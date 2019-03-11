@@ -1,15 +1,11 @@
 package com.winwin.winwin.entity;
 
-import java.sql.Timestamp;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -26,7 +22,7 @@ import lombok.ToString;
 @ToString
 @Table(name = "address")
 @Entity
-public class Address {
+public class Address extends AbstractAuditableEntity {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -46,12 +42,6 @@ public class Address {
 	
 	@Column(name = "zip")
 	private Long zip;
-	
-	@Column(name = "created_at")
-	private Timestamp createdAt;
-	
-	@Column(name = "updated_at")
-	private Timestamp updatedAt;
 	
 	@Column(name = "street")
 	private String street;

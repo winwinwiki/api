@@ -1,7 +1,5 @@
 package com.winwin.winwin.entity;
 
-import java.sql.Timestamp;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -26,7 +24,7 @@ import lombok.ToString;
 @ToString
 @Entity
 @Table(name = "organization")
-public class Organization {
+public class Organization extends AbstractAuditableEntity{
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -59,12 +57,6 @@ public class Organization {
 	
 	@Column(name = "priority")
 	private String priority;
-	
-	@Column(name = "created_at")
-	private Timestamp createdAt;
-	
-	@Column(name = "updated_at")
-	private Timestamp updatedAt;
 	
 	@Column(name = "parent_id")
 	private Long parentId;

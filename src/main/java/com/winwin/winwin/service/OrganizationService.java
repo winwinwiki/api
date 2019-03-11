@@ -1,5 +1,7 @@
 package com.winwin.winwin.service;
 
+import java.sql.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +33,8 @@ public class OrganizationService implements IOrganizationService{
 				address = saveAddress(organizationPayload.getAddress());
 			}
 			organization.setAddress(address);
+			organization.setCreatedAt(new Date(System.currentTimeMillis()));
+			organization.setUpdatedAt(new Date(System.currentTimeMillis()));
 			organizationRepository.saveAndFlush(organization);
 		}
 	}
@@ -43,6 +47,8 @@ public class OrganizationService implements IOrganizationService{
 		address.setCounty(addressPayload.getCounty());
 		address.setZip(addressPayload.getZip());
 		address.setStreet(addressPayload.getStreet());
+		address.setCreatedAt(new Date(System.currentTimeMillis()));
+		address.setUpdatedAt(new Date(System.currentTimeMillis()));
 		return addressRepository.saveAndFlush(address);
 				
 			
