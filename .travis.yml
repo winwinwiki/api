@@ -1,4 +1,6 @@
-sudo: required
+sudo: true
 language: java
 jdk:
   - openjdk10
+before_install:
+  - chmod +x mvnw
