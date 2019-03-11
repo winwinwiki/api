@@ -42,3 +42,8 @@ deploy:
 
 after_deploy: 
   - echo "Deployment is complete"
+
+script:
+  - zip -r latest *
+  - mkdir -p build
+  - mv latest.zip build/latest.zip
