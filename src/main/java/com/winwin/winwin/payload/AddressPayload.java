@@ -16,6 +16,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class AddressPayload {
+	private Long id;
 	private String country;
 	private String state;
 	private String city;

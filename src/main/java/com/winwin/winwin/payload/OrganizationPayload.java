@@ -26,6 +26,13 @@ public class OrganizationPayload {
 	String description;
 	String status;
 	String priority;
-	Timestamp createdAt;
-	Timestamp updatedAt;	
+	Long parentId;
+	String type;
+	Boolean isActive;
+	Boolean isTaggingReady;
+	String tagStatus;
+	Long totalAssets;
+	String websiteUrl;
+	String socialUrl;
+	Long classificationId; 
 }
