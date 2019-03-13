@@ -29,6 +29,7 @@ public class OrganizationService implements IOrganizationService{
 			organization.setName(organizationPayload.getName());
 			organization.setSector(organizationPayload.getSector());
 			organization.setSectorLevel(organizationPayload.getSectorLevel());
+			organization.setDescription(organizationPayload.getDescription());
 			if(organizationPayload.getAddress() != null) {
 				address = saveAddress(organizationPayload.getAddress());
 			}
@@ -37,6 +38,17 @@ public class OrganizationService implements IOrganizationService{
 			organization.setUpdatedAt(new Date(System.currentTimeMillis()));
 			organizationRepository.saveAndFlush(organization);
 		}
+	}
+	
+	@Override
+	public void deleteOrganization(Long id) {
+		Organization  organization = organizationRepository.findOrgById(id);
+		if(organization != null) {
+			organization.setIsActive(false);
+			organization.getAddress().setIsActive(false);
+		}
+		addressRepository.saveAndFlush(organization.getAddress());
+		organizationRepository.saveAndFlush(organization);
 	}
 	
 	public Address saveAddress(AddressPayload addressPayload) {

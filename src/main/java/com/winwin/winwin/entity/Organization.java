@@ -52,17 +52,26 @@ public class Organization extends AbstractAuditableEntity{
 	@Column(name = "description")
 	private String description;
 	
-	@Column(name = "status")
-	private String status;
-	
 	@Column(name = "priority")
-	private String priority;
+	private String priority = "Normal";
 	
 	@Column(name = "parent_id")
 	private Long parentId;
 	
 	@Column(name = "type")
 	private String type;
+	
+	@Column(name = "is_active")
+	private Boolean isActive = true;
+	
+	@Column(name = "tag_status")
+	private String tagStatus;
+	
+	@Column(name = "website_url")
+	private String websiteUrl;
+	
+	@Column(name = "social_url")
+	private String socialUrl;
 	
 	
 }

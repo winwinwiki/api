@@ -31,6 +31,9 @@ public class Address extends AbstractAuditableEntity {
 	@Column(name = "country")
 	private String country;
 	
+	@Column(name = "is_active")
+	private Boolean isActive = true;
+	
 	@Column(name = "state")
 	private String state;
 	

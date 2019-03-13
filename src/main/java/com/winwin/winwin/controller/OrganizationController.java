@@ -6,9 +6,11 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.exception.OrganizationException;
@@ -33,6 +35,17 @@ public class OrganizationController {
 	public Object createOrganization(HttpServletResponse httpServletResponse, @Valid @RequestBody OrganizationPayload organizationPayload) {
 		try {
 		organizationService.createOrganization(organizationPayload);
+		return true;
+	}catch (Exception e) {
+		throw new OrganizationException();
+	}
+	}
+	
+	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
+	@Transactional
+	public Object deleteOrganization(HttpServletResponse httpServletResponse,  @PathVariable("id") Long id) {
+		try {
+		organizationService.deleteOrganization(id);
 		return true;
 	}catch (Exception e) {
 		throw new OrganizationException();
