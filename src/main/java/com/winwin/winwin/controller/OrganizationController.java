@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.OrganizationPayload;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationService;
 
 @RestController
@@ -23,6 +25,9 @@ public class OrganizationController {
 
 	@Autowired
 	private OrganizationService organizationService;
+	
+	@Autowired
+	private OrganizationRepository organizationRepository;
 
 	@GetMapping("/organization")
 	public String getOrganization() {
@@ -37,7 +42,7 @@ public class OrganizationController {
 		organizationService.createOrganization(organizationPayload);
 		return true;
 	}catch (Exception e) {
-		throw new OrganizationException();
+		throw new OrganizationException("There is some error while creating the org");
 	}
 	}
 	
@@ -45,10 +50,16 @@ public class OrganizationController {
 	@Transactional
 	public Object deleteOrganization(HttpServletResponse httpServletResponse,  @PathVariable("id") Long id) {
 		try {
-		organizationService.deleteOrganization(id);
-		return true;
+		Organization  organization = organizationRepository.findOrgById(id);
+		if(organization == null) {
+			throw new OrganizationException("Org is not found");
+		}else {
+			organizationService.deleteOrganization(id);
+			return true;
+		}
+		
 	}catch (Exception e) {
-		throw new OrganizationException();
+		throw new OrganizationException("Org is not found");
 	}
 	}
 }

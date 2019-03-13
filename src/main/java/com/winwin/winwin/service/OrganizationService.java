@@ -46,9 +46,10 @@ public class OrganizationService implements IOrganizationService{
 		if(organization != null) {
 			organization.setIsActive(false);
 			organization.getAddress().setIsActive(false);
+			addressRepository.saveAndFlush(organization.getAddress());
+			organizationRepository.saveAndFlush(organization);
 		}
-		addressRepository.saveAndFlush(organization.getAddress());
-		organizationRepository.saveAndFlush(organization);
+		
 	}
 	
 	public Address saveAddress(AddressPayload addressPayload) {
