@@ -1,7 +1,7 @@
 sudo: true
 language: java
 jdk:
-  - openjdk10
+  - oraclejdk11
 before_install:
   - chmod +x mvnw
   - psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE winwindb;"
