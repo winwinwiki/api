@@ -34,4 +34,5 @@ public class OrganizationPayload {
 	Long totalAssets;
 	String websiteUrl;
 	String socialUrl;
+	Long classificationId; 
 }

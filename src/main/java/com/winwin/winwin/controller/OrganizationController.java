@@ -35,9 +35,10 @@ public class OrganizationController {
 		// return orgRepo.getOne(id);
 	}
 
-	@PostMapping("/create")
+	//@PostMapping("/create")
+	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	@Transactional
-	public Object createOrganization(HttpServletResponse httpServletResponse, @Valid @RequestBody OrganizationPayload organizationPayload) {
+	public Object createOrganization(HttpServletResponse httpServletResponse,@RequestBody OrganizationPayload organizationPayload) {
 		try {
 		organizationService.createOrganization(organizationPayload);
 		return true;
@@ -60,6 +61,23 @@ public class OrganizationController {
 		
 	}catch (Exception e) {
 		throw new OrganizationException("Org is not found");
+	}
+	}
+	
+	@RequestMapping(value = "/update", method = RequestMethod.PUT)
+	@Transactional
+	public Object updateOrgDetails(HttpServletResponse httpServletResponse,  @RequestBody OrganizationPayload organizationPayload) {
+		try {
+		Organization  organization = organizationRepository.findOrgById(organizationPayload.getId());
+		if(organization == null) {
+			throw new OrganizationException("Org is not found");
+		}else {
+			organizationService.updateOrgDetails(organizationPayload,organization);
+			return true;
+		}
+		
+	}catch (Exception e) {
+		throw new OrganizationException(e.getMessage());
 	}
 	}
 }
