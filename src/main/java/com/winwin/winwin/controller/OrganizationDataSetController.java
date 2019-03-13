@@ -30,7 +30,6 @@ public class OrganizationDataSetController {
 	@GetMapping("/organizationdataset")
 	public String getOrganizationDataSet() {
 		return "Hello World  For Organization Data Set";
-		// return orgRepo.getOne(id);
 	}
 
 	@PostMapping("/create")

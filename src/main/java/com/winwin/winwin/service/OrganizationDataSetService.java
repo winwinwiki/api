@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
@@ -15,6 +16,7 @@ import com.winwin.winwin.repository.OrganizationDataSetRepository;
  * @author ArvindK
  *
  */
+@Component
 public class OrganizationDataSetService implements IOrganizationDataSetService {
 	@Autowired
 	OrganizationDataSetRepository organizationDataSetRepository;
@@ -53,7 +55,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	private OrganizationDataSet constructOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad) {
 		OrganizationDataSet organizationDataSet;
 		if (null != organizationDataSetPayLoad.getId()) {
-			organizationDataSet = organizationDataSetRepository.getOne(organizationDataSetPayLoad.getOrganization_id());
+			organizationDataSet = organizationDataSetRepository.getOne(organizationDataSetPayLoad.getId());
 		} else {
 			organizationDataSet = new OrganizationDataSet();
 			organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
