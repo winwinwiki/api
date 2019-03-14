@@ -15,6 +15,13 @@ jobs: # a collection of steps
       - image: circleci/postgres:latest
 
     #working_directory: ~/repo
+    
+    branches:
+      only: 
+        - dev
+        #- qa
+        #- staging
+        #- master
 
     environment:
       # Customize the JVM maximum heap limit
@@ -44,6 +51,7 @@ jobs: # a collection of steps
 
       # build now
       - run: mvn package # run the actual tests
+      #- run: mvn clean install # run the actual tests
       #- run: mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
       - store_test_results: # uploads the test metadata from the `target/surefire-reports` directory so that it can show up in the CircleCI dashboard. 
