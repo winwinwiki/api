@@ -1,0 +1,70 @@
+# TODO: Add dependency of CodeDeploy client
+# TODO: Update environment variable on the EC2 box
+# TODO: Create service to run java -jar
+# Command to encrypt secret key:
+#   travis encrypt --com --interactive --add deploy.secret_access_key <SECRET_KEY>
+
+sudo: true
+language: java
+jdk:
+- oraclejdk11
+before_install:
+- chmod +x mvnw
+- psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE winwindb;"
+- psql --port=$WINWIN_DB_PORT -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD
+  'winwindbpassword';"
+- psql --port=$WINWIN_DB_PORT -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
+- sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
+addons:
+  postgresql: '10'
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+env:
+- WINWIN_DB_HOST=localhost WINWIN_DB_NAME=winwindb WINWIN_DB_USER=winwindbuser WINWIN_DB_PASSWORD=winwindbpassword WINWIN_DB_PORT=5433
+services:
+- postgresql
+before_deploy:
+- echo "Deployment in progress"
+"-":
+  provider: s3
+  access_key_id: AKIAIQPGI6TTKCITNVVA
+  secret_access_key: &1
+    secure: kI8FtVdE5Du2HGDueAv8zAyXG8rqW8+hw4y1yNlEpI5isHj8L2Sb3/EzLTC/TB49jnp7BcNcTo8JEcs3HBow/LZKDv3j6q67CgcKZZCf97+VLqz52Tk9sQHeMQ37xwc9Y5QD5xvIwym6eF+yC9VsqjeVyd/y93U+2SGP65YfLOg474XoJfXc5PLrhHkaqnba4DRDspVaNTeDa9EISuduP0GYl0nFFY+v/8G4TEwFWmVGI25fpugcthTw9L7sm1A2j3+LpP336diHiohex5jWTAj3dQmHmaz6TLcW6bC2WA5MUcis+lwZxo5jLQ/RrATFw+S19FdnY77Lg4K6N88qDFU4n9SGU2TTemvDfJQ8wNdlRvdFLe2ZccJ2zZM8ucO+T4qLbt1AVXin7oQYNnc5J+jEkQOAjgHnf+bkmgDXxH63MX4QdEBT5P0h0wufu3Z9/otSBPLKBt4Y3nzvIa3fxjt9JOru5KVQ79vBKqQTP42cJcnPbF78ZIiSAkInSRGIFr4r20TGLDaOOdkzqaLP39IP5M5AfCaRyDByvtaM/E/FecBZ74LSYQOwK/XQO5/oz4t4eeVE/Qc42vCd3z51LcLYWPIouqW8j93qnVrFDHozL4eYMMv6wWgcyYaE705h/cBCgWhZQhdIIXUjaQRWLq/qRyw8h0LidsKEUKxk/b8=
+  local_dir: build
+  skip_cleanup: true
+  region: us-west-2
+  wait-until-deployed: true
+deploy:
+  matrix:
+  - provider: s3
+    access_key_id: AKIAIQPGI6TTKCITNVVA
+    secret_access_key: *1
+    local_dir: build
+    skip_cleanup: true
+    region: us-west-2
+    wait-until-deployed: true
+    on:
+      branch: dev
+    bucket: winwin-backend-bucket-dev
+  - provider: codedeploy
+    access_key_id: AKIAIQPGI6TTKCITNVVA
+    secret_access_key:
+      secure: kI8FtVdE5Du2HGDueAv8zAyXG8rqW8+hw4y1yNlEpI5isHj8L2Sb3/EzLTC/TB49jnp7BcNcTo8JEcs3HBow/LZKDv3j6q67CgcKZZCf97+VLqz52Tk9sQHeMQ37xwc9Y5QD5xvIwym6eF+yC9VsqjeVyd/y93U+2SGP65YfLOg474XoJfXc5PLrhHkaqnba4DRDspVaNTeDa9EISuduP0GYl0nFFY+v/8G4TEwFWmVGI25fpugcthTw9L7sm1A2j3+LpP336diHiohex5jWTAj3dQmHmaz6TLcW6bC2WA5MUcis+lwZxo5jLQ/RrATFw+S19FdnY77Lg4K6N88qDFU4n9SGU2TTemvDfJQ8wNdlRvdFLe2ZccJ2zZM8ucO+T4qLbt1AVXin7oQYNnc5J+jEkQOAjgHnf+bkmgDXxH63MX4QdEBT5P0h0wufu3Z9/otSBPLKBt4Y3nzvIa3fxjt9JOru5KVQ79vBKqQTP42cJcnPbF78ZIiSAkInSRGIFr4r20TGLDaOOdkzqaLP39IP5M5AfCaRyDByvtaM/E/FecBZ74LSYQOwK/XQO5/oz4t4eeVE/Qc42vCd3z51LcLYWPIouqW8j93qnVrFDHozL4eYMMv6wWgcyYaE705h/cBCgWhZQhdIIXUjaQRWLq/qRyw8h0LidsKEUKxk/b8=
+    bucket: winwin-backend-bucket-dev
+    key: latest.zip
+    bundle_type: zip
+    application: WinWin-Backend-CodeDeploy-Dev
+    deployment_group: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
+    region: us-east-1 #Server region
+    on:
+      branch: dev
+  # secret_access_key:
+  #   secure: sli2YDKOyv/CrB1x0zIWhBiGQhDyW2pcHSSSJs3YKXivlALsS3JKFGpov4rYh9JOZQjTRSvxlZoPBHR0O/qCgl6KNj2Frqr7MP+5XIA2v0R0H75Qz7SgtmtSwDRBoFQBPVNsxZlf53uSJ0QHgbwAuAHgvCcqxx4dMJEVWjonLVlp9b+XN0gBIvrYx1jeYBvKNEkaiUTGRb4RtMnPmpnH3NPX9JN5qBMW1LbGtknX9GKg4IxUkuOZOKl5/6Pv405jBpAKCoFbnSLkOJzd3Mvcu/BBW6iajCcpuPrMZjfRBkxRpFFhjL/pPcaC9EeNbXpgv6y33joeVO9zMnFjizEQ8C0qNpzo7ii3hLYM4Ugv+FcBurzHDDQ5QpAj5EKv7caEuHcMz9IblQeo27iSXxGrqh6Q6xgetCnwEdX51Gn+EmTt2faG8QPEJlbt0SO+jBlbtzqLeTeIBz8UA3dYc+oZ/m9IMegy86kBVBBU7F9sotLGQ6ERK6Z/ZsuzMoj0LH37wJbv6vHDKFH2/4v27nFYZ74t7PuGghf6ZUEZCwLRl60fo19kEfGoeYxw++WlUryR+7p3dpUzmR9xsdWXQf0/sR9MwfQ5UJ3UYpRs95BkeFNGcSZQcbUtT7iPHartrrwJc2xzqxckm/XduggbY3WGNXmlrzXQFTGK1w7hCLrkf50=
+after_deploy:
+- echo "Deployment is complete"
+script:
+- zip -r latest *
+- mkdir -p build
+- mv latest.zip build/latest.zip

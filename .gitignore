@@ -1,5 +1,8 @@
 HELP.md
 /target/
+.metadata/
+*.log
+.vscode/
 !.mvn/wrapper/maven-wrapper.jar
 
 ### STS ###
