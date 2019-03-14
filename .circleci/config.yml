@@ -94,6 +94,16 @@ jobs: # a collection of steps
           name: Check S3 directory
           command: aws s3 ls
       - run:
+          name: Zipping required files
+          command: |
+            zip target/winwin-0.0.1-SNAPSHOT.zip target/winwin-0.0.1-SNAPSHOT.jar appspec.yml
+            zip -r target/winwin-0.0.1-SNAPSHOT.zip scripts
+      
+      - store_artifacts: # store the zip as an artifact
+          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: target/winwin-0.0.1-SNAPSHOT.zip
+
+      - run:
           name: Deploy to S3
           command: |
             #if [ "$CIRCLE_BRANCH" = "dev" ]; then 
@@ -107,9 +117,7 @@ jobs: # a collection of steps
             #   export S3_BUCKET="s3://frontend-production-server/"
             # fi
             echo "S3_BUCKET - $S3_BUCKET"
-            zip target/winwin-0.0.1-SNAPSHOT.zip target/winwin-0.0.1-SNAPSHOT.jar appspec.yml
-            zip -r target/winwin-0.0.1-SNAPSHOT.zip scripts
-            aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET" --delete
+            aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
