@@ -1,0 +1,27 @@
+version: 0.0
+os: linux
+files:
+  - source: winwin-0.0.1-SNAPSHOT.jar
+    destination: /home/ec2-user
+  # - source: source
+  #   destination: /webapps/myApp
+hooks:
+  # BeforeInstall:
+  #   - location: stop_server
+  #     runas: root
+  #   - location: Scripts/UnzipDataBundle.sh
+  # AfterInstall:
+  #   - location: service winwin-service start
+  #     timeout: 180
+  ApplicationStart:
+    - location: scripts/start_server.sh
+      timeout: 3600
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop_server.sh
+      timeout: 300
+      runas: root
+  # ValidateService:
+  #   - location: Scripts/MonitorService.sh
+  #     timeout: 3600
+  #     runas: codedeployuser

@@ -32,6 +32,8 @@ jobs: # a collection of steps
       WINWIN_DB_USER: postgres
       WINWIN_DB_PASSWORD: 
       WINWIN_DB_PORT: 5432
+      AWS_CODE_DEPLOY_APPLICATION_NAME: WinWin-Backend-CodeDeploy-Dev
+      AWS_CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
 
     steps: # a collection of executable commands
       - checkout # check out source code to working directory
@@ -105,4 +107,10 @@ jobs: # a collection of steps
             #   export S3_BUCKET="s3://frontend-production-server/"
             # fi
             echo "S3_BUCKET - $S3_BUCKET"
-            aws s3 sync target/ "$S3_BUCKET" --delete  
+            zip target/winwin-0.0.1-SNAPSHOT.zip target/winwin-0.0.1-SNAPSHOT.jar appspec.yml
+            zip -r target/winwin-0.0.1-SNAPSHOT.zip scripts
+            aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET" --delete
+      - run:
+          name: Run CodeDeploy to deploy on EC2
+          command: |
+            aws deploy create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip

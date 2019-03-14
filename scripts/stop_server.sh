@@ -1,0 +1,1 @@
+service winwin-service stop
