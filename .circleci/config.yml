@@ -53,9 +53,9 @@ jobs: # a collection of steps
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
       - run: sudo apt-get update -qq && sudo apt-get install -y postgresql
-      - run: psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE winwindb;"
-      - run: psql --port=$WINWIN_DB_PORT -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
-      - run: psql --port=$WINWIN_DB_PORT -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
+      - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
+      - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
+      - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
       - run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
 
       # build now
