@@ -1,3 +1,7 @@
+# TODO: Add dependency of CodeDeploy client
+# TODO: Update environment variable on the EC2 box
+# TODO: Create service to run java -jar
+
 sudo: true
 language: java
 jdk:
@@ -31,7 +35,7 @@ before_deploy:
       secure: "kI8FtVdE5Du2HGDueAv8zAyXG8rqW8+hw4y1yNlEpI5isHj8L2Sb3/EzLTC/TB49jnp7BcNcTo8JEcs3HBow/LZKDv3j6q67CgcKZZCf97+VLqz52Tk9sQHeMQ37xwc9Y5QD5xvIwym6eF+yC9VsqjeVyd/y93U+2SGP65YfLOg474XoJfXc5PLrhHkaqnba4DRDspVaNTeDa9EISuduP0GYl0nFFY+v/8G4TEwFWmVGI25fpugcthTw9L7sm1A2j3+LpP336diHiohex5jWTAj3dQmHmaz6TLcW6bC2WA5MUcis+lwZxo5jLQ/RrATFw+S19FdnY77Lg4K6N88qDFU4n9SGU2TTemvDfJQ8wNdlRvdFLe2ZccJ2zZM8ucO+T4qLbt1AVXin7oQYNnc5J+jEkQOAjgHnf+bkmgDXxH63MX4QdEBT5P0h0wufu3Z9/otSBPLKBt4Y3nzvIa3fxjt9JOru5KVQ79vBKqQTP42cJcnPbF78ZIiSAkInSRGIFr4r20TGLDaOOdkzqaLP39IP5M5AfCaRyDByvtaM/E/FecBZ74LSYQOwK/XQO5/oz4t4eeVE/Qc42vCd3z51LcLYWPIouqW8j93qnVrFDHozL4eYMMv6wWgcyYaE705h/cBCgWhZQhdIIXUjaQRWLq/qRyw8h0LidsKEUKxk/b8="
     local_dir: build #Upload only this directory
     skip_cleanup: true #Skip cleaning up the build folder before deploy/upload
-    region: "us-east-2"
+    region: "us-west-2"
     wait-until-deployed: true
 
 deploy:
