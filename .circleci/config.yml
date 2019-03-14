@@ -53,12 +53,10 @@ jobs: # a collection of steps
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
       - run: apt-get update -qq && apt-get install -y postgresql
-      - run:
-        command: |
-          psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE $WINWIN_DB_NAME;"
-          psql --port=$WINWIN_DB_PORT -c "CREATE USER $WINWIN_DB_USER WITH ENCRYPTED PASSWORD '$WINWIN_DB_PASSWORD';"
-          psql --port=$WINWIN_DB_PORT -c "GRANT ALL PRIVILEGES ON DATABASE $WINWIN_DB_NAME TO $WINWIN_DB_USER;"
-          sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
+      - run: psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE $WINWIN_DB_NAME;"
+      - run: psql --port=$WINWIN_DB_PORT -c "CREATE USER $WINWIN_DB_USER WITH ENCRYPTED PASSWORD '$WINWIN_DB_PASSWORD';"
+      - run: psql --port=$WINWIN_DB_PORT -c "GRANT ALL PRIVILEGES ON DATABASE $WINWIN_DB_NAME TO $WINWIN_DB_USER;"
+      - run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
 
       # build now
       #- run: mvn package # run the actual tests
