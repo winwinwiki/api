@@ -52,7 +52,7 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: apt-get update -qq && apt-get install -y postgresql
+      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql
       - run: psql --port=$WINWIN_DB_PORT -c "CREATE DATABASE $WINWIN_DB_NAME;"
       - run: psql --port=$WINWIN_DB_PORT -c "CREATE USER $WINWIN_DB_USER WITH ENCRYPTED PASSWORD '$WINWIN_DB_PASSWORD';"
       - run: psql --port=$WINWIN_DB_PORT -c "GRANT ALL PRIVILEGES ON DATABASE $WINWIN_DB_NAME TO $WINWIN_DB_USER;"
