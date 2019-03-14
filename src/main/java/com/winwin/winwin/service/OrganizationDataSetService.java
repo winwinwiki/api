@@ -2,6 +2,8 @@ package com.winwin.winwin.service;
 
 import java.sql.Date;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,6 +25,8 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 
 	@Autowired
 	OrganizationDataSetCategoryRepository organizationDataSetCategoryRepository;
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetService.class);
 
 	private final Long CATEGORY_ID = -1L;
 
@@ -36,8 +40,12 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 				organizationDataSetRepository.saveAndFlush(organizationDataSet);
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if ( null != organizationDataSetPayLoad.getId()){
+				LOGGER.error("Exception occured while updating of organization data set" , e);
+			} else{
+				LOGGER.error("Exception occured while creating organization data set" , e);
+			}
+			
 		}
 
 	}// end of method createOrUpdateOrganizationDataSet
@@ -53,21 +61,25 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	 * @return
 	 */
 	private OrganizationDataSet constructOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad) {
-		OrganizationDataSet organizationDataSet;
-		if (null != organizationDataSetPayLoad.getId()) {
-			organizationDataSet = organizationDataSetRepository.getOne(organizationDataSetPayLoad.getId());
-		} else {
-			organizationDataSet = new OrganizationDataSet();
-			organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
+		OrganizationDataSet organizationDataSet = null;
+		try {
+			if (null != organizationDataSetPayLoad.getId()) {
+				organizationDataSet = organizationDataSetRepository.getOne(organizationDataSetPayLoad.getId());
+			} else {
+				organizationDataSet = new OrganizationDataSet();
+				organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
+			}
+
+			setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
+
+			organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganization_id());
+			organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
+			organizationDataSet.setType(organizationDataSetPayLoad.getType());
+			organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
+			organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
+		} catch (Exception e) {
+			LOGGER.error("Exception occured during construction of organization data set" , e);
 		}
-
-		setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
-
-		organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganization_id());
-		organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
-		organizationDataSet.setType(organizationDataSetPayLoad.getType());
-		organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
-		organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
 
 		return organizationDataSet;
 	}
@@ -84,30 +96,38 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	private void setOrganizationDataSetCategory(OrganizationDataSetPayLoad organizationDataSetPayLoad,
 			OrganizationDataSet organizationDataSet) {
 		OrganizationDataSetCategory organizationDataSetCategory;
-		if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory()) {
-			if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory().getId()) {
-				if (organizationDataSetPayLoad.getOrganizationDataSetCategory().getId() == CATEGORY_ID) {
-					organizationDataSetCategory = saveOrganizationDataSetCategory(
-							organizationDataSetPayLoad.getOrganizationDataSetCategory());
+		try {
+			if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory()) {
+				if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory().getId()) {
+					if (organizationDataSetPayLoad.getOrganizationDataSetCategory().getId() == CATEGORY_ID) {
+						organizationDataSetCategory = saveOrganizationDataSetCategory(
+								organizationDataSetPayLoad.getOrganizationDataSetCategory());
+						LOGGER.info("oraganization dataset category has been created successfully in DB");
+						organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
 
-					organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
+					} else {
+						organizationDataSetCategory = getOrganizationDataSetCategoryById(
+								organizationDataSetPayLoad.getOrganizationDataSetCategory().getId());
+						organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
+					}
 
-				} else {
-					organizationDataSetCategory = getOrganizationDataSetCategoryById(
-							organizationDataSetPayLoad.getOrganizationDataSetCategory().getId());
-					organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
 				}
-
 			}
+		} catch (Exception e) {
+			LOGGER.error("Exception occured during creation of organization dataset category" , e);
 		}
 	}
 
 	public OrganizationDataSetCategory saveOrganizationDataSetCategory(
 			OrganizationDataSetCategory categoryFromPayLoad) {
 		OrganizationDataSetCategory category = new OrganizationDataSetCategory();
-		category.setCategoryName(categoryFromPayLoad.getCategoryName());
-		category.setCreatedAt(new Date(System.currentTimeMillis()));
-		category.setUpdatedAt(new Date(System.currentTimeMillis()));
+		try {
+			category.setCategoryName(categoryFromPayLoad.getCategoryName());
+			category.setCreatedAt(new Date(System.currentTimeMillis()));
+			category.setUpdatedAt(new Date(System.currentTimeMillis()));
+		} catch (Exception e) {
+			LOGGER.error("Exception occured during updation of organization dataset category in DB" , e);
+		}
 
 		return organizationDataSetCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationDataSetCategory
