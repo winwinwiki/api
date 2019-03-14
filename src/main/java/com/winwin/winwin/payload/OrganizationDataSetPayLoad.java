@@ -1,6 +1,11 @@
+/**
+ * 
+ */
 package com.winwin.winwin.payload;
 
 import java.sql.Timestamp;
+
+import com.winwin.winwin.entity.OrganizationDataSetCategory;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -9,30 +14,24 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindK
+ *
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrganizationPayload {
+public class OrganizationDataSetPayLoad {
 	Long id;
-	AddressPayload address;
-	String name;
-	Long revenue;
-	Long assets;
-	String sector;
-	String sectorLevel;
+	OrganizationDataSetCategory organizationDataSetCategory;
+	Long organization_id;
 	String description;
-	String status;
-	String priority;
-	Long parentId;
 	String type;
-	Boolean isActive;
-	Boolean isTaggingReady;
-	String tagStatus;
-	Long totalAssets;
-	String websiteUrl;
-	String socialUrl;
-	Long classificationId; 
+	String url;
+	Timestamp createdAt;
+	Timestamp updatedAt;
+
 }
