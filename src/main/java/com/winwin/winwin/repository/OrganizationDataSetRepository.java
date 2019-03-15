@@ -13,10 +13,13 @@ import com.winwin.winwin.entity.OrganizationDataSet;
  *
  */
 public interface OrganizationDataSetRepository extends JpaRepository<OrganizationDataSet, Long> {
-	@Query(value = "select * from org_dataset", nativeQuery = true)
-	List<OrganizationDataSet> findAllOrgDataSet();
+	@Query(value = "select * from org_dataset where organization_id = :organization_id", nativeQuery = true)
+	List<OrganizationDataSet> findAllOrgDataSetList(@Param("organization_id") Long organization_id);
 
 	@Query(value = "select * from org_dataset where id = :id", nativeQuery = true)
 	OrganizationDataSet findOrgDataSetById(@Param("id") Long id);
+
+	@Query(value = "select * from org_dataset ORDER BY id DESC LIMIT 1", nativeQuery = true)
+	OrganizationDataSet findLastOrgDataSet();
 
 }

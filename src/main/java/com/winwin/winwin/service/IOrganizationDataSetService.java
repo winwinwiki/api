@@ -13,10 +13,10 @@ import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
  *
  */
 public interface IOrganizationDataSetService {
-	void createOrUpdateOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad);
+	OrganizationDataSet createOrUpdateOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad);
 
 	void removeOrganizationDataSet(Long dataSetId);
 
-	List<OrganizationDataSet> getOrganizationDataSetList();
+	List<OrganizationDataSet> getOrganizationDataSetList(Long id);
 
 }

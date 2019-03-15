@@ -35,13 +35,18 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
-	public void createOrUpdateOrganizationResource(OrganizationResourcePayLoad organizationResourcePayLoad) {
+	public OrganizationResource createOrUpdateOrganizationResource(
+			OrganizationResourcePayLoad organizationResourcePayLoad) {
+		OrganizationResource organizationResource = null;
 
 		try {
 			if (null != organizationResourcePayLoad) {
-				OrganizationResource organizationResource = constructOrganizationResource(organizationResourcePayLoad);
+				organizationResource = constructOrganizationResource(organizationResourcePayLoad);
 
 				organizationResourceRepository.saveAndFlush(organizationResource);
+				if (null != organizationResourcePayLoad.getId()) {
+					return organizationResource;
+				}
 			}
 		} catch (Exception e) {
 			if (null != organizationResourcePayLoad.getId()) {
@@ -51,6 +56,8 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			}
 
 		}
+		organizationResource = organizationResourceRepository.findLastOrgResource();
+		return organizationResource;
 
 	}// end of method createOrUpdateOrganizationResource
 
@@ -109,7 +116,6 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	private void setOrganizationResourceCategory(OrganizationResourcePayLoad organizationResourcePayLoad,
 			OrganizationResource organizationResource) {
 		OrganizationResourceCategory organizationResourceCategory = null;
-		;
 		try {
 			if (null != organizationResourcePayLoad.getOrganizationResourceCategory()) {
 				Long categoryId = organizationResourcePayLoad.getOrganizationResourceCategory().getId();

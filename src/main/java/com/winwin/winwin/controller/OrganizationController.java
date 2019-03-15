@@ -4,23 +4,18 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.entity.Organization;
-import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.exception.OrganizationException;
-import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationService;
@@ -88,7 +83,7 @@ public class OrganizationController extends BaseController {
 			throw new OrganizationException(e.getMessage());
 		}
 	}
-	
+
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public ResponseEntity<?> getOrganizationList(HttpServletResponse httpServletResponse) throws OrganizationException {
 		List<Organization> orgList = null;
