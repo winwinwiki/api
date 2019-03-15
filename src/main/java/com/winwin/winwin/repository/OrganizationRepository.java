@@ -11,7 +11,10 @@ import com.winwin.winwin.entity.Organization;
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 	@Query(value = "select * from organization where id = :id", nativeQuery = true)
 	Organization findOrgById(@Param("id") Long id);
-	
+
 	@Query(value = "select * from organization", nativeQuery = true)
 	List<Organization> findAllOrganizationList();
-}	
+
+	@Query(value = "select * from organization ORDER BY id DESC LIMIT 1", nativeQuery = true)
+	Organization findLastOrg();
+}

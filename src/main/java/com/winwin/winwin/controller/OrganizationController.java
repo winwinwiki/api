@@ -37,16 +37,18 @@ public class OrganizationController extends BaseController {
 	}
 
 	// @PostMapping("/create")
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	@Transactional
-	public Object createOrganization(HttpServletResponse httpServletResponse,
+	public ResponseEntity createOrganization(HttpServletResponse httpServletResponse,
 			@RequestBody OrganizationPayload organizationPayload) {
+		Organization organization = null;
 		try {
-			organizationService.createOrganization(organizationPayload);
-			return true;
+			organization = organizationService.createOrganization(organizationPayload);
 		} catch (Exception e) {
 			throw new OrganizationException("There is some error while creating the org");
 		}
+		return sendSuccessResponse(organization);
 	}
 
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
@@ -66,22 +68,25 @@ public class OrganizationController extends BaseController {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/update", method = RequestMethod.PUT)
 	@Transactional
-	public Object updateOrgDetails(HttpServletResponse httpServletResponse,
+	public ResponseEntity updateOrgDetails(HttpServletResponse httpServletResponse,
 			@RequestBody OrganizationPayload organizationPayload) {
+		Organization organization = null;
 		try {
-			Organization organization = organizationRepository.findOrgById(organizationPayload.getId());
+			organization = organizationRepository.findOrgById(organizationPayload.getId());
 			if (organization == null) {
 				throw new OrganizationException("Org is not found");
 			} else {
-				organizationService.updateOrgDetails(organizationPayload, organization);
-				return true;
+				organization = organizationService.updateOrgDetails(organizationPayload, organization);
 			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(e.getMessage());
 		}
+		return sendSuccessResponse(organization);
+
 	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
@@ -96,6 +101,24 @@ public class OrganizationController extends BaseController {
 			throw new OrganizationException("org.error.list");
 		}
 		return sendSuccessResponse(orgList);
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "{id}", method = RequestMethod.GET)
+	@Transactional
+	public ResponseEntity getOrgDetails(HttpServletResponse httpServletResponse, @PathVariable("id") Long id) {
+		Organization organization = null;
+		try {
+			organization = organizationRepository.findOrgById(id);
+			if (organization == null) {
+				throw new OrganizationException("Org is not found");
+			}
+
+		} catch (Exception e) {
+			throw new OrganizationException(e.getMessage());
+		}
+		return sendSuccessResponse(organization);
 
 	}
 }

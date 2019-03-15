@@ -10,9 +10,13 @@ import org.springframework.stereotype.Component;
 
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
+import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
+import com.winwin.winwin.exception.OrganizationDataSetException;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.repository.OrganizationDataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
+
+import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindK
@@ -25,28 +29,36 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 
 	@Autowired
 	OrganizationDataSetCategoryRepository organizationDataSetCategoryRepository;
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetService.class);
 
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
-	public void createOrUpdateOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad) {
+	public OrganizationDataSet createOrUpdateOrganizationDataSet(
+			OrganizationDataSetPayLoad organizationDataSetPayLoad) {
+		OrganizationDataSet organizationDataSet = null;
 
 		try {
 			if (null != organizationDataSetPayLoad) {
-				OrganizationDataSet organizationDataSet = constructOrganizationDataSet(organizationDataSetPayLoad);
+				organizationDataSet = constructOrganizationDataSet(organizationDataSetPayLoad);
 
 				organizationDataSetRepository.saveAndFlush(organizationDataSet);
+				if (null != organizationDataSetPayLoad.getId()) {
+					return organizationDataSet;
+				}
+
 			}
 		} catch (Exception e) {
-			if ( null != organizationDataSetPayLoad.getId()){
-				LOGGER.error("Exception occured while updating of organization data set" , e);
-			} else{
-				LOGGER.error("Exception occured while creating organization data set" , e);
+			if (null != organizationDataSetPayLoad.getId()) {
+				LOGGER.error("Exception occured while updating of organization data set", e);
+			} else {
+				LOGGER.error("Exception occured while creating organization data set", e);
 			}
-			
+
 		}
+		organizationDataSet = organizationDataSetRepository.findLastOrgDataSet();
+		return organizationDataSet;
 
 	}// end of method createOrUpdateOrganizationDataSet
 
@@ -70,23 +82,30 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 				organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
 			}
 
-			setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
+			if (organizationDataSet == null) {
+				throw new OrganizationDataSetException("Org dataset record not found for Id: "
+						+ organizationDataSetPayLoad.getId() + " to update in DB ");
+			} else {
+				setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
 
-			organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganization_id());
-			organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
-			organizationDataSet.setType(organizationDataSetPayLoad.getType());
-			organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
-			organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
+				organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganization_id());
+				organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
+				organizationDataSet.setType(organizationDataSetPayLoad.getType());
+				organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
+				organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
+
+			}
+
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during construction of organization data set" , e);
+			LOGGER.error("Exception occured during construction of organization data set", e);
 		}
 
 		return organizationDataSet;
 	}
 
 	@Override
-	public List<OrganizationDataSet> getOrganizationDataSetList() {
-		return organizationDataSetRepository.findAllOrgDataSet();
+	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
+		return organizationDataSetRepository.findAllOrgDataSetList(id);
 	}// end of method getOrganizationDataSetList
 
 	/**
@@ -95,26 +114,33 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	 */
 	private void setOrganizationDataSetCategory(OrganizationDataSetPayLoad organizationDataSetPayLoad,
 			OrganizationDataSet organizationDataSet) {
-		OrganizationDataSetCategory organizationDataSetCategory;
+		OrganizationDataSetCategory organizationDataSetCategory = null;
+		;
 		try {
 			if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory()) {
-				if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory().getId()) {
-					if (organizationDataSetPayLoad.getOrganizationDataSetCategory().getId() == CATEGORY_ID) {
+				Long categoryId = organizationDataSetPayLoad.getOrganizationDataSetCategory().getId();
+				if (null != categoryId) {
+					if (categoryId == CATEGORY_ID) {
 						organizationDataSetCategory = saveOrganizationDataSetCategory(
 								organizationDataSetPayLoad.getOrganizationDataSetCategory());
 						LOGGER.info("oraganization dataset category has been created successfully in DB");
 						organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
 
 					} else {
-						organizationDataSetCategory = getOrganizationDataSetCategoryById(
-								organizationDataSetPayLoad.getOrganizationDataSetCategory().getId());
-						organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
+						organizationDataSetCategory = organizationDataSetCategoryRepository.getOne(categoryId);
+						if (organizationDataSetCategory == null) {
+							throw new OrganizationDataSetCategoryException(
+									"Org dataset category record not found for Id: " + categoryId + " in DB ");
+						} else {
+							organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
+
+						}
 					}
 
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during creation of organization dataset category" , e);
+			LOGGER.error("Exception occured during creation of organization dataset category", e);
 		}
 	}
 
@@ -122,11 +148,13 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			OrganizationDataSetCategory categoryFromPayLoad) {
 		OrganizationDataSetCategory category = new OrganizationDataSetCategory();
 		try {
-			category.setCategoryName(categoryFromPayLoad.getCategoryName());
+			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
+				category.setCategoryName(categoryFromPayLoad.getCategoryName());
+			}
 			category.setCreatedAt(new Date(System.currentTimeMillis()));
 			category.setUpdatedAt(new Date(System.currentTimeMillis()));
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during updation of organization dataset category in DB" , e);
+			LOGGER.error("Exception occured during updation of organization dataset category in DB", e);
 		}
 
 		return organizationDataSetCategoryRepository.saveAndFlush(category);
