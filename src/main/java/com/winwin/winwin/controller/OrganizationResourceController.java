@@ -9,7 +9,6 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -36,27 +35,46 @@ public class OrganizationResourceController extends BaseController {
 	private OrganizationResourceRepository organizationResourceRepository;
 
 	@SuppressWarnings("rawtypes")
-	@PostMapping("/create")
 	@Transactional
+	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	public ResponseEntity createOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
-		try {
-			organizationResourceService.createOrUpdateOrganizationResource(organizationResourcePayLoad);
-		} catch (Exception e) {
-			throw new OrganizationResourceException("org.resource.error.created");
+		OrganizationResource organizationResource = null;
+		if (null != organizationResourcePayLoad) {
+			try {
+				organizationResource = organizationResourceService
+						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+			} catch (Exception e) {
+				throw new OrganizationResourceException("org.resource.error.created");
+			}
+
+		} else {
+			return sendErrorResponse("org.bad.request");
+
 		}
-		return sendSuccessResponse("org.resource.success.created");
+		return sendSuccessResponse(organizationResource);
 	}
 
 	@SuppressWarnings("rawtypes")
-	@PostMapping("/update")
 	@Transactional
+	@RequestMapping(value = "/update", method = RequestMethod.PUT)
 	public ResponseEntity updateOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		try {
-			organizationResourceService.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
+				Long id = organizationResourcePayLoad.getId();
+				OrganizationResource organizationResource = organizationResourceRepository.findOrgResourceById(id);
+				if (organizationResource == null) {
+					throw new OrganizationResourceException("org.resource.error.update.not_found");
+				}
+				organizationResourceService.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+			} else {
+				return sendErrorResponse("org.bad.request");
+
+			}
+
 		} catch (Exception e) {
 			throw new OrganizationResourceException("org.resource.error.updated");
 		}
@@ -64,8 +82,8 @@ public class OrganizationResourceController extends BaseController {
 	}
 
 	@SuppressWarnings("rawtypes")
-	@PostMapping("/delete")
 	@Transactional
+	@RequestMapping(value = "/delete", method = RequestMethod.DELETE)
 	public ResponseEntity deleteOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -77,6 +95,9 @@ public class OrganizationResourceController extends BaseController {
 					throw new OrganizationResourceException("org.resource.error.delete.not_found");
 				}
 				organizationResourceService.removeOrganizationResource(id);
+			} else {
+				return sendErrorResponse("org.bad.request");
+
 			}
 
 		} catch (Exception e) {

@@ -19,4 +19,7 @@ public interface OrganizationResourceRepository extends JpaRepository<Organizati
 	@Query(value = "select * from org_resource where id = :id", nativeQuery = true)
 	OrganizationResource findOrgResourceById(@Param("id") Long id);
 
+	@Query(value = "select * from org_resource ORDER BY id DESC LIMIT 1", nativeQuery = true)
+	OrganizationResource findLastOrgResource();
+
 }
