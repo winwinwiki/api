@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.entity.ResponseWrapper;
@@ -18,6 +19,7 @@ import com.winwin.winwin.entity.ResponseWrapper;
  * 
  */
 @Component
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class BaseController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BaseController.class);

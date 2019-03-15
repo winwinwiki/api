@@ -1,6 +1,7 @@
 package com.winwin.winwin.service;
 
 import java.sql.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,7 @@ import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.OrgClassificationMapping;
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
@@ -178,4 +180,9 @@ public class OrganizationService implements IOrganizationService{
 			return orgClassificationMapRepository.saveAndFlush(orgClassificationMappingObj);
 		}
 	}
+	
+	@Override
+	public List<Organization> getOrganizationList() {
+		return organizationRepository.findAllOrganizationList();
+	}// end of method getOrganizationResourceList
 }

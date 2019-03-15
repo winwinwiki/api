@@ -23,7 +23,7 @@ import com.winwin.winwin.exception.OrganizationDataSetException;
  *
  */
 @RestController
-@RequestMapping(value = "/organizationdataset")
+@RequestMapping(value = "/orgdataset")
 public class OrganizationDataSetController extends BaseController {
 
 	@Autowired
