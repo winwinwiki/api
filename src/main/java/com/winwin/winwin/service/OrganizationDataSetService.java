@@ -86,7 +86,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 
 	@Override
 	public List<OrganizationDataSet> getOrganizationDataSetList() {
-		return organizationDataSetRepository.findAll();
+		return organizationDataSetRepository.findAllOrgDataSet();
 	}// end of method getOrganizationDataSetList
 
 	/**
