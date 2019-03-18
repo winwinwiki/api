@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.OrgClassificationMapping;
@@ -49,6 +50,8 @@ public class OrganizationService implements IOrganizationService {
 			organization.setAddress(address);
 			organization.setCreatedAt(new Date(System.currentTimeMillis()));
 			organization.setUpdatedAt(new Date(System.currentTimeMillis()));
+			organization.setCreatedBy(OrganizationConstants.CREATED_BY);
+			organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 			organizationRepository.saveAndFlush(organization);
 			organization = organizationRepository.findLastOrg();
 		}
@@ -95,6 +98,9 @@ public class OrganizationService implements IOrganizationService {
 			throw new OrganizationException("Address is null");
 		}
 
+		organization.setUpdatedAt(new Date(System.currentTimeMillis()));
+		organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+
 		orgClassificationMapping = addClassification(organizationPayload, organization);
 
 		if (orgClassificationMapping == null) {
@@ -118,35 +124,44 @@ public class OrganizationService implements IOrganizationService {
 		address.setStreet(addressPayload.getStreet());
 		address.setCreatedAt(new Date(System.currentTimeMillis()));
 		address.setUpdatedAt(new Date(System.currentTimeMillis()));
+		address.setCreatedBy(OrganizationConstants.CREATED_BY);
+		address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 		return addressRepository.saveAndFlush(address);
 	}
 
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload) {
 		// Address address =
 		// addressRepository.findAddressById(addressPayload.getId());
-		if (addressPayload.getId().equals(organization.getAddress().getId())) {
-			if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-				organization.getAddress().setCountry(addressPayload.getCountry());
+		if (null != addressPayload && null != addressPayload.getId()) {
+			if (addressPayload.getId().equals(organization.getAddress().getId())) {
+				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+					organization.getAddress().setCountry(addressPayload.getCountry());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getState())) {
+					organization.getAddress().setState(addressPayload.getState());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCity())) {
+					organization.getAddress().setCity(addressPayload.getCity());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+					organization.getAddress().setCounty(addressPayload.getCounty());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getZip())) {
+					organization.getAddress().setZip(addressPayload.getZip());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
+					organization.getAddress().setStreet(addressPayload.getStreet());
+				}
+
+				organization.getAddress().setUpdatedAt(new Date(System.currentTimeMillis()));
+				organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
+
+				return true;
 			}
-			if (!StringUtils.isEmpty(addressPayload.getState())) {
-				organization.getAddress().setState(addressPayload.getState());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getCity())) {
-				organization.getAddress().setCity(addressPayload.getCity());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-				organization.getAddress().setCounty(addressPayload.getCounty());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getZip())) {
-				organization.getAddress().setZip(addressPayload.getZip());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-				organization.getAddress().setStreet(addressPayload.getStreet());
-			}
-			return true;
-		} else {
-			return false;
+
 		}
+		return false;
+
 		// if(!StringUtils.isEmpty(address)) {
 		// if(!StringUtils.isEmpty(addressPayload.getCountry())) {
 		// address.setCountry(addressPayload.getCountry());
@@ -174,10 +189,16 @@ public class OrganizationService implements IOrganizationService {
 
 	public OrgClassificationMapping addClassification(OrganizationPayload organizationPayload,
 			Organization organization) {
-		OrgClassificationMapping orgClassificationMapping = orgClassificationMapRepository
-				.findMappingForOrg(organizationPayload.getId());
-		Classification classification = classificationRepository
-				.findClassificationById(organizationPayload.getClassificationId());
+		Classification classification = null;
+		OrgClassificationMapping orgClassificationMapping = null;
+		if (null != organizationPayload && null != organizationPayload.getId()) {
+			orgClassificationMapping = orgClassificationMapRepository.findMappingForOrg(organizationPayload.getId());
+		}
+
+		if (null != organizationPayload.getClassificationId()) {
+			classification = classificationRepository.findClassificationById(organizationPayload.getClassificationId());
+		}
+
 		if (StringUtils.isEmpty(classification)) {
 			return null;
 		} else {

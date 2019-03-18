@@ -46,7 +46,8 @@ public class OrganizationDataSetController extends BaseController {
 				organizationDataSet = organizationDataSetService
 						.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 			} catch (Exception e) {
-				throw new OrganizationDataSetException("org.dataset.success.updated");
+				throw new OrganizationDataSetException(
+						customMessageSource.getMessage("org.dataset.error.created") + ": " + e.getMessage());
 			}
 
 		} else {
@@ -63,20 +64,20 @@ public class OrganizationDataSetController extends BaseController {
 	public ResponseEntity updateOrganizationDataSet(
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
-
+		OrganizationDataSet dataSet = null;
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
-			OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(id);
+			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
 			if (dataSet == null) {
-				throw new OrganizationDataSetException("org.dataset.error.update.not_found");
+				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			}
-			organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
+			dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 		} else {
 			return sendErrorResponse("org.bad.request");
 
 		}
 
-		return sendSuccessResponse("org.dataset.success.updated");
+		return sendSuccessResponse(dataSet);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -89,7 +90,8 @@ public class OrganizationDataSetController extends BaseController {
 				Long id = organizationDataSetPayLoad.getId();
 				OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(id);
 				if (dataSet == null) {
-					throw new OrganizationDataSetException("org.dataset.error.delete.not_found");
+					throw new OrganizationDataSetException(
+							customMessageSource.getMessage("org.dataset.error.not_found"));
 				}
 				organizationDataSetService.removeOrganizationDataSet(id);
 			} else {
@@ -98,7 +100,8 @@ public class OrganizationDataSetController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationDataSetException("org.dataset.error.deleted");
+			throw new OrganizationDataSetException(
+					customMessageSource.getMessage("org.dataset.error.deleted") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse("org.dataset.success.deleted");
 	}
@@ -110,10 +113,11 @@ public class OrganizationDataSetController extends BaseController {
 		try {
 			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
 			if (orgDataSetList == null) {
-				throw new OrganizationDataSetException("org.dataset.error.list.not_found");
+				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			}
 		} catch (Exception e) {
-			throw new OrganizationDataSetException("org.dataset.error.list");
+			throw new OrganizationDataSetException(
+					customMessageSource.getMessage("org.dataset.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(orgDataSetList);
 

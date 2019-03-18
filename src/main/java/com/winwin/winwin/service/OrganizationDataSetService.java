@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.winwin.winwin.Logger.CustomMessageSource;
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
 import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
@@ -30,6 +32,9 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	@Autowired
 	OrganizationDataSetCategoryRepository organizationDataSetCategoryRepository;
 
+	@Autowired
+	protected CustomMessageSource customMessageSource;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetService.class);
 
 	private final Long CATEGORY_ID = -1L;
@@ -51,9 +56,9 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			}
 		} catch (Exception e) {
 			if (null != organizationDataSetPayLoad.getId()) {
-				LOGGER.error("Exception occured while updating of organization data set", e);
+				LOGGER.error(customMessageSource.getMessage("org.dataset.exception.updated"), e);
 			} else {
-				LOGGER.error("Exception occured while creating organization data set", e);
+				LOGGER.error(customMessageSource.getMessage("org.dataset.exception.created"), e);
 			}
 
 		}
@@ -80,6 +85,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			} else {
 				organizationDataSet = new OrganizationDataSet();
 				organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
+				organizationDataSet.setCreatedBy(OrganizationConstants.CREATED_BY);
 			}
 
 			if (organizationDataSet == null) {
@@ -93,11 +99,12 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 				organizationDataSet.setType(organizationDataSetPayLoad.getType());
 				organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
 				organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
+				organizationDataSet.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
 			}
 
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during construction of organization data set", e);
+			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
 
 		return organizationDataSet;
@@ -123,7 +130,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 					if (categoryId == CATEGORY_ID) {
 						organizationDataSetCategory = saveOrganizationDataSetCategory(
 								organizationDataSetPayLoad.getOrganizationDataSetCategory());
-						LOGGER.info("oraganization dataset category has been created successfully in DB");
+						LOGGER.info(customMessageSource.getMessage("org.dataset.category.success.created"));
 						organizationDataSet.setOrganizationDataSetCategory(organizationDataSetCategory);
 
 					} else {
@@ -140,7 +147,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during creation of organization dataset category", e);
+			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.created"), e);
 		}
 	}
 
@@ -153,8 +160,10 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			}
 			category.setCreatedAt(new Date(System.currentTimeMillis()));
 			category.setUpdatedAt(new Date(System.currentTimeMillis()));
+			category.setCreatedBy(OrganizationConstants.CREATED_BY);
+			category.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during updation of organization dataset category in DB", e);
+			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}
 
 		return organizationDataSetCategoryRepository.saveAndFlush(category);
