@@ -46,7 +46,8 @@ public class OrganizationResourceController extends BaseController {
 				organizationResource = organizationResourceService
 						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
 			} catch (Exception e) {
-				throw new OrganizationResourceException("org.resource.error.created");
+				throw new OrganizationResourceException(
+						customMessageSource.getMessage("org.resource.error.created") + ": " + e.getMessage());
 			}
 
 		} else {
@@ -62,23 +63,27 @@ public class OrganizationResourceController extends BaseController {
 	public ResponseEntity updateOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
+		OrganizationResource organizationResource = null;
 		try {
 			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
 				Long id = organizationResourcePayLoad.getId();
-				OrganizationResource organizationResource = organizationResourceRepository.findOrgResourceById(id);
+				organizationResource = organizationResourceRepository.findOrgResourceById(id);
 				if (organizationResource == null) {
-					throw new OrganizationResourceException("org.resource.error.update.not_found");
+					throw new OrganizationResourceException(
+							customMessageSource.getMessage("org.resource.error.not_found"));
 				}
-				organizationResourceService.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+				organizationResource = organizationResourceService
+						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
 			} else {
 				return sendErrorResponse("org.bad.request");
 
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationResourceException("org.resource.error.updated");
+			throw new OrganizationResourceException(
+					customMessageSource.getMessage("org.resource.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse("org.resource.success.updated");
+		return sendSuccessResponse(organizationResource);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -92,7 +97,8 @@ public class OrganizationResourceController extends BaseController {
 				Long id = organizationResourcePayLoad.getId();
 				OrganizationResource organizationResource = organizationResourceRepository.findOrgResourceById(id);
 				if (organizationResource == null) {
-					throw new OrganizationResourceException("org.resource.error.delete.not_found");
+					throw new OrganizationResourceException(
+							customMessageSource.getMessage("org.resource.error.not_found"));
 				}
 				organizationResourceService.removeOrganizationResource(id);
 			} else {
@@ -101,7 +107,8 @@ public class OrganizationResourceController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationResourceException("org.resource.error.deleted");
+			throw new OrganizationResourceException(
+					customMessageSource.getMessage("org.resource.error.deleted") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse("org.resource.success.deleted");
 	}
@@ -113,10 +120,11 @@ public class OrganizationResourceController extends BaseController {
 		try {
 			orgResourceList = organizationResourceService.getOrganizationResourceList(id);
 			if (orgResourceList == null) {
-				throw new OrganizationResourceException("org.resource.error.list.not_found");
+				throw new OrganizationResourceException(customMessageSource.getMessage("org.resource.error.not_found"));
 			}
 		} catch (Exception e) {
-			throw new OrganizationResourceException("org.resource.error.list");
+			throw new OrganizationResourceException(
+					customMessageSource.getMessage("org.resource.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(orgResourceList);
 

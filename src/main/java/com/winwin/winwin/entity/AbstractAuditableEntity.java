@@ -7,7 +7,9 @@ import javax.persistence.EntityListeners;
 import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
 
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -27,7 +29,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @MappedSuperclass
 @EntityListeners({ AuditingEntityListener.class })
-public class AbstractAuditableEntity extends AbstractPersistable<Long>{
+public class AbstractAuditableEntity extends AbstractPersistable<Long> {
 	/**
 	 * 
 	 */
@@ -42,4 +44,14 @@ public class AbstractAuditableEntity extends AbstractPersistable<Long>{
 	@Column(name = "updated_at")
 	@JoinColumn(name = "updated_at")
 	protected Date updatedAt;
+
+	@CreatedBy
+	@Column(name = "created_by")
+	@JoinColumn(name = "created_by")
+	protected String createdBy;
+
+	@LastModifiedBy
+	@Column(name = "updated_by")
+	@JoinColumn(name = "updated_by")
+	protected String updatedBy;
 }

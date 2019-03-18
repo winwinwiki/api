@@ -5,9 +5,10 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.repository.OrganizationRepository;
+import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationService;
 
 @RestController
@@ -30,13 +32,8 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	private OrganizationRepository organizationRepository;
 
-	@GetMapping("/organization")
-	public String getOrganization() {
-		return "Hello World";
-		// return orgRepo.getOne(id);
-	}
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetService.class);
 
-	// @PostMapping("/create")
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	@Transactional
@@ -46,26 +43,34 @@ public class OrganizationController extends BaseController {
 		try {
 			organization = organizationService.createOrganization(organizationPayload);
 		} catch (Exception e) {
-			throw new OrganizationException("There is some error while creating the org");
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(organization);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/delete/{id}", method = RequestMethod.DELETE)
 	@Transactional
-	public Object deleteOrganization(HttpServletResponse httpServletResponse, @PathVariable("id") Long id) {
+	public ResponseEntity deleteOrganization(HttpServletResponse httpServletResponse, @PathVariable("id") Long id) {
 		try {
-			Organization organization = organizationRepository.findOrgById(id);
-			if (organization == null) {
-				throw new OrganizationException("Org is not found");
-			} else {
+			if (null != id) {
+				Organization organization = organizationRepository.findOrgById(id);
+				if (organization == null) {
+					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+				}
 				organizationService.deleteOrganization(id);
-				return true;
+
+			} else {
+				return sendErrorResponse("org.bad.request");
+
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationException("Org is not found");
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.error.deleted") + ": " + e.getMessage());
 		}
+		return sendSuccessResponse("org.success.deleted");
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -77,13 +82,14 @@ public class OrganizationController extends BaseController {
 		try {
 			organization = organizationRepository.findOrgById(organizationPayload.getId());
 			if (organization == null) {
-				throw new OrganizationException("Org is not found");
+				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
 				organization = organizationService.updateOrgDetails(organizationPayload, organization);
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationException(e.getMessage());
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.error.updated") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(organization);
 
@@ -95,10 +101,10 @@ public class OrganizationController extends BaseController {
 		try {
 			orgList = organizationService.getOrganizationList();
 			if (orgList == null) {
-				throw new OrganizationException("org.error.list.not_found");
+				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			}
 		} catch (Exception e) {
-			throw new OrganizationException("org.error.list");
+			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
 		return sendSuccessResponse(orgList);
 
@@ -112,11 +118,12 @@ public class OrganizationController extends BaseController {
 		try {
 			organization = organizationRepository.findOrgById(id);
 			if (organization == null) {
-				throw new OrganizationException("Org is not found");
+				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationException(e.getMessage());
+			LOGGER.error(customMessageSource.getMessage("org.error.fetch"), e);
+			throw new OrganizationException(customMessageSource.getMessage("org.error.fetch") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(organization);
 

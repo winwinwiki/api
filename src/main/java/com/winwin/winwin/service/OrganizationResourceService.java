@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.winwin.winwin.Logger.CustomMessageSource;
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrganizationResourceCategoryException;
@@ -30,6 +32,9 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	@Autowired
 	OrganizationResourceCategoryRepository organizationResourceCategoryRepository;
 
+	@Autowired
+	protected CustomMessageSource customMessageSource;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceService.class);
 
 	private final Long CATEGORY_ID = -1L;
@@ -50,9 +55,9 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			}
 		} catch (Exception e) {
 			if (null != organizationResourcePayLoad.getId()) {
-				LOGGER.error("Exception occured while updating organization resource", e);
+				LOGGER.error(customMessageSource.getMessage("org.resource.exception.updated"), e);
 			} else {
-				LOGGER.error("Exception occured while creating organization resource", e);
+				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
 			}
 
 		}
@@ -80,6 +85,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			} else {
 				organizationResource = new OrganizationResource();
 				organizationResource.setCreatedAt(new Date(System.currentTimeMillis()));
+				organizationResource.setCreatedBy(OrganizationConstants.CREATED_BY);
 			}
 
 			if (organizationResource == null) {
@@ -94,11 +100,12 @@ public class OrganizationResourceService implements IOrganizationResourceService
 				organizationResource.setType(organizationResourcePayLoad.getType());
 				organizationResource.setUrl(organizationResourcePayLoad.getUrl());
 				organizationResource.setUpdatedAt(new Date(System.currentTimeMillis()));
+				organizationResource.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
 			}
 
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during construction of org resource", e);
+			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);
 		}
 
 		return organizationResource;
@@ -123,7 +130,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 					if (categoryId == CATEGORY_ID) {
 						organizationResourceCategory = saveOrganizationResourceCategory(
 								organizationResourcePayLoad.getOrganizationResourceCategory());
-						LOGGER.info("org resource category has been created successfully in DB");
+						LOGGER.info(customMessageSource.getMessage("org.resource.category.success.created"));
 						organizationResource.setOrganizationResourceCategory(organizationResourceCategory);
 
 					} else {
@@ -141,7 +148,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during creation of organization resource category", e);
+			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.created"), e);
 		}
 	}
 
@@ -155,8 +162,10 @@ public class OrganizationResourceService implements IOrganizationResourceService
 
 			category.setCreatedAt(new Date(System.currentTimeMillis()));
 			category.setUpdatedAt(new Date(System.currentTimeMillis()));
+			category.setCreatedBy(OrganizationConstants.CREATED_BY);
+			category.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 		} catch (Exception e) {
-			LOGGER.error("Exception occured during updation of organization Resource category in DB", e);
+			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
 
 		return organizationResourceCategoryRepository.saveAndFlush(category);
