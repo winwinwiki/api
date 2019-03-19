@@ -73,8 +73,9 @@ public class OrganizationService implements IOrganizationService {
 
 	@Override
 	public Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization) {
-		Address address = new Address();
+		@SuppressWarnings("unused")
 		OrgClassificationMapping orgClassificationMapping = new OrgClassificationMapping();
+
 		if (!StringUtils.isEmpty(organizationPayload.getDescription())) {
 			organization.setDescription(organizationPayload.getDescription());
 		}
@@ -103,9 +104,12 @@ public class OrganizationService implements IOrganizationService {
 
 		orgClassificationMapping = addClassification(organizationPayload, organization);
 
-		if (orgClassificationMapping == null) {
-			throw new OrganizationException("Request to update classification is invalid");
-		}
+		/*
+		 * if (orgClassificationMapping == null) { throw new
+		 * OrganizationException("Request to update classification is invalid");
+		 * }
+		 */
+
 		organizationRepository.saveAndFlush(organization);
 
 		if (null != organizationPayload && null != organizationPayload.getId()) {
@@ -130,8 +134,6 @@ public class OrganizationService implements IOrganizationService {
 	}
 
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload) {
-		// Address address =
-		// addressRepository.findAddressById(addressPayload.getId());
 		if (null != addressPayload && null != addressPayload.getId()) {
 			if (addressPayload.getId().equals(organization.getAddress().getId())) {
 				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
@@ -161,30 +163,6 @@ public class OrganizationService implements IOrganizationService {
 
 		}
 		return false;
-
-		// if(!StringUtils.isEmpty(address)) {
-		// if(!StringUtils.isEmpty(addressPayload.getCountry())) {
-		// address.setCountry(addressPayload.getCountry());
-		// }
-		// if(!StringUtils.isEmpty(addressPayload.getState())) {
-		// address.setState(addressPayload.getState());
-		// }
-		// if(!StringUtils.isEmpty(addressPayload.getCity())) {
-		// address.setCity(addressPayload.getCity());
-		// }
-		// if(!StringUtils.isEmpty(addressPayload.getCounty())) {
-		// address.setCounty(addressPayload.getCounty());
-		// }
-		// if(!StringUtils.isEmpty(addressPayload.getZip())) {
-		// address.setZip(addressPayload.getZip());
-		// }
-		// if(!StringUtils.isEmpty(addressPayload.getStreet())) {
-		// address.setStreet(addressPayload.getStreet());
-		// }
-		// return addressRepository.saveAndFlush(address);
-		// }else {
-		// return null;
-		// }
 	}
 
 	public OrgClassificationMapping addClassification(OrganizationPayload organizationPayload,

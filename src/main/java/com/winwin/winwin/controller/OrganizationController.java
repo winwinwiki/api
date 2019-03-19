@@ -22,6 +22,10 @@ import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationService;
 
+/**
+ * @author ArvindK
+ *
+ */
 @RestController
 @RequestMapping(value = "/organization")
 public class OrganizationController extends BaseController {
@@ -73,6 +77,11 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse("org.success.deleted");
 	}
 
+	/**
+	 * @param httpServletResponse
+	 * @param organizationPayload
+	 * @return
+	 */
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/update", method = RequestMethod.PUT)
 	@Transactional
