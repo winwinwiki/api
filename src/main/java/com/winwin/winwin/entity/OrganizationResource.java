@@ -40,7 +40,7 @@ public class OrganizationResource extends AbstractAuditableEntity {
 
 	@Column(name = "organization_id")
 	private Long organizationId;
-	
+
 	@Column(name = "count")
 	private Long count;
 
@@ -53,5 +53,7 @@ public class OrganizationResource extends AbstractAuditableEntity {
 	@Column(name = "url")
 	private String url;
 
-}
+	@Column(name = "is_active")
+	private Boolean isActive = true;
 
+}

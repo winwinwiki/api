@@ -68,7 +68,12 @@ public class OrganizationResourceService implements IOrganizationResourceService
 
 	@Override
 	public void removeOrganizationResource(Long resourceId) {
-		organizationResourceRepository.deleteById(resourceId);
+		OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
+		if (null != resource) {
+			resource.setIsActive(false);
+		}
+
+		organizationResourceRepository.saveAndFlush(resource);
 
 	}// end of method removeOrganizationResource
 

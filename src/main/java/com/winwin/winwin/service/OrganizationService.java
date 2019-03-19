@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
@@ -33,6 +34,9 @@ public class OrganizationService implements IOrganizationService {
 
 	@Autowired
 	ClassificationRepository classificationRepository;
+
+	@Autowired
+	protected CustomMessageSource customMessageSource;
 
 	@Override
 	public Organization createOrganization(OrganizationPayload organizationPayload) {
@@ -96,7 +100,7 @@ public class OrganizationService implements IOrganizationService {
 		}
 		Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
 		if (!isUpdated) {
-			throw new OrganizationException("Address is null");
+			throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
 		}
 
 		organization.setUpdatedAt(new Date(System.currentTimeMillis()));
