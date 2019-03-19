@@ -3,8 +3,6 @@
  */
 package com.winwin.winwin.payload;
 
-import java.sql.Timestamp;
-
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
 
 import lombok.AllArgsConstructor;
@@ -31,7 +29,5 @@ public class OrganizationDataSetPayLoad {
 	String description;
 	String type;
 	String url;
-	Timestamp createdAt;
-	Timestamp updatedAt;
-
+	Boolean isActive;
 }

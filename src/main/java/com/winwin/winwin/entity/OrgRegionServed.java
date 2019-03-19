@@ -27,30 +27,21 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_dataset")
-public class OrganizationDataSet extends AbstractAuditableEntity {
+@Table(name = "org_region_served")
+public class OrgRegionServed extends AbstractAuditableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@ManyToOne
-	@JoinColumn(name = "category_id")
-	private OrganizationDataSetCategory organizationDataSetCategory;
+	@JoinColumn(name = "address_id")
+	private Address address;
 
-	@Column(name = "organization_id")
-	private Long organizationId;
+	@ManyToOne
+	@JoinColumn(name = "org_id")
+	private Long orgId;
 
-	@Column(name = "description")
-	private String description;
-
-	@Column(name = "type")
-	private String type;
-
-	@Column(name = "url")
-	private String url;
-	
 	@Column(name = "is_active")
 	private Boolean isActive = true;
-
 }

@@ -18,6 +18,8 @@ import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.entity.OrganizationDataSet;
+import com.winwin.winwin.entity.OrganizationDataSetCategory;
+import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
 import com.winwin.winwin.exception.OrganizationDataSetException;
 
 /**
@@ -120,6 +122,24 @@ public class OrganizationDataSetController extends BaseController {
 					customMessageSource.getMessage("org.dataset.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(orgDataSetList);
+
+	}
+
+	@RequestMapping(value = "/categorylist", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
+			throws OrganizationDataSetCategoryException {
+		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
+		try {
+			orgDataSetCategoryList = organizationDataSetService.getOrganizationDataSetCategoryList();
+			if (orgDataSetCategoryList == null) {
+				throw new OrganizationDataSetCategoryException(
+						customMessageSource.getMessage("org.dataset.category.error.not_found"));
+			}
+		} catch (Exception e) {
+			throw new OrganizationDataSetCategoryException(
+					customMessageSource.getMessage("org.dataset.category.error.list") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(orgDataSetCategoryList);
 
 	}
 

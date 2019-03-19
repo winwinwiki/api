@@ -5,8 +5,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +17,6 @@ import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.repository.OrganizationRepository;
-import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationService;
 
 /**
@@ -35,8 +32,6 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	private OrganizationRepository organizationRepository;
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetService.class);
 
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
@@ -131,7 +126,6 @@ public class OrganizationController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.error.fetch"), e);
 			throw new OrganizationException(customMessageSource.getMessage("org.error.fetch") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(organization);

@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import java.sql.Timestamp;
-
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 
 import lombok.AllArgsConstructor;
@@ -29,7 +27,5 @@ public class OrganizationResourcePayLoad {
 	Long count;
 	String type;
 	String url;
-	Timestamp createdAt;
-	Timestamp updatedAt;
-
+	Boolean isActive;
 }

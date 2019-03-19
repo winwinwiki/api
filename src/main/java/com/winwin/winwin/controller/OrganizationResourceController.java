@@ -18,6 +18,8 @@ import com.winwin.winwin.payload.OrganizationResourcePayLoad;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.entity.OrganizationResource;
+import com.winwin.winwin.entity.OrganizationResourceCategory;
+import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 
 /**
@@ -127,6 +129,24 @@ public class OrganizationResourceController extends BaseController {
 					customMessageSource.getMessage("org.resource.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(orgResourceList);
+
+	}
+
+	@RequestMapping(value = "/categorylist", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
+			throws OrganizationResourceCategoryException {
+		List<OrganizationResourceCategory> orgResourceCategoryList = null;
+		try {
+			orgResourceCategoryList = organizationResourceService.getOrganizationResourceCategoryList();
+			if (orgResourceCategoryList == null) {
+				throw new OrganizationResourceCategoryException(
+						customMessageSource.getMessage("org.resource.category.error.not_found"));
+			}
+		} catch (Exception e) {
+			throw new OrganizationResourceCategoryException(
+					customMessageSource.getMessage("org.resource.category.error.list") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(orgResourceCategoryList);
 
 	}
 

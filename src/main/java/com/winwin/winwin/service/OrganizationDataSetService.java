@@ -69,7 +69,12 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 
 	@Override
 	public void removeOrganizationDataSet(Long dataSetId) {
-		organizationDataSetRepository.deleteById(dataSetId);
+		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
+		if (null != dataSet) {
+			dataSet.setIsActive(false);
+		}
+
+		organizationDataSetRepository.saveAndFlush(dataSet);
 
 	}// end of method removeOrganizationDataSet
 

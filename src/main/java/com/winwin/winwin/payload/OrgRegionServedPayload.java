@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package com.winwin.winwin.payload;
 
 import lombok.AllArgsConstructor;
@@ -7,30 +10,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindK
+ *
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrganizationPayload {
+public class OrgRegionServedPayload {
 	Long id;
+	Long org_id;
 	AddressPayload address;
-	String name;
-	Long revenue;
-	Long assets;
-	String sector;
-	String sectorLevel;
-	String description;
-	String status;
-	String priority;
-	Long parentId;
-	String type;
 	Boolean isActive;
-	Boolean isTaggingReady;
-	String tagStatus;
-	Long totalAssets;
-	String websiteUrl;
-	String socialUrl;
-	Long classificationId;
 }
