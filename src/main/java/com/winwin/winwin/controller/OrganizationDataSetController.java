@@ -1,5 +1,6 @@
 package com.winwin.winwin.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
@@ -43,10 +45,22 @@ public class OrganizationDataSetController extends BaseController {
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet organizationDataSet = null;
+		OrganizationDataSetPayLoad payload = null;
 		if (null != organizationDataSetPayLoad) {
 			try {
 				organizationDataSet = organizationDataSetService
 						.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
+				if (null != organizationDataSet) {
+					payload = new OrganizationDataSetPayLoad();
+					payload.setId(organizationDataSet.getId());
+					payload.setOrganizationDataSetCategory(organizationDataSet.getOrganizationDataSetCategory());
+					payload.setOrganizationId(organizationDataSet.getOrganizationId());
+					payload.setDescription(organizationDataSet.getDescription());
+					payload.setType(organizationDataSet.getType());
+					payload.setUrl(organizationDataSet.getUrl());
+					payload.setIsActive(organizationDataSet.getIsActive());
+				}
+
 			} catch (Exception e) {
 				throw new OrganizationDataSetException(
 						customMessageSource.getMessage("org.dataset.error.created") + ": " + e.getMessage());
@@ -57,7 +71,7 @@ public class OrganizationDataSetController extends BaseController {
 
 		}
 
-		return sendSuccessResponse(organizationDataSet);
+		return sendSuccessResponse(payload);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -67,19 +81,28 @@ public class OrganizationDataSetController extends BaseController {
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet dataSet = null;
+		OrganizationDataSetPayLoad payload = new OrganizationDataSetPayLoad();
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
 			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
 			if (dataSet == null) {
 				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
+			} else {
+				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
+				payload.setId(dataSet.getId());
+				payload.setOrganizationDataSetCategory(dataSet.getOrganizationDataSetCategory());
+				payload.setOrganizationId(dataSet.getOrganizationId());
+				payload.setDescription(dataSet.getDescription());
+				payload.setType(dataSet.getType());
+				payload.setUrl(dataSet.getUrl());
+				payload.setIsActive(dataSet.getIsActive());
 			}
-			dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 		} else {
 			return sendErrorResponse("org.bad.request");
 
 		}
 
-		return sendSuccessResponse(dataSet);
+		return sendSuccessResponse(payload);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -112,16 +135,31 @@ public class OrganizationDataSetController extends BaseController {
 	public ResponseEntity<?> getOrganizationDataSetList(HttpServletResponse httpServletResponse,
 			@PathVariable("id") Long id) throws OrganizationDataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
+		OrganizationDataSetPayLoad payload = null;
+		List<OrganizationDataSetPayLoad> payloadList = new ArrayList<OrganizationDataSetPayLoad>();
 		try {
 			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
 			if (orgDataSetList == null) {
 				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
+			} else {
+				for (OrganizationDataSet dataSet : orgDataSetList) {
+					payload = new OrganizationDataSetPayLoad();
+					payload.setId(dataSet.getId());
+					payload.setOrganizationDataSetCategory(dataSet.getOrganizationDataSetCategory());
+					payload.setOrganizationId(dataSet.getOrganizationId());
+					payload.setDescription(dataSet.getDescription());
+					payload.setType(dataSet.getType());
+					payload.setUrl(dataSet.getUrl());
+					payload.setIsActive(dataSet.getIsActive());
+					payloadList.add(payload);
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrganizationDataSetException(
 					customMessageSource.getMessage("org.dataset.error.list") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgDataSetList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
@@ -129,17 +167,27 @@ public class OrganizationDataSetController extends BaseController {
 	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationDataSetCategoryException {
 		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
+		List<OrganizationDataSetCategoryPayLoad> payloadList = new ArrayList<OrganizationDataSetCategoryPayLoad>();
+		OrganizationDataSetCategoryPayLoad payload = null;
 		try {
 			orgDataSetCategoryList = organizationDataSetService.getOrganizationDataSetCategoryList();
 			if (orgDataSetCategoryList == null) {
 				throw new OrganizationDataSetCategoryException(
 						customMessageSource.getMessage("org.dataset.category.error.not_found"));
+			} else {
+				for (OrganizationDataSetCategory category : orgDataSetCategoryList) {
+					payload = new OrganizationDataSetCategoryPayLoad();
+					payload.setId(category.getId());
+					payload.setCategoryName(category.getCategoryName());
+					payloadList.add(payload);
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrganizationDataSetCategoryException(
 					customMessageSource.getMessage("org.dataset.category.error.list") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgDataSetCategoryList);
+		return sendSuccessResponse(payloadList);
 
 	}
 

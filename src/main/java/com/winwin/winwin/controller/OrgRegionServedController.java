@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.exception.OrgRegionServedException;
 import com.winwin.winwin.exception.OrganizationException;
+import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.repository.OrgRegionServedRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
@@ -35,13 +36,37 @@ public class OrgRegionServedController extends BaseController {
 	public ResponseEntity createOrgRegions(HttpServletResponse httpServletResponse,
 			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionServedList = null;
+		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
+		OrgRegionServedPayload payload = null;
+		AddressPayload addressPayload = null;
 		try {
 			orgRegionServedList = orgRegionServedService.createOrgRegionServed(orgRegionServedPayloadList);
+			if (null != orgRegionServedList) {
+				for (OrgRegionServed region : orgRegionServedList) {
+					payload = new OrgRegionServedPayload();
+					payload.setId(region.getId());
+					payload.setOrganizationId(region.getOrgId());
+					if (null != region.getAddress()) {
+						addressPayload = new AddressPayload();
+						addressPayload.setId(region.getAddress().getId());
+						addressPayload.setCountry(region.getAddress().getCountry());
+						addressPayload.setState(region.getAddress().getState());
+						addressPayload.setCity(region.getAddress().getCity());
+						addressPayload.setCounty(region.getAddress().getCounty());
+						addressPayload.setZip(region.getAddress().getZip());
+						addressPayload.setStreet(region.getAddress().getStreet());
+						payload.setAddress(addressPayload);
+					}
+					payload.setIsActive(region.getIsActive());
+					payloadList.add(payload);
+
+				}
+			}
 		} catch (Exception e) {
 			throw new OrgRegionServedException(
 					customMessageSource.getMessage("org.region.error.created") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgRegionServedList);
+		return sendSuccessResponse(payloadList);
 	}
 
 	/**
@@ -54,23 +79,40 @@ public class OrgRegionServedController extends BaseController {
 	@Transactional
 	public ResponseEntity updateOrgRegions(HttpServletResponse httpServletResponse,
 			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) {
-		OrgRegionServed orgRegionServed = null;
-		List<OrgRegionServed> orgRegionServedList = new ArrayList<OrgRegionServed>();
+		OrgRegionServed region = null;
+		OrgRegionServedPayload payload = null;
+		AddressPayload addressPayload = null;
+		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
 		try {
-			for (OrgRegionServedPayload payload : orgRegionServedPayloadList) {
-				orgRegionServed = orgRegionServedRepository.findOrgRegionById(payload.getId());
-				if (orgRegionServed == null) {
+			for (OrgRegionServedPayload regionPayload : orgRegionServedPayloadList) {
+				region = orgRegionServedRepository.findOrgRegionById(regionPayload.getId());
+				if (region == null) {
 					throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
 				} else {
-					orgRegionServed = orgRegionServedService.updateOrgRegionServed(payload, orgRegionServed);
-					orgRegionServedList.add(orgRegionServed);
+					region = orgRegionServedService.updateOrgRegionServed(regionPayload, region);
+					payload = new OrgRegionServedPayload();
+					payload.setId(region.getId());
+					payload.setOrganizationId(region.getOrgId());
+					if (null != region.getAddress()) {
+						addressPayload = new AddressPayload();
+						addressPayload.setId(region.getAddress().getId());
+						addressPayload.setCountry(region.getAddress().getCountry());
+						addressPayload.setState(region.getAddress().getState());
+						addressPayload.setCity(region.getAddress().getCity());
+						addressPayload.setCounty(region.getAddress().getCounty());
+						addressPayload.setZip(region.getAddress().getZip());
+						addressPayload.setStreet(region.getAddress().getStreet());
+						payload.setAddress(addressPayload);
+					}
+					payload.setIsActive(region.getIsActive());
+					payloadList.add(payload);
 				}
 			}
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.region.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgRegionServedList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
@@ -78,15 +120,39 @@ public class OrgRegionServedController extends BaseController {
 	public ResponseEntity<?> getOrgRegionsList(HttpServletResponse httpServletResponse)
 			throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionList = null;
+		OrgRegionServedPayload payload = null;
+		AddressPayload addressPayload = null;
+		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
 		try {
 			orgRegionList = orgRegionServedService.getOrgRegionServedList();
 			if (orgRegionList == null) {
 				throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
+			} else {
+				for (OrgRegionServed region : orgRegionList) {
+					payload = new OrgRegionServedPayload();
+					payload.setId(region.getId());
+					payload.setOrganizationId(region.getOrgId());
+					if (null != region.getAddress()) {
+						addressPayload = new AddressPayload();
+						addressPayload.setId(region.getAddress().getId());
+						addressPayload.setCountry(region.getAddress().getCountry());
+						addressPayload.setState(region.getAddress().getState());
+						addressPayload.setCity(region.getAddress().getCity());
+						addressPayload.setCounty(region.getAddress().getCounty());
+						addressPayload.setZip(region.getAddress().getZip());
+						addressPayload.setStreet(region.getAddress().getStreet());
+						payload.setAddress(addressPayload);
+					}
+					payload.setIsActive(region.getIsActive());
+					payloadList.add(payload);
+
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.list"));
 		}
-		return sendSuccessResponse(orgRegionList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
