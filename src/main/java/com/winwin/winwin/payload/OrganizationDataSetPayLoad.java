@@ -25,7 +25,7 @@ import lombok.ToString;
 public class OrganizationDataSetPayLoad {
 	Long id;
 	OrganizationDataSetCategory organizationDataSetCategory;
-	Long organization_id;
+	Long organizationId;
 	String description;
 	String type;
 	String url;

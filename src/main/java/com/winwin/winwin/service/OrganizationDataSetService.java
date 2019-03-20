@@ -99,7 +99,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			} else {
 				setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
 
-				organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganization_id());
+				organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganizationId());
 				organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
 				organizationDataSet.setType(organizationDataSetPayLoad.getType());
 				organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());

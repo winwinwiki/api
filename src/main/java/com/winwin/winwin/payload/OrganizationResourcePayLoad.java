@@ -22,7 +22,7 @@ import lombok.ToString;
 public class OrganizationResourcePayLoad {
 	Long id;
 	OrganizationResourceCategory organizationResourceCategory;
-	Long organization_id;
+	Long organizationId;
 	String description;
 	Long count;
 	String type;

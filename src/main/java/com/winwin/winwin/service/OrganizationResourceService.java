@@ -99,7 +99,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			} else {
 				setOrganizationResourceCategory(organizationResourcePayLoad, organizationResource);
 
-				organizationResource.setOrganizationId(organizationResourcePayLoad.getOrganization_id());
+				organizationResource.setOrganizationId(organizationResourcePayLoad.getOrganizationId());
 				organizationResource.setCount(organizationResourcePayLoad.getCount());
 				organizationResource.setDescription(organizationResourcePayLoad.getDescription());
 				organizationResource.setType(organizationResourcePayLoad.getType());
