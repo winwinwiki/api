@@ -22,7 +22,7 @@ import lombok.ToString;
 @ToString
 public class OrgRegionServedPayload {
 	Long id;
-	Long org_id;
+	Long organizationId;
 	AddressPayload address;
 	Boolean isActive;
 }

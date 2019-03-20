@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
@@ -26,6 +27,7 @@ import com.winwin.winwin.repository.OrgRegionServedRepository;
  * @author ArvindK
  *
  */
+@Component
 public class OrgRegionServedService implements IOrgRegionServedService {
 
 	@Autowired
@@ -48,7 +50,7 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 			orgRegionList = new ArrayList<OrgRegionServed>();
 			for (OrgRegionServedPayload payload : orgRegionPayloadlist) {
 				orgRegionServed = new OrgRegionServed();
-				orgRegionServed.setOrgId(payload.getOrg_id());
+				orgRegionServed.setOrgId(payload.getOrganizationId());
 				if (null != payload.getAddress()) {
 					address = saveAddress(payload.getAddress());
 					orgRegionServed.setAddress(address);

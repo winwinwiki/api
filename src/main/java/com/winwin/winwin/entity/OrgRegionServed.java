@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -38,7 +39,6 @@ public class OrgRegionServed extends AbstractAuditableEntity {
 	@JoinColumn(name = "address_id")
 	private Address address;
 
-	@ManyToOne
 	@JoinColumn(name = "org_id")
 	private Long orgId;
 
