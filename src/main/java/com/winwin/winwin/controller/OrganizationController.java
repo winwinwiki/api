@@ -1,5 +1,6 @@
 package com.winwin.winwin.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.OrganizationException;
+import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationService;
@@ -39,13 +41,16 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity createOrganization(HttpServletResponse httpServletResponse,
 			@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
+		OrganizationPayload payload = null;
 		try {
 			organization = organizationService.createOrganization(organizationPayload);
+			payload = setOrganizationPayload(organization, payload);
+
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(organization);
+		return sendSuccessResponse(payload);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -83,34 +88,44 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity updateOrgDetails(HttpServletResponse httpServletResponse,
 			@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
+		OrganizationPayload payload = null;
 		try {
 			organization = organizationRepository.findOrgById(organizationPayload.getId());
 			if (organization == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
 				organization = organizationService.updateOrgDetails(organizationPayload, organization);
+				payload = setOrganizationPayload(organization, payload);
 			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(organization);
+		return sendSuccessResponse(payload);
 
 	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public ResponseEntity<?> getOrganizationList(HttpServletResponse httpServletResponse) throws OrganizationException {
 		List<Organization> orgList = null;
+		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+		OrganizationPayload payload = null;
 		try {
 			orgList = organizationService.getOrganizationList();
 			if (orgList == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+			} else {
+				for (Organization organization : orgList) {
+					payload = setOrganizationPayload(organization, payload);
+					payloadList.add(payload);
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
-		return sendSuccessResponse(orgList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
@@ -119,16 +134,63 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	public ResponseEntity getOrgDetails(HttpServletResponse httpServletResponse, @PathVariable("id") Long id) {
 		Organization organization = null;
+		OrganizationPayload payload = null;
 		try {
 			organization = organizationRepository.findOrgById(id);
 			if (organization == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+			} else {
+				payload = setOrganizationPayload(organization, payload);
+
 			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.error.fetch") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(organization);
+		return sendSuccessResponse(payload);
 
+	}
+
+	/**
+	 * @param organization
+	 * @param payload
+	 * @return
+	 */
+	private OrganizationPayload setOrganizationPayload(Organization organization, OrganizationPayload payload) {
+		AddressPayload addressPayload;
+		if (null != organization) {
+			payload = new OrganizationPayload();
+			payload.setId(organization.getId());
+			if (null != organization.getAddress()) {
+				addressPayload = new AddressPayload();
+				addressPayload.setId(organization.getAddress().getId());
+				addressPayload.setCountry(organization.getAddress().getCountry());
+				addressPayload.setState(organization.getAddress().getState());
+				addressPayload.setCity(organization.getAddress().getCity());
+				addressPayload.setCounty(organization.getAddress().getCounty());
+				addressPayload.setZip(organization.getAddress().getZip());
+				addressPayload.setStreet(organization.getAddress().getStreet());
+				payload.setAddress(addressPayload);
+			}
+			payload.setName(organization.getName());
+			payload.setRevenue(organization.getRevenue());
+			payload.setAssets(organization.getAssets());
+			payload.setSector(organization.getSector());
+			payload.setSectorLevel(organization.getSectorLevel());
+			payload.setDescription(organization.getDescription());
+			// payload.setStatus(organization.getTagStatus());
+			payload.setPriority(organization.getPriority());
+			payload.setParentId(organization.getParentId());
+			payload.setType(organization.getType());
+			payload.setIsActive(organization.getIsActive());
+			// payload.setIsTaggingReady(isTaggingReady);
+			payload.setTagStatus(organization.getTagStatus());
+			payload.setTotalAssets(organization.getAssets());
+			payload.setWebsiteUrl(organization.getWebsiteUrl());
+			payload.setSocialUrl(organization.getSocialUrl());
+			// payload.setClassificationId(classificationId);
+
+		}
+		return payload;
 	}
 }

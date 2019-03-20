@@ -1,5 +1,6 @@
 package com.winwin.winwin.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.service.OrganizationResourceService;
@@ -43,10 +45,22 @@ public class OrganizationResourceController extends BaseController {
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
+		OrganizationResourcePayLoad payload = null;
 		if (null != organizationResourcePayLoad) {
 			try {
 				organizationResource = organizationResourceService
 						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+				if (null != organizationResource) {
+					payload = new OrganizationResourcePayLoad();
+					payload.setId(organizationResource.getId());
+					payload.setOrganizationResourceCategory(organizationResource.getOrganizationResourceCategory());
+					payload.setOrganizationId(organizationResource.getOrganizationId());
+					payload.setCount(organizationResource.getCount());
+					payload.setDescription(organizationResource.getDescription());
+					payload.setType(organizationResource.getType());
+					payload.setUrl(organizationResource.getUrl());
+					payload.setIsActive(organizationResource.getIsActive());
+				}
 			} catch (Exception e) {
 				throw new OrganizationResourceException(
 						customMessageSource.getMessage("org.resource.error.created") + ": " + e.getMessage());
@@ -56,7 +70,7 @@ public class OrganizationResourceController extends BaseController {
 			return sendErrorResponse("org.bad.request");
 
 		}
-		return sendSuccessResponse(organizationResource);
+		return sendSuccessResponse(payload);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -66,6 +80,7 @@ public class OrganizationResourceController extends BaseController {
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
+		OrganizationResourcePayLoad payload = new OrganizationResourcePayLoad();
 		try {
 			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
 				Long id = organizationResourcePayLoad.getId();
@@ -73,9 +88,19 @@ public class OrganizationResourceController extends BaseController {
 				if (organizationResource == null) {
 					throw new OrganizationResourceException(
 							customMessageSource.getMessage("org.resource.error.not_found"));
+				} else {
+					organizationResource = organizationResourceService
+							.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+					payload.setId(organizationResource.getId());
+					payload.setOrganizationResourceCategory(organizationResource.getOrganizationResourceCategory());
+					payload.setOrganizationId(organizationResource.getOrganizationId());
+					payload.setCount(organizationResource.getCount());
+					payload.setDescription(organizationResource.getDescription());
+					payload.setType(organizationResource.getType());
+					payload.setUrl(organizationResource.getUrl());
+					payload.setIsActive(organizationResource.getIsActive());
 				}
-				organizationResource = organizationResourceService
-						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+
 			} else {
 				return sendErrorResponse("org.bad.request");
 
@@ -119,16 +144,32 @@ public class OrganizationResourceController extends BaseController {
 	public ResponseEntity<?> getOrganizationResourceList(HttpServletResponse httpServletResponse,
 			@PathVariable("id") Long id) throws OrganizationResourceException {
 		List<OrganizationResource> orgResourceList = null;
+		OrganizationResourcePayLoad payload = null;
+		List<OrganizationResourcePayLoad> payloadList = new ArrayList<OrganizationResourcePayLoad>();
 		try {
 			orgResourceList = organizationResourceService.getOrganizationResourceList(id);
 			if (orgResourceList == null) {
 				throw new OrganizationResourceException(customMessageSource.getMessage("org.resource.error.not_found"));
+			} else {
+				for (OrganizationResource resource : orgResourceList) {
+					payload = new OrganizationResourcePayLoad();
+					payload.setId(resource.getId());
+					payload.setOrganizationResourceCategory(resource.getOrganizationResourceCategory());
+					payload.setOrganizationId(resource.getOrganizationId());
+					payload.setCount(resource.getCount());
+					payload.setDescription(resource.getDescription());
+					payload.setType(resource.getType());
+					payload.setUrl(resource.getUrl());
+					payload.setIsActive(resource.getIsActive());
+					payloadList.add(payload);
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrganizationResourceException(
 					customMessageSource.getMessage("org.resource.error.list") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgResourceList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
@@ -136,17 +177,28 @@ public class OrganizationResourceController extends BaseController {
 	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationResourceCategoryException {
 		List<OrganizationResourceCategory> orgResourceCategoryList = null;
+		OrganizationResourceCategoryPayLoad payload = null;
+		List<OrganizationResourceCategoryPayLoad> payloadList = new ArrayList<OrganizationResourceCategoryPayLoad>();
+
 		try {
 			orgResourceCategoryList = organizationResourceService.getOrganizationResourceCategoryList();
 			if (orgResourceCategoryList == null) {
 				throw new OrganizationResourceCategoryException(
 						customMessageSource.getMessage("org.resource.category.error.not_found"));
+			} else {
+				for (OrganizationResourceCategory category : orgResourceCategoryList) {
+					payload = new OrganizationResourceCategoryPayLoad();
+					payload.setId(category.getId());
+					payload.setCategoryName(category.getCategoryName());
+					payloadList.add(payload);
+				}
+
 			}
 		} catch (Exception e) {
 			throw new OrganizationResourceCategoryException(
 					customMessageSource.getMessage("org.resource.category.error.list") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(orgResourceCategoryList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
