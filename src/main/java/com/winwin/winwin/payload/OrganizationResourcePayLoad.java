@@ -25,7 +25,5 @@ public class OrganizationResourcePayLoad {
 	Long organizationId;
 	String description;
 	Long count;
-	String type;
-	String url;
 	Boolean isActive;
 }

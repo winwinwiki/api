@@ -47,12 +47,6 @@ public class OrganizationResource extends AbstractAuditableEntity {
 	@Column(name = "description")
 	private String description;
 
-	@Column(name = "type")
-	private String type;
-
-	@Column(name = "url")
-	private String url;
-
 	@Column(name = "is_active")
 	private Boolean isActive = true;
 
