@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import com.winwin.winwin.entity.OrganizationResourceCategory;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,7 +19,7 @@ import lombok.ToString;
 @ToString
 public class OrganizationResourcePayLoad {
 	Long id;
-	OrganizationResourceCategory organizationResourceCategory;
+	OrganizationResourceCategoryPayLoad organizationResourceCategory;
 	Long organizationId;
 	String description;
 	Long count;

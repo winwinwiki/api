@@ -14,6 +14,7 @@ import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
 import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
 import com.winwin.winwin.exception.OrganizationDataSetException;
+import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.repository.OrganizationDataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
@@ -157,7 +158,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	}
 
 	public OrganizationDataSetCategory saveOrganizationDataSetCategory(
-			OrganizationDataSetCategory categoryFromPayLoad) {
+			OrganizationDataSetCategoryPayLoad categoryFromPayLoad) {
 		OrganizationDataSetCategory category = new OrganizationDataSetCategory();
 		try {
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
