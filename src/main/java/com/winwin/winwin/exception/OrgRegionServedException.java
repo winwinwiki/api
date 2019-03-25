@@ -5,7 +5,7 @@ public class OrgRegionServedException extends Exception {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	//private static final long serialVersionUID = 1L;
 
 	public OrgRegionServedException() {
 		// TODO Auto-generated constructor stub
