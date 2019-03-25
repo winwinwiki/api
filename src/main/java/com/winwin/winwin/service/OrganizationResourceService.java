@@ -102,8 +102,6 @@ public class OrganizationResourceService implements IOrganizationResourceService
 				organizationResource.setOrganizationId(organizationResourcePayLoad.getOrganizationId());
 				organizationResource.setCount(organizationResourcePayLoad.getCount());
 				organizationResource.setDescription(organizationResourcePayLoad.getDescription());
-				organizationResource.setType(organizationResourcePayLoad.getType());
-				organizationResource.setUrl(organizationResourcePayLoad.getUrl());
 				organizationResource.setUpdatedAt(new Date(System.currentTimeMillis()));
 				organizationResource.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 

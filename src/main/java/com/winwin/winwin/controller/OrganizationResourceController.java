@@ -57,8 +57,6 @@ public class OrganizationResourceController extends BaseController {
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
-					payload.setType(organizationResource.getType());
-					payload.setUrl(organizationResource.getUrl());
 					payload.setIsActive(organizationResource.getIsActive());
 				}
 			} catch (Exception e) {
@@ -96,8 +94,6 @@ public class OrganizationResourceController extends BaseController {
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
-					payload.setType(organizationResource.getType());
-					payload.setUrl(organizationResource.getUrl());
 					payload.setIsActive(organizationResource.getIsActive());
 				}
 
@@ -158,8 +154,6 @@ public class OrganizationResourceController extends BaseController {
 					payload.setOrganizationId(resource.getOrganizationId());
 					payload.setCount(resource.getCount());
 					payload.setDescription(resource.getDescription());
-					payload.setType(resource.getType());
-					payload.setUrl(resource.getUrl());
 					payload.setIsActive(resource.getIsActive());
 					payloadList.add(payload);
 				}
