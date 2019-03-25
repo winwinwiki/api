@@ -14,6 +14,7 @@ import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
+import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
 import com.winwin.winwin.repository.OrganizationResourceCategoryRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -156,7 +157,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	}
 
 	public OrganizationResourceCategory saveOrganizationResourceCategory(
-			OrganizationResourceCategory categoryFromPayLoad) {
+			OrganizationResourceCategoryPayLoad categoryFromPayLoad) {
 		OrganizationResourceCategory category = new OrganizationResourceCategory();
 		try {
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
