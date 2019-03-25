@@ -29,6 +29,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
+import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationPayload;
@@ -39,6 +40,7 @@ import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
+import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
@@ -74,6 +76,9 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	private OrgRegionServedRepository orgRegionServedRepository;
+	
+	@Autowired
+	OrgSpiDataService orgSpiDataService;
 
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -685,7 +690,25 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}
-
 	// Code for organization region served end
+	
+	// Code for organization SPI data  start
+	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrgSpiDataList(HttpServletResponse httpServletResponse)
+			throws OrgRegionServedException {
+		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
+		try {
+			payloadList = orgSpiDataService.getSpiDataForResponse();
+			if (payloadList == null) {
+				throw new OrgRegionServedException(customMessageSource.getMessage("org.spidata.error.not_found"));
+			} 
+
+		} catch (Exception e) {
+			throw new OrgRegionServedException(customMessageSource.getMessage("org.spidata.error.list"));
+		}
+		return sendSuccessResponse(payloadList);
+
+	}
+	
 
 }

@@ -3,11 +3,13 @@ package com.winwin.winwin.entity;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * @author arvindK
  *
  */
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ResponseWrapper<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
