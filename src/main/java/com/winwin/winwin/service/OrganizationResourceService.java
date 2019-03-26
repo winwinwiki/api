@@ -1,6 +1,7 @@
 package com.winwin.winwin.service;
 
-import java.sql.Date;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,12 +86,15 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	private OrganizationResource constructOrganizationResource(
 			OrganizationResourcePayLoad organizationResourcePayLoad) {
 		OrganizationResource organizationResource = null;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = null;
 		try {
 			if (null != organizationResourcePayLoad.getId()) {
 				organizationResource = organizationResourceRepository.getOne(organizationResourcePayLoad.getId());
 			} else {
 				organizationResource = new OrganizationResource();
-				organizationResource.setCreatedAt(new Date(System.currentTimeMillis()));
+				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				organizationResource.setCreatedAt(sdf.parse(formattedDte));
 				organizationResource.setCreatedBy(OrganizationConstants.CREATED_BY);
 			}
 
@@ -99,11 +103,11 @@ public class OrganizationResourceService implements IOrganizationResourceService
 						+ organizationResourcePayLoad.getId() + " to update in DB ");
 			} else {
 				setOrganizationResourceCategory(organizationResourcePayLoad, organizationResource);
-
+				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organizationResource.setOrganizationId(organizationResourcePayLoad.getOrganizationId());
 				organizationResource.setCount(organizationResourcePayLoad.getCount());
 				organizationResource.setDescription(organizationResourcePayLoad.getDescription());
-				organizationResource.setUpdatedAt(new Date(System.currentTimeMillis()));
+				organizationResource.setUpdatedAt(sdf.parse(formattedDte));
 				organizationResource.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
 			}
@@ -142,10 +146,8 @@ public class OrganizationResourceService implements IOrganizationResourceService
 						if (organizationResourceCategory == null) {
 							throw new OrganizationResourceCategoryException(
 									"Org resource category record not found for Id: " + categoryId + " in DB ");
-						} else {
-							organizationResource.setOrganizationResourceCategory(organizationResourceCategory);
-
 						}
+						organizationResource.setOrganizationResourceCategory(organizationResourceCategory);
 
 					}
 
@@ -160,12 +162,14 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			OrganizationResourceCategoryPayLoad categoryFromPayLoad) {
 		OrganizationResourceCategory category = new OrganizationResourceCategory();
 		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
 
-			category.setCreatedAt(new Date(System.currentTimeMillis()));
-			category.setUpdatedAt(new Date(System.currentTimeMillis()));
+			category.setCreatedAt(sdf.parse(formattedDte));
+			category.setUpdatedAt(sdf.parse(formattedDte));
 			category.setCreatedBy(OrganizationConstants.CREATED_BY);
 			category.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 		} catch (Exception e) {

@@ -46,6 +46,8 @@ public class OrganizationDataSetController extends BaseController {
 			throws OrganizationDataSetException {
 		OrganizationDataSet organizationDataSet = null;
 		OrganizationDataSetPayLoad payload = null;
+		OrganizationDataSetCategory category = null;
+		OrganizationDataSetCategoryPayLoad payloadCategory = null;
 		if (null != organizationDataSetPayLoad) {
 			try {
 				organizationDataSet = organizationDataSetService
@@ -53,7 +55,13 @@ public class OrganizationDataSetController extends BaseController {
 				if (null != organizationDataSet) {
 					payload = new OrganizationDataSetPayLoad();
 					payload.setId(organizationDataSet.getId());
-					payload.setOrganizationDataSetCategory(organizationDataSet.getOrganizationDataSetCategory());
+					category = organizationDataSet.getOrganizationDataSetCategory();
+					if (null != category) {
+						payloadCategory = new OrganizationDataSetCategoryPayLoad();
+						payloadCategory.setId(category.getId());
+						payloadCategory.setCategoryName(category.getCategoryName());
+					}
+					payload.setOrganizationDataSetCategory(payloadCategory);
 					payload.setOrganizationId(organizationDataSet.getOrganizationId());
 					payload.setDescription(organizationDataSet.getDescription());
 					payload.setType(organizationDataSet.getType());
@@ -81,6 +89,8 @@ public class OrganizationDataSetController extends BaseController {
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet dataSet = null;
+		OrganizationDataSetCategory category = null;
+		OrganizationDataSetCategoryPayLoad payloadCategory = null;
 		OrganizationDataSetPayLoad payload = new OrganizationDataSetPayLoad();
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
@@ -90,7 +100,13 @@ public class OrganizationDataSetController extends BaseController {
 			} else {
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 				payload.setId(dataSet.getId());
-				payload.setOrganizationDataSetCategory(dataSet.getOrganizationDataSetCategory());
+				category = dataSet.getOrganizationDataSetCategory();
+				if (null != category) {
+					payloadCategory = new OrganizationDataSetCategoryPayLoad();
+					payloadCategory.setId(category.getId());
+					payloadCategory.setCategoryName(category.getCategoryName());
+				}
+				payload.setOrganizationDataSetCategory(payloadCategory);
 				payload.setOrganizationId(dataSet.getOrganizationId());
 				payload.setDescription(dataSet.getDescription());
 				payload.setType(dataSet.getType());
@@ -136,6 +152,8 @@ public class OrganizationDataSetController extends BaseController {
 			@PathVariable("id") Long id) throws OrganizationDataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
 		OrganizationDataSetPayLoad payload = null;
+		OrganizationDataSetCategory category = null;
+		OrganizationDataSetCategoryPayLoad payloadCategory = null;
 		List<OrganizationDataSetPayLoad> payloadList = new ArrayList<OrganizationDataSetPayLoad>();
 		try {
 			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
@@ -145,7 +163,13 @@ public class OrganizationDataSetController extends BaseController {
 				for (OrganizationDataSet dataSet : orgDataSetList) {
 					payload = new OrganizationDataSetPayLoad();
 					payload.setId(dataSet.getId());
-					payload.setOrganizationDataSetCategory(dataSet.getOrganizationDataSetCategory());
+					category = dataSet.getOrganizationDataSetCategory();
+					if (null != category) {
+						payloadCategory = new OrganizationDataSetCategoryPayLoad();
+						payloadCategory.setId(category.getId());
+						payloadCategory.setCategoryName(category.getCategoryName());
+					}
+					payload.setOrganizationDataSetCategory(payloadCategory);
 					payload.setOrganizationId(dataSet.getOrganizationId());
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());

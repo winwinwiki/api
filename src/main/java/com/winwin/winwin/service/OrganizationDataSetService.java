@@ -1,6 +1,7 @@
 package com.winwin.winwin.service;
 
-import java.sql.Date;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,12 +86,15 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	 */
 	private OrganizationDataSet constructOrganizationDataSet(OrganizationDataSetPayLoad organizationDataSetPayLoad) {
 		OrganizationDataSet organizationDataSet = null;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = null;
 		try {
 			if (null != organizationDataSetPayLoad.getId()) {
 				organizationDataSet = organizationDataSetRepository.getOne(organizationDataSetPayLoad.getId());
 			} else {
 				organizationDataSet = new OrganizationDataSet();
-				organizationDataSet.setCreatedAt(new Date(System.currentTimeMillis()));
+				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				organizationDataSet.setCreatedAt(sdf.parse(formattedDte));
 				organizationDataSet.setCreatedBy(OrganizationConstants.CREATED_BY);
 			}
 
@@ -99,12 +103,12 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 						+ organizationDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				setOrganizationDataSetCategory(organizationDataSetPayLoad, organizationDataSet);
-
+				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organizationDataSet.setOrganizationId(organizationDataSetPayLoad.getOrganizationId());
 				organizationDataSet.setDescription(organizationDataSetPayLoad.getDescription());
 				organizationDataSet.setType(organizationDataSetPayLoad.getType());
 				organizationDataSet.setUrl(organizationDataSetPayLoad.getUrl());
-				organizationDataSet.setUpdatedAt(new Date(System.currentTimeMillis()));
+				organizationDataSet.setUpdatedAt(sdf.parse(formattedDte));
 				organizationDataSet.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
 			}
@@ -161,11 +165,13 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			OrganizationDataSetCategoryPayLoad categoryFromPayLoad) {
 		OrganizationDataSetCategory category = new OrganizationDataSetCategory();
 		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
-			category.setCreatedAt(new Date(System.currentTimeMillis()));
-			category.setUpdatedAt(new Date(System.currentTimeMillis()));
+			category.setCreatedAt(sdf.parse(formattedDte));
+			category.setUpdatedAt(sdf.parse(formattedDte));
 			category.setCreatedBy(OrganizationConstants.CREATED_BY);
 			category.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 		} catch (Exception e) {

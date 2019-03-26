@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.entity.OrgRegionServed;
+import com.winwin.winwin.entity.OrgSpiDataMapping;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrgRegionServedException;
+import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
 import com.winwin.winwin.exception.OrganizationDataSetException;
 import com.winwin.winwin.exception.OrganizationException;
@@ -30,6 +32,7 @@ import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
+import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationPayload;
@@ -295,13 +298,14 @@ public class OrganizationController extends BaseController {
 		OrganizationDataSet dataSet = null;
 		OrganizationDataSetCategory category = null;
 		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		OrganizationDataSetPayLoad payload = new OrganizationDataSetPayLoad();
+		OrganizationDataSetPayLoad payload = null;
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
 			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
 			if (dataSet == null) {
 				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			} else {
+				payload = new OrganizationDataSetPayLoad();
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 				payload.setId(dataSet.getId());
 				category = dataSet.getOrganizationDataSetCategory();
@@ -358,12 +362,13 @@ public class OrganizationController extends BaseController {
 		OrganizationDataSetPayLoad payload = null;
 		OrganizationDataSetCategory category = null;
 		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		List<OrganizationDataSetPayLoad> payloadList = new ArrayList<OrganizationDataSetPayLoad>();
+		List<OrganizationDataSetPayLoad> payloadList = null;
 		try {
 			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
 			if (orgDataSetList == null) {
 				throw new OrganizationDataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			} else {
+				payloadList = new ArrayList<OrganizationDataSetPayLoad>();
 				for (OrganizationDataSet dataSet : orgDataSetList) {
 					payload = new OrganizationDataSetPayLoad();
 					payload.setId(dataSet.getId());
@@ -395,7 +400,7 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationDataSetCategoryException {
 		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
-		List<OrganizationDataSetCategoryPayLoad> payloadList = new ArrayList<OrganizationDataSetCategoryPayLoad>();
+		List<OrganizationDataSetCategoryPayLoad> payloadList = null;
 		OrganizationDataSetCategoryPayLoad payload = null;
 		try {
 			orgDataSetCategoryList = organizationDataSetService.getOrganizationDataSetCategoryList();
@@ -403,6 +408,7 @@ public class OrganizationController extends BaseController {
 				throw new OrganizationDataSetCategoryException(
 						customMessageSource.getMessage("org.dataset.category.error.not_found"));
 			} else {
+				payloadList = new ArrayList<OrganizationDataSetCategoryPayLoad>();
 				for (OrganizationDataSetCategory category : orgDataSetCategoryList) {
 					payload = new OrganizationDataSetCategoryPayLoad();
 					payload.setId(category.getId());
@@ -472,7 +478,7 @@ public class OrganizationController extends BaseController {
 		OrganizationResource organizationResource = null;
 		OrganizationResourceCategory category = null;
 		OrganizationResourceCategoryPayLoad payloadCategory = null;
-		OrganizationResourcePayLoad payload = new OrganizationResourcePayLoad();
+		OrganizationResourcePayLoad payload = null;
 		try {
 			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
 				Long id = organizationResourcePayLoad.getId();
@@ -483,6 +489,7 @@ public class OrganizationController extends BaseController {
 				} else {
 					organizationResource = organizationResourceService
 							.createOrUpdateOrganizationResource(organizationResourcePayLoad);
+					payload = new OrganizationResourcePayLoad();
 					payload.setId(organizationResource.getId());
 					category = organizationResource.getOrganizationResourceCategory();
 					if (null != category) {
@@ -506,7 +513,7 @@ public class OrganizationController extends BaseController {
 			throw new OrganizationResourceException(
 					customMessageSource.getMessage("org.resource.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(organizationResource);
+		return sendSuccessResponse(payload);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -543,12 +550,13 @@ public class OrganizationController extends BaseController {
 		OrganizationResourcePayLoad payload = null;
 		OrganizationResourceCategory category = null;
 		OrganizationResourceCategoryPayLoad payloadCategory = null;
-		List<OrganizationResourcePayLoad> payloadList = new ArrayList<OrganizationResourcePayLoad>();
+		List<OrganizationResourcePayLoad> payloadList = null;
 		try {
 			orgResourceList = organizationResourceService.getOrganizationResourceList(id);
 			if (orgResourceList == null) {
 				throw new OrganizationResourceException(customMessageSource.getMessage("org.resource.error.not_found"));
 			} else {
+				payloadList = new ArrayList<OrganizationResourcePayLoad>();
 				for (OrganizationResource resource : orgResourceList) {
 					payload = new OrganizationResourcePayLoad();
 					payload.setId(resource.getId());
@@ -580,7 +588,7 @@ public class OrganizationController extends BaseController {
 			throws OrganizationResourceCategoryException {
 		List<OrganizationResourceCategory> orgResourceCategoryList = null;
 		OrganizationResourceCategoryPayLoad payload = null;
-		List<OrganizationResourceCategoryPayLoad> payloadList = new ArrayList<OrganizationResourceCategoryPayLoad>();
+		List<OrganizationResourceCategoryPayLoad> payloadList = null;
 
 		try {
 			orgResourceCategoryList = organizationResourceService.getOrganizationResourceCategoryList();
@@ -588,6 +596,7 @@ public class OrganizationController extends BaseController {
 				throw new OrganizationResourceCategoryException(
 						customMessageSource.getMessage("org.resource.category.error.not_found"));
 			} else {
+				payloadList = new ArrayList<OrganizationResourceCategoryPayLoad>();
 				for (OrganizationResourceCategory category : orgResourceCategoryList) {
 					payload = new OrganizationResourceCategoryPayLoad();
 					payload.setId(category.getId());
@@ -613,12 +622,13 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity createOrgRegions(HttpServletResponse httpServletResponse,
 			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionServedList = null;
-		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
+		List<OrgRegionServedPayload> payloadList = null;
 		OrgRegionServedPayload payload = null;
 		AddressPayload addressPayload = null;
 		try {
 			orgRegionServedList = orgRegionServedService.createOrgRegionServed(orgRegionServedPayloadList);
 			if (null != orgRegionServedList) {
+				payloadList = new ArrayList<OrgRegionServedPayload>();
 				for (OrgRegionServed region : orgRegionServedList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
@@ -659,13 +669,14 @@ public class OrganizationController extends BaseController {
 		OrgRegionServed region = null;
 		OrgRegionServedPayload payload = null;
 		AddressPayload addressPayload = null;
-		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
+		List<OrgRegionServedPayload> payloadList = null;
 		try {
 			for (OrgRegionServedPayload regionPayload : orgRegionServedPayloadList) {
 				region = orgRegionServedRepository.findOrgRegionById(regionPayload.getId());
 				if (region == null) {
 					throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
 				} else {
+					payloadList = new ArrayList<OrgRegionServedPayload>();
 					region = orgRegionServedService.updateOrgRegionServed(regionPayload, region);
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
@@ -699,12 +710,13 @@ public class OrganizationController extends BaseController {
 		List<OrgRegionServed> orgRegionList = null;
 		OrgRegionServedPayload payload = null;
 		AddressPayload addressPayload = null;
-		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
+		List<OrgRegionServedPayload> payloadList = null;
 		try {
 			orgRegionList = orgRegionServedService.getOrgRegionServedList();
 			if (orgRegionList == null) {
 				throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
 			} else {
+				payloadList = new ArrayList<OrgRegionServedPayload>();
 				for (OrgRegionServed region : orgRegionList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
@@ -736,17 +748,68 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization SPI data start
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgSpiDataList(HttpServletResponse httpServletResponse)
-			throws OrgRegionServedException {
+	public ResponseEntity<?> getOrgSpiDataList(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
 		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
 		try {
 			payloadList = orgSpiDataService.getSpiDataForResponse();
 			if (payloadList == null) {
-				throw new OrgRegionServedException(customMessageSource.getMessage("org.spidata.error.not_found"));
+				throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
 			}
 
 		} catch (Exception e) {
-			throw new OrgRegionServedException(customMessageSource.getMessage("org.spidata.error.list"));
+			throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.list"));
+		}
+		return sendSuccessResponse(payloadList);
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity createOrgSpiDataMapping(HttpServletResponse httpServletResponse,
+			@RequestBody List<OrgSpiDataMapPayload> payloadList, @PathVariable("id") Long orgId)
+			throws OrgSpiDataException {
+		if (null != payloadList) {
+			try {
+				orgSpiDataService.createSpiDataMapping(payloadList, orgId);
+			} catch (Exception e) {
+				throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+			}
+			return sendSuccessResponse("org.spidata.success.created");
+
+		} else {
+			return sendErrorResponse("org.bad.request");
+		}
+
+	}
+
+	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
+	public ResponseEntity<?> getSelectedOrgSpiData(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
+		List<OrgSpiDataMapping> selectedSpiDataList = null;
+		OrgSpiDataMapPayload payload = null;
+		List<OrgSpiDataMapPayload> payloadList = null;
+		try {
+			selectedSpiDataList = orgSpiDataService.getSelectedSpiData();
+
+			if (selectedSpiDataList == null) {
+				throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
+			} else {
+				payloadList = new ArrayList<OrgSpiDataMapPayload>();
+				for (OrgSpiDataMapping spiDataMapObj : selectedSpiDataList) {
+					payload = new OrgSpiDataMapPayload();
+					payload.setId(spiDataMapObj.getId());
+					payload.setOrganizationId(spiDataMapObj.getOrganizationId());
+					payload.setDimensionId(spiDataMapObj.getDimensionId());
+					payload.setDimensionName(spiDataMapObj.getDimensionName());
+					payload.setComponentId(spiDataMapObj.getComponentId());
+					payload.setComponentName(spiDataMapObj.getComponentName());
+					payload.setIndicatorId(spiDataMapObj.getIndicatorId());
+					payload.setIndicatorName(spiDataMapObj.getIndicatorName());
+					payloadList.add(payload);
+				}
+			}
+		} catch (Exception e) {
+			throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));
 		}
 		return sendSuccessResponse(payloadList);
 
