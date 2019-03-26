@@ -3,7 +3,8 @@
  */
 package com.winwin.winwin.service;
 
-import java.sql.Date;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,25 +47,31 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 		OrgRegionServed orgRegionServed = null;
 		List<OrgRegionServed> orgRegionList = null;
 		Address address = null;
-		if (null != orgRegionPayloadlist) {
-			orgRegionList = new ArrayList<OrgRegionServed>();
-			for (OrgRegionServedPayload payload : orgRegionPayloadlist) {
-				orgRegionServed = new OrgRegionServed();
-				orgRegionServed.setOrgId(payload.getOrganizationId());
-				if (null != payload.getAddress()) {
-					address = saveAddress(payload.getAddress());
-					orgRegionServed.setAddress(address);
+		try {
+			if (null != orgRegionPayloadlist) {
+				orgRegionList = new ArrayList<OrgRegionServed>();
+				for (OrgRegionServedPayload payload : orgRegionPayloadlist) {
+					orgRegionServed = new OrgRegionServed();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+					orgRegionServed.setOrgId(payload.getOrganizationId());
+					if (null != payload.getAddress()) {
+						address = saveAddress(payload.getAddress());
+						orgRegionServed.setAddress(address);
+					}
+					orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
+					orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
+					orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
+					orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+					orgRegionServedRepository.saveAndFlush(orgRegionServed);
+
+					orgRegionServed = orgRegionServedRepository.findLastOrgRegion();
+					orgRegionList.add(orgRegionServed);
 				}
-				orgRegionServed.setCreatedAt(new Date(System.currentTimeMillis()));
-				orgRegionServed.setUpdatedAt(new Date(System.currentTimeMillis()));
-				orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
-				orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
-				orgRegionServed = orgRegionServedRepository.findLastOrgRegion();
-				orgRegionList.add(orgRegionServed);
 			}
-
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.region.exception.created"), e);
 		}
 
 		return orgRegionList;
@@ -81,7 +88,7 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 			try {
 				throw new OrgRegionServedException(customMessageSource.getMessage("org.exception.address.null"));
 			} catch (OrgRegionServedException e) {
-				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
+				LOGGER.error(customMessageSource.getMessage("org.exception.address.null"), e);
 			}
 		}
 
@@ -103,47 +110,59 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 	public Address saveAddress(AddressPayload addressPayload) {
 		Address address = new Address();
-		address.setCountry(addressPayload.getCountry());
-		address.setCity(addressPayload.getCity());
-		address.setState(addressPayload.getState());
-		address.setCounty(addressPayload.getCounty());
-		address.setZip(addressPayload.getZip());
-		address.setStreet(addressPayload.getStreet());
-		address.setCreatedAt(new Date(System.currentTimeMillis()));
-		address.setUpdatedAt(new Date(System.currentTimeMillis()));
-		address.setCreatedBy(OrganizationConstants.CREATED_BY);
-		address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+			address.setCountry(addressPayload.getCountry());
+			address.setCity(addressPayload.getCity());
+			address.setState(addressPayload.getState());
+			address.setCounty(addressPayload.getCounty());
+			address.setZip(addressPayload.getZip());
+			address.setStreet(addressPayload.getStreet());
+			address.setCreatedAt(sdf.parse(formattedDte));
+			address.setUpdatedAt(sdf.parse(formattedDte));
+			address.setCreatedBy(OrganizationConstants.CREATED_BY);
+			address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
+		}
 		return addressRepository.saveAndFlush(address);
 	}
 
 	public Boolean updateAddress(OrgRegionServed orgRegionServed, AddressPayload addressPayload) {
-		if (null != addressPayload && null != addressPayload.getId()) {
-			if (addressPayload.getId().equals(orgRegionServed.getAddress().getId())) {
-				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-					orgRegionServed.getAddress().setCountry(addressPayload.getCountry());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getState())) {
-					orgRegionServed.getAddress().setState(addressPayload.getState());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCity())) {
-					orgRegionServed.getAddress().setCity(addressPayload.getCity());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-					orgRegionServed.getAddress().setCounty(addressPayload.getCounty());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getZip())) {
-					orgRegionServed.getAddress().setZip(addressPayload.getZip());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-					orgRegionServed.getAddress().setStreet(addressPayload.getStreet());
+		try {
+			if (null != addressPayload && null != addressPayload.getId()) {
+				if (addressPayload.getId().equals(orgRegionServed.getAddress().getId())) {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+					if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+						orgRegionServed.getAddress().setCountry(addressPayload.getCountry());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getState())) {
+						orgRegionServed.getAddress().setState(addressPayload.getState());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getCity())) {
+						orgRegionServed.getAddress().setCity(addressPayload.getCity());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+						orgRegionServed.getAddress().setCounty(addressPayload.getCounty());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getZip())) {
+						orgRegionServed.getAddress().setZip(addressPayload.getZip());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getStreet())) {
+						orgRegionServed.getAddress().setStreet(addressPayload.getStreet());
+					}
+
+					orgRegionServed.getAddress().setUpdatedAt(sdf.parse(formattedDte));
+					orgRegionServed.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
+
+					return true;
 				}
 
-				orgRegionServed.getAddress().setUpdatedAt(new Date(System.currentTimeMillis()));
-				orgRegionServed.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
-
-				return true;
 			}
-
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
 		}
 		return false;
 	}

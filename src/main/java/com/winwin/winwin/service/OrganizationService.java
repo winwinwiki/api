@@ -1,8 +1,12 @@
 package com.winwin.winwin.service;
 
-import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -38,26 +42,34 @@ public class OrganizationService implements IOrganizationService {
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationService.class);
+
 	@Override
 	public Organization createOrganization(OrganizationPayload organizationPayload) {
 		Organization organization = null;
-		if (organizationPayload != null) {
-			Address address = new Address();
-			organization = new Organization();
-			organization.setName(organizationPayload.getName());
-			organization.setSector(organizationPayload.getSector());
-			organization.setSectorLevel(organizationPayload.getSectorLevel());
-			organization.setDescription(organizationPayload.getDescription());
-			if (organizationPayload.getAddress() != null) {
-				address = saveAddress(organizationPayload.getAddress());
+		try {
+			if (organizationPayload != null) {
+				Address address = new Address();
+				organization = new Organization();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				organization.setName(organizationPayload.getName());
+				organization.setSector(organizationPayload.getSector());
+				organization.setSectorLevel(organizationPayload.getSectorLevel());
+				organization.setDescription(organizationPayload.getDescription());
+				if (organizationPayload.getAddress() != null) {
+					address = saveAddress(organizationPayload.getAddress());
+				}
+				organization.setAddress(address);
+				organization.setCreatedAt(sdf.parse(formattedDte));
+				organization.setUpdatedAt(sdf.parse(formattedDte));
+				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
+				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+				organizationRepository.saveAndFlush(organization);
+				organization = organizationRepository.findLastOrg();
 			}
-			organization.setAddress(address);
-			organization.setCreatedAt(new Date(System.currentTimeMillis()));
-			organization.setUpdatedAt(new Date(System.currentTimeMillis()));
-			organization.setCreatedBy(OrganizationConstants.CREATED_BY);
-			organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-			organizationRepository.saveAndFlush(organization);
-			organization = organizationRepository.findLastOrg();
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
 		}
 
 		return organization;
@@ -79,90 +91,108 @@ public class OrganizationService implements IOrganizationService {
 	public Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization) {
 		@SuppressWarnings("unused")
 		OrgClassificationMapping orgClassificationMapping = new OrgClassificationMapping();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
-		if (!StringUtils.isEmpty(organizationPayload.getDescription())) {
-			organization.setDescription(organizationPayload.getDescription());
-		}
-		if (!StringUtils.isEmpty(organizationPayload.getPriority())) {
-			organization.setPriority(organizationPayload.getPriority());
-		}
-		if (!StringUtils.isEmpty(organizationPayload.getRevenue())) {
-			organization.setRevenue(organizationPayload.getRevenue());
-		}
-		if (!StringUtils.isEmpty(organizationPayload.getAssets())) {
-			organization.setAssets(organizationPayload.getAssets());
-		}
-		if (!StringUtils.isEmpty(organizationPayload.getSector())) {
-			organization.setSector(organizationPayload.getSector());
-		}
-		if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
-			organization.setSectorLevel(organizationPayload.getSectorLevel());
-		}
-		Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
-		if (!isUpdated) {
-			throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
-		}
+		try {
+			if (!StringUtils.isEmpty(organizationPayload.getDescription())) {
+				organization.setDescription(organizationPayload.getDescription());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getPriority())) {
+				organization.setPriority(organizationPayload.getPriority());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getRevenue())) {
+				organization.setRevenue(organizationPayload.getRevenue());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getAssets())) {
+				organization.setAssets(organizationPayload.getAssets());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getSector())) {
+				organization.setSector(organizationPayload.getSector());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
+				organization.setSectorLevel(organizationPayload.getSectorLevel());
+			}
+			Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
+			if (!isUpdated) {
+				throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
+			}
 
-		organization.setUpdatedAt(new Date(System.currentTimeMillis()));
-		organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+			organization.setUpdatedAt(sdf.parse(formattedDte));
+			organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
-		orgClassificationMapping = addClassification(organizationPayload, organization);
+			orgClassificationMapping = addClassification(organizationPayload, organization);
 
-		/*
-		 * if (orgClassificationMapping == null) { throw new
-		 * OrganizationException("Request to update classification is invalid");
-		 * }
-		 */
+			/*
+			 * if (orgClassificationMapping == null) { throw new
+			 * OrganizationException(
+			 * "Request to update classification is invalid"); }
+			 */
 
-		organizationRepository.saveAndFlush(organization);
+			organizationRepository.saveAndFlush(organization);
 
-		if (null != organizationPayload && null != organizationPayload.getId()) {
-			organization = organizationRepository.findOrgById(organizationPayload.getId());
+			if (null != organizationPayload && null != organizationPayload.getId()) {
+				organization = organizationRepository.findOrgById(organizationPayload.getId());
+			}
+		} catch (ParseException e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
 		}
 		return organization;
 	}
 
 	public Address saveAddress(AddressPayload addressPayload) {
 		Address address = new Address();
-		address.setCountry(addressPayload.getCountry());
-		address.setCity(addressPayload.getCity());
-		address.setState(addressPayload.getState());
-		address.setCounty(addressPayload.getCounty());
-		address.setZip(addressPayload.getZip());
-		address.setStreet(addressPayload.getStreet());
-		address.setCreatedAt(new Date(System.currentTimeMillis()));
-		address.setUpdatedAt(new Date(System.currentTimeMillis()));
-		address.setCreatedBy(OrganizationConstants.CREATED_BY);
-		address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+			address.setCountry(addressPayload.getCountry());
+			address.setCity(addressPayload.getCity());
+			address.setState(addressPayload.getState());
+			address.setCounty(addressPayload.getCounty());
+			address.setZip(addressPayload.getZip());
+			address.setStreet(addressPayload.getStreet());
+			address.setCreatedAt(sdf.parse(formattedDte));
+			address.setUpdatedAt(sdf.parse(formattedDte));
+			address.setCreatedBy(OrganizationConstants.CREATED_BY);
+			address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
+		}
 		return addressRepository.saveAndFlush(address);
 	}
 
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload) {
 		if (null != addressPayload && null != addressPayload.getId()) {
-			if (addressPayload.getId().equals(organization.getAddress().getId())) {
-				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-					organization.getAddress().setCountry(addressPayload.getCountry());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getState())) {
-					organization.getAddress().setState(addressPayload.getState());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCity())) {
-					organization.getAddress().setCity(addressPayload.getCity());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-					organization.getAddress().setCounty(addressPayload.getCounty());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getZip())) {
-					organization.getAddress().setZip(addressPayload.getZip());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-					organization.getAddress().setStreet(addressPayload.getStreet());
-				}
+			try {
+				if (addressPayload.getId().equals(organization.getAddress().getId())) {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+					if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+						organization.getAddress().setCountry(addressPayload.getCountry());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getState())) {
+						organization.getAddress().setState(addressPayload.getState());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getCity())) {
+						organization.getAddress().setCity(addressPayload.getCity());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+						organization.getAddress().setCounty(addressPayload.getCounty());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getZip())) {
+						organization.getAddress().setZip(addressPayload.getZip());
+					}
+					if (!StringUtils.isEmpty(addressPayload.getStreet())) {
+						organization.getAddress().setStreet(addressPayload.getStreet());
+					}
 
-				organization.getAddress().setUpdatedAt(new Date(System.currentTimeMillis()));
-				organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
+					organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
+					organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
-				return true;
+					return true;
+				}
+			} catch (Exception e) {
+				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
 			}
 
 		}

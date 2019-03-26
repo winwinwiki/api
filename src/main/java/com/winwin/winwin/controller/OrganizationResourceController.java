@@ -46,6 +46,8 @@ public class OrganizationResourceController extends BaseController {
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
 		OrganizationResourcePayLoad payload = null;
+		OrganizationResourceCategory category = null;
+		OrganizationResourceCategoryPayLoad payloadCategory = null;
 		if (null != organizationResourcePayLoad) {
 			try {
 				organizationResource = organizationResourceService
@@ -53,7 +55,13 @@ public class OrganizationResourceController extends BaseController {
 				if (null != organizationResource) {
 					payload = new OrganizationResourcePayLoad();
 					payload.setId(organizationResource.getId());
-					payload.setOrganizationResourceCategory(organizationResource.getOrganizationResourceCategory());
+					category = organizationResource.getOrganizationResourceCategory();
+					if (null != category) {
+						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory.setId(category.getId());
+						payloadCategory.setCategoryName(category.getCategoryName());
+					}
+					payload.setOrganizationResourceCategory(payloadCategory);
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
@@ -78,6 +86,8 @@ public class OrganizationResourceController extends BaseController {
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
+		OrganizationResourceCategory category = null;
+		OrganizationResourceCategoryPayLoad payloadCategory = null;
 		OrganizationResourcePayLoad payload = new OrganizationResourcePayLoad();
 		try {
 			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
@@ -90,7 +100,13 @@ public class OrganizationResourceController extends BaseController {
 					organizationResource = organizationResourceService
 							.createOrUpdateOrganizationResource(organizationResourcePayLoad);
 					payload.setId(organizationResource.getId());
-					payload.setOrganizationResourceCategory(organizationResource.getOrganizationResourceCategory());
+					category = organizationResource.getOrganizationResourceCategory();
+					if (null != category) {
+						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory.setId(category.getId());
+						payloadCategory.setCategoryName(category.getCategoryName());
+					}
+					payload.setOrganizationResourceCategory(payloadCategory);
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
@@ -141,6 +157,8 @@ public class OrganizationResourceController extends BaseController {
 			@PathVariable("id") Long id) throws OrganizationResourceException {
 		List<OrganizationResource> orgResourceList = null;
 		OrganizationResourcePayLoad payload = null;
+		OrganizationResourceCategory category = null;
+		OrganizationResourceCategoryPayLoad payloadCategory = null;
 		List<OrganizationResourcePayLoad> payloadList = new ArrayList<OrganizationResourcePayLoad>();
 		try {
 			orgResourceList = organizationResourceService.getOrganizationResourceList(id);
@@ -150,7 +168,13 @@ public class OrganizationResourceController extends BaseController {
 				for (OrganizationResource resource : orgResourceList) {
 					payload = new OrganizationResourcePayLoad();
 					payload.setId(resource.getId());
-					payload.setOrganizationResourceCategory(resource.getOrganizationResourceCategory());
+					category = resource.getOrganizationResourceCategory();
+					if (null != category) {
+						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory.setId(category.getId());
+						payloadCategory.setCategoryName(category.getCategoryName());
+					}
+					payload.setOrganizationResourceCategory(payloadCategory);
 					payload.setOrganizationId(resource.getOrganizationId());
 					payload.setCount(resource.getCount());
 					payload.setDescription(resource.getDescription());
