@@ -44,64 +44,58 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 	@Override
 	public List<OrgRegionServed> createOrgRegionServed(List<OrgRegionServedPayload> orgRegionPayloadlist) {
-		OrgRegionServed orgRegionServed = null;
 		List<OrgRegionServed> orgRegionList = null;
 		Address address = null;
 		try {
 			if (null != orgRegionPayloadlist) {
 				orgRegionList = new ArrayList<OrgRegionServed>();
 				for (OrgRegionServedPayload payload : orgRegionPayloadlist) {
-					orgRegionServed = new OrgRegionServed();
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-					orgRegionServed.setOrgId(payload.getOrganizationId());
-					if (null != payload.getAddress()) {
-						address = saveAddress(payload.getAddress());
-						orgRegionServed.setAddress(address);
+					if (payload.getId() == null) {
+						OrgRegionServed orgRegionServed = null;
+						orgRegionServed = new OrgRegionServed();
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+						orgRegionServed.setOrgId(payload.getOrganizationId());
+						if (null != payload.getAddress()) {
+							address = saveAddress(payload.getAddress());
+							orgRegionServed.setAddress(address);
+						}
+						orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
+						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
+						orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
+						orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+						orgRegionServedRepository.saveAndFlush(orgRegionServed);
+
+						orgRegionServed = orgRegionServedRepository.findLastOrgRegion();
+						orgRegionList.add(orgRegionServed);
+
 					}
-					orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
-					orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
-					orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
-					orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-					orgRegionServedRepository.saveAndFlush(orgRegionServed);
+					// for delete organization region served
+					else if (null != payload.getId() && !(payload.getIsActive())) {
+						OrgRegionServed region = null;
+						region = orgRegionServedRepository.findOrgRegionById(payload.getId());
+						if (region == null) {
+							LOGGER.info(customMessageSource.getMessage("org.region.error.not_found"));
+							throw new OrgRegionServedException(
+									customMessageSource.getMessage("org.region.error.not_found"));
+						} else {
+							region.setIsActive(payload.getIsActive());
+							region.setUpdatedAt(new Date(System.currentTimeMillis()));
+							region.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+							orgRegionServedRepository.saveAndFlush(region);
+							orgRegionList.add(region);
+						}
+					} // end of else if
 
-					orgRegionServed = orgRegionServedRepository.findLastOrgRegion();
-					orgRegionList.add(orgRegionServed);
-				}
+				} // end of loop
 
-			}
+			} // end of if
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.exception.created"), e);
 		}
 
 		return orgRegionList;
-	}
-
-	@Override
-	public OrgRegionServed updateOrgRegionServed(OrgRegionServedPayload payload, OrgRegionServed orgRegionServed) {
-		if (!payload.getIsActive()) {
-			orgRegionServed.setIsActive(payload.getIsActive());
-		}
-
-		Boolean isUpdated = updateAddress(orgRegionServed, payload.getAddress());
-		if (!isUpdated) {
-			try {
-				throw new OrgRegionServedException(customMessageSource.getMessage("org.exception.address.null"));
-			} catch (OrgRegionServedException e) {
-				LOGGER.error(customMessageSource.getMessage("org.exception.address.null"), e);
-			}
-		}
-
-		orgRegionServed.setUpdatedAt(new Date(System.currentTimeMillis()));
-		orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-
-		orgRegionServedRepository.saveAndFlush(orgRegionServed);
-
-		if (null != payload && null != payload.getId()) {
-			orgRegionServed = orgRegionServedRepository.findOrgRegionById(payload.getId());
-		}
-		return orgRegionServed;
-	}
+	}// end of method createOrgRegionServed
 
 	@Override
 	public List<OrgRegionServed> getOrgRegionServedList() {
@@ -128,45 +122,6 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
 		return addressRepository.saveAndFlush(address);
-	}
-
-	public Boolean updateAddress(OrgRegionServed orgRegionServed, AddressPayload addressPayload) {
-		try {
-			if (null != addressPayload && null != addressPayload.getId()) {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-					orgRegionServed.getAddress().setCountry(addressPayload.getCountry());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getState())) {
-					orgRegionServed.getAddress().setState(addressPayload.getState());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCity())) {
-					orgRegionServed.getAddress().setCity(addressPayload.getCity());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-					orgRegionServed.getAddress().setCounty(addressPayload.getCounty());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getZip())) {
-					orgRegionServed.getAddress().setZip(addressPayload.getZip());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-					orgRegionServed.getAddress().setStreet(addressPayload.getStreet());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getPlaceId())) {
-					orgRegionServed.getAddress().setPlaceId(addressPayload.getPlaceId());
-				}
-
-				orgRegionServed.getAddress().setUpdatedAt(sdf.parse(formattedDte));
-				orgRegionServed.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
-
-				return true;
-
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
-		}
-		return false;
 	}
 
 }

@@ -15,9 +15,6 @@ import com.winwin.winwin.payload.OrgRegionServedPayload;
 public interface IOrgRegionServedService {
 	List<OrgRegionServed> createOrgRegionServed(List<OrgRegionServedPayload> orgRegionPayloadList);
 
-	OrgRegionServed updateOrgRegionServed(OrgRegionServedPayload orgRegionServedPayload,
-			OrgRegionServed orgRegionServed);
-
 	List<OrgRegionServed> getOrgRegionServedList();
 
 }

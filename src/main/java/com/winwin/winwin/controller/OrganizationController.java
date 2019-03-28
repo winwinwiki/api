@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.entity.OrgRegionServed;
+import com.winwin.winwin.entity.OrgSdgDataMapping;
 import com.winwin.winwin.entity.OrgSpiDataMapping;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
@@ -23,6 +24,7 @@ import com.winwin.winwin.entity.OrganizationDataSetCategory;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrgRegionServedException;
+import com.winwin.winwin.exception.OrgSdgDataException;
 import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
 import com.winwin.winwin.exception.OrganizationDataSetException;
@@ -31,6 +33,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
+import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
@@ -84,7 +87,7 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
-	
+
 	@Autowired
 	OrgSdgDataService orgSdgDataService;
 
@@ -663,55 +666,6 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 	}
 
-	/**
-	 * @param httpServletResponse
-	 * @param orgRegionServedPayloadList
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value = "/{id}/region", method = RequestMethod.PUT)
-	@Transactional
-	public ResponseEntity updateOrgRegions(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) {
-		OrgRegionServed region = null;
-		OrgRegionServedPayload payload = null;
-		AddressPayload addressPayload = null;
-		List<OrgRegionServedPayload> payloadList = null;
-		try {
-			for (OrgRegionServedPayload regionPayload : orgRegionServedPayloadList) {
-				region = orgRegionServedRepository.findOrgRegionById(regionPayload.getId());
-				if (region == null) {
-					throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
-				} else {
-					payloadList = new ArrayList<OrgRegionServedPayload>();
-					region = orgRegionServedService.updateOrgRegionServed(regionPayload, region);
-					payload = new OrgRegionServedPayload();
-					payload.setId(region.getId());
-					payload.setOrganizationId(region.getOrgId());
-					if (null != region.getAddress()) {
-						addressPayload = new AddressPayload();
-						addressPayload.setId(region.getAddress().getId());
-						addressPayload.setCountry(region.getAddress().getCountry());
-						addressPayload.setState(region.getAddress().getState());
-						addressPayload.setCity(region.getAddress().getCity());
-						addressPayload.setCounty(region.getAddress().getCounty());
-						addressPayload.setZip(region.getAddress().getZip());
-						addressPayload.setStreet(region.getAddress().getStreet());
-						addressPayload.setPlaceId(region.getAddress().getPlaceId());
-						payload.setAddress(addressPayload);
-					}
-					payload.setIsActive(region.getIsActive());
-					payloadList.add(payload);
-				}
-			}
-		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("org.region.error.updated") + ": " + e.getMessage());
-		}
-		return sendSuccessResponse(payloadList);
-
-	}
-
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
 	public ResponseEntity<?> getOrgRegionsList(HttpServletResponse httpServletResponse)
 			throws OrgRegionServedException {
@@ -823,22 +777,61 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}// Code for organization SPI data end
-	
+
 	// Code for organization SDG data start
-		@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
-		public ResponseEntity<?> getOrgSdgDataList(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
-			List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
-			try {
-				payloadList = orgSdgDataService.getSdgDataForResponse();
-				if (payloadList == null) {
-					throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
-				}
-
-			} catch (Exception e) {
-				throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.list"));
+	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrgSdgDataList(HttpServletResponse httpServletResponse) throws OrgSdgDataException {
+		List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
+		try {
+			payloadList = orgSdgDataService.getSdgDataForResponse();
+			if (payloadList == null) {
+				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 			}
-			return sendSuccessResponse(payloadList);
 
+		} catch (Exception e) {
+			throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.list"));
 		}
+		return sendSuccessResponse(payloadList);
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity createOrgSdgDataMapping(HttpServletResponse httpServletResponse,
+			@RequestBody List<OrgSdgDataMapPayload> payloadList, @PathVariable("id") Long orgId)
+			throws OrgSdgDataException {
+		if (null != payloadList) {
+			try {
+				orgSdgDataService.createSdgDataMapping(payloadList, orgId);
+			} catch (Exception e) {
+				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
+			}
+			return sendSuccessResponse("org.sdgdata.success.created");
+
+		} else {
+			return sendErrorResponse("org.bad.request");
+		}
+
+	}
+
+	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
+	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse) throws OrgSdgDataException {
+		List<OrgSdgDataMapping> selectedSdgDataList = null;
+		OrgSdgDataMapPayload payload = null;
+		List<OrgSdgDataMapPayload> payloadList = null;
+		try {
+			selectedSdgDataList = orgSdgDataService.getSelectedSdgData();
+
+			if (selectedSdgDataList == null) {
+				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
+			} else {
+			}
+		} catch (Exception e) {
+			throw new OrgSdgDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));
+		}
+		return sendSuccessResponse(selectedSdgDataList);
+
+	}// Code for organization SDG data end
 
 }
