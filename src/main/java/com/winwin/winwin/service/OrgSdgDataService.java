@@ -7,6 +7,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.entity.OrgSdgData;
@@ -21,6 +22,7 @@ import com.winwin.winwin.repository.OrgSdgDataRepository;
  * @author ArvindKhatik
  *
  */
+@Component
 public class OrgSdgDataService implements IOrgSdgDataService {
 	@Autowired
 	OrgSdgDataRepository orgSdgDataRepository;
