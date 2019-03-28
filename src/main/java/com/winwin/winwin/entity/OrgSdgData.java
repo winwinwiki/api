@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
@@ -26,19 +23,22 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_spi_data")
-public class OrgSpiData {
+@Table(name = "org_sdg_data")
+public class OrgSdgData {
 	@Id
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "name")
-	private String name;
+	@Column(name = "goal_code")
+	private Long goalCode;
 
-	@Column(name = "parent_id")
-	private Long parentId;
+	@Column(name = "goal_name")
+	private String goalName;
 
-	@Column(name = "level")
-	private Integer level;
+	@Column(name = "short_name_code")
+	private String shortNameCode;
+
+	@Column(name = "short_name")
+	private String shortName;
 
 }

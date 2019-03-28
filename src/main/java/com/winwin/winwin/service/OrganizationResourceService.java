@@ -23,7 +23,7 @@ import com.winwin.winwin.repository.OrganizationResourceRepository;
 import io.micrometer.core.instrument.util.StringUtils;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @Component

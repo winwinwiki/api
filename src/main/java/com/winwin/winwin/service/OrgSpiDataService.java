@@ -25,7 +25,7 @@ import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataRepository;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @Component

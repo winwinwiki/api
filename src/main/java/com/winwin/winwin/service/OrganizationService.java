@@ -25,6 +25,10 @@ import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Component
 public class OrganizationService implements IOrganizationService {
 	@Autowired
@@ -151,6 +155,7 @@ public class OrganizationService implements IOrganizationService {
 			address.setCounty(addressPayload.getCounty());
 			address.setZip(addressPayload.getZip());
 			address.setStreet(addressPayload.getStreet());
+			address.setPlaceId(addressPayload.getPlaceId());
 			address.setCreatedAt(sdf.parse(formattedDte));
 			address.setUpdatedAt(sdf.parse(formattedDte));
 			address.setCreatedBy(OrganizationConstants.CREATED_BY);
@@ -164,33 +169,34 @@ public class OrganizationService implements IOrganizationService {
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload) {
 		if (null != addressPayload && null != addressPayload.getId()) {
 			try {
-				if (addressPayload.getId().equals(organization.getAddress().getId())) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-					if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-						organization.getAddress().setCountry(addressPayload.getCountry());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getState())) {
-						organization.getAddress().setState(addressPayload.getState());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getCity())) {
-						organization.getAddress().setCity(addressPayload.getCity());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-						organization.getAddress().setCounty(addressPayload.getCounty());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getZip())) {
-						organization.getAddress().setZip(addressPayload.getZip());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-						organization.getAddress().setStreet(addressPayload.getStreet());
-					}
-
-					organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
-					organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
-
-					return true;
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+					organization.getAddress().setCountry(addressPayload.getCountry());
 				}
+				if (!StringUtils.isEmpty(addressPayload.getState())) {
+					organization.getAddress().setState(addressPayload.getState());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCity())) {
+					organization.getAddress().setCity(addressPayload.getCity());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+					organization.getAddress().setCounty(addressPayload.getCounty());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getZip())) {
+					organization.getAddress().setZip(addressPayload.getZip());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
+					organization.getAddress().setStreet(addressPayload.getStreet());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getPlaceId())) {
+					organization.getAddress().setPlaceId(addressPayload.getPlaceId());
+				}
+
+				organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
+				organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
+
+				return true;
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
 			}

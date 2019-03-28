@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import com.winwin.winwin.entity.OrgSpiData;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface OrgSpiDataRepository extends JpaRepository<OrgSpiData, Long> {

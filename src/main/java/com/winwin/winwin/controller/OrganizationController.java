@@ -31,6 +31,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
+import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
@@ -43,13 +44,14 @@ import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
+import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @RestController
@@ -82,6 +84,9 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
+	
+	@Autowired
+	OrgSdgDataService orgSdgDataService;
 
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -220,6 +225,7 @@ public class OrganizationController extends BaseController {
 				addressPayload.setCounty(organization.getAddress().getCounty());
 				addressPayload.setZip(organization.getAddress().getZip());
 				addressPayload.setStreet(organization.getAddress().getStreet());
+				addressPayload.setPlaceId(organization.getAddress().getPlaceId());
 				payload.setAddress(addressPayload);
 			}
 			payload.setName(organization.getName());
@@ -642,6 +648,7 @@ public class OrganizationController extends BaseController {
 						addressPayload.setCounty(region.getAddress().getCounty());
 						addressPayload.setZip(region.getAddress().getZip());
 						addressPayload.setStreet(region.getAddress().getStreet());
+						addressPayload.setPlaceId(region.getAddress().getPlaceId());
 						payload.setAddress(addressPayload);
 					}
 					payload.setIsActive(region.getIsActive());
@@ -690,6 +697,7 @@ public class OrganizationController extends BaseController {
 						addressPayload.setCounty(region.getAddress().getCounty());
 						addressPayload.setZip(region.getAddress().getZip());
 						addressPayload.setStreet(region.getAddress().getStreet());
+						addressPayload.setPlaceId(region.getAddress().getPlaceId());
 						payload.setAddress(addressPayload);
 					}
 					payload.setIsActive(region.getIsActive());
@@ -730,6 +738,7 @@ public class OrganizationController extends BaseController {
 						addressPayload.setCounty(region.getAddress().getCounty());
 						addressPayload.setZip(region.getAddress().getZip());
 						addressPayload.setStreet(region.getAddress().getStreet());
+						addressPayload.setPlaceId(region.getAddress().getPlaceId());
 						payload.setAddress(addressPayload);
 					}
 					payload.setIsActive(region.getIsActive());
@@ -813,6 +822,23 @@ public class OrganizationController extends BaseController {
 		}
 		return sendSuccessResponse(payloadList);
 
-	}
+	}// Code for organization SPI data end
+	
+	// Code for organization SDG data start
+		@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
+		public ResponseEntity<?> getOrgSdgDataList(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
+			List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
+			try {
+				payloadList = orgSdgDataService.getSdgDataForResponse();
+				if (payloadList == null) {
+					throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
+				}
+
+			} catch (Exception e) {
+				throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.list"));
+			}
+			return sendSuccessResponse(payloadList);
+
+		}
 
 }

@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.winwin.winwin.entity.OrgRegionServed;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface OrgRegionServedRepository extends JpaRepository<OrgRegionServed, Long> {
 	@Query(value = "select * from org_region_served where id = :id", nativeQuery = true)
 	OrgRegionServed findOrgRegionById(@Param("id") Long id);

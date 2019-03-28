@@ -4,7 +4,7 @@
 package com.winwin.winwin.exception;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @SuppressWarnings("serial")

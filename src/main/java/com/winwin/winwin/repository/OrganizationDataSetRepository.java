@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import com.winwin.winwin.entity.OrganizationDataSet;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface OrganizationDataSetRepository extends JpaRepository<OrganizationDataSet, Long> {

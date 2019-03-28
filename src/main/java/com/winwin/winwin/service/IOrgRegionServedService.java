@@ -9,7 +9,7 @@ import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface IOrgRegionServedService {

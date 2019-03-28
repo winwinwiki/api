@@ -25,7 +25,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @RestController

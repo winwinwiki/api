@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.winwin.winwin.entity.OrgSpiDataMapping;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface OrgSpiDataMapRepository extends JpaRepository<OrgSpiDataMapping, Long> {
