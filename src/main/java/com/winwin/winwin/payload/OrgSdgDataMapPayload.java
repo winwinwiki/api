@@ -19,6 +19,9 @@ import lombok.ToString;
 @ToString
 public class OrgSdgDataMapPayload {
 	Long id;
-	OrganizationPayload organizationId;
-	OrgSdgDataPayload sdgId;
+	Long organizationId;
+	Long goalCode;
+	String goalName;
+	String subGoalCode;
+	String subGoalName;
 }
