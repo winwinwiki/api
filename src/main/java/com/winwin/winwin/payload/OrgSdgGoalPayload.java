@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.winwin.winwin.payload;
 
 import java.util.List;
@@ -22,9 +19,9 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrgSpiDataComponentsPayload {
-	Long componentId;
-	String componentName;
-	List<OrgSpiDataIndicatorsPayload> indicators;
+public class OrgSdgGoalPayload {
+	Long goalCode;
+	String goalName;
+	List<OrgSdgSubGoalPayload> subGoals;
 
 }

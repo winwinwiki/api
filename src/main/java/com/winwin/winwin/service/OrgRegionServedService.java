@@ -25,7 +25,7 @@ import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.OrgRegionServedRepository;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @Component
@@ -119,6 +119,7 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 			address.setCounty(addressPayload.getCounty());
 			address.setZip(addressPayload.getZip());
 			address.setStreet(addressPayload.getStreet());
+			address.setPlaceId(addressPayload.getPlaceId());
 			address.setCreatedAt(sdf.parse(formattedDte));
 			address.setUpdatedAt(sdf.parse(formattedDte));
 			address.setCreatedBy(OrganizationConstants.CREATED_BY);
@@ -132,33 +133,34 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	public Boolean updateAddress(OrgRegionServed orgRegionServed, AddressPayload addressPayload) {
 		try {
 			if (null != addressPayload && null != addressPayload.getId()) {
-				if (addressPayload.getId().equals(orgRegionServed.getAddress().getId())) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-					if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-						orgRegionServed.getAddress().setCountry(addressPayload.getCountry());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getState())) {
-						orgRegionServed.getAddress().setState(addressPayload.getState());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getCity())) {
-						orgRegionServed.getAddress().setCity(addressPayload.getCity());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-						orgRegionServed.getAddress().setCounty(addressPayload.getCounty());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getZip())) {
-						orgRegionServed.getAddress().setZip(addressPayload.getZip());
-					}
-					if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-						orgRegionServed.getAddress().setStreet(addressPayload.getStreet());
-					}
-
-					orgRegionServed.getAddress().setUpdatedAt(sdf.parse(formattedDte));
-					orgRegionServed.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
-
-					return true;
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+					orgRegionServed.getAddress().setCountry(addressPayload.getCountry());
 				}
+				if (!StringUtils.isEmpty(addressPayload.getState())) {
+					orgRegionServed.getAddress().setState(addressPayload.getState());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCity())) {
+					orgRegionServed.getAddress().setCity(addressPayload.getCity());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+					orgRegionServed.getAddress().setCounty(addressPayload.getCounty());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getZip())) {
+					orgRegionServed.getAddress().setZip(addressPayload.getZip());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
+					orgRegionServed.getAddress().setStreet(addressPayload.getStreet());
+				}
+				if (!StringUtils.isEmpty(addressPayload.getPlaceId())) {
+					orgRegionServed.getAddress().setPlaceId(addressPayload.getPlaceId());
+				}
+
+				orgRegionServed.getAddress().setUpdatedAt(sdf.parse(formattedDte));
+				orgRegionServed.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
+
+				return true;
 
 			}
 		} catch (Exception e) {

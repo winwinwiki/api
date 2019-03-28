@@ -1,7 +1,7 @@
 package com.winwin.winwin.constants;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public class OrganizationConstants {

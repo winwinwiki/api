@@ -8,7 +8,7 @@ import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface IOrgSpiDataService {

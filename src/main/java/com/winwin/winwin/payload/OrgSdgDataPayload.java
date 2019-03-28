@@ -1,9 +1,4 @@
-/**
- * 
- */
 package com.winwin.winwin.payload;
-
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -22,9 +17,12 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrgSpiDataComponentsPayload {
-	Long componentId;
-	String componentName;
-	List<OrgSpiDataIndicatorsPayload> indicators;
+public class OrgSdgDataPayload {
+
+	private Long id;
+	private Long goalCode;
+	private String goalName;
+	private Long shortNameCode;
+	private String shortName;
 
 }

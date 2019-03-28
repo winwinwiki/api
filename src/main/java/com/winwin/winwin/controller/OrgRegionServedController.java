@@ -20,6 +20,10 @@ import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.repository.OrgRegionServedRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @RestController
 @RequestMapping(value = "/orgregions")
 public class OrgRegionServedController extends BaseController {

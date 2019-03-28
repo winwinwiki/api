@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface OrganizationResourceCategoryRepository extends JpaRepository<OrganizationResourceCategory, Long> {

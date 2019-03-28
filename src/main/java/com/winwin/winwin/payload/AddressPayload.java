@@ -21,4 +21,5 @@ public class AddressPayload {
 	private String county;
 	private Long zip;
 	private String street;
+	private String placeId;
 }

@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import com.winwin.winwin.entity.OrganizationResource;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface OrganizationResourceRepository extends JpaRepository<OrganizationResource, Long> {

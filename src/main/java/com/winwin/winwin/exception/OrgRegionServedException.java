@@ -1,5 +1,9 @@
 package com.winwin.winwin.exception;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public class OrgRegionServedException extends Exception {
 
 	private static final long serialVersionUID = 1L;

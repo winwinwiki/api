@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * @author arvindK
+ * @author ArvindKhatik
  *
  */
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
