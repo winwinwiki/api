@@ -816,21 +816,19 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
-	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse) throws OrgSdgDataException {
-		List<OrgSdgDataMapping> selectedSdgDataList = null;
-		OrgSdgDataMapPayload payload = null;
+	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse,@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		List<OrgSdgDataMapPayload> payloadList = null;
 		try {
-			selectedSdgDataList = orgSdgDataService.getSelectedSdgData();
+			payloadList = orgSdgDataService.getSelectedSdgData(orgId);
 
-			if (selectedSdgDataList == null) {
+			if (payloadList == null) {
 				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 			} else {
 			}
 		} catch (Exception e) {
 			throw new OrgSdgDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));
 		}
-		return sendSuccessResponse(selectedSdgDataList);
+		return sendSuccessResponse(payloadList);
 
 	}// Code for organization SDG data end
 

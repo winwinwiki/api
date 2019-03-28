@@ -17,6 +17,7 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgSdgData;
 import com.winwin.winwin.entity.OrgSdgDataMapping;
+import com.winwin.winwin.exception.OrgSdgDataException;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSdgSubGoalPayload;
@@ -70,7 +71,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 		}
 
 		return payloadList;
-	}//end of method getSdgDataForResponse
+	}// end of method getSdgDataForResponse
 
 	/**
 	 * @param sdgList
@@ -87,28 +88,28 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 				sdgDataMap.get(sdgDataObj.getGoalCode()).add(sdgDataObj);
 			}
 		}
-	}//end of method setSdgDataMap
+	}// end of method setSdgDataMap
 
 	@Override
-	public void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) {
-		HashMap<String,Long> subGoalCodesMap = new HashMap<String,Long>();
+	public void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) throws OrgSdgDataException {
+		HashMap<String, OrgSdgData> subGoalCodesMap = new HashMap<String, OrgSdgData>();
 		List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
-		if ( null != sdgList){
-			for(OrgSdgData sdgDataObj : sdgList){
-				subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj.getId());
+		if (null != sdgList) {
+			for (OrgSdgData sdgDataObj : sdgList) {
+				subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
 			}
 		}
-		
+
 		for (OrgSdgDataMapPayload payload : payloadList) {
 			try {
 				OrgSdgDataMapping sdgDataMap = new OrgSdgDataMapping();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				sdgDataMap.setOrganizationId(payload.getOrganizationId());
-				
-				if(!StringUtils.isEmpty(payload.getSubGoalCode())){
-					Long sdgId = subGoalCodesMap.get(payload.getSubGoalCode());
-					sdgDataMap.setSdgId(sdgId);
+				sdgDataMap.setOrganizationId(orgId);
+
+				if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
+					OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+					sdgDataMap.setSdgData(orgSdgData);
 				}
 				sdgDataMap.setCreatedAt(sdf.parse(formattedDte));
 				sdgDataMap.setUpdatedAt(sdf.parse(formattedDte));
@@ -117,16 +118,37 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 				orgSdgDataMapRepository.saveAndFlush(sdgDataMap);
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.created"), e);
+				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
 			}
 		}
 
-	}//end of method createSdgDataMapping
+	}// end of method createSdgDataMapping
 
 	@Override
-	public List<OrgSdgDataMapping> getSelectedSdgData() {
-		List<OrgSdgDataMapping> sdgDataMapList = orgSdgDataMapRepository.findAll();
-		// TODO Auto-generated method stub
-		return sdgDataMapList;
+	public List<OrgSdgDataMapPayload> getSelectedSdgData(Long orgId) {
+
+		List<OrgSdgDataMapPayload> payloadList = null;
+		List<OrgSdgDataMapping> sdgDataMapList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(orgId);
+		if (null != sdgDataMapList) {
+			payloadList = new ArrayList<OrgSdgDataMapPayload>();
+
+			for (OrgSdgDataMapping sdgMapData : sdgDataMapList) {
+				OrgSdgDataMapPayload payload = new OrgSdgDataMapPayload();
+				payload.setId(sdgMapData.getId());
+				payload.setOrganizationId(sdgMapData.getOrganizationId());
+				if (null != sdgMapData.getSdgData()) {
+					payload.setGoalCode(sdgMapData.getSdgData().getGoalCode());
+					payload.setGoalName(sdgMapData.getSdgData().getGoalName());
+					payload.setSubGoalCode(sdgMapData.getSdgData().getShortNameCode());
+					payload.setSubGoalName(sdgMapData.getSdgData().getShortName());
+				}
+
+				payloadList.add(payload);
+
+			}
+		}
+
+		return payloadList;
 	}
 
 }

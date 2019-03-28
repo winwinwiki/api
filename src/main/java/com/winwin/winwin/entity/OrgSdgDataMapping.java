@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -35,7 +37,8 @@ public class OrgSdgDataMapping extends AbstractAuditableEntity {
 	@Column(name = "organization_id")
 	private Long organizationId;
 
-	@Column(name = "sdg_id")
-	private Long sdgId;
+	@ManyToOne
+	@JoinColumn(name = "sdg_id")
+	private OrgSdgData sdgData;
 
 }
