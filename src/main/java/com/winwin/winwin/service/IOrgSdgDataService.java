@@ -2,7 +2,7 @@ package com.winwin.winwin.service;
 
 import java.util.List;
 
-import com.winwin.winwin.entity.OrgSdgDataMapping;
+import com.winwin.winwin.exception.OrgSdgDataException;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 
@@ -13,8 +13,8 @@ import com.winwin.winwin.payload.OrgSdgGoalPayload;
 public interface IOrgSdgDataService {
 	List<OrgSdgGoalPayload> getSdgDataForResponse();
 
-	void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId);
+	void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) throws OrgSdgDataException;
 
-	List<OrgSdgDataMapping> getSelectedSdgData();
+	List<OrgSdgDataMapPayload> getSelectedSdgData(Long orgId);
 
 }

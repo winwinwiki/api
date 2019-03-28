@@ -73,52 +73,7 @@ public class OrgRegionServedController extends BaseController {
 		return sendSuccessResponse(payloadList);
 	}
 
-	/**
-	 * @param httpServletResponse
-	 * @param orgRegionServedPayloadList
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	@RequestMapping(value = "/update", method = RequestMethod.PUT)
-	@Transactional
-	public ResponseEntity updateOrgRegions(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) {
-		OrgRegionServed region = null;
-		OrgRegionServedPayload payload = null;
-		AddressPayload addressPayload = null;
-		List<OrgRegionServedPayload> payloadList = new ArrayList<OrgRegionServedPayload>();
-		try {
-			for (OrgRegionServedPayload regionPayload : orgRegionServedPayloadList) {
-				region = orgRegionServedRepository.findOrgRegionById(regionPayload.getId());
-				if (region == null) {
-					throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
-				} else {
-					region = orgRegionServedService.updateOrgRegionServed(regionPayload, region);
-					payload = new OrgRegionServedPayload();
-					payload.setId(region.getId());
-					payload.setOrganizationId(region.getOrgId());
-					if (null != region.getAddress()) {
-						addressPayload = new AddressPayload();
-						addressPayload.setId(region.getAddress().getId());
-						addressPayload.setCountry(region.getAddress().getCountry());
-						addressPayload.setState(region.getAddress().getState());
-						addressPayload.setCity(region.getAddress().getCity());
-						addressPayload.setCounty(region.getAddress().getCounty());
-						addressPayload.setZip(region.getAddress().getZip());
-						addressPayload.setStreet(region.getAddress().getStreet());
-						payload.setAddress(addressPayload);
-					}
-					payload.setIsActive(region.getIsActive());
-					payloadList.add(payload);
-				}
-			}
-		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("org.region.error.updated") + ": " + e.getMessage());
-		}
-		return sendSuccessResponse(payloadList);
 
-	}
 
 	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public ResponseEntity<?> getOrgRegionsList(HttpServletResponse httpServletResponse)
