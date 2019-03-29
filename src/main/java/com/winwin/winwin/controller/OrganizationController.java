@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.entity.OrgRegionServed;
-import com.winwin.winwin.entity.OrgSdgDataMapping;
-import com.winwin.winwin.entity.OrgSpiDataMapping;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
@@ -42,7 +40,6 @@ import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
-import com.winwin.winwin.repository.OrgRegionServedRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -81,9 +78,6 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	private OrgRegionServedService orgRegionServedService;
-
-	@Autowired
-	private OrgRegionServedRepository orgRegionServedRepository;
 
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
@@ -732,6 +726,8 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity createOrgSpiDataMapping(HttpServletResponse httpServletResponse,
 			@RequestBody List<OrgSpiDataMapPayload> payloadList, @PathVariable("id") Long orgId)
 			throws OrgSpiDataException {
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
 			try {
 				orgSpiDataService.createSpiDataMapping(payloadList, orgId);
@@ -747,30 +743,19 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
-	public ResponseEntity<?> getSelectedOrgSpiData(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
-		List<OrgSpiDataMapping> selectedSpiDataList = null;
-		OrgSpiDataMapPayload payload = null;
+	public ResponseEntity<?> getSelectedOrgSpiData(HttpServletResponse httpServletResponse,
+			@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		List<OrgSpiDataMapPayload> payloadList = null;
-		try {
-			selectedSpiDataList = orgSpiDataService.getSelectedSpiData();
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 
-			if (selectedSpiDataList == null) {
+		try {
+			payloadList = orgSpiDataService.getSelectedSpiData(orgId);
+
+			if (payloadList == null) {
 				throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
-			} else {
-				payloadList = new ArrayList<OrgSpiDataMapPayload>();
-				for (OrgSpiDataMapping spiDataMapObj : selectedSpiDataList) {
-					payload = new OrgSpiDataMapPayload();
-					payload.setId(spiDataMapObj.getId());
-					payload.setOrganizationId(spiDataMapObj.getOrganizationId());
-					payload.setDimensionId(spiDataMapObj.getDimensionId());
-					payload.setDimensionName(spiDataMapObj.getDimensionName());
-					payload.setComponentId(spiDataMapObj.getComponentId());
-					payload.setComponentName(spiDataMapObj.getComponentName());
-					payload.setIndicatorId(spiDataMapObj.getIndicatorId());
-					payload.setIndicatorName(spiDataMapObj.getIndicatorName());
-					payloadList.add(payload);
-				}
 			}
+
 		} catch (Exception e) {
 			throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));
 		}
@@ -801,6 +786,8 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity createOrgSdgDataMapping(HttpServletResponse httpServletResponse,
 			@RequestBody List<OrgSdgDataMapPayload> payloadList, @PathVariable("id") Long orgId)
 			throws OrgSdgDataException {
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
 			try {
 				orgSdgDataService.createSdgDataMapping(payloadList, orgId);
@@ -816,14 +803,16 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
-	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse,@PathVariable("id") Long orgId) throws OrgSdgDataException {
+	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse,
+			@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		List<OrgSdgDataMapPayload> payloadList = null;
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
 			payloadList = orgSdgDataService.getSelectedSdgData(orgId);
 
 			if (payloadList == null) {
 				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
-			} else {
 			}
 		} catch (Exception e) {
 			throw new OrgSdgDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));

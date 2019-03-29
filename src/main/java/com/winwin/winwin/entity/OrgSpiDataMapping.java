@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -35,22 +37,7 @@ public class OrgSpiDataMapping extends AbstractAuditableEntity {
 	@Column(name = "organization_id")
 	private Long organizationId;
 
-	@Column(name = "dimension_id")
-	private Long dimensionId;
-
-	@Column(name = "dimension_name")
-	private String dimensionName;
-
-	@Column(name = "component_id")
-	private Long componentId;
-
-	@Column(name = "component_name")
-	private String componentName;
-
-	@Column(name = "indicator_id")
-	private Long indicatorId;
-
-	@Column(name = "indicator_name")
-	private String indicatorName;
-
+	@ManyToOne
+	@JoinColumn(name = "spi_id")
+	private OrgSpiData spiData;
 }

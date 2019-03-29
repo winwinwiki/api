@@ -32,13 +32,22 @@ public class OrgSpiData {
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "name")
-	private String name;
+	@Column(name = "dimension_id")
+	private Long dimensionId;
 
-	@Column(name = "parent_id")
-	private Long parentId;
+	@Column(name = "dimension_name")
+	private String dimensionName;
 
-	@Column(name = "level")
-	private Integer level;
+	@Column(name = "component_id")
+	private Long componentId;
+
+	@Column(name = "component_name")
+	private String componentName;
+
+	@Column(name = "indicator_id")
+	private Long indicatorId;
+
+	@Column(name = "indicator_name")
+	private String indicatorName;
 
 }

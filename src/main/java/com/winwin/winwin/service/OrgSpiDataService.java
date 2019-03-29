@@ -4,6 +4,7 @@
 package com.winwin.winwin.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgSpiData;
 import com.winwin.winwin.entity.OrgSpiDataMapping;
+import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.payload.OrgSpiDataComponentsPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataIndicatorsPayload;
@@ -45,83 +47,160 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	@Override
 	public List<OrgSpiDataDimensionsPayload> getSpiDataForResponse() {
 		List<OrgSpiDataDimensionsPayload> dimensionPayloadList = null;
-		List<OrgSpiData> spiDimensionList = getSpiDimensionMasterList();
-		if (null != spiDimensionList) {
-			dimensionPayloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
-			for (OrgSpiData dimensionDataObj : spiDimensionList) {
-				List<OrgSpiDataComponentsPayload> componentPayloadList = new ArrayList<OrgSpiDataComponentsPayload>();
-				List<OrgSpiData> components = new ArrayList<OrgSpiData>();
-				OrgSpiDataDimensionsPayload dimensionPayloadObj = new OrgSpiDataDimensionsPayload();
-				dimensionPayloadObj.setDimensionId(dimensionDataObj.getId());
-				dimensionPayloadObj.setDimensionName(dimensionDataObj.getName());
-				components = orgSpiDataRepository.findAllComponentsById(dimensionDataObj.getId());
-				if (null != components) {
-					for (OrgSpiData componentDataObj : components) {
-						List<OrgSpiData> indicators = new ArrayList<OrgSpiData>();
+		List<OrgSpiData> spiList = orgSpiDataRepository.findAll();
+		if (null != spiList) {
+			HashMap<Long, List<OrgSpiData>> spiDimensionsMap = new HashMap<Long, List<OrgSpiData>>();
+			setSpiDimensionsMap(spiList, spiDimensionsMap);
+
+			if ((!spiDimensionsMap.isEmpty())) {
+				dimensionPayloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
+				for (List<OrgSpiData> spiComponentsList : spiDimensionsMap.values()) {
+					OrgSpiDataDimensionsPayload dimensionPayloadObj = new OrgSpiDataDimensionsPayload();
+					dimensionPayloadObj.setDimensionId(spiComponentsList.get(0).getDimensionId());
+					dimensionPayloadObj.setDimensionName(spiComponentsList.get(0).getDimensionName());
+
+					HashMap<Long, List<OrgSpiData>> spiComponentsMap = new HashMap<Long, List<OrgSpiData>>();
+					setSpiComponentsMap(spiComponentsList, spiComponentsMap);
+
+					HashMap<Long, List<OrgSpiDataIndicatorsPayload>> spiIndicatorsMap = new HashMap<Long, List<OrgSpiDataIndicatorsPayload>>();
+					setSpiIndicatorsMap(spiComponentsList, spiIndicatorsMap);
+
+					List<OrgSpiDataComponentsPayload> componentPayloadList = new ArrayList<OrgSpiDataComponentsPayload>();
+					for (List<OrgSpiData> splittedComponentsList : spiComponentsMap.values()) {
 						OrgSpiDataComponentsPayload componentPayloadObj = new OrgSpiDataComponentsPayload();
-						List<OrgSpiDataIndicatorsPayload> indPayloadList = new ArrayList<OrgSpiDataIndicatorsPayload>();
-						componentPayloadObj.setComponentId(componentDataObj.getId());
-						componentPayloadObj.setComponentName(componentDataObj.getName());
-						indicators = orgSpiDataRepository.findAllIndicatorsById(componentDataObj.getId());
-						if (null != indicators) {
-							for (OrgSpiData obj : indicators) {
-								OrgSpiDataIndicatorsPayload indPayloadObj = new OrgSpiDataIndicatorsPayload();
-								indPayloadObj.setIndicatorId(obj.getId());
-								indPayloadObj.setIndicatorName(obj.getName());
-								indPayloadList.add(indPayloadObj);
-							}
-							componentPayloadObj.setIndicators(indPayloadList);
-
-						}
-
+						componentPayloadObj.setComponentId(splittedComponentsList.get(0).getComponentId());
+						componentPayloadObj.setComponentName(splittedComponentsList.get(0).getComponentName());
+						componentPayloadObj
+								.setIndicators(spiIndicatorsMap.get(splittedComponentsList.get(0).getComponentId()));
 						componentPayloadList.add(componentPayloadObj);
 					}
-				}
-				dimensionPayloadObj.setComponents(componentPayloadList);
-				dimensionPayloadList.add(dimensionPayloadObj);
 
-			}
+					dimensionPayloadObj.setComponents(componentPayloadList);
+					dimensionPayloadList.add(dimensionPayloadObj);
+				} // end of loop
 
-		}
+			} // end of if ((!spiDimensionsMap.isEmpty()))
+
+		} // end of if (null != spiList) {
+
 		return dimensionPayloadList;
 	}// end of method public List<OrgSpiDataDimensionsPayload>
 		// getSpiDataForResponse(
 
-	@Override
-	public List<OrgSpiData> getSpiDimensionMasterList() {
-		return orgSpiDataRepository.findAllSpiDimensionData();
-	}
+	/**
+	 * @param spiList
+	 * @param spiDimensionsMap
+	 */
+	private void setSpiDimensionsMap(List<OrgSpiData> spiList, HashMap<Long, List<OrgSpiData>> spiDimensionsMap) {
+		for (OrgSpiData spiDataObj : spiList) {
+			if (!spiDimensionsMap.containsKey(spiDataObj.getDimensionId())) {
+				List<OrgSpiData> components = new ArrayList<OrgSpiData>();
+				components.add(spiDataObj);
+
+				spiDimensionsMap.put(spiDataObj.getDimensionId(), components);
+			} else {
+				spiDimensionsMap.get(spiDataObj.getDimensionId()).add(spiDataObj);
+			}
+		}
+	}// end of method setSpiDimensionsMap
+
+	/**
+	 * @param spiList
+	 * @param spiComponentsMap
+	 */
+	private void setSpiComponentsMap(List<OrgSpiData> spiList, HashMap<Long, List<OrgSpiData>> spiComponentsMap) {
+		for (OrgSpiData spiDataObj : spiList) {
+			if (!spiComponentsMap.containsKey(spiDataObj.getComponentId())) {
+				List<OrgSpiData> components = new ArrayList<OrgSpiData>();
+				components.add(spiDataObj);
+
+				spiComponentsMap.put(spiDataObj.getComponentId(), components);
+			} else {
+				spiComponentsMap.get(spiDataObj.getComponentId()).add(spiDataObj);
+			}
+		}
+	}// end of method setSpiIndicatorsMap
+
+	/**
+	 * @param spiList
+	 * @param spiIndicatorsMap
+	 */
+	private void setSpiIndicatorsMap(List<OrgSpiData> spiList,
+			HashMap<Long, List<OrgSpiDataIndicatorsPayload>> spiIndicatorsMap) {
+		for (OrgSpiData spiDataObj : spiList) {
+			OrgSpiDataIndicatorsPayload payload = new OrgSpiDataIndicatorsPayload();
+			payload.setIndicatorId(spiDataObj.getIndicatorId());
+			payload.setIndicatorName(spiDataObj.getIndicatorName());
+
+			if (!spiIndicatorsMap.containsKey(spiDataObj.getComponentId())) {
+				List<OrgSpiDataIndicatorsPayload> indicators = new ArrayList<OrgSpiDataIndicatorsPayload>();
+				indicators.add(payload);
+
+				spiIndicatorsMap.put(spiDataObj.getComponentId(), indicators);
+			} else {
+				spiIndicatorsMap.get(spiDataObj.getComponentId()).add(payload);
+			}
+		}
+	}// end of method setSpiIndicatorsMap
 
 	@Override
-	public void createSpiDataMapping(List<OrgSpiDataMapPayload> payloadList, Long orgId) {
-		for (OrgSpiDataMapPayload spiDataMapPayload : payloadList) {
-			try {
-				OrgSpiDataMapping spiDataMap = new OrgSpiDataMapping();
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				spiDataMap.setOrganizationId(orgId);
-				spiDataMap.setDimensionId(spiDataMapPayload.getDimensionId());
-				spiDataMap.setDimensionName(spiDataMapPayload.getDimensionName());
-				spiDataMap.setComponentId(spiDataMapPayload.getComponentId());
-				spiDataMap.setComponentName(spiDataMapPayload.getComponentName());
-				spiDataMap.setIndicatorId(spiDataMapPayload.getIndicatorId());
-				spiDataMap.setIndicatorName(spiDataMapPayload.getIndicatorName());
-				spiDataMap.setCreatedAt(sdf.parse(formattedDte));
-				spiDataMap.setUpdatedAt(sdf.parse(formattedDte));
-				spiDataMap.setCreatedBy(OrganizationConstants.CREATED_BY);
-				spiDataMap.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				orgSpiDataMapRepository.saveAndFlush(spiDataMap);
-			} catch (Exception e) {
-				LOGGER.error(customMessageSource.getMessage("org.spidata.exception.created"), e);
+	public void createSpiDataMapping(List<OrgSpiDataMapPayload> payloadList, Long orgId) throws OrgSpiDataException {
+		if (null != payloadList) {
+			for (OrgSpiDataMapPayload payload : payloadList) {
+				try {
+					OrgSpiDataMapping spiDataMapObj = new OrgSpiDataMapping();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+					spiDataMapObj.setOrganizationId(orgId);
+					Long dId = payload.getDimensionId();
+					Long cId = payload.getComponentId();
+					Long indId = payload.getIndicatorId();
+
+					if (null != dId && null != cId && null != indId) {
+						OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
+						spiDataMapObj.setSpiData(orgSpiDataObj);
+					}
+					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
+					spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+					orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+				} catch (Exception e) {
+					LOGGER.error(customMessageSource.getMessage("org.spidata.exception.created"), e);
+					throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+				}
 			}
+
 		}
 
 	}// end of method public void createSpiDataMapping(
 
 	@Override
-	public List<OrgSpiDataMapping> getSelectedSpiData() {
+	public List<OrgSpiDataMapPayload> getSelectedSpiData(Long orgId) {
+		List<OrgSpiDataMapPayload> payloadList = null;
+		List<OrgSpiDataMapping> spiDataMapList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(orgId);
+		if (null != spiDataMapList) {
+			payloadList = new ArrayList<OrgSpiDataMapPayload>();
 
-		return orgSpiDataMapRepository.findAllSpiMappedData();
-	}
+			for (OrgSpiDataMapping spiMapData : spiDataMapList) {
+				OrgSpiDataMapPayload payload = new OrgSpiDataMapPayload();
+				payload.setId(spiMapData.getId());
+				payload.setOrganizationId(spiMapData.getOrganizationId());
+				if (null != spiMapData.getSpiData()) {
+					payload.setDimensionId(spiMapData.getSpiData().getDimensionId());
+					payload.setDimensionName(spiMapData.getSpiData().getDimensionName());
+					payload.setComponentId(spiMapData.getSpiData().getComponentId());
+					payload.setComponentName(spiMapData.getSpiData().getComponentName());
+					payload.setIndicatorId(spiMapData.getSpiData().getIndicatorId());
+					payload.setIndicatorName(spiMapData.getSpiData().getIndicatorName());
+				}
+
+				payloadList.add(payload);
+
+			}
+		}
+
+		return payloadList;
+	}// end of method
 
 }

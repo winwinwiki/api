@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -149,6 +148,6 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 		}
 
 		return payloadList;
-	}
+	}// end of method
 
 }
