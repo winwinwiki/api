@@ -1,9 +1,7 @@
 package com.winwin.winwin.service;
 
 import java.util.List;
-
-import com.winwin.winwin.entity.OrgSpiData;
-import com.winwin.winwin.entity.OrgSpiDataMapping;
+import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 
@@ -14,10 +12,8 @@ import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 public interface IOrgSpiDataService {
 	List<OrgSpiDataDimensionsPayload> getSpiDataForResponse();
 
-	void createSpiDataMapping(List<OrgSpiDataMapPayload> payloadList, Long orgId);
+	void createSpiDataMapping(List<OrgSpiDataMapPayload> payloadList, Long orgId) throws OrgSpiDataException;
 
-	List<OrgSpiDataMapping> getSelectedSpiData();
-
-	List<OrgSpiData> getSpiDimensionMasterList();
+	List<OrgSpiDataMapPayload> getSelectedSpiData(Long orgId);
 
 }
