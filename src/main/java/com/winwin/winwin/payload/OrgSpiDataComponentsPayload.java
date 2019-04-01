@@ -23,7 +23,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrgSpiDataComponentsPayload {
-	Long componentId;
+	String componentId;
 	String componentName;
 	List<OrgSpiDataIndicatorsPayload> indicators;
 
