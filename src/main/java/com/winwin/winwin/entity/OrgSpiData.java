@@ -39,7 +39,7 @@ public class OrgSpiData {
 	private String dimensionName;
 
 	@Column(name = "component_id")
-	private Long componentId;
+	private String componentId;
 
 	@Column(name = "component_name")
 	private String componentName;

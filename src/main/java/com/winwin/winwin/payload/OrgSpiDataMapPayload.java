@@ -22,7 +22,7 @@ public class OrgSpiDataMapPayload {
 	Long organizationId;
 	Long dimensionId;
 	String dimensionName;
-	Long componentId;
+	String componentId;
 	String componentName;
 	String indicatorId;
 	String indicatorName;
