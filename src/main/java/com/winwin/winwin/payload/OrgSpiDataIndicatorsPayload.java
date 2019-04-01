@@ -18,7 +18,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrgSpiDataIndicatorsPayload {
-	Long indicatorId;
+	String indicatorId;
 	String indicatorName;
 
 }

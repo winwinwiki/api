@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -129,8 +130,10 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 			HashMap<Long, List<OrgSpiDataIndicatorsPayload>> spiIndicatorsMap) {
 		for (OrgSpiData spiDataObj : spiList) {
 			OrgSpiDataIndicatorsPayload payload = new OrgSpiDataIndicatorsPayload();
-			payload.setIndicatorId(spiDataObj.getIndicatorId());
-			payload.setIndicatorName(spiDataObj.getIndicatorName());
+			if (!StringUtils.isEmpty(spiDataObj.getIndicatorId())) {
+				payload.setIndicatorId(spiDataObj.getIndicatorId());
+				payload.setIndicatorName(spiDataObj.getIndicatorName());
+			}
 
 			if (!spiIndicatorsMap.containsKey(spiDataObj.getComponentId())) {
 				List<OrgSpiDataIndicatorsPayload> indicators = new ArrayList<OrgSpiDataIndicatorsPayload>();
@@ -154,12 +157,18 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 					spiDataMapObj.setOrganizationId(orgId);
 					Long dId = payload.getDimensionId();
 					Long cId = payload.getComponentId();
-					Long indId = payload.getIndicatorId();
+					String indId = payload.getIndicatorId();
 
-					if (null != dId && null != cId && null != indId) {
+					if (null != dId && null != cId && !(StringUtils.isEmpty(indId))) {
 						OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
 						spiDataMapObj.setSpiData(orgSpiDataObj);
 					}
+
+					if (!payload.getIsChecked()) {
+						throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+					}
+
+					spiDataMapObj.setIsChecked(payload.getIsChecked());
 					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);

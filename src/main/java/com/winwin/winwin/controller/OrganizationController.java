@@ -9,12 +9,14 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
@@ -92,6 +94,9 @@ public class OrganizationController extends BaseController {
 			@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
+		if ((StringUtils.isEmpty(organizationPayload.getType()))
+				&& !(organizationPayload.getType().equals(OrganizationConstants.ORGANIZATION)))
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.type"));
 		try {
 			organization = organizationService.createOrganization(organizationPayload);
 			payload = setOrganizationPayload(organization, payload);
@@ -231,17 +236,14 @@ public class OrganizationController extends BaseController {
 			payload.setSector(organization.getSector());
 			payload.setSectorLevel(organization.getSectorLevel());
 			payload.setDescription(organization.getDescription());
-			// payload.setStatus(organization.getTagStatus());
 			payload.setPriority(organization.getPriority());
 			payload.setParentId(organization.getParentId());
 			payload.setType(organization.getType());
 			payload.setIsActive(organization.getIsActive());
-			// payload.setIsTaggingReady(isTaggingReady);
 			payload.setTagStatus(organization.getTagStatus());
 			payload.setTotalAssets(organization.getAssets());
 			payload.setWebsiteUrl(organization.getWebsiteUrl());
 			payload.setSocialUrl(organization.getSocialUrl());
-			// payload.setClassificationId(classificationId);
 
 		}
 		return payload;
@@ -820,5 +822,58 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}// Code for organization SDG data end
+
+	// Code for organization Program Details start
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/program", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity createProgram(HttpServletResponse httpServletResponse,
+			@RequestBody OrganizationPayload organizationPayload, @PathVariable("id") Long orgId) {
+		Organization organization = null;
+		OrganizationPayload payload = null;
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		
+		if ((StringUtils.isEmpty(organizationPayload.getType()))
+				&& !(organizationPayload.getType().equals(OrganizationConstants.PROGRAM)))
+			return sendErrorResponse(customMessageSource.getMessage("org.error.program.type"));
+
+		try {
+			organization = organizationService.createOrganization(organizationPayload);
+			payload = setOrganizationPayload(organization, payload);
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("prg.error.created") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(payload);
+	}
+	
+	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
+	public ResponseEntity<?> getProgramList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId) throws OrganizationException {
+		List<Organization> prgList = null;
+		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+		OrganizationPayload payload = null;
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		try {
+			prgList = organizationService.getProgramList(orgId);
+			if (prgList == null) {
+				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
+			} else {
+				for (Organization organization : prgList) {
+					payload = setOrganizationPayload(organization, payload);
+					payloadList.add(payload);
+				}
+
+			}
+		} catch (Exception e) {
+			throw new OrganizationException(customMessageSource.getMessage("prg.error.list"));
+		}
+		return sendSuccessResponse(payloadList);
+
+	}
+	
+	// Code for organization Program Details end
 
 }

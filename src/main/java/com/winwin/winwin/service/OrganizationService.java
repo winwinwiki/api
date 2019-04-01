@@ -64,6 +64,7 @@ public class OrganizationService implements IOrganizationService {
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress());
 				}
+				organization.setType(organizationPayload.getType());
 				organization.setAddress(address);
 				organization.setCreatedAt(sdf.parse(formattedDte));
 				organization.setUpdatedAt(sdf.parse(formattedDte));
@@ -235,5 +236,10 @@ public class OrganizationService implements IOrganizationService {
 	@Override
 	public List<Organization> getOrganizationList() {
 		return organizationRepository.findAllOrganizationList();
-	}// end of method getOrganizationResourceList
+	}// end of method getOrganizationList
+
+	@Override
+	public List<Organization> getProgramList(Long orgId) {
+		return organizationRepository.findAllProgramList(orgId);
+	}// end of method getOrganizationList
 }

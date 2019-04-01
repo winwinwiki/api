@@ -110,6 +110,11 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 					OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
 					sdgDataMap.setSdgData(orgSdgData);
 				}
+
+				if (!payload.getIsChecked()) {
+					throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
+				}
+				sdgDataMap.setIsChecked(payload.getIsChecked());
 				sdgDataMap.setCreatedAt(sdf.parse(formattedDte));
 				sdgDataMap.setUpdatedAt(sdf.parse(formattedDte));
 				sdgDataMap.setCreatedBy(OrganizationConstants.CREATED_BY);

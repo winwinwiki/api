@@ -24,7 +24,8 @@ public class OrgSpiDataMapPayload {
 	String dimensionName;
 	Long componentId;
 	String componentName;
-	Long indicatorId;
+	String indicatorId;
 	String indicatorName;
+	Boolean isChecked; 
 
 }

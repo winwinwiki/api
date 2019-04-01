@@ -12,6 +12,6 @@ import com.winwin.winwin.entity.OrgSdgDataMapping;
  *
  */
 public interface OrgSdgDataMapRepository extends JpaRepository<OrgSdgDataMapping, Long> {
-	@Query(value = "select * from org_sdg_mapping where organization_id = :orgId", nativeQuery = true)
+	@Query(value = "select * from org_sdg_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
 	List<OrgSdgDataMapping> getOrgSdgMapDataByOrgId(Long orgId);
 }

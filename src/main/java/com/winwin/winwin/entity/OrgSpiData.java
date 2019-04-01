@@ -45,7 +45,7 @@ public class OrgSpiData {
 	private String componentName;
 
 	@Column(name = "indicator_id")
-	private Long indicatorId;
+	private String indicatorId;
 
 	@Column(name = "indicator_name")
 	private String indicatorName;

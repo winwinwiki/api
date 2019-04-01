@@ -40,5 +40,8 @@ public class OrgSdgDataMapping extends AbstractAuditableEntity {
 	@ManyToOne
 	@JoinColumn(name = "sdg_id")
 	private OrgSdgData sdgData;
+	
+	@Column(name = "is_checked")
+	private Boolean isChecked = false;
 
 }
