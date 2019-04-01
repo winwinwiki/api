@@ -165,10 +165,8 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 					}
 
 					if (!payload.getIsChecked()) {
-						throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+						spiDataMapObj.setIsChecked(payload.getIsChecked());
 					}
-
-					spiDataMapObj.setIsChecked(payload.getIsChecked());
 					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
