@@ -118,6 +118,10 @@ public class OrganizationService implements IOrganizationService {
 			if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
 				organization.setSectorLevel(organizationPayload.getSectorLevel());
 			}
+			
+			if (!StringUtils.isEmpty(organizationPayload.getType())) {
+				organization.setType(organizationPayload.getType());
+			}
 			Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
 			if (!isUpdated) {
 				throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
