@@ -833,10 +833,10 @@ public class OrganizationController extends BaseController {
 		OrganizationPayload payload = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
-		
+
 		if ((StringUtils.isEmpty(organizationPayload.getType()))
 				&& !(organizationPayload.getType().equals(OrganizationConstants.PROGRAM)))
-			return sendErrorResponse(customMessageSource.getMessage("org.error.program.type"));
+			return sendErrorResponse(customMessageSource.getMessage("prg.error.program.type"));
 
 		try {
 			organization = organizationService.createOrganization(organizationPayload);
@@ -848,9 +848,10 @@ public class OrganizationController extends BaseController {
 		}
 		return sendSuccessResponse(payload);
 	}
-	
+
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
-	public ResponseEntity<?> getProgramList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId) throws OrganizationException {
+	public ResponseEntity<?> getProgramList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
+			throws OrganizationException {
 		List<Organization> prgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
@@ -873,7 +874,62 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}
-	
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/program", method = RequestMethod.DELETE)
+	@Transactional
+	public ResponseEntity deleteProgram(HttpServletResponse httpServletResponse,
+			@RequestBody OrganizationPayload organizationPayLoad) {
+		try {
+			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
+				Long id = organizationPayLoad.getId();
+				Organization organization = organizationRepository.findOrgById(id);
+				if (organization == null) {
+					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
+				}
+				organizationService.deleteOrganization(id);
+
+			} else {
+				return sendErrorResponse("org.bad.request");
+
+			}
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("prg.error.deleted") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse("prg.success.deleted");
+	}
+
+	/**
+	 * @param httpServletResponse
+	 * @param organizationPayload
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/program", method = RequestMethod.PUT)
+	@Transactional
+	public ResponseEntity updateProgramDetails(HttpServletResponse httpServletResponse,
+			@RequestBody OrganizationPayload organizationPayload) {
+		Organization organization = null;
+		OrganizationPayload payload = null;
+		try {
+			organization = organizationRepository.findOrgById(organizationPayload.getId());
+			if (organization == null) {
+				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
+			} else {
+				organization = organizationService.updateOrgDetails(organizationPayload, organization);
+				payload = setOrganizationPayload(organization, payload);
+			}
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("prg.error.updated") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(payload);
+
+	}
+
 	// Code for organization Program Details end
 
 }
