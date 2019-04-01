@@ -65,6 +65,7 @@ public class OrganizationService implements IOrganizationService {
 					address = saveAddress(organizationPayload.getAddress());
 				}
 				organization.setType(organizationPayload.getType());
+				organization.setParentId(organizationPayload.getParentId());
 				organization.setAddress(address);
 				organization.setCreatedAt(sdf.parse(formattedDte));
 				organization.setUpdatedAt(sdf.parse(formattedDte));
