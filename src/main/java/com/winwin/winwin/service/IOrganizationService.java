@@ -13,4 +13,6 @@ public interface IOrganizationService {
 	Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization);
 
 	List<Organization> getOrganizationList();
+
+	List<Organization> getProgramList(Long orgId);
 }

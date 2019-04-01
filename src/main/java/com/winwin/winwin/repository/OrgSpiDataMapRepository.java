@@ -14,6 +14,6 @@ import com.winwin.winwin.entity.OrgSpiDataMapping;
  */
 public interface OrgSpiDataMapRepository extends JpaRepository<OrgSpiDataMapping, Long> {
 
-	@Query(value = "select * from org_spi_mapping where organization_id = :orgId", nativeQuery = true)
+	@Query(value = "select * from org_spi_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
 	List<OrgSpiDataMapping> getOrgSpiMapDataByOrgId(@Param(value = "orgId") Long orgId);
 }

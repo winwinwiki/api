@@ -40,4 +40,7 @@ public class OrgSpiDataMapping extends AbstractAuditableEntity {
 	@ManyToOne
 	@JoinColumn(name = "spi_id")
 	private OrgSpiData spiData;
+	
+	@Column(name = "is_checked")
+	private Boolean isChecked = false;
 }
