@@ -87,6 +87,7 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	OrgSdgDataService orgSdgDataService;
 
+	// Code for organization start
 	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@Transactional
@@ -248,6 +249,7 @@ public class OrganizationController extends BaseController {
 		}
 		return payload;
 	}
+	// Code for organization end
 
 	// Code for organization data set start
 	@SuppressWarnings("rawtypes")
