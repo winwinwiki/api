@@ -110,9 +110,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 					OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
 					sdgDataMap.setSdgData(orgSdgData);
 				}
-				if (!payload.getIsChecked()) {
-					sdgDataMap.setIsChecked(payload.getIsChecked());
-				}
+				sdgDataMap.setIsChecked(payload.getIsChecked());
 				sdgDataMap.setCreatedAt(sdf.parse(formattedDte));
 				sdgDataMap.setUpdatedAt(sdf.parse(formattedDte));
 				sdgDataMap.setCreatedBy(OrganizationConstants.CREATED_BY);
@@ -138,6 +136,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 				OrgSdgDataMapPayload payload = new OrgSdgDataMapPayload();
 				payload.setId(sdgMapData.getId());
 				payload.setOrganizationId(sdgMapData.getOrganizationId());
+				payload.setIsChecked(sdgMapData.getIsChecked());
 				if (null != sdgMapData.getSdgData()) {
 					payload.setGoalCode(sdgMapData.getSdgData().getGoalCode());
 					payload.setGoalName(sdgMapData.getSdgData().getGoalName());
