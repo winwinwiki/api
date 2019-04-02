@@ -151,27 +151,97 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 		if (null != payloadList) {
 			for (OrgSpiDataMapPayload payload : payloadList) {
 				try {
-					OrgSpiDataMapping spiDataMapObj = new OrgSpiDataMapping();
+					OrgSpiDataMapping spiDataMapObj = null;
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-					spiDataMapObj.setOrganizationId(orgId);
-					Long dId = payload.getDimensionId();
-					String cId = payload.getComponentId();
-					String indId = payload.getIndicatorId();
 
-					if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))) {
-						OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
-						spiDataMapObj.setSpiData(orgSpiDataObj);
+					if (payload.getId() == null) {
+						spiDataMapObj = new OrgSpiDataMapping();
+						spiDataMapObj.setOrganizationId(orgId);
+						Long dId = payload.getDimensionId();
+						String cId = payload.getComponentId();
+						String indId = payload.getIndicatorId();
+
+						if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))) {
+							OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
+							spiDataMapObj.setSpiData(orgSpiDataObj);
+						}
+
+						spiDataMapObj.setIsChecked(payload.getIsChecked());
+						spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+						spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
+						spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+						orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+					} else {
+						Boolean isValidSpiData = true;
+						Long dId = payload.getDimensionId();
+						String cId = payload.getComponentId();
+						String indId = payload.getIndicatorId();
+						String dName = payload.getDimensionName();
+						String cName = payload.getComponentName();
+						String indName = payload.getIndicatorName();
+
+						spiDataMapObj = orgSpiDataMapRepository.findSpiSelectedTagsById(payload.getId());
+
+						if (spiDataMapObj == null) {
+							LOGGER.error(customMessageSource.getMessage("org.spidata.error.not_found"));
+							throw new OrgSpiDataException(
+									customMessageSource.getMessage("org.spidata.error.not_found"));
+						}
+
+						if (payload.getOrganizationId() == null || !(payload.getOrganizationId() == orgId)) {
+							isValidSpiData = false;
+						}
+
+						if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))
+								&& !(StringUtils.isEmpty(dName)) && !(StringUtils.isEmpty(dName))
+								&& !(StringUtils.isEmpty(dName))) {
+
+							if (null != spiDataMapObj.getSpiData()) {
+								if (dId != spiDataMapObj.getSpiData().getDimensionId()) {
+									isValidSpiData = false;
+								}
+								if (!cId.equals(spiDataMapObj.getSpiData().getComponentId())) {
+									isValidSpiData = false;
+								}
+								if (!indId.equals(spiDataMapObj.getSpiData().getIndicatorId())) {
+									isValidSpiData = false;
+								}
+								if (!dName.equals(spiDataMapObj.getSpiData().getDimensionName())) {
+									isValidSpiData = false;
+								}
+								if (!cName.equals(spiDataMapObj.getSpiData().getComponentName())) {
+									isValidSpiData = false;
+								}
+								if (!indName.equals(spiDataMapObj.getSpiData().getIndicatorName())) {
+									isValidSpiData = false;
+								}
+
+							}
+						}
+
+						if (!isValidSpiData) {
+							LOGGER.error(customMessageSource.getMessage("org.spidata.error.updated"));
+							throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.updated"));
+						} else {
+							formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+							spiDataMapObj.setIsChecked(payload.getIsChecked());
+							spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+							spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+						}
+
 					}
-					spiDataMapObj.setIsChecked(payload.getIsChecked());
-					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-					spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
-					spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-					orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+
 				} catch (Exception e) {
-					LOGGER.error(customMessageSource.getMessage("org.spidata.exception.created"), e);
-					throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+					if (payload.getId() == null) {
+						LOGGER.error(customMessageSource.getMessage("org.spidata.exception.created"), e);
+						throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
+					} else {
+						LOGGER.error(customMessageSource.getMessage("org.spidata.exception.updated"), e);
+						throw new OrgSpiDataException(customMessageSource.getMessage("org.spidata.error.updated"));
+					}
+
 				}
 			}
 
