@@ -163,10 +163,7 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 						OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
 						spiDataMapObj.setSpiData(orgSpiDataObj);
 					}
-
-					if (!payload.getIsChecked()) {
-						spiDataMapObj.setIsChecked(payload.getIsChecked());
-					}
+					spiDataMapObj.setIsChecked(payload.getIsChecked());
 					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
@@ -193,6 +190,7 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 				OrgSpiDataMapPayload payload = new OrgSpiDataMapPayload();
 				payload.setId(spiMapData.getId());
 				payload.setOrganizationId(spiMapData.getOrganizationId());
+				payload.setIsChecked(spiMapData.getIsChecked());
 				if (null != spiMapData.getSpiData()) {
 					payload.setDimensionId(spiMapData.getSpiData().getDimensionId());
 					payload.setDimensionName(spiMapData.getSpiData().getDimensionName());
