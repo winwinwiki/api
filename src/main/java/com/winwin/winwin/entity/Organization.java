@@ -28,54 +28,68 @@ import lombok.ToString;
 @ToString
 @Entity
 @Table(name = "organization")
-public class Organization extends AbstractAuditableEntity{
+public class Organization extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "address_id")
 	private Address address;
-	
+
 	@Column(name = "name")
 	private String name;
-	
+
 	@Column(name = "revenue")
 	private Long revenue;
-	
+
 	@Column(name = "assets")
 	private Long assets;
-	
+
 	@Column(name = "sector")
 	private String sector;
-	
+
 	@Column(name = "sector_level")
 	private String sectorLevel;
-	
+
 	@Column(name = "description")
 	private String description;
-	
+
 	@Column(name = "priority")
 	private String priority = "Normal";
-	
+
 	@Column(name = "parent_id")
 	private Long parentId;
-	
+
 	@Column(name = "type")
 	private String type;
-	
+
 	@Column(name = "is_active")
 	private Boolean isActive = true;
-	
+
 	@Column(name = "tag_status")
 	private String tagStatus;
-	
+
 	@Column(name = "website_url")
 	private String websiteUrl;
-	
+
 	@Column(name = "social_url")
 	private String socialUrl;
-	
-	
+
+	@Column(name = "key_activities")
+	String keyActivities;
+
+	@Column(name = "org_driver")
+	String orgDriver;
+
+	@Column(name = "business_model")
+	String businessModel;
+
+	@Column(name = "population_served")
+	Long populationServed;
+
+	@Column(name = "mission_statement")
+	String missionStatement;
+
 }

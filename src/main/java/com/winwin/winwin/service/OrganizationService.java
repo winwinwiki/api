@@ -107,10 +107,10 @@ public class OrganizationService implements IOrganizationService {
 			if (!StringUtils.isEmpty(organizationPayload.getPriority())) {
 				organization.setPriority(organizationPayload.getPriority());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getRevenue())) {
+			if (null != organizationPayload.getRevenue()) {
 				organization.setRevenue(organizationPayload.getRevenue());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getAssets())) {
+			if (null != organizationPayload.getAssets()) {
 				organization.setAssets(organizationPayload.getAssets());
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getSector())) {
@@ -119,10 +119,31 @@ public class OrganizationService implements IOrganizationService {
 			if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
 				organization.setSectorLevel(organizationPayload.getSectorLevel());
 			}
-			
+			if (!StringUtils.isEmpty(organizationPayload.getWebsiteUrl())) {
+				organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getSocialUrl())) {
+				organization.setSocialUrl(organizationPayload.getSocialUrl());
+			}
 			if (!StringUtils.isEmpty(organizationPayload.getType())) {
 				organization.setType(organizationPayload.getType());
 			}
+			if (!StringUtils.isEmpty(organizationPayload.getKeyActivities())) {
+				organization.setKeyActivities(organizationPayload.getKeyActivities());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getOrgDriver())) {
+				organization.setOrgDriver(organizationPayload.getOrgDriver());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getBusinessModel())) {
+				organization.setBusinessModel(organizationPayload.getBusinessModel());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getMissionStatement())) {
+				organization.setMissionStatement(organizationPayload.getMissionStatement());
+			}
+			if (null != organizationPayload.getPopulationServed()) {
+				organization.setPopulationServed(organizationPayload.getPopulationServed());
+			}
+
 			Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
 			if (!isUpdated) {
 				throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
