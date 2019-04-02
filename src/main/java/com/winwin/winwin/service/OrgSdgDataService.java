@@ -17,6 +17,7 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgSdgData;
 import com.winwin.winwin.entity.OrgSdgDataMapping;
 import com.winwin.winwin.exception.OrgSdgDataException;
+import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSdgSubGoalPayload;
@@ -101,24 +102,87 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 		for (OrgSdgDataMapPayload payload : payloadList) {
 			try {
-				OrgSdgDataMapping sdgDataMap = new OrgSdgDataMapping();
+				OrgSdgDataMapping sdgDataMapObj = null;
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				sdgDataMap.setOrganizationId(orgId);
+				if (payload.getId() == null) {
+					sdgDataMapObj = new OrgSdgDataMapping();
+					sdgDataMapObj.setOrganizationId(orgId);
 
-				if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
-					OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
-					sdgDataMap.setSdgData(orgSdgData);
+					if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
+						OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+						sdgDataMapObj.setSdgData(orgSdgData);
+					} else {
+						LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
+						throw new OrgSdgDataException(
+								customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
+					}
+					sdgDataMapObj.setIsChecked(payload.getIsChecked());
+					sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+					sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					sdgDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
+					sdgDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+					orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+				} else {
+					Boolean isValidSdgData = true;
+					Long goalCode = payload.getGoalCode();
+					String subGoalCode = payload.getSubGoalCode();
+					String goalName = payload.getGoalName();
+					String subGoalName = payload.getSubGoalName();
+
+					sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsById(payload.getId());
+
+					if (sdgDataMapObj == null) {
+						LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.not_found"));
+						throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
+					}
+
+					if (payload.getOrganizationId() == null || !(payload.getOrganizationId() == orgId)) {
+						isValidSdgData = false;
+					}
+
+					if (null != goalCode && !(StringUtils.isEmpty(subGoalCode)) && !(StringUtils.isEmpty(goalName))
+							&& !(StringUtils.isEmpty(subGoalName))) {
+
+						if (null != sdgDataMapObj.getSdgData()) {
+
+							if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
+								isValidSdgData = false;
+							}
+							if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
+								isValidSdgData = false;
+							}
+							if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
+								isValidSdgData = false;
+							}
+							if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
+								isValidSdgData = false;
+							}
+
+						}
+					}
+
+					if (!isValidSdgData) {
+						LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.updated"));
+						throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
+					} else {
+						formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+						sdgDataMapObj.setIsChecked(payload.getIsChecked());
+						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+						sdgDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+					}
+
 				}
-				sdgDataMap.setIsChecked(payload.getIsChecked());
-				sdgDataMap.setCreatedAt(sdf.parse(formattedDte));
-				sdgDataMap.setUpdatedAt(sdf.parse(formattedDte));
-				sdgDataMap.setCreatedBy(OrganizationConstants.CREATED_BY);
-				sdgDataMap.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				orgSdgDataMapRepository.saveAndFlush(sdgDataMap);
+
 			} catch (Exception e) {
-				LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.created"), e);
-				throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
+				if (payload.getId() == null) {
+					LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.created"), e);
+					throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
+				} else {
+					LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.updated"), e);
+					throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
+				}
+
 			}
 		}
 

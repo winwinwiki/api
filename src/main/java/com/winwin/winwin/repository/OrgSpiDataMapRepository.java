@@ -16,4 +16,7 @@ public interface OrgSpiDataMapRepository extends JpaRepository<OrgSpiDataMapping
 
 	@Query(value = "select * from org_spi_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
 	List<OrgSpiDataMapping> getOrgSpiMapDataByOrgId(@Param(value = "orgId") Long orgId);
+
+	@Query(value = "select * from org_spi_mapping where id = :id", nativeQuery = true)
+	OrgSpiDataMapping findSpiSelectedTagsById(@Param("id") Long id);
 }
