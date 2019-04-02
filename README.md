@@ -1,10 +1,10 @@
 # api
 
-### Travis Build Status
+### Circle Build Status
 
-Dev [![Build Status](https://travis-ci.com/winwinwiki/api.svg?branch=dev)](https://travis-ci.com/winwinwiki/api)
+Dev  [![CircleCI](https://circleci.com/gh/winwinwiki/api/tree/dev.svg?style=svg)](https://circleci.com/gh/winwinwiki/api/tree/dev)
 
-Prod [![Build Status](https://travis-ci.com/winwinwiki/api.svg?branch=prod)](https://travis-ci.com/winwinwiki/api)
+Prod  [![CircleCI](https://circleci.com/gh/winwinwiki/api/tree/master.svg?style=svg)](https://circleci.com/gh/winwinwiki/api/tree/master)
 
 ## Development
 
