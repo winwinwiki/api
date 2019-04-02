@@ -33,4 +33,10 @@ public class OrganizationPayload {
 	String websiteUrl;
 	String socialUrl;
 	Long classificationId;
+	String keyActivities;
+	String orgDriver;
+	String businessModel;
+	Long populationServed;
+	String missionStatement;
+	
 }

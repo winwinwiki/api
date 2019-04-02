@@ -245,6 +245,11 @@ public class OrganizationController extends BaseController {
 			payload.setTotalAssets(organization.getAssets());
 			payload.setWebsiteUrl(organization.getWebsiteUrl());
 			payload.setSocialUrl(organization.getSocialUrl());
+			payload.setKeyActivities(organization.getKeyActivities());
+			payload.setOrgDriver(organization.getOrgDriver());
+			payload.setBusinessModel(organization.getBusinessModel());
+			payload.setMissionStatement(organization.getMissionStatement());
+			payload.setPopulationServed(organization.getPopulationServed());
 
 		}
 		return payload;
