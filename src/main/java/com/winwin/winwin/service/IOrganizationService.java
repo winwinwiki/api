@@ -23,8 +23,8 @@ public interface IOrganizationService {
 	List<Organization> getOrganizationList();
 
 	List<Organization> getProgramList(Long orgId);
-	
+
 	OrgChartPayload getOrgCharts(Organization organization, Long orgId);
-	
+
 	Organization createSubOrganization(SubOrganizationPayload payload);
 }

@@ -396,22 +396,22 @@ public class OrganizationService implements IOrganizationService {
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		Organization organization = null;
 		try {
-			if ( null != payload ) {
+			if (null != payload) {
 				Address address = new Address();
 				address.setCountry("");
 				organization = new Organization();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				
-				if(!(StringUtils.isEmpty(payload.getChildOrgName()))){
+
+				if (!(StringUtils.isEmpty(payload.getChildOrgName()))) {
 					organization.setName(payload.getChildOrgName());
 				}
-				
-				if(!(StringUtils.isEmpty(payload.getChildOrgType()))){
+
+				if (!(StringUtils.isEmpty(payload.getChildOrgType()))) {
 					organization.setType(payload.getChildOrgType());
 				}
-					
-				if( null != payload.getParentId()){
+
+				if (null != payload.getParentId()) {
 					payload.setParentId(payload.getParentId());
 				}
 				organization.setAddress(address);
