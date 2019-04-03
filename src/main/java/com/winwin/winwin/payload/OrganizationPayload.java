@@ -25,7 +25,6 @@ public class OrganizationPayload {
 	String status;
 	String priority;
 	Long parentId;
-	String type;
 	Boolean isActive;
 	Boolean isTaggingReady;
 	String tagStatus;

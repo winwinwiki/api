@@ -64,7 +64,7 @@ public class OrganizationService implements IOrganizationService {
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress());
 				}
-				organization.setType(organizationPayload.getType());
+				organization.setType(OrganizationConstants.ORGANIZATION);
 				organization.setParentId(organizationPayload.getParentId());
 				organization.setAddress(address);
 				organization.setCreatedAt(sdf.parse(formattedDte));
@@ -124,9 +124,6 @@ public class OrganizationService implements IOrganizationService {
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getSocialUrl())) {
 				organization.setSocialUrl(organizationPayload.getSocialUrl());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getType())) {
-				organization.setType(organizationPayload.getType());
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getKeyActivities())) {
 				organization.setKeyActivities(organizationPayload.getKeyActivities());
@@ -268,4 +265,37 @@ public class OrganizationService implements IOrganizationService {
 	public List<Organization> getProgramList(Long orgId) {
 		return organizationRepository.findAllProgramList(orgId);
 	}// end of method getOrganizationList
+
+	@Override
+	public Organization createProgram(OrganizationPayload organizationPayload) {
+		Organization organization = null;
+		try {
+			if (organizationPayload != null) {
+				Address address = new Address();
+				organization = new Organization();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				organization.setName(organizationPayload.getName());
+				organization.setSector(organizationPayload.getSector());
+				organization.setSectorLevel(organizationPayload.getSectorLevel());
+				organization.setDescription(organizationPayload.getDescription());
+				if (organizationPayload.getAddress() != null) {
+					address = saveAddress(organizationPayload.getAddress());
+				}
+				organization.setType(OrganizationConstants.PROGRAM);
+				organization.setParentId(organizationPayload.getParentId());
+				organization.setAddress(address);
+				organization.setCreatedAt(sdf.parse(formattedDte));
+				organization.setUpdatedAt(sdf.parse(formattedDte));
+				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
+				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+				organizationRepository.saveAndFlush(organization);
+				organization = organizationRepository.findLastOrg();
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("prg.exception.created"), e);
+		}
+
+		return organization;
+	}
 }

@@ -95,9 +95,6 @@ public class OrganizationController extends BaseController {
 			@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
-		if ((StringUtils.isEmpty(organizationPayload.getType()))
-				&& !(organizationPayload.getType().equals(OrganizationConstants.ORGANIZATION)))
-			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.type"));
 		try {
 			organization = organizationService.createOrganization(organizationPayload);
 			payload = setOrganizationPayload(organization, payload);
@@ -239,7 +236,6 @@ public class OrganizationController extends BaseController {
 			payload.setDescription(organization.getDescription());
 			payload.setPriority(organization.getPriority());
 			payload.setParentId(organization.getParentId());
-			payload.setType(organization.getType());
 			payload.setIsActive(organization.getIsActive());
 			payload.setTagStatus(organization.getTagStatus());
 			payload.setTotalAssets(organization.getAssets());
@@ -840,13 +836,8 @@ public class OrganizationController extends BaseController {
 		OrganizationPayload payload = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
-
-		if ((StringUtils.isEmpty(organizationPayload.getType()))
-				&& !(organizationPayload.getType().equals(OrganizationConstants.PROGRAM)))
-			return sendErrorResponse(customMessageSource.getMessage("prg.error.program.type"));
-
 		try {
-			organization = organizationService.createOrganization(organizationPayload);
+			organization = organizationService.createProgram(organizationPayload);
 			payload = setOrganizationPayload(organization, payload);
 
 		} catch (Exception e) {
