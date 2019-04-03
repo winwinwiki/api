@@ -107,6 +107,9 @@ public class OrganizationService implements IOrganizationService {
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 		try {
+			if (!StringUtils.isEmpty(organizationPayload.getName())) {
+				organization.setName(organizationPayload.getName());
+			}
 			if (!StringUtils.isEmpty(organizationPayload.getDescription())) {
 				organization.setDescription(organizationPayload.getDescription());
 			}
@@ -163,11 +166,7 @@ public class OrganizationService implements IOrganizationService {
 			 * "Request to update classification is invalid"); }
 			 */
 
-			organizationRepository.saveAndFlush(organization);
-
-			if (null != organizationPayload && null != organizationPayload.getId()) {
-				organization = organizationRepository.findOrgById(organizationPayload.getId());
-			}
+			organization = organizationRepository.saveAndFlush(organization);
 		} catch (ParseException e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
 		}
@@ -398,7 +397,8 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			if (null != payload) {
 				Address address = new Address();
-				address.setCountry("");
+				AddressPayload addressPayload = new AddressPayload();
+				addressPayload.setCountry("");
 				organization = new Organization();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
@@ -412,15 +412,17 @@ public class OrganizationService implements IOrganizationService {
 				}
 
 				if (null != payload.getParentId()) {
-					payload.setParentId(payload.getParentId());
+					organization.setParentId(payload.getParentId());
 				}
+				address = saveAddress(addressPayload);
+
 				organization.setAddress(address);
+
 				organization.setCreatedAt(sdf.parse(formattedDte));
 				organization.setUpdatedAt(sdf.parse(formattedDte));
 				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
 				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				organizationRepository.saveAndFlush(organization);
-				organization = organizationRepository.findLastOrg();
+				organization = organizationRepository.saveAndFlush(organization);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
