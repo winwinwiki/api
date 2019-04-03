@@ -7,6 +7,8 @@ import com.winwin.winwin.payload.OrganizationPayload;
 
 public interface IOrganizationService {
 	Organization createOrganization(OrganizationPayload organizationPayload);
+	
+	Organization createProgram(OrganizationPayload organizationPayload);
 
 	void deleteOrganization(Long id);
 
