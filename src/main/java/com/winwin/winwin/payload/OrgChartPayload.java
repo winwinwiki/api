@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,19 +13,17 @@ import lombok.ToString;
  * @author ArvindKhatik
  *
  */
-@NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@NoArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode
 @ToString
-public class AddressPayload {
-	private Long id;
-	private String country;
-	private String state;
-	private String city;
-	private String county;
-	private Long zip;
-	private String street;
-	private String placeId;
+public class OrgChartPayload {
+	Long id;
+	String name;
+	AddressPayload location;
+	String childrenType;
+	List<OrgDivisionPayload> children;
+
 }

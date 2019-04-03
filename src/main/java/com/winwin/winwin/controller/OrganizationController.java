@@ -9,14 +9,12 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
@@ -32,6 +30,7 @@ import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
+import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
@@ -927,7 +926,30 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 
 	}
-
 	// Code for organization Program Details end
+	
+	// Code for organization Chart start
+	@RequestMapping(value = "/{id}/orgchart", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrgLevelsList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
+			throws OrganizationException {
+		Organization organization = null;
+		OrgChartPayload payload = new OrgChartPayload();
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		try {
+			organization = organizationRepository.findOrgById(orgId);
+			if (organization == null) {
+				return sendErrorResponse("org.bad.request");
+			} else {
+				payload = organizationService.getOrgCharts(organization,orgId);
+			}
+		} catch (Exception e) {
+			throw new OrganizationException(customMessageSource.getMessage("org.chart.error"));
+		}
+		return sendSuccessResponse(payload);
+
+	}
+	
+	// Code for organization Chart end
 
 }

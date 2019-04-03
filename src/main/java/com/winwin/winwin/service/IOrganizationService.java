@@ -3,11 +3,16 @@ package com.winwin.winwin.service;
 import java.util.List;
 
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface IOrganizationService {
 	Organization createOrganization(OrganizationPayload organizationPayload);
-	
+
 	Organization createProgram(OrganizationPayload organizationPayload);
 
 	void deleteOrganization(Long id);
@@ -17,4 +22,6 @@ public interface IOrganizationService {
 	List<Organization> getOrganizationList();
 
 	List<Organization> getProgramList(Long orgId);
+	
+	OrgChartPayload getOrgCharts(Organization organization, Long orgId);
 }
