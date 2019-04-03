@@ -398,7 +398,8 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			if (null != payload) {
 				Address address = new Address();
-				address.setCountry("");
+				AddressPayload addressPayload = new AddressPayload();
+				addressPayload.setCountry("");
 				organization = new Organization();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
@@ -414,6 +415,8 @@ public class OrganizationService implements IOrganizationService {
 				if (null != payload.getParentId()) {
 					payload.setParentId(payload.getParentId());
 				}
+				address = saveAddress(addressPayload);
+				
 				organization.setAddress(address);
 				organization.setCreatedAt(sdf.parse(formattedDte));
 				organization.setUpdatedAt(sdf.parse(formattedDte));
