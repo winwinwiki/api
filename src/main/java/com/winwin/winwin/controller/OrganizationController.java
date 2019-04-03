@@ -41,6 +41,7 @@ import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
+import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -927,11 +928,11 @@ public class OrganizationController extends BaseController {
 
 	}
 	// Code for organization Program Details end
-	
+
 	// Code for organization Chart start
-	@RequestMapping(value = "/{id}/orgchart", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgLevelsList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
-			throws OrganizationException {
+	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.GET)
+	public ResponseEntity<?> getSuborganizationList(HttpServletResponse httpServletResponse,
+			@PathVariable("id") Long orgId) throws OrganizationException {
 		Organization organization = null;
 		OrgChartPayload payload = new OrgChartPayload();
 		if (orgId == null)
@@ -941,7 +942,7 @@ public class OrganizationController extends BaseController {
 			if (organization == null) {
 				return sendErrorResponse("org.bad.request");
 			} else {
-				payload = organizationService.getOrgCharts(organization,orgId);
+				payload = organizationService.getOrgCharts(organization, orgId);
 			}
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.chart.error"));
@@ -949,7 +950,25 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 
 	}
-	
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity createSuborganization(HttpServletResponse httpServletResponse,
+			@RequestBody SubOrganizationPayload subOrganizationPayload) {
+		OrganizationPayload payload = null;
+		Organization organization = null;
+		try {
+			organization = organizationService.createSubOrganization(subOrganizationPayload);
+			payload = setOrganizationPayload(organization, payload);
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(payload);
+	}
+
 	// Code for organization Chart end
 
 }
