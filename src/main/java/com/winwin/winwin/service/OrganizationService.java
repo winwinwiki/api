@@ -2,7 +2,9 @@ package com.winwin.winwin.service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -19,6 +21,9 @@ import com.winwin.winwin.entity.OrgClassificationMapping;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
+import com.winwin.winwin.payload.OrgChartPayload;
+import com.winwin.winwin.payload.OrgDepartmentPayload;
+import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.ClassificationRepository;
@@ -298,4 +303,91 @@ public class OrganizationService implements IOrganizationService {
 
 		return organization;
 	}
+
+	@Override
+	public OrgChartPayload getOrgCharts(Organization organization, Long orgId) {
+		List<Organization> divisions = organizationRepository.findAllDivisionList(orgId);
+		List<Organization> departments = organizationRepository.findAllDepartmentList();
+		OrgChartPayload payload = new OrgChartPayload();
+		try {
+			AddressPayload orgAddress = null;
+			payload.setId(organization.getId());
+			payload.setName(organization.getName());
+			orgAddress = getLocationPayload(organization, orgAddress);
+			payload.setLocation(orgAddress);
+			payload.setChildrenType(organization.getType());
+
+			if (null != divisions) {
+				List<OrgDivisionPayload> divisionPayloadList = new ArrayList<OrgDivisionPayload>();
+				HashMap<Long, List<OrgDepartmentPayload>> orgDeptMap = new HashMap<Long, List<OrgDepartmentPayload>>();
+				if (null != departments) {
+					setOrgDepartmentsMap(departments, orgDeptMap);
+				}
+
+				for (Organization orgDivision : divisions) {
+					OrgDivisionPayload divPayload = new OrgDivisionPayload();
+					AddressPayload divAddress = null;
+					divPayload.setId(orgDivision.getId());
+					divPayload.setName(orgDivision.getName());
+					divAddress = getLocationPayload(organization, divAddress);
+					divPayload.setLocation(divAddress);
+					divPayload.setChildrenType(orgDivision.getType());
+
+					if (!orgDeptMap.isEmpty()) {
+						divPayload.setChildren(orgDeptMap.get(orgDivision.getId()));
+					}
+					divisionPayloadList.add(divPayload);
+				}
+
+				payload.setChildren(divisionPayloadList);
+			} // end of if( null != divisions)
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.chart.error.list"), e);
+		}
+		return payload;
+	}
+
+	/**
+	 * @param organization
+	 * @param addressPayload
+	 * @return
+	 */
+	private AddressPayload getLocationPayload(Organization organization, AddressPayload addressPayload) {
+		if (null != organization.getAddress()) {
+			addressPayload = new AddressPayload();
+			addressPayload.setId(organization.getAddress().getId());
+			addressPayload.setCountry(organization.getAddress().getCountry());
+			addressPayload.setState(organization.getAddress().getState());
+			addressPayload.setCity(organization.getAddress().getCity());
+			addressPayload.setCounty(organization.getAddress().getCounty());
+			addressPayload.setZip(organization.getAddress().getZip());
+			addressPayload.setStreet(organization.getAddress().getStreet());
+			addressPayload.setPlaceId(organization.getAddress().getPlaceId());
+		}
+		return addressPayload;
+	}
+
+	/**
+	 * @param spiList
+	 * @param orgDepartmentsMap
+	 */
+	private void setOrgDepartmentsMap(List<Organization> departments,
+			HashMap<Long, List<OrgDepartmentPayload>> orgDepartmentsMap) {
+		for (Organization organization : departments) {
+			OrgDepartmentPayload payload = new OrgDepartmentPayload();
+			AddressPayload deptAddress = null;
+			payload.setId(organization.getId());
+			payload.setName(organization.getName());
+			deptAddress = getLocationPayload(organization, deptAddress);
+			payload.setLocation(deptAddress);
+			payload.setChildrenType(organization.getType());
+			if (!orgDepartmentsMap.containsKey(organization.getParentId())) {
+				List<OrgDepartmentPayload> orgList = new ArrayList<OrgDepartmentPayload>();
+				orgList.add(payload);
+				orgDepartmentsMap.put(organization.getParentId(), orgList);
+			} else {
+				orgDepartmentsMap.get(organization.getParentId()).add(payload);
+			}
+		}
+	}// end of method setSpiDimensionsMap
 }
