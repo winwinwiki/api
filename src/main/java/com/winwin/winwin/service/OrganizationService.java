@@ -25,6 +25,7 @@ import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgDepartmentPayload;
 import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
+import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
@@ -390,4 +391,41 @@ public class OrganizationService implements IOrganizationService {
 			}
 		}
 	}// end of method setSpiDimensionsMap
+
+	@Override
+	public Organization createSubOrganization(SubOrganizationPayload payload) {
+		Organization organization = null;
+		try {
+			if ( null != payload ) {
+				Address address = new Address();
+				address.setCountry("");
+				organization = new Organization();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+				
+				if(!(StringUtils.isEmpty(payload.getChildOrgName()))){
+					organization.setName(payload.getChildOrgName());
+				}
+				
+				if(!(StringUtils.isEmpty(payload.getChildOrgType()))){
+					organization.setType(payload.getChildOrgType());
+				}
+					
+				if( null != payload.getParentId()){
+					payload.setParentId(payload.getParentId());
+				}
+				organization.setAddress(address);
+				organization.setCreatedAt(sdf.parse(formattedDte));
+				organization.setUpdatedAt(sdf.parse(formattedDte));
+				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
+				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+				organizationRepository.saveAndFlush(organization);
+				organization = organizationRepository.findLastOrg();
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+		}
+
+		return organization;
+	}
 }
