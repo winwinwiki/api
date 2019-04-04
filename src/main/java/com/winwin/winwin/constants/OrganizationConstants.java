@@ -9,5 +9,7 @@ public class OrganizationConstants {
 	public static final String UPDATED_BY = "admin";
 	public static final String ORGANIZATION = "organization";
 	public static final String PROGRAM = "program";
+	public static final String DIVISION = "division";
+	public static final String DEPARTMENT = "department";
 
 }

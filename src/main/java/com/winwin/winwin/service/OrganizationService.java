@@ -315,7 +315,7 @@ public class OrganizationService implements IOrganizationService {
 			payload.setName(organization.getName());
 			orgAddress = getLocationPayload(organization, orgAddress);
 			payload.setLocation(orgAddress);
-			payload.setChildrenType(organization.getType());
+			payload.setChildrenType(OrganizationConstants.DIVISION);
 
 			if (null != divisions) {
 				List<OrgDivisionPayload> divisionPayloadList = new ArrayList<OrgDivisionPayload>();
@@ -331,7 +331,7 @@ public class OrganizationService implements IOrganizationService {
 					divPayload.setName(orgDivision.getName());
 					divAddress = getLocationPayload(organization, divAddress);
 					divPayload.setLocation(divAddress);
-					divPayload.setChildrenType(orgDivision.getType());
+					divPayload.setChildrenType(OrganizationConstants.DEPARTMENT);
 
 					if (!orgDeptMap.isEmpty()) {
 						divPayload.setChildren(orgDeptMap.get(orgDivision.getId()));
@@ -380,7 +380,6 @@ public class OrganizationService implements IOrganizationService {
 			payload.setName(organization.getName());
 			deptAddress = getLocationPayload(organization, deptAddress);
 			payload.setLocation(deptAddress);
-			payload.setChildrenType(organization.getType());
 			if (!orgDepartmentsMap.containsKey(organization.getParentId())) {
 				List<OrgDepartmentPayload> orgList = new ArrayList<OrgDepartmentPayload>();
 				orgList.add(payload);
