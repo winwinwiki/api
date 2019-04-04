@@ -19,6 +19,7 @@ import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
+import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrgRegionServedException;
@@ -38,17 +39,20 @@ import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
+import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
+import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationDataSetService;
+import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
 
@@ -86,6 +90,12 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	OrgSdgDataService orgSdgDataService;
+
+	@Autowired
+	OrganizationNoteService organizationNoteService;
+
+	@Autowired
+	OrganizationNoteRepository organizationNoteRepository;
 
 	// Code for organization start
 	@SuppressWarnings("rawtypes")
@@ -969,7 +979,96 @@ public class OrganizationController extends BaseController {
 		}
 		return sendSuccessResponse(payload);
 	}
-
 	// Code for organization Chart end
 
+	// Code for organization notes start
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/notes", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity createOrgNote(HttpServletResponse httpServletResponse,
+			@RequestBody OrganizationNotePayload organizationNotePayload, @PathVariable("id") Long orgId) {
+		OrganizationNote note = null;
+		OrganizationNotePayload payload = null;
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		try {
+			note = organizationNoteService.createOrganizationNote(organizationNotePayload);
+			payload = setOrganizationNotePayload(note, payload);
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.note.error.created") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(payload);
+	}
+
+	@RequestMapping(value = "/{id}/notes", method = RequestMethod.GET)
+	public ResponseEntity<?> getorgNotesList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
+			throws OrganizationException {
+		List<OrganizationNote> orgNoteList = null;
+		OrganizationNotePayload payload = new OrganizationNotePayload();
+		List<OrganizationNotePayload> payloadList = new ArrayList<OrganizationNotePayload>();
+		if (orgId == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		try {
+			orgNoteList = organizationNoteRepository.findAllOrgNotesList(orgId);
+			if (orgNoteList == null) {
+				throw new OrganizationException(customMessageSource.getMessage("org.note.error.not_found"));
+			} else {
+				for (OrganizationNote orgNote : orgNoteList) {
+					payload = setOrganizationNotePayload(orgNote, payload);
+					payloadList.add(payload);
+				}
+
+			}
+		} catch (Exception e) {
+			throw new OrganizationException(customMessageSource.getMessage("org.note.error.list"));
+		}
+		return sendSuccessResponse(payload);
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
+	@Transactional
+	public ResponseEntity deleteOrgNote(HttpServletResponse httpServletResponse,
+			@RequestBody OrganizationNotePayload organizationNotePayLoad) {
+		try {
+			if (null != organizationNotePayLoad && null != organizationNotePayLoad.getNoteId()) {
+				Long noteId = organizationNotePayLoad.getNoteId();
+				OrganizationNote note = organizationNoteRepository.findOrgNoteById(noteId);
+				if (note == null) {
+					throw new OrganizationException(customMessageSource.getMessage("org.note.error.not_found"));
+				}
+				organizationNoteService.removeOrganizationNote(noteId);
+
+			} else {
+				return sendErrorResponse("org.bad.request");
+
+			}
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.note.error.deleted") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse("org.note.success.deleted");
+	}
+
+	/**
+	 * @param organizationNote
+	 * @param payload
+	 * @return
+	 */
+	private OrganizationNotePayload setOrganizationNotePayload(OrganizationNote organizationNote,
+			OrganizationNotePayload payload) {
+
+		if (null != organizationNote) {
+			payload = new OrganizationNotePayload();
+			payload.setNoteId(organizationNote.getId());
+			payload.setNote(organizationNote.getName());
+			payload.setOrganizationId(organizationNote.getOrganizationId());
+
+		}
+		return payload;
+	}
 }
