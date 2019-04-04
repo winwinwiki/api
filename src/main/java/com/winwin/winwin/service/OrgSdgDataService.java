@@ -137,7 +137,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 						throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 					}
 
-					if (payload.getOrganizationId() == null || !(payload.getOrganizationId() == orgId)) {
+					if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
 						isValidSdgData = false;
 					}
 
@@ -170,6 +170,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 						sdgDataMapObj.setIsChecked(payload.getIsChecked());
 						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 						sdgDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+						orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 					}
 
 				}
