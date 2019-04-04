@@ -21,5 +21,4 @@ public class OrgDepartmentPayload {
 	Long id;
 	String name;
 	AddressPayload location;
-	String childrenType;
 }
