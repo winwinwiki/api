@@ -49,12 +49,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 		try {
 			if (null != organizationDataSetPayLoad) {
 				organizationDataSet = constructOrganizationDataSet(organizationDataSetPayLoad);
-
-				organizationDataSetRepository.saveAndFlush(organizationDataSet);
-				if (null != organizationDataSetPayLoad.getId()) {
-					return organizationDataSet;
-				}
-
+				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
 			}
 		} catch (Exception e) {
 			if (null != organizationDataSetPayLoad.getId()) {
@@ -64,7 +59,6 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			}
 
 		}
-		organizationDataSet = organizationDataSetRepository.findLastOrgDataSet();
 		return organizationDataSet;
 
 	}// end of method createOrUpdateOrganizationDataSet
@@ -132,7 +126,6 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	private void setOrganizationDataSetCategory(OrganizationDataSetPayLoad organizationDataSetPayLoad,
 			OrganizationDataSet organizationDataSet) {
 		OrganizationDataSetCategory organizationDataSetCategory = null;
-		;
 		try {
 			if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory()) {
 				Long categoryId = organizationDataSetPayLoad.getOrganizationDataSetCategory().getId();

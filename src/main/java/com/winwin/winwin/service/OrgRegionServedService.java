@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -64,9 +63,8 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
 						orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
 						orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-						orgRegionServedRepository.saveAndFlush(orgRegionServed);
+						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
-						orgRegionServed = orgRegionServedRepository.findLastOrgRegion();
 						orgRegionList.add(orgRegionServed);
 
 					}
@@ -82,7 +80,8 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 							region.setIsActive(payload.getIsActive());
 							region.setUpdatedAt(new Date(System.currentTimeMillis()));
 							region.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-							orgRegionServedRepository.saveAndFlush(region);
+							region = orgRegionServedRepository.saveAndFlush(region);
+
 							orgRegionList.add(region);
 						}
 					} // end of else if

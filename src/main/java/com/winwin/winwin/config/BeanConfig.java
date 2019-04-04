@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @Configuration

@@ -49,11 +49,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 		try {
 			if (null != organizationResourcePayLoad) {
 				organizationResource = constructOrganizationResource(organizationResourcePayLoad);
-
-				organizationResourceRepository.saveAndFlush(organizationResource);
-				if (null != organizationResourcePayLoad.getId()) {
-					return organizationResource;
-				}
+				organizationResource = organizationResourceRepository.saveAndFlush(organizationResource);
 			}
 		} catch (Exception e) {
 			if (null != organizationResourcePayLoad.getId()) {
@@ -63,7 +59,6 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			}
 
 		}
-		organizationResource = organizationResourceRepository.findLastOrgResource();
 		return organizationResource;
 
 	}// end of method createOrUpdateOrganizationResource

@@ -37,5 +37,6 @@ public class OrganizationPayload {
 	String businessModel;
 	Long populationServed;
 	String missionStatement;
+	String contactInfo;
 	
 }

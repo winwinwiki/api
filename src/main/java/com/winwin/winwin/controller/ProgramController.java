@@ -48,7 +48,6 @@ import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationResourceService;
-import com.winwin.winwin.service.OrganizationService;
 
 /**
  * @author ArvindKhatik
@@ -105,6 +104,7 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 
 	}
+
 	/**
 	 * @param organization
 	 * @param payload
@@ -144,6 +144,7 @@ public class ProgramController extends BaseController {
 			payload.setOrgDriver(organization.getOrgDriver());
 			payload.setBusinessModel(organization.getBusinessModel());
 			payload.setMissionStatement(organization.getMissionStatement());
+			payload.setContactInfo(organization.getContactInfo());
 			payload.setPopulationServed(organization.getPopulationServed());
 
 		}
