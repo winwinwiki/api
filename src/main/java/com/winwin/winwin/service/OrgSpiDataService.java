@@ -190,7 +190,7 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 									customMessageSource.getMessage("org.spidata.error.not_found"));
 						}
 
-						if (payload.getOrganizationId() == null || !(payload.getOrganizationId() == orgId)) {
+						if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
 							isValidSpiData = false;
 						}
 
@@ -229,6 +229,7 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 							spiDataMapObj.setIsChecked(payload.getIsChecked());
 							spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+							orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 						}
 
 					}
