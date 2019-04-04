@@ -185,7 +185,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 				}
 
 			}
-		}
+		} // end of loop for (OrgSdgDataMapPayload payload :
 
 	}// end of method createSdgDataMapping
 

@@ -77,8 +77,7 @@ public class OrganizationService implements IOrganizationService {
 				organization.setUpdatedAt(sdf.parse(formattedDte));
 				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
 				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				organizationRepository.saveAndFlush(organization);
-				organization = organizationRepository.findLastOrg();
+				organization = organizationRepository.saveAndFlush(organization);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
@@ -145,6 +144,9 @@ public class OrganizationService implements IOrganizationService {
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getMissionStatement())) {
 				organization.setMissionStatement(organizationPayload.getMissionStatement());
+			}
+			if (!StringUtils.isEmpty(organizationPayload.getContactInfo())) {
+				organization.setContactInfo(organizationPayload.getContactInfo());
 			}
 			if (null != organizationPayload.getPopulationServed()) {
 				organization.setPopulationServed(organizationPayload.getPopulationServed());
@@ -294,8 +296,7 @@ public class OrganizationService implements IOrganizationService {
 				organization.setUpdatedAt(sdf.parse(formattedDte));
 				organization.setCreatedBy(OrganizationConstants.CREATED_BY);
 				organization.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-				organizationRepository.saveAndFlush(organization);
-				organization = organizationRepository.findLastOrg();
+				organization = organizationRepository.saveAndFlush(organization);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("prg.exception.created"), e);

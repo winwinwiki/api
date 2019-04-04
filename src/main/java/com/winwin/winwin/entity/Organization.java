@@ -91,5 +91,8 @@ public class Organization extends AbstractAuditableEntity {
 
 	@Column(name = "mission_statement")
 	String missionStatement;
+	
+	@Column(name = "contact_info")
+	String contactInfo;
 
 }

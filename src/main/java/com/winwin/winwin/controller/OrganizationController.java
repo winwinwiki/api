@@ -245,6 +245,7 @@ public class OrganizationController extends BaseController {
 			payload.setOrgDriver(organization.getOrgDriver());
 			payload.setBusinessModel(organization.getBusinessModel());
 			payload.setMissionStatement(organization.getMissionStatement());
+			payload.setContactInfo(organization.getContactInfo());
 			payload.setPopulationServed(organization.getPopulationServed());
 
 		}
