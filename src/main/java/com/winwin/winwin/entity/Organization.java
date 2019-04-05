@@ -53,6 +53,9 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "sector_level")
 	private String sectorLevel;
 
+	@Column(name = "sector_level_name")
+	private String sectorLevelName;
+
 	@Column(name = "description")
 	private String description;
 
@@ -77,11 +80,14 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "social_url")
 	private String socialUrl;
 
-	@Column(name = "key_activities")
-	String keyActivities;
+	@Column(name = "values")
+	String values;
 
-	@Column(name = "org_driver")
-	String orgDriver;
+	@Column(name = "purpose")
+	String purpose;
+
+	@Column(name = "self_interest")
+	private String selfInterest;
 
 	@Column(name = "business_model")
 	String businessModel;
@@ -91,7 +97,7 @@ public class Organization extends AbstractAuditableEntity {
 
 	@Column(name = "mission_statement")
 	String missionStatement;
-	
+
 	@Column(name = "contact_info")
 	String contactInfo;
 

@@ -21,6 +21,7 @@ public class OrganizationPayload {
 	Long assets;
 	String sector;
 	String sectorLevel;
+	String sectorLevelName;
 	String description;
 	String status;
 	String priority;
@@ -32,8 +33,9 @@ public class OrganizationPayload {
 	String websiteUrl;
 	String socialUrl;
 	Long classificationId;
-	String keyActivities;
-	String orgDriver;
+	String values;
+	String purpose;
+	String selfInterest;
 	String businessModel;
 	Long populationServed;
 	String missionStatement;
