@@ -243,6 +243,7 @@ public class OrganizationController extends BaseController {
 			payload.setAssets(organization.getAssets());
 			payload.setSector(organization.getSector());
 			payload.setSectorLevel(organization.getSectorLevel());
+			payload.setSectorLevelName(organization.getSectorLevelName());
 			payload.setDescription(organization.getDescription());
 			payload.setPriority(organization.getPriority());
 			payload.setParentId(organization.getParentId());
@@ -251,8 +252,9 @@ public class OrganizationController extends BaseController {
 			payload.setTotalAssets(organization.getAssets());
 			payload.setWebsiteUrl(organization.getWebsiteUrl());
 			payload.setSocialUrl(organization.getSocialUrl());
-			payload.setKeyActivities(organization.getKeyActivities());
-			payload.setOrgDriver(organization.getOrgDriver());
+			payload.setValues(organization.getValues());
+			payload.setPurpose(organization.getPurpose());
+			payload.setSelfInterest(organization.getSelfInterest());
 			payload.setBusinessModel(organization.getBusinessModel());
 			payload.setMissionStatement(organization.getMissionStatement());
 			payload.setContactInfo(organization.getContactInfo());

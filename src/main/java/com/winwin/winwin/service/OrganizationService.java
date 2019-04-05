@@ -127,18 +127,25 @@ public class OrganizationService implements IOrganizationService {
 			if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
 				organization.setSectorLevel(organizationPayload.getSectorLevel());
 			}
+			if (!StringUtils.isEmpty(organizationPayload.getSectorLevelName())) {
+				organization.setSectorLevelName(organizationPayload.getSectorLevelName());
+			}
 			if (!StringUtils.isEmpty(organizationPayload.getWebsiteUrl())) {
 				organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getSocialUrl())) {
 				organization.setSocialUrl(organizationPayload.getSocialUrl());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getKeyActivities())) {
-				organization.setKeyActivities(organizationPayload.getKeyActivities());
+			if (!StringUtils.isEmpty(organizationPayload.getValues())) {
+				organization.setValues(organizationPayload.getValues());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getOrgDriver())) {
-				organization.setOrgDriver(organizationPayload.getOrgDriver());
+			if (!StringUtils.isEmpty(organizationPayload.getPurpose())) {
+				organization.setPurpose(organizationPayload.getPurpose());
 			}
+			if (!StringUtils.isEmpty(organizationPayload.getSelfInterest())) {
+				organization.setSelfInterest(organizationPayload.getSelfInterest());
+			}
+
 			if (!StringUtils.isEmpty(organizationPayload.getBusinessModel())) {
 				organization.setBusinessModel(organizationPayload.getBusinessModel());
 			}
