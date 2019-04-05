@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.Date;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,4 +23,6 @@ public class OrganizationNotePayload {
 	Long noteId;
 	String note;
 	Long organizationId;
+	String createdBy;
+	Date createdAt;
 }

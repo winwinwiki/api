@@ -1069,6 +1069,8 @@ public class OrganizationController extends BaseController {
 			payload.setNoteId(organizationNote.getId());
 			payload.setNote(organizationNote.getName());
 			payload.setOrganizationId(organizationNote.getOrganizationId());
+			payload.setCreatedBy(organizationNote.getCreatedBy());
+			payload.setCreatedAt(organizationNote.getCreatedAt());
 
 		}
 		return payload;
