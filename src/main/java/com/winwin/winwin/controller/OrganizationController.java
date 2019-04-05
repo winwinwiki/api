@@ -1024,7 +1024,7 @@ public class OrganizationController extends BaseController {
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.note.error.list"));
 		}
-		return sendSuccessResponse(orgNoteList);
+		return sendSuccessResponse(payloadList);
 
 	}
 
