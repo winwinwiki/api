@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -23,6 +27,8 @@ public class OrganizationPayload {
 	String sectorLevel;
 	String sectorLevelName;
 	String description;
+	String naicsCode;
+	String nteeCode;
 	String status;
 	String priority;
 	Long parentId;
@@ -31,7 +37,9 @@ public class OrganizationPayload {
 	String tagStatus;
 	Long totalAssets;
 	String websiteUrl;
-	String socialUrl;
+	String facebookUrl;
+	String linkedinUrl;
+	String twitterUrl;
 	Long classificationId;
 	String values;
 	String purpose;
