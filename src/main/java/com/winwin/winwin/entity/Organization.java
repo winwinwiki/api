@@ -59,6 +59,12 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "description")
 	private String description;
 
+	@Column(name = "naics_code")
+	private String naicsCode;
+
+	@Column(name = "ntee_code")
+	private String nteeCode;
+
 	@Column(name = "priority")
 	private String priority = "Normal";
 
@@ -77,8 +83,14 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "website_url")
 	private String websiteUrl;
 
-	@Column(name = "social_url")
-	private String socialUrl;
+	@Column(name = "facebook_url")
+	private String facebookUrl;
+
+	@Column(name = "linkedin_url")
+	private String linkedinUrl;
+
+	@Column(name = "twitter_url")
+	private String twitterUrl;
 
 	@Column(name = "values")
 	String values;

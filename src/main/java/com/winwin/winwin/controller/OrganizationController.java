@@ -245,13 +245,17 @@ public class OrganizationController extends BaseController {
 			payload.setSectorLevel(organization.getSectorLevel());
 			payload.setSectorLevelName(organization.getSectorLevelName());
 			payload.setDescription(organization.getDescription());
+			payload.setNaicsCode(organization.getNaicsCode());
+			payload.setNteeCode(organization.getNteeCode());
 			payload.setPriority(organization.getPriority());
 			payload.setParentId(organization.getParentId());
 			payload.setIsActive(organization.getIsActive());
 			payload.setTagStatus(organization.getTagStatus());
 			payload.setTotalAssets(organization.getAssets());
 			payload.setWebsiteUrl(organization.getWebsiteUrl());
-			payload.setSocialUrl(organization.getSocialUrl());
+			payload.setFacebookUrl(organization.getFacebookUrl());
+			payload.setLinkedinUrl(organization.getLinkedinUrl());
+			payload.setTwitterUrl(organization.getTwitterUrl());
 			payload.setValues(organization.getValues());
 			payload.setPurpose(organization.getPurpose());
 			payload.setSelfInterest(organization.getSelfInterest());
