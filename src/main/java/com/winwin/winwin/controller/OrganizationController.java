@@ -946,23 +946,27 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.PUT)
 	@Transactional
 	public ResponseEntity updateProgramDetails(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayload) {
+			@RequestBody List<OrganizationPayload> orgPayloadList) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		try {
-			organization = organizationRepository.findOrgById(organizationPayload.getId());
-			if (organization == null) {
-				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
-			} else {
-				organization = organizationService.updateOrgDetails(organizationPayload, organization);
-				payload = setOrganizationPayload(organization, payload);
+			for (OrganizationPayload payload : orgPayloadList) {
+				organization = organizationRepository.findOrgById(payload.getId());
+				if (organization == null) {
+					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
+				} else {
+					organization = organizationService.updateOrgDetails(payload, organization);
+					payload = setOrganizationPayload(organization, payload);
+					payloadList.add(payload);
+				}
+
 			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("prg.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(payload);
+		return sendSuccessResponse(payloadList);
 
 	}
 	// Code for organization Program Details end
