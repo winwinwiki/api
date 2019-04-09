@@ -130,7 +130,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 			if (null != organizationDataSetPayLoad.getOrganizationDataSetCategory()) {
 				Long categoryId = organizationDataSetPayLoad.getOrganizationDataSetCategory().getId();
 				if (null != categoryId) {
-					if (categoryId == CATEGORY_ID) {
+					if (categoryId.equals(CATEGORY_ID)) {
 						organizationDataSetCategory = saveOrganizationDataSetCategory(
 								organizationDataSetPayLoad.getOrganizationDataSetCategory());
 						LOGGER.info(customMessageSource.getMessage("org.dataset.category.success.created"));

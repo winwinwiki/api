@@ -130,7 +130,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			if (null != organizationResourcePayLoad.getOrganizationResourceCategory()) {
 				Long categoryId = organizationResourcePayLoad.getOrganizationResourceCategory().getId();
 				if (null != categoryId) {
-					if (categoryId == CATEGORY_ID) {
+					if (categoryId.equals(CATEGORY_ID)) {
 						organizationResourceCategory = saveOrganizationResourceCategory(
 								organizationResourcePayLoad.getOrganizationResourceCategory());
 						LOGGER.info(customMessageSource.getMessage("org.resource.category.success.created"));

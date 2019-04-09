@@ -12,15 +12,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.entity.Address;
+import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.exception.OrgRegionServedException;
-import com.winwin.winwin.payload.AddressPayload;
+import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.repository.AddressRepository;
+import com.winwin.winwin.repository.OrgRegionMasterRepository;
 import com.winwin.winwin.repository.OrgRegionServedRepository;
 
 /**
@@ -37,14 +39,18 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	private OrgRegionServedRepository orgRegionServedRepository;
 
 	@Autowired
+	private OrgRegionMasterRepository orgRegionMasterRepository;
+
+	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgRegionServedService.class);
 
+	private final Long REGION_ID = -1L;
+
 	@Override
 	public List<OrgRegionServed> createOrgRegionServed(List<OrgRegionServedPayload> orgRegionPayloadlist) {
 		List<OrgRegionServed> orgRegionList = null;
-		Address address = null;
 		try {
 			if (null != orgRegionPayloadlist) {
 				orgRegionList = new ArrayList<OrgRegionServed>();
@@ -54,11 +60,10 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 						orgRegionServed = new OrgRegionServed();
 						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
+						setOrgRegionMasterData(payload, orgRegionServed);
+
 						orgRegionServed.setOrgId(payload.getOrganizationId());
-						if (null != payload.getAddress()) {
-							address = saveAddress(payload.getAddress());
-							orgRegionServed.setAddress(address);
-						}
 						orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
 						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
 						orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
@@ -96,31 +101,63 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 		return orgRegionList;
 	}// end of method createOrgRegionServed
 
+	/**
+	 * @param payload
+	 * @param region
+	 */
+	private void setOrgRegionMasterData(OrgRegionServedPayload payload, OrgRegionServed region) {
+		OrgRegionMaster regionMaster = null;
+		try {
+			if (null != payload.getOrgRegionMasterPayload()) {
+				Long regionMasterId = payload.getOrgRegionMasterPayload().getId();
+				if (null != regionMasterId) {
+					if (regionMasterId.equals(REGION_ID)) {
+						regionMaster = saveOrganizationRegionMaster(payload.getOrgRegionMasterPayload());
+						LOGGER.info(customMessageSource.getMessage("org.region.master.success.created"));
+					} else {
+						regionMaster = orgRegionMasterRepository.getOne(regionMasterId);
+						if (regionMaster == null) {
+							throw new OrgRegionServedException(
+									"Org region master record not found for Id: " + regionMasterId + " in DB ");
+						}
+					}
+
+					region.setRegionMaster(regionMaster);
+
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
+		}
+	}
+
+	public OrgRegionMaster saveOrganizationRegionMaster(OrgRegionMasterPayload payload) {
+		OrgRegionMaster region = new OrgRegionMaster();
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+			if (!StringUtils.isEmpty(payload.getRegionName())) {
+				region.setRegionName(payload.getRegionName());
+			}
+			region.setCreatedAt(sdf.parse(formattedDte));
+			region.setUpdatedAt(sdf.parse(formattedDte));
+			region.setCreatedBy(OrganizationConstants.CREATED_BY);
+			region.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
+		}
+
+		return orgRegionMasterRepository.saveAndFlush(region);
+	}// end of method saveOrganizationRegionMaster
+	
 	@Override
 	public List<OrgRegionServed> getOrgRegionServedList() {
 		return orgRegionServedRepository.findAllOrgRegionsList();
 	}
 
-	public Address saveAddress(AddressPayload addressPayload) {
-		Address address = new Address();
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			address.setCountry(addressPayload.getCountry());
-			address.setCity(addressPayload.getCity());
-			address.setState(addressPayload.getState());
-			address.setCounty(addressPayload.getCounty());
-			address.setZip(addressPayload.getZip());
-			address.setStreet(addressPayload.getStreet());
-			address.setPlaceId(addressPayload.getPlaceId());
-			address.setCreatedAt(sdf.parse(formattedDte));
-			address.setUpdatedAt(sdf.parse(formattedDte));
-			address.setCreatedBy(OrganizationConstants.CREATED_BY);
-			address.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
-		}
-		return addressRepository.saveAndFlush(address);
+	@Override
+	public List<OrgRegionMaster> getOrgRegionMasterList() {
+		return orgRegionMasterRepository.findAll();
 	}
 
 }

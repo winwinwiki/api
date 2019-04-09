@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
@@ -32,6 +33,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgChartPayload;
+import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
@@ -649,7 +651,6 @@ public class OrganizationController extends BaseController {
 		List<OrgRegionServed> orgRegionServedList = null;
 		List<OrgRegionServedPayload> payloadList = null;
 		OrgRegionServedPayload payload = null;
-		AddressPayload addressPayload = null;
 		try {
 			orgRegionServedList = orgRegionServedService.createOrgRegionServed(orgRegionServedPayloadList);
 			if (null != orgRegionServedList) {
@@ -657,19 +658,13 @@ public class OrganizationController extends BaseController {
 				for (OrgRegionServed region : orgRegionServedList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
-					payload.setOrganizationId(region.getOrgId());
-					if (null != region.getAddress()) {
-						addressPayload = new AddressPayload();
-						addressPayload.setId(region.getAddress().getId());
-						addressPayload.setCountry(region.getAddress().getCountry());
-						addressPayload.setState(region.getAddress().getState());
-						addressPayload.setCity(region.getAddress().getCity());
-						addressPayload.setCounty(region.getAddress().getCounty());
-						addressPayload.setZip(region.getAddress().getZip());
-						addressPayload.setStreet(region.getAddress().getStreet());
-						addressPayload.setPlaceId(region.getAddress().getPlaceId());
-						payload.setAddress(addressPayload);
+					if ( null != region.getRegionMaster()){
+						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
+						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						payload.setOrgRegionMasterPayload(regionMasterPayload);
 					}
+					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 
@@ -687,7 +682,6 @@ public class OrganizationController extends BaseController {
 			throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionList = null;
 		OrgRegionServedPayload payload = null;
-		AddressPayload addressPayload = null;
 		List<OrgRegionServedPayload> payloadList = null;
 		try {
 			orgRegionList = orgRegionServedService.getOrgRegionServedList();
@@ -698,19 +692,13 @@ public class OrganizationController extends BaseController {
 				for (OrgRegionServed region : orgRegionList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
-					payload.setOrganizationId(region.getOrgId());
-					if (null != region.getAddress()) {
-						addressPayload = new AddressPayload();
-						addressPayload.setId(region.getAddress().getId());
-						addressPayload.setCountry(region.getAddress().getCountry());
-						addressPayload.setState(region.getAddress().getState());
-						addressPayload.setCity(region.getAddress().getCity());
-						addressPayload.setCounty(region.getAddress().getCounty());
-						addressPayload.setZip(region.getAddress().getZip());
-						addressPayload.setStreet(region.getAddress().getStreet());
-						addressPayload.setPlaceId(region.getAddress().getPlaceId());
-						payload.setAddress(addressPayload);
+					if ( null != region.getRegionMaster()){
+						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
+						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						payload.setOrgRegionMasterPayload(regionMasterPayload);
 					}
+					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 
@@ -723,6 +711,35 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}
+	
+	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
+	public ResponseEntity<?> getOrgRegionsMasterList(HttpServletResponse httpServletResponse)
+			throws OrgRegionServedException {
+		List<OrgRegionMaster> orgRegionMasterList = null;
+		OrgRegionMasterPayload payload = null;
+		List<OrgRegionMasterPayload> payloadList = null;
+		try {
+			orgRegionMasterList = orgRegionServedService.getOrgRegionMasterList();
+			if (orgRegionMasterList == null) {
+				throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
+			} else {
+				payloadList = new ArrayList<OrgRegionMasterPayload>();
+				for (OrgRegionMaster region : orgRegionMasterList) {
+					payload = new OrgRegionMasterPayload();
+					payload.setId(region.getId());
+					payload.setRegionName(region.getRegionName());
+					payloadList.add(payload);
+
+				}
+
+			}
+		} catch (Exception e) {
+			throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.list"));
+		}
+		return sendSuccessResponse(payloadList);
+
+	}
+	
 	// Code for organization region served end
 
 	// Code for organization SPI data start

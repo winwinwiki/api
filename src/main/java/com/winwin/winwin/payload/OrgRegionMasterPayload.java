@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.winwin.winwin.payload;
 
 import lombok.AllArgsConstructor;
@@ -20,9 +17,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrgRegionServedPayload {
+public class OrgRegionMasterPayload {
 	Long id;
-	OrgRegionMasterPayload orgRegionMasterPayload;
-	Long organizationId;
-	Boolean isActive;
+	String regionName;
 }
