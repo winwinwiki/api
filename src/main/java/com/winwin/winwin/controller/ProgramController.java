@@ -547,9 +547,9 @@ public class ProgramController extends BaseController {
 					payload.setId(region.getId());
 					if (null != region.getRegionMaster()) {
 						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
-						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						payload.setOrgRegionMasterPayload(regionMasterPayload);
+						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
@@ -581,9 +581,9 @@ public class ProgramController extends BaseController {
 					payload.setId(region.getId());
 					if (null != region.getRegionMaster()) {
 						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
-						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						payload.setOrgRegionMasterPayload(regionMasterPayload);
+						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
@@ -613,7 +613,7 @@ public class ProgramController extends BaseController {
 				payloadList = new ArrayList<OrgRegionMasterPayload>();
 				for (OrgRegionMaster region : orgRegionMasterList) {
 					payload = new OrgRegionMasterPayload();
-					payload.setId(region.getId());
+					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
 					payloadList.add(payload);
 				}

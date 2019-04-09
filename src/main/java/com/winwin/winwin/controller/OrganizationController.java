@@ -153,23 +153,27 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "", method = RequestMethod.PUT)
 	@Transactional
 	public ResponseEntity updateOrgDetails(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayload) {
+			@RequestBody List<OrganizationPayload> orgPayloadList) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		try {
-			organization = organizationRepository.findOrgById(organizationPayload.getId());
-			if (organization == null) {
-				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
-			} else {
-				organization = organizationService.updateOrgDetails(organizationPayload, organization);
-				payload = setOrganizationPayload(organization, payload);
+			for (OrganizationPayload payload : orgPayloadList) {
+				organization = organizationRepository.findOrgById(payload.getId());
+				if (organization == null) {
+					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+				} else {
+					organization = organizationService.updateOrgDetails(payload, organization);
+					payload = setOrganizationPayload(organization, payload);
+					payloadList.add(payload);
+				}
+
 			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.error.updated") + ": " + e.getMessage());
 		}
-		return sendSuccessResponse(payload);
+		return sendSuccessResponse(payloadList);
 
 	}
 
@@ -658,11 +662,11 @@ public class OrganizationController extends BaseController {
 				for (OrgRegionServed region : orgRegionServedList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
-					if ( null != region.getRegionMaster()){
+					if (null != region.getRegionMaster()) {
 						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
-						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						payload.setOrgRegionMasterPayload(regionMasterPayload);
+						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
@@ -692,11 +696,11 @@ public class OrganizationController extends BaseController {
 				for (OrgRegionServed region : orgRegionList) {
 					payload = new OrgRegionServedPayload();
 					payload.setId(region.getId());
-					if ( null != region.getRegionMaster()){
+					if (null != region.getRegionMaster()) {
 						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
-						regionMasterPayload.setId(region.getRegionMaster().getId());
+						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						payload.setOrgRegionMasterPayload(regionMasterPayload);
+						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
@@ -711,7 +715,7 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}
-	
+
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
 	public ResponseEntity<?> getOrgRegionsMasterList(HttpServletResponse httpServletResponse)
 			throws OrgRegionServedException {
@@ -726,7 +730,7 @@ public class OrganizationController extends BaseController {
 				payloadList = new ArrayList<OrgRegionMasterPayload>();
 				for (OrgRegionMaster region : orgRegionMasterList) {
 					payload = new OrgRegionMasterPayload();
-					payload.setId(region.getId());
+					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
 					payloadList.add(payload);
 
@@ -739,7 +743,7 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 
 	}
-	
+
 	// Code for organization region served end
 
 	// Code for organization SPI data start
