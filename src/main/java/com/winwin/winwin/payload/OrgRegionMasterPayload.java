@@ -18,6 +18,6 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrgRegionMasterPayload {
-	Long id;
+	Long regionId;
 	String regionName;
 }
