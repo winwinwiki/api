@@ -5,8 +5,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -27,20 +25,14 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_region_served")
-public class OrgRegionServed extends AbstractAuditableEntity {
+@Table(name = "org_region_master")
+public class OrgRegionMaster extends AbstractAuditableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@ManyToOne
-	@JoinColumn(name = "region_master_id")
-	private OrgRegionMaster regionMaster;
+	@Column(name = "name")
+	private String regionName;
 
-	@JoinColumn(name = "org_id")
-	private Long orgId;
-
-	@Column(name = "is_active")
-	private Boolean isActive = true;
 }

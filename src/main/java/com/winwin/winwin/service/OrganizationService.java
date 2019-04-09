@@ -109,67 +109,31 @@ public class OrganizationService implements IOrganizationService {
 			if (!StringUtils.isEmpty(organizationPayload.getName())) {
 				organization.setName(organizationPayload.getName());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getDescription())) {
-				organization.setDescription(organizationPayload.getDescription());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getPriority())) {
-				organization.setPriority(organizationPayload.getPriority());
-			}
-			if (null != organizationPayload.getRevenue()) {
-				organization.setRevenue(organizationPayload.getRevenue());
-			}
-			if (null != organizationPayload.getAssets()) {
-				organization.setAssets(organizationPayload.getAssets());
-			}
 			if (!StringUtils.isEmpty(organizationPayload.getSector())) {
 				organization.setSector(organizationPayload.getSector());
 			}
 			if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
 				organization.setSectorLevel(organizationPayload.getSectorLevel());
 			}
-			if (!StringUtils.isEmpty(organizationPayload.getSectorLevelName())) {
-				organization.setSectorLevelName(organizationPayload.getSectorLevelName());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getNaicsCode())) {
-				organization.setNaicsCode(organizationPayload.getNaicsCode());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getNteeCode())) {
-				organization.setNteeCode(organizationPayload.getNteeCode());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getWebsiteUrl())) {
-				organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getFacebookUrl())) {
-				organization.setFacebookUrl(organizationPayload.getFacebookUrl());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getLinkedinUrl())) {
-				organization.setLinkedinUrl(organizationPayload.getLinkedinUrl());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getTwitterUrl())) {
-				organization.setTwitterUrl(organizationPayload.getTwitterUrl());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getValues())) {
-				organization.setValues(organizationPayload.getValues());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getPurpose())) {
-				organization.setPurpose(organizationPayload.getPurpose());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getSelfInterest())) {
-				organization.setSelfInterest(organizationPayload.getSelfInterest());
-			}
 
-			if (!StringUtils.isEmpty(organizationPayload.getBusinessModel())) {
-				organization.setBusinessModel(organizationPayload.getBusinessModel());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getMissionStatement())) {
-				organization.setMissionStatement(organizationPayload.getMissionStatement());
-			}
-			if (!StringUtils.isEmpty(organizationPayload.getContactInfo())) {
-				organization.setContactInfo(organizationPayload.getContactInfo());
-			}
-			if (null != organizationPayload.getPopulationServed()) {
-				organization.setPopulationServed(organizationPayload.getPopulationServed());
-			}
+			organization.setDescription(organizationPayload.getDescription());
+			organization.setPriority(organizationPayload.getPriority());
+			organization.setRevenue(organizationPayload.getRevenue());
+			organization.setAssets(organizationPayload.getAssets());
+			organization.setSectorLevelName(organizationPayload.getSectorLevelName());
+			organization.setNaicsCode(organizationPayload.getNaicsCode());
+			organization.setNteeCode(organizationPayload.getNteeCode());
+			organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
+			organization.setFacebookUrl(organizationPayload.getFacebookUrl());
+			organization.setLinkedinUrl(organizationPayload.getLinkedinUrl());
+			organization.setTwitterUrl(organizationPayload.getTwitterUrl());
+			organization.setValues(organizationPayload.getValues());
+			organization.setPurpose(organizationPayload.getPurpose());
+			organization.setSelfInterest(organizationPayload.getSelfInterest());
+			organization.setBusinessModel(organizationPayload.getBusinessModel());
+			organization.setMissionStatement(organizationPayload.getMissionStatement());
+			organization.setContactInfo(organizationPayload.getContactInfo());
+			organization.setPopulationServed(organizationPayload.getPopulationServed());
 
 			Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
 			if (!isUpdated) {
@@ -199,12 +163,21 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			address.setCountry(addressPayload.getCountry());
-			address.setCity(addressPayload.getCity());
-			address.setState(addressPayload.getState());
-			address.setCounty(addressPayload.getCounty());
-			address.setZip(addressPayload.getZip());
-			address.setStreet(addressPayload.getStreet());
+			if (!StringUtils.isEmpty(addressPayload.getCountry())) {
+				address.setCountry(addressPayload.getCountry());
+			}
+			if (!StringUtils.isEmpty(addressPayload.getState())) {
+				address.setState(addressPayload.getState());
+			}
+			if (!StringUtils.isEmpty(addressPayload.getCity())) {
+				address.setCity(addressPayload.getCity());
+			}
+			if (!StringUtils.isEmpty(addressPayload.getCounty())) {
+				address.setCounty(addressPayload.getCounty());
+			}
+			if (!StringUtils.isEmpty(addressPayload.getZip())) {
+				address.setZip(addressPayload.getZip());
+			}
 			address.setPlaceId(addressPayload.getPlaceId());
 			address.setCreatedAt(sdf.parse(formattedDte));
 			address.setUpdatedAt(sdf.parse(formattedDte));
@@ -236,13 +209,8 @@ public class OrganizationService implements IOrganizationService {
 				if (!StringUtils.isEmpty(addressPayload.getZip())) {
 					organization.getAddress().setZip(addressPayload.getZip());
 				}
-				if (!StringUtils.isEmpty(addressPayload.getStreet())) {
-					organization.getAddress().setStreet(addressPayload.getStreet());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getPlaceId())) {
-					organization.getAddress().setPlaceId(addressPayload.getPlaceId());
-				}
-
+				organization.getAddress().setStreet(addressPayload.getStreet());
+				organization.getAddress().setPlaceId(addressPayload.getPlaceId());
 				organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
 				organization.getAddress().setUpdatedBy(OrganizationConstants.UPDATED_BY);
 
