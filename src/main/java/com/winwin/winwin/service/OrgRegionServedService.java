@@ -108,11 +108,11 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	private void setOrgRegionMasterData(OrgRegionServedPayload payload, OrgRegionServed region) {
 		OrgRegionMaster regionMaster = null;
 		try {
-			if (null != payload.getOrgRegionMasterPayload()) {
-				Long regionMasterId = payload.getOrgRegionMasterPayload().getId();
+			if (null != payload.getRegion()) {
+				Long regionMasterId = payload.getRegion().getRegionId();
 				if (null != regionMasterId) {
 					if (regionMasterId.equals(REGION_ID)) {
-						regionMaster = saveOrganizationRegionMaster(payload.getOrgRegionMasterPayload());
+						regionMaster = saveOrganizationRegionMaster(payload.getRegion());
 						LOGGER.info(customMessageSource.getMessage("org.region.master.success.created"));
 					} else {
 						regionMaster = orgRegionMasterRepository.getOne(regionMasterId);
