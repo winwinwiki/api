@@ -307,7 +307,7 @@ public class OrganizationService implements IOrganizationService {
 					AddressPayload divAddress = null;
 					divPayload.setId(orgDivision.getId());
 					divPayload.setName(orgDivision.getName());
-					divAddress = getLocationPayload(organization, divAddress);
+					divAddress = getLocationPayload(orgDivision, divAddress);
 					divPayload.setLocation(divAddress);
 					divPayload.setChildrenType(OrganizationConstants.DEPARTMENT);
 
