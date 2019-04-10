@@ -9,9 +9,6 @@ package com.winwin.winwin.exception;
  */
 public class OrgSpiDataException extends Exception {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public OrgSpiDataException() {

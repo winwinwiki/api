@@ -4,8 +4,10 @@ package com.winwin.winwin.exception;
  * @author ArvindKhatik
  *
  */
-@SuppressWarnings("serial")
 public class OrganizationDataSetCategoryException extends Exception {
+
+	private static final long serialVersionUID = 1L;
+	
 	private String message = null;
 
 	public OrganizationDataSetCategoryException() {
