@@ -253,7 +253,7 @@ public class OrganizationService implements IOrganizationService {
 	@Override
 	public Organization createProgram(OrganizationPayload organizationPayload) {
 		Organization organization = null;
-		try {
+		try { 
 			if (organizationPayload != null) {
 				Address address = new Address();
 				organization = new Organization();
