@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
@@ -33,6 +34,7 @@ import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgChartPayload;
+import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
@@ -967,11 +969,30 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.POST)
 	@Transactional
 	public ResponseEntity<?> createSuborganization(@RequestBody SubOrganizationPayload subOrganizationPayload) {
-		OrganizationPayload payload = null;
+		OrgDivisionPayload payload = null;
 		Organization organization = null;
 		try {
 			organization = organizationService.createSubOrganization(subOrganizationPayload);
-			payload = setOrganizationPayload(organization, payload);
+			if (null != organization) {
+				payload = new OrgDivisionPayload();
+				payload.setId(organization.getId());
+				payload.setName(organization.getName());
+				payload.setChildrenType(OrganizationConstants.DEPARTMENT);
+
+				if (null != organization.getAddress()) {
+					AddressPayload addressPayload = new AddressPayload();
+					addressPayload.setId(organization.getAddress().getId());
+					addressPayload.setCountry(organization.getAddress().getCountry());
+					addressPayload.setState(organization.getAddress().getState());
+					addressPayload.setCity(organization.getAddress().getCity());
+					addressPayload.setCounty(organization.getAddress().getCounty());
+					addressPayload.setZip(organization.getAddress().getZip());
+					addressPayload.setStreet(organization.getAddress().getStreet());
+					addressPayload.setPlaceId(organization.getAddress().getPlaceId());
+					payload.setLocation(addressPayload);
+				}
+
+			}
 
 		} catch (Exception e) {
 			throw new OrganizationException(
