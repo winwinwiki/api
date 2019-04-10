@@ -25,7 +25,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization where type = 'department' AND is_Active = true " , nativeQuery = true)
 	List<Organization> findAllDepartmentList();
 	
-	@Query(value = "select * from organization where parent_id = :orgId AND is_Active = true" , nativeQuery = true)
+	@Query(value = "select * from organization where type = 'program' AND parent_id = :orgId AND is_Active = true" , nativeQuery = true)
 	List<Organization> findAllProgramList(@Param("orgId") Long orgId);
 
 	@Query(value = "select * from organization ORDER BY id DESC LIMIT 1", nativeQuery = true)

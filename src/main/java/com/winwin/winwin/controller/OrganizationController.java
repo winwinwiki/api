@@ -100,11 +100,9 @@ public class OrganizationController extends BaseController {
 	OrganizationNoteRepository organizationNoteRepository;
 
 	// Code for organization start
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createOrganization(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayload) {
+	public ResponseEntity<?> createOrganization(@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
 		try {
@@ -118,11 +116,9 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
 	@Transactional
-	public ResponseEntity deleteOrganization(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayLoad) {
+	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
 				Long id = organizationPayLoad.getId();
@@ -149,11 +145,9 @@ public class OrganizationController extends BaseController {
 	 * @param organizationPayload
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "", method = RequestMethod.PUT)
 	@Transactional
-	public ResponseEntity updateOrgDetails(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrganizationPayload> orgPayloadList) {
+	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
 		Organization organization = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		try {
@@ -178,7 +172,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrganizationList(HttpServletResponse httpServletResponse) throws OrganizationException {
+	public ResponseEntity<?> getOrganizationList() throws OrganizationException {
 		List<Organization> orgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
@@ -200,10 +194,9 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@Transactional
-	public ResponseEntity getOrgDetails(HttpServletResponse httpServletResponse, @PathVariable("id") Long id) {
+	public ResponseEntity<?> getOrgDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
 		try {
@@ -276,10 +269,9 @@ public class OrganizationController extends BaseController {
 	// Code for organization end
 
 	// Code for organization data set start
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
-	public ResponseEntity createOrganizationDataSet(
+	public ResponseEntity<?> createOrganizationDataSet(
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet organizationDataSet = null;
@@ -320,10 +312,9 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
-	public ResponseEntity updateOrganizationDataSet(
+	public ResponseEntity<?> updateOrganizationDataSet(
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet dataSet = null;
@@ -360,11 +351,10 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
-	public ResponseEntity deleteOrganizationDataSet(@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
-			throws OrganizationDataSetException {
+	public ResponseEntity<?> deleteOrganizationDataSet(
+			@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad) throws OrganizationDataSetException {
 		try {
 			if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 				Long id = organizationDataSetPayLoad.getId();
@@ -387,8 +377,8 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrganizationDataSetList(HttpServletResponse httpServletResponse,
-			@PathVariable("id") Long id) throws OrganizationDataSetException {
+	public ResponseEntity<?> getOrganizationDataSetList(@PathVariable("id") Long id)
+			throws OrganizationDataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
 		OrganizationDataSetPayLoad payload = null;
 		OrganizationDataSetCategory category = null;
@@ -459,10 +449,9 @@ public class OrganizationController extends BaseController {
 	// Code for organization data set end
 
 	// Code for organization resource start
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
-	public ResponseEntity createOrganizationResource(
+	public ResponseEntity<?> createOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
@@ -500,10 +489,9 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
-	public ResponseEntity updateOrganizationResource(
+	public ResponseEntity<?> updateOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		OrganizationResource organizationResource = null;
@@ -547,10 +535,9 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
-	public ResponseEntity deleteOrganizationResource(
+	public ResponseEntity<?> deleteOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
 		try {
@@ -575,8 +562,8 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrganizationResourceList(HttpServletResponse httpServletResponse,
-			@PathVariable("id") Long id) throws OrganizationResourceException {
+	public ResponseEntity<?> getOrganizationResourceList(@PathVariable("id") Long id)
+			throws OrganizationResourceException {
 		List<OrganizationResource> orgResourceList = null;
 		OrganizationResourcePayLoad payload = null;
 		OrganizationResourceCategory category = null;
@@ -647,11 +634,10 @@ public class OrganizationController extends BaseController {
 	// Code for organization resource end
 
 	// Code for organization region served start
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/region", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createOrgRegions(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList) throws OrgRegionServedException {
+	public ResponseEntity<?> createOrgRegions(@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList)
+			throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionServedList = null;
 		List<OrgRegionServedPayload> payloadList = null;
 		OrgRegionServedPayload payload = null;
@@ -682,8 +668,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgRegionsList(HttpServletResponse httpServletResponse)
-			throws OrgRegionServedException {
+	public ResponseEntity<?> getOrgRegionsList() throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionList = null;
 		OrgRegionServedPayload payload = null;
 		List<OrgRegionServedPayload> payloadList = null;
@@ -717,8 +702,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgRegionsMasterList(HttpServletResponse httpServletResponse)
-			throws OrgRegionServedException {
+	public ResponseEntity<?> getOrgRegionsMasterList() throws OrgRegionServedException {
 		List<OrgRegionMaster> orgRegionMasterList = null;
 		OrgRegionMasterPayload payload = null;
 		List<OrgRegionMasterPayload> payloadList = null;
@@ -748,7 +732,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization SPI data start
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgSpiDataList(HttpServletResponse httpServletResponse) throws OrgSpiDataException {
+	public ResponseEntity<?> getOrgSpiDataList() throws OrgSpiDataException {
 		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
 		try {
 			payloadList = orgSpiDataService.getSpiDataForResponse();
@@ -763,12 +747,10 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createOrgSpiDataMapping(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrgSpiDataMapPayload> payloadList, @PathVariable("id") Long orgId)
-			throws OrgSpiDataException {
+	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrgSpiDataMapPayload> payloadList,
+			@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
@@ -786,8 +768,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
-	public ResponseEntity<?> getSelectedOrgSpiData(HttpServletResponse httpServletResponse,
-			@PathVariable("id") Long orgId) throws OrgSpiDataException {
+	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		List<OrgSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
@@ -808,7 +789,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization SDG data start
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgSdgDataList(HttpServletResponse httpServletResponse) throws OrgSdgDataException {
+	public ResponseEntity<?> getOrgSdgDataList() throws OrgSdgDataException {
 		List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
 		try {
 			payloadList = orgSdgDataService.getSdgDataForResponse();
@@ -823,12 +804,10 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createOrgSdgDataMapping(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrgSdgDataMapPayload> payloadList, @PathVariable("id") Long orgId)
-			throws OrgSdgDataException {
+	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrgSdgDataMapPayload> payloadList,
+			@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
@@ -846,8 +825,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
-	public ResponseEntity<?> getSelectedOrgSdgData(HttpServletResponse httpServletResponse,
-			@PathVariable("id") Long orgId) throws OrgSdgDataException {
+	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		List<OrgSdgDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
@@ -865,11 +843,10 @@ public class OrganizationController extends BaseController {
 	}// Code for organization SDG data end
 
 	// Code for organization Program Details start
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createProgram(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayload, @PathVariable("id") Long orgId) {
+	public ResponseEntity<?> createProgram(@RequestBody OrganizationPayload organizationPayload,
+			@PathVariable("id") Long orgId) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
 		if (orgId == null)
@@ -886,8 +863,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
-	public ResponseEntity<?> getProgramList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
-			throws OrganizationException {
+	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId) throws OrganizationException {
 		List<Organization> prgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
@@ -911,11 +887,9 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.DELETE)
 	@Transactional
-	public ResponseEntity deleteProgram(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationPayload organizationPayLoad) {
+	public ResponseEntity<?> deleteProgram(@RequestBody OrganizationPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
 				Long id = organizationPayLoad.getId();
@@ -942,11 +916,9 @@ public class OrganizationController extends BaseController {
 	 * @param organizationPayload
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.PUT)
 	@Transactional
-	public ResponseEntity updateProgramDetails(HttpServletResponse httpServletResponse,
-			@RequestBody List<OrganizationPayload> orgPayloadList) {
+	public ResponseEntity<?> updateProgramDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
 		Organization organization = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		try {
@@ -973,8 +945,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization Chart start
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.GET)
-	public ResponseEntity<?> getSuborganizationList(HttpServletResponse httpServletResponse,
-			@PathVariable("id") Long orgId) throws OrganizationException {
+	public ResponseEntity<?> getSuborganizationList(@PathVariable("id") Long orgId) throws OrganizationException {
 		Organization organization = null;
 		OrgChartPayload payload = new OrgChartPayload();
 		if (orgId == null)
@@ -993,11 +964,9 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createSuborganization(HttpServletResponse httpServletResponse,
-			@RequestBody SubOrganizationPayload subOrganizationPayload) {
+	public ResponseEntity<?> createSuborganization(@RequestBody SubOrganizationPayload subOrganizationPayload) {
 		OrganizationPayload payload = null;
 		Organization organization = null;
 		try {
@@ -1013,11 +982,10 @@ public class OrganizationController extends BaseController {
 	// Code for organization Chart end
 
 	// Code for organization notes start
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.POST)
 	@Transactional
-	public ResponseEntity createOrgNote(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationNotePayload organizationNotePayload, @PathVariable("id") Long orgId) {
+	public ResponseEntity<?> createOrgNote(@RequestBody OrganizationNotePayload organizationNotePayload,
+			@PathVariable("id") Long orgId) {
 		OrganizationNote note = null;
 		OrganizationNotePayload payload = null;
 		if (orgId == null)
@@ -1034,8 +1002,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.GET)
-	public ResponseEntity<?> getorgNotesList(HttpServletResponse httpServletResponse, @PathVariable("id") Long orgId)
-			throws OrganizationException {
+	public ResponseEntity<?> getorgNotesList(@PathVariable("id") Long orgId) throws OrganizationException {
 		List<OrganizationNote> orgNoteList = null;
 		OrganizationNotePayload payload = new OrganizationNotePayload();
 		List<OrganizationNotePayload> payloadList = new ArrayList<OrganizationNotePayload>();
@@ -1059,11 +1026,9 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
 	@Transactional
-	public ResponseEntity deleteOrgNote(HttpServletResponse httpServletResponse,
-			@RequestBody OrganizationNotePayload organizationNotePayLoad) {
+	public ResponseEntity<?> deleteOrgNote(@RequestBody OrganizationNotePayload organizationNotePayLoad) {
 		try {
 			if (null != organizationNotePayLoad && null != organizationNotePayLoad.getNoteId()) {
 				Long noteId = organizationNotePayLoad.getNoteId();

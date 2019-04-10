@@ -6,9 +6,6 @@ package com.winwin.winwin.exception;
  */
 public class OrgSdgDataException extends Exception {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public OrgSdgDataException() {

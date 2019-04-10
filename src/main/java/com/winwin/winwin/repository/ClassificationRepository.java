@@ -6,6 +6,10 @@ import org.springframework.data.repository.query.Param;
 
 import com.winwin.winwin.entity.Classification;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface ClassificationRepository extends JpaRepository<Classification, Long> {
 	@Query(value = "select * from classification where id = :id", nativeQuery = true)
 	Classification findClassificationById(@Param("id") Long id);

@@ -7,6 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.winwin.winwin.entity.OrganizationNote;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface OrganizationNoteRepository extends JpaRepository<OrganizationNote, Long> {
 	@Query(value = "select * from org_note where organization_id = :orgId", nativeQuery = true)
 	List<OrganizationNote> findAllOrgNotesList(@Param("orgId") Long orgId);
