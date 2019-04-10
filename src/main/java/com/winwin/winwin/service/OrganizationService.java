@@ -163,21 +163,11 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-				address.setCountry(addressPayload.getCountry());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getState())) {
-				address.setState(addressPayload.getState());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getCity())) {
-				address.setCity(addressPayload.getCity());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-				address.setCounty(addressPayload.getCounty());
-			}
-			if (!StringUtils.isEmpty(addressPayload.getZip())) {
-				address.setZip(addressPayload.getZip());
-			}
+			address.setCountry(addressPayload.getCountry());
+			address.setState(addressPayload.getState());
+			address.setCity(addressPayload.getCity());
+			address.setCounty(addressPayload.getCounty());
+			address.setZip(addressPayload.getZip());
 			address.setPlaceId(addressPayload.getPlaceId());
 			address.setCreatedAt(sdf.parse(formattedDte));
 			address.setUpdatedAt(sdf.parse(formattedDte));
