@@ -134,6 +134,7 @@ public class OrganizationService implements IOrganizationService {
 			organization.setMissionStatement(organizationPayload.getMissionStatement());
 			organization.setContactInfo(organizationPayload.getContactInfo());
 			organization.setPopulationServed(organizationPayload.getPopulationServed());
+			organization.setTagStatus(organizationPayload.getTagStatus());
 
 			Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress());
 			if (!isUpdated) {

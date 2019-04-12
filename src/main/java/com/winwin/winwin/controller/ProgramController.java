@@ -153,6 +153,7 @@ public class ProgramController extends BaseController {
 			payload.setMissionStatement(organization.getMissionStatement());
 			payload.setContactInfo(organization.getContactInfo());
 			payload.setPopulationServed(organization.getPopulationServed());
+			payload.setTagStatus(organization.getTagStatus());
 
 		}
 		return payload;
