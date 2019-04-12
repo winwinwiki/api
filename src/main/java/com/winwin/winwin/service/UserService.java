@@ -35,7 +35,6 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
-import com.winwin.winwin.repository.UserRepository;
 
 /**
  * @author ArvindKhatik
@@ -43,9 +42,6 @@ import com.winwin.winwin.repository.UserRepository;
  */
 @Component
 public class UserService implements IUserService {
-
-	@Autowired
-	UserRepository userRepository;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
