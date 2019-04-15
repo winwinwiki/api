@@ -25,6 +25,8 @@ import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordResult;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeRequest;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult;
+import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
+import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.AuthFlowType;
 import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
@@ -34,7 +36,6 @@ import com.amazonaws.services.cognitoidp.model.ChangePasswordResult;
 import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordResult;
 import com.amazonaws.services.cognitoidp.model.DeliveryMediumType;
-import com.amazonaws.services.cognitoidp.model.ForgotPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
 import com.amazonaws.services.cognitoidp.model.ListUsersResult;
 import com.amazonaws.services.cognitoidp.model.ResendConfirmationCodeRequest;
@@ -76,7 +77,8 @@ public class UserService implements IUserService {
 					.withUserAttributes(new AttributeType().withName("custom:role").withValue(payload.getRole()),
 							new AttributeType().withName("custom:team").withValue(payload.getTeam()),
 							new AttributeType().withName("picture").withValue(payload.getImageUrl()),
-							new AttributeType().withName("name").withValue(payload.getUserDisplayName()))
+							new AttributeType().withName("name").withValue(payload.getUserDisplayName()),
+							new AttributeType().withName("email_verified").withValue("true"))
 					.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
@@ -122,6 +124,59 @@ public class UserService implements IUserService {
 		}
 
 		return payload;
+	}
+
+	@Override
+	public void updateUserInfo(UserPayload payload) throws UserException {
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			AdminUpdateUserAttributesRequest cognitoUpdateUserRequest = new AdminUpdateUserAttributesRequest()
+					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
+
+			AttributeType attribute = null;
+			List<AttributeType> userAttributes = new ArrayList<AttributeType>();
+
+			if (!StringUtils.isEmpty(payload.getUserDisplayName())) {
+				attribute = new AttributeType();
+				attribute.setName("name");
+				attribute.setValue(payload.getUserDisplayName());
+				userAttributes.add(attribute);
+			}
+
+			if (!StringUtils.isEmpty(payload.getTeam())) {
+				attribute = new AttributeType();
+				attribute.setName("custom:team");
+				attribute.setValue(payload.getTeam());
+				userAttributes.add(attribute);
+			}
+
+			if (!StringUtils.isEmpty(payload.getRole())) {
+				attribute = new AttributeType();
+				attribute.setName("custom:role");
+				attribute.setValue(payload.getRole());
+				userAttributes.add(attribute);
+			}
+
+			if (!StringUtils.isEmpty(payload.getImageUrl())) {
+				attribute = new AttributeType();
+				attribute.setName("picture");
+				attribute.setValue(payload.getImageUrl());
+				userAttributes.add(attribute);
+			}
+
+			cognitoUpdateUserRequest.withUserAttributes(userAttributes);
+
+			@SuppressWarnings("unused")
+			AdminUpdateUserAttributesResult userResult = cognitoClient
+					.adminUpdateUserAttributes(cognitoUpdateUserRequest);
+
+			cognitoClient.shutdown();
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.info.update"), e);
+			throw new UserException(e);
+		}
+
 	}
 
 	@Override
