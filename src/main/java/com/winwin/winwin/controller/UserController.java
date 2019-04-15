@@ -49,7 +49,9 @@ public class UserController extends BaseController {
 				userService.createUser(payload);
 			}
 		} catch (UserException e) {
-			return sendErrorResponse("org.user.bad_request", HttpStatus.BAD_REQUEST);
+			// return sendErrorResponse("org.user.bad_request",
+			// HttpStatus.BAD_REQUEST);
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
@@ -86,9 +88,8 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendExceptionResponse(e, "org.user.error.signIn");
-			// return sendErrorResponse("org.user.error.signIn",
-			// HttpStatus.UNAUTHORIZED);
+			// return sendExceptionResponse(e, "org.user.error.signIn");
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse(authenticationResult, HttpStatus.OK);
@@ -96,7 +97,7 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "info", method = RequestMethod.POST)
-	public ResponseEntity<?> getUserInfo(@Valid @RequestBody UserPayload userPayload) {
+	public ResponseEntity<?> getUserInfo(@Valid @RequestBody UserPayload userPayload) throws UserException {
 		UserPayload payload = null;
 		try {
 			if (null != userPayload) {
@@ -112,9 +113,32 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendExceptionResponse(e, "org.user.error.not_found");
-			// return sendErrorResponse("org.user.error.not_found",
-			// HttpStatus.NOT_FOUND);
+			// return sendExceptionResponse(e, "org.user.error.not_found");
+			throw new UserException(e);
+		}
+		return sendSuccessResponse(payload, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(value = "updateInfo", method = RequestMethod.POST)
+	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody UserPayload userPayload) throws UserException {
+		UserPayload payload = null;
+		try {
+			if (null != userPayload) {
+				if (!StringUtils.isEmpty(userPayload.getEmail()) ) {
+					userService.updateUserInfo(userPayload);
+
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+
+			} else {
+				return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
+			}
+
+		} catch (Exception e) {
+			// return sendExceptionResponse(e, "org.user.error.not_found");
+			throw new UserException(e);
 		}
 		return sendSuccessResponse(payload, HttpStatus.OK);
 
@@ -141,7 +165,7 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
-	public ResponseEntity<?> getUserList() {
+	public ResponseEntity<?> getUserList() throws UserException {
 		List<UserPayload> payloadList = null;
 		try {
 			payloadList = userService.getUserList();
@@ -152,9 +176,8 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendExceptionResponse(e, "org.user.exception.info");
-			// return sendErrorResponse("org.user.exception.info",
-			// HttpStatus.INTERNAL_SERVER_ERROR);
+			// return sendExceptionResponse(e, "org.user.exception.info");
+			throw new UserException(e);
 		}
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
 
@@ -173,9 +196,8 @@ public class UserController extends BaseController {
 				}
 			}
 		} catch (UserException e) {
-			return sendExceptionResponse(e, "org.user.bad_request");
-			// return sendErrorResponse("org.user.bad_request",
-			// HttpStatus.BAD_REQUEST);
+			// return sendExceptionResponse(e, "org.user.bad_request");
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
@@ -196,15 +218,14 @@ public class UserController extends BaseController {
 				}
 			}
 		} catch (UserException e) {
-			return sendExceptionResponse(e, "org.user.bad_request");
-			// return sendErrorResponse("org.user.bad_request",
-			// HttpStatus.BAD_REQUEST);
+			// return sendExceptionResponse(e, "org.user.bad_request");
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
 
 	}
-	
+
 	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
 	@Transactional
 	public ResponseEntity<?> resendConfirmationCode(@Valid @RequestBody UserPayload payload) throws UserException {
@@ -218,9 +239,8 @@ public class UserController extends BaseController {
 				}
 			}
 		} catch (UserException e) {
-			return sendExceptionResponse(e, "org.user.bad_request");
-			// return sendErrorResponse("org.user.bad_request",
-			// HttpStatus.BAD_REQUEST);
+			// return sendExceptionResponse(e, "org.user.bad_request");
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse("org.user.code.success", HttpStatus.OK);
@@ -241,9 +261,8 @@ public class UserController extends BaseController {
 				}
 			}
 		} catch (UserException e) {
-			return sendExceptionResponse(e, "org.user.bad_request");
-			// return sendErrorResponse("org.user.bad_request",
-			// HttpStatus.BAD_REQUEST);
+			// return sendExceptionResponse(e, "org.user.bad_request");
+			throw new UserException(e);
 		}
 
 		return sendSuccessResponse("org.user.password.success.changed", HttpStatus.OK);

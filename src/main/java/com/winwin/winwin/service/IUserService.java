@@ -16,6 +16,8 @@ public interface IUserService {
 
 	public UserPayload getUserInfo(String userName) throws UserException;
 
+	void updateUserInfo(UserPayload payload) throws UserException;
+
 	public List<UserPayload> getUserList() throws UserException;
 
 	public String getUserStatus(String userName) throws UserException;
