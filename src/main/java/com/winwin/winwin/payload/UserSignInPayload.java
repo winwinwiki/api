@@ -22,4 +22,6 @@ public class UserSignInPayload {
 	private String password;
 	private String newPassword;
 	private Boolean isNewUser;
+	private String accessToken;
+	private String confirmationCode;
 }

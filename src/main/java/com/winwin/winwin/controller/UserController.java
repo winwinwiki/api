@@ -66,7 +66,7 @@ public class UserController extends BaseController {
 				if (!StringUtils.isEmpty(payload.getUserName())) {
 
 					try {
-						if (isNewUser(payload.getUserName())) {
+						if (isNewUser(payload.getUserName()) && payload.getNewPassword() == null) {
 							userSignInPayload = new UserSignInPayload();
 							userSignInPayload.setUserName(payload.getUserName());
 							userSignInPayload.setIsNewUser(true);
@@ -86,7 +86,9 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendErrorResponse("org.user.error.signIn", HttpStatus.UNAUTHORIZED);
+			return sendExceptionResponse(e, "org.user.error.signIn");
+			// return sendErrorResponse("org.user.error.signIn",
+			// HttpStatus.UNAUTHORIZED);
 		}
 
 		return sendSuccessResponse(authenticationResult, HttpStatus.OK);
@@ -110,7 +112,9 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendErrorResponse("org.user.error.not_found", HttpStatus.NOT_FOUND);
+			return sendExceptionResponse(e, "org.user.error.not_found");
+			// return sendErrorResponse("org.user.error.not_found",
+			// HttpStatus.NOT_FOUND);
 		}
 		return sendSuccessResponse(payload, HttpStatus.OK);
 
@@ -129,6 +133,8 @@ public class UserController extends BaseController {
 
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.error.signIn"), e);
+			throw new UserException(customMessageSource.getMessage("org.user.error.signIn"));
+
 		}
 		return false;
 
@@ -146,9 +152,101 @@ public class UserController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			return sendErrorResponse("org.user.exception.info", HttpStatus.INTERNAL_SERVER_ERROR);
+			return sendExceptionResponse(e, "org.user.exception.info");
+			// return sendErrorResponse("org.user.exception.info",
+			// HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
+
+	}
+
+	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity<?> resetPassword(@Valid @RequestBody UserPayload payload) throws UserException {
+		try {
+			if (null != payload) {
+				if (!StringUtils.isEmpty(payload.getEmail())) {
+					userService.resetUserPassword(payload);
+
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+		} catch (UserException e) {
+			return sendExceptionResponse(e, "org.user.bad_request");
+			// return sendErrorResponse("org.user.bad_request",
+			// HttpStatus.BAD_REQUEST);
+		}
+
+		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+
+	}
+
+	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity<?> confirmResetPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
+		try {
+			if (null != payload) {
+				if ((!StringUtils.isEmpty(payload.getConfirmationCode()))
+						&& (!StringUtils.isEmpty(payload.getNewPassword()))) {
+					userService.confirmResetPassword(payload);
+
+				} else {
+					return sendErrorResponse("org.user.bad_request", HttpStatus.BAD_REQUEST);
+				}
+			}
+		} catch (UserException e) {
+			return sendExceptionResponse(e, "org.user.bad_request");
+			// return sendErrorResponse("org.user.bad_request",
+			// HttpStatus.BAD_REQUEST);
+		}
+
+		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+
+	}
+	
+	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity<?> resendConfirmationCode(@Valid @RequestBody UserPayload payload) throws UserException {
+		try {
+			if (null != payload) {
+				if (!StringUtils.isEmpty(payload.getEmail())) {
+					userService.resendConfirmationCode(payload);
+
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+		} catch (UserException e) {
+			return sendExceptionResponse(e, "org.user.bad_request");
+			// return sendErrorResponse("org.user.bad_request",
+			// HttpStatus.BAD_REQUEST);
+		}
+
+		return sendSuccessResponse("org.user.code.success", HttpStatus.OK);
+
+	}
+
+	@RequestMapping(value = "changePassword", method = RequestMethod.POST)
+	@Transactional
+	public ResponseEntity<?> changeUserPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
+		try {
+			if (null != payload) {
+				if ((!StringUtils.isEmpty(payload.getAccessToken())) && (!StringUtils.isEmpty(payload.getPassword()))
+						&& (!StringUtils.isEmpty(payload.getNewPassword()))) {
+					userService.changePassword(payload);
+
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+		} catch (UserException e) {
+			return sendExceptionResponse(e, "org.user.bad_request");
+			// return sendErrorResponse("org.user.bad_request",
+			// HttpStatus.BAD_REQUEST);
+		}
+
+		return sendSuccessResponse("org.user.password.success.changed", HttpStatus.OK);
 
 	}
 

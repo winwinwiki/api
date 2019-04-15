@@ -21,15 +21,24 @@ import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthRequest;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthResult;
+import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordRequest;
+import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordResult;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeRequest;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.AuthFlowType;
 import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
 import com.amazonaws.services.cognitoidp.model.ChallengeNameType;
+import com.amazonaws.services.cognitoidp.model.ChangePasswordRequest;
+import com.amazonaws.services.cognitoidp.model.ChangePasswordResult;
+import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordRequest;
+import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordResult;
 import com.amazonaws.services.cognitoidp.model.DeliveryMediumType;
+import com.amazonaws.services.cognitoidp.model.ForgotPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
 import com.amazonaws.services.cognitoidp.model.ListUsersResult;
+import com.amazonaws.services.cognitoidp.model.ResendConfirmationCodeRequest;
+import com.amazonaws.services.cognitoidp.model.ResendConfirmationCodeResult;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.exception.UserException;
@@ -71,6 +80,8 @@ public class UserService implements IUserService {
 					.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+
+			cognitoClient.shutdown();
 
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
@@ -229,6 +240,75 @@ public class UserService implements IUserService {
 		}
 
 		return authenticationResult;
+
+	}
+
+	@Override
+	public void resetUserPassword(UserPayload payload) throws UserException {
+
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			AdminResetUserPasswordRequest cognitoRequest = new AdminResetUserPasswordRequest()
+					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
+
+			@SuppressWarnings("unused")
+			AdminResetUserPasswordResult resetUserPassResult = cognitoClient.adminResetUserPassword(cognitoRequest);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
+			throw new UserException(e);
+		}
+
+	}
+
+	@Override
+	public void confirmResetPassword(UserSignInPayload payload) throws UserException {
+
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			ConfirmForgotPasswordRequest cognitoRequest = new ConfirmForgotPasswordRequest()
+					.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID"))
+					.withConfirmationCode(payload.getConfirmationCode()).withPassword(payload.getNewPassword());
+
+			@SuppressWarnings("unused")
+			ConfirmForgotPasswordResult conForgotUserPassResult = cognitoClient.confirmForgotPassword(cognitoRequest);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
+			throw new UserException(e);
+		}
+
+	}
+
+	@Override
+	public void resendConfirmationCode(UserPayload payload) throws UserException {
+
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			ResendConfirmationCodeRequest cognitoRequest = new ResendConfirmationCodeRequest()
+					.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID")).withUsername(payload.getEmail());
+
+			@SuppressWarnings("unused")
+			ResendConfirmationCodeResult confirmCodeResult = cognitoClient.resendConfirmationCode(cognitoRequest);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
+			throw new UserException(e);
+		}
+
+	}
+
+	@Override
+	public void changePassword(UserSignInPayload payload) throws UserException {
+
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			ChangePasswordRequest cognitoRequest = new ChangePasswordRequest().withAccessToken(payload.getAccessToken())
+					.withPreviousPassword(payload.getPassword()).withProposedPassword(payload.getNewPassword());
+
+			ChangePasswordResult changePassResult = cognitoClient.changePassword(cognitoRequest);
+			System.out.println(changePassResult);
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
+			throw new UserException(e);
+		}
 
 	}
 
