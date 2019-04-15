@@ -78,6 +78,7 @@ public class UserService implements IUserService {
 							new AttributeType().withName("custom:team").withValue(payload.getTeam()),
 							new AttributeType().withName("picture").withValue(payload.getImageUrl()),
 							new AttributeType().withName("name").withValue(payload.getUserDisplayName()),
+							new AttributeType().withName("email").withValue(payload.getEmail()),
 							new AttributeType().withName("email_verified").withValue("true"))
 					.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
@@ -322,7 +323,8 @@ public class UserService implements IUserService {
 			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
 			ConfirmForgotPasswordRequest cognitoRequest = new ConfirmForgotPasswordRequest()
 					.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID"))
-					.withConfirmationCode(payload.getConfirmationCode()).withPassword(payload.getNewPassword());
+					.withConfirmationCode(payload.getConfirmationCode()).withPassword(payload.getNewPassword())
+					.withUsername(payload.getUserName());
 
 			@SuppressWarnings("unused")
 			ConfirmForgotPasswordResult conForgotUserPassResult = cognitoClient.confirmForgotPassword(cognitoRequest);
