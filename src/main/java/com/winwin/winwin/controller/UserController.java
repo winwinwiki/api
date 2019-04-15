@@ -125,8 +125,9 @@ public class UserController extends BaseController {
 		UserPayload payload = null;
 		try {
 			if (null != userPayload) {
-				if (!StringUtils.isEmpty(userPayload.getEmail()) ) {
+				if (!StringUtils.isEmpty(userPayload.getEmail())) {
 					userService.updateUserInfo(userPayload);
+					payload = userService.getUserInfo(userPayload.getEmail());
 
 				} else {
 					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
@@ -210,9 +211,9 @@ public class UserController extends BaseController {
 		try {
 			if (null != payload) {
 				if ((!StringUtils.isEmpty(payload.getConfirmationCode()))
-						&& (!StringUtils.isEmpty(payload.getNewPassword()))) {
+						&& (!StringUtils.isEmpty(payload.getNewPassword()))
+						&& (!StringUtils.isEmpty(payload.getUserName()))) {
 					userService.confirmResetPassword(payload);
-
 				} else {
 					return sendErrorResponse("org.user.bad_request", HttpStatus.BAD_REQUEST);
 				}
