@@ -3,6 +3,7 @@ package com.winwin.winwin.service;
 import java.util.List;
 
 import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
@@ -12,26 +13,26 @@ import com.winwin.winwin.payload.UserSignInPayload;
  *
  */
 public interface IUserService {
-	public void createUser(UserPayload payload) throws UserException;
+	public void createUser(UserPayload payload, ExceptionResponse response) throws UserException;
 
-	public UserPayload getUserInfo(String userName) throws UserException;
+	public UserPayload getUserInfo(String userName, ExceptionResponse response);
 
-	void updateUserInfo(UserPayload payload) throws UserException;
+	void updateUserInfo(UserPayload payload, ExceptionResponse response);
 
-	public List<UserPayload> getUserList() throws UserException;
+	public List<UserPayload> getUserList(ExceptionResponse response);
 
-	public String getUserStatus(String userName) throws UserException;
+	public String getUserStatus(String userName, ExceptionResponse response);
 
-	public void resetUserPassword(UserPayload payload) throws UserException;
+	public void resetUserPassword(UserPayload payload, ExceptionResponse response);
 
-	public void resendConfirmationCode(UserPayload payload) throws UserException;
+	public void resendConfirmationCode(UserPayload payload, ExceptionResponse response);
 
-	void confirmResetPassword(UserSignInPayload payload) throws UserException;
+	void confirmResetPassword(UserSignInPayload payload, ExceptionResponse response);
 
-	public void changePassword(UserSignInPayload payload) throws UserException;
+	public void changePassword(UserSignInPayload payload, ExceptionResponse response);
 
-	public AuthenticationResultType userSignIn(UserSignInPayload payload) throws UserException;
+	public AuthenticationResultType userSignIn(UserSignInPayload payload, ExceptionResponse response);
 
-	void deleteUser(UserPayload payload) throws UserException;
+	void deleteUser(UserPayload payload, ExceptionResponse response);
 
 }
