@@ -24,4 +24,5 @@ public class UserPayload {
 	private String team;
 	private String imageUrl;
 	private String accessToken;
+	private String isActive;
 }
