@@ -17,6 +17,8 @@ import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminDeleteUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthRequest;
@@ -309,6 +311,9 @@ public class UserService implements IUserService {
 
 			@SuppressWarnings("unused")
 			AdminResetUserPasswordResult resetUserPassResult = cognitoClient.adminResetUserPassword(cognitoRequest);
+
+			cognitoClient.shutdown();
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
 			throw new UserException(e);
@@ -328,6 +333,9 @@ public class UserService implements IUserService {
 
 			@SuppressWarnings("unused")
 			ConfirmForgotPasswordResult conForgotUserPassResult = cognitoClient.confirmForgotPassword(cognitoRequest);
+
+			cognitoClient.shutdown();
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
 			throw new UserException(e);
@@ -345,6 +353,9 @@ public class UserService implements IUserService {
 
 			@SuppressWarnings("unused")
 			ResendConfirmationCodeResult confirmCodeResult = cognitoClient.resendConfirmationCode(cognitoRequest);
+
+			cognitoClient.shutdown();
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
 			throw new UserException(e);
@@ -360,8 +371,31 @@ public class UserService implements IUserService {
 			ChangePasswordRequest cognitoRequest = new ChangePasswordRequest().withAccessToken(payload.getAccessToken())
 					.withPreviousPassword(payload.getPassword()).withProposedPassword(payload.getNewPassword());
 
+			@SuppressWarnings("unused")
 			ChangePasswordResult changePassResult = cognitoClient.changePassword(cognitoRequest);
-			System.out.println(changePassResult);
+
+			cognitoClient.shutdown();
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
+			throw new UserException(e);
+		}
+
+	}
+
+	@Override
+	public void deleteUser(UserPayload payload) throws UserException {
+
+		try {
+			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+			AdminDeleteUserRequest cognitoRequest = new AdminDeleteUserRequest()
+					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
+
+			@SuppressWarnings("unused")
+			AdminDeleteUserResult delPassResult = cognitoClient.adminDeleteUser(cognitoRequest);
+
+			cognitoClient.shutdown();
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.user.exception.created"), e);
 			throw new UserException(e);

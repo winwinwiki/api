@@ -32,4 +32,6 @@ public interface IUserService {
 
 	public AuthenticationResultType userSignIn(UserSignInPayload payload) throws UserException;
 
+	void deleteUser(UserPayload payload) throws UserException;
+
 }

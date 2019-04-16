@@ -270,4 +270,25 @@ public class UserController extends BaseController {
 
 	}
 
+	@RequestMapping(value = "", method = RequestMethod.DELETE)
+	@Transactional
+	public ResponseEntity<?> deleteUser(@Valid @RequestBody UserPayload payload) throws UserException {
+		try {
+			if (null != payload) {
+				if (!StringUtils.isEmpty(payload.getEmail())) {
+					userService.deleteUser(payload);
+
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+		} catch (UserException e) {
+			// return sendExceptionResponse(e, "org.user.bad_request");
+			throw new UserException(e);
+		}
+
+		return sendSuccessResponse("org.user.delete.success", HttpStatus.OK);
+
+	}
+
 }
