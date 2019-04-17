@@ -60,38 +60,31 @@ public class UserController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		AuthenticationResultType authenticationResult = null;
 		UserSignInPayload userSignInPayload = null;
-		try {
-			if (null != payload) {
-				if (!StringUtils.isEmpty(payload.getUserName())) {
-					if (isNewUser(payload.getUserName(), exceptionResponse) && payload.getNewPassword() == null) {
-						userSignInPayload = new UserSignInPayload();
-						userSignInPayload.setUserName(payload.getUserName());
-						userSignInPayload.setIsNewUser(true);
-
-						if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-								&& exceptionResponse.getStatusCode() != null)
-							return sendMsgResponse(exceptionResponse.getErrorMessage(),
-									exceptionResponse.getStatusCode());
-
-						return sendSuccessResponse(userSignInPayload, HttpStatus.OK);
-					}
-					authenticationResult = userService.userSignIn(payload, exceptionResponse);
+		if (null != payload) {
+			if (!StringUtils.isEmpty(payload.getUserName())) {
+				if (isNewUser(payload.getUserName(), exceptionResponse) && payload.getNewPassword() == null) {
+					userSignInPayload = new UserSignInPayload();
+					userSignInPayload.setUserName(payload.getUserName());
+					userSignInPayload.setIsNewUser(true);
 
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
 						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-				} else {
-					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+					return sendSuccessResponse(userSignInPayload, HttpStatus.OK);
 				}
+				authenticationResult = userService.userSignIn(payload, exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 			} else {
-				return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
+				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
 
-		} catch (Exception e) {
-			// return sendExceptionResponse(e, "org.user.error.signIn");
-			throw new UserException(e);
+		} else {
+			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
 
 		return sendSuccessResponse(authenticationResult, HttpStatus.OK);
@@ -124,21 +117,24 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "updateInfo", method = RequestMethod.POST)
-	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody UserPayload userPayload) {
+	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody List<UserPayload> userPayloadList) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		UserPayload payload = null;
 
-		if (null != userPayload) {
-			if (!StringUtils.isEmpty(userPayload.getEmail())) {
-				userService.updateUserInfo(userPayload, exceptionResponse);
-				payload = userService.getUserInfo(userPayload.getEmail(), exceptionResponse);
+		if (null != userPayloadList) {
+			for (UserPayload userPayload : userPayloadList) {
+				if (!StringUtils.isEmpty(userPayload.getEmail())) {
+					userService.updateUserInfo(userPayload, exceptionResponse);
+					payload = userService.getUserInfo(userPayload.getEmail(), exceptionResponse);
 
-				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+							&& exceptionResponse.getStatusCode() != null)
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-			} else {
-				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				} else {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+
 			}
 
 		} else {
@@ -151,12 +147,10 @@ public class UserController extends BaseController {
 
 	public Boolean isNewUser(String userName, ExceptionResponse exceptionResponse) throws UserException {
 		String userStatus = userService.getUserStatus(userName, exceptionResponse);
-		if (!userStatus.isEmpty()) {
+		if (!StringUtils.isEmpty(userStatus)) {
 			if (OrganizationConstants.AWS_USER_STATUS_FORCE_CHANGE_PASSWORD.equals(userStatus)) {
 				return true;
 			}
-		} else {
-			throw new UserException(customMessageSource.getMessage("org.user.error.not_found"));
 		}
 
 		return false;

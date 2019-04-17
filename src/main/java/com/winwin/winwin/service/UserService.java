@@ -398,6 +398,10 @@ public class UserService implements IUserService {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 
+		} catch (UserNotFoundException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
