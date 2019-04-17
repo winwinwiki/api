@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.payload.OrgChartPayload;
+import com.winwin.winwin.payload.OrgHistoryPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 
@@ -27,4 +28,7 @@ public interface IOrganizationService {
 	OrgChartPayload getOrgCharts(Organization organization, Long orgId);
 
 	Organization createSubOrganization(SubOrganizationPayload payload);
+
+	List<OrgHistoryPayload> getOrgHistoryDetails(Long orgId);
+
 }

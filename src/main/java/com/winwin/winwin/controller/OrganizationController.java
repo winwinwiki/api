@@ -35,6 +35,7 @@ import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgDivisionPayload;
+import com.winwin.winwin.payload.OrgHistoryPayload;
 import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
@@ -978,7 +979,7 @@ public class OrganizationController extends BaseController {
 				payload = new OrgDivisionPayload();
 				payload.setId(organization.getId());
 				payload.setName(organization.getName());
-				payload.setChildrenType(OrganizationConstants.DEPARTMENT);
+				payload.setChildrenType(organization.getType());
 
 				if (null != organization.getAddress()) {
 					AddressPayload addressPayload = new AddressPayload();
@@ -1070,6 +1071,25 @@ public class OrganizationController extends BaseController {
 					customMessageSource.getMessage("org.note.error.deleted") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse("org.note.success.deleted");
+	}
+
+	@RequestMapping(value = "/{id}/history", method = RequestMethod.GET)
+	@Transactional
+	public ResponseEntity<?> getOrgHistoy(@PathVariable("id") Long orgId) {
+		List<OrgHistoryPayload> payloadList = null;
+		try {
+			if (null != orgId) {
+				payloadList = organizationService.getOrgHistoryDetails(orgId);
+
+			} else {
+				return sendErrorResponse("org.bad.request");
+
+			}
+
+		} catch (Exception e) {
+			return sendExceptionResponse(e, "org.history.error.list");
+		}
+		return sendSuccessResponse(payloadList);
 	}
 
 	/**

@@ -19,16 +19,19 @@ import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.OrgClassificationMapping;
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgDepartmentPayload;
 import com.winwin.winwin.payload.OrgDivisionPayload;
+import com.winwin.winwin.payload.OrgHistoryPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
+import com.winwin.winwin.repository.OrgHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 
 /**
@@ -48,6 +51,9 @@ public class OrganizationService implements IOrganizationService {
 
 	@Autowired
 	ClassificationRepository classificationRepository;
+
+	@Autowired
+	OrgHistoryRepository orgHistoryRepository;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
@@ -254,7 +260,7 @@ public class OrganizationService implements IOrganizationService {
 	@Override
 	public Organization createProgram(OrganizationPayload organizationPayload) {
 		Organization organization = null;
-		try { 
+		try {
 			if (organizationPayload != null) {
 				Address address = new Address();
 				organization = new Organization();
@@ -408,4 +414,31 @@ public class OrganizationService implements IOrganizationService {
 
 		return organization;
 	}
+
+	@Override
+	public List<OrgHistoryPayload> getOrgHistoryDetails(Long orgId) {
+		List<OrgHistoryPayload> payloadList = null;
+
+		try {
+			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
+
+			if (null != orgHistoryList) {
+				payloadList = new ArrayList<OrgHistoryPayload>();
+
+				for (OrganizationHistory history : orgHistoryList) {
+					OrgHistoryPayload payload = new OrgHistoryPayload();
+					payload.setId(history.getId());
+					payload.setModifiedBy(history.getUpdatedBy());
+					payload.setModifiedAt(history.getUpdatedAt());
+
+					payloadList.add(payload);
+				}
+			}
+		} catch (Exception e) {
+			throw e;
+		}
+
+		return payloadList;
+	}
+
 }
