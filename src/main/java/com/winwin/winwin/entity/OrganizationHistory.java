@@ -35,7 +35,7 @@ import lombok.ToString;
 public class OrganizationHistory {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@JoinColumn(name = "organization_id")
@@ -48,4 +48,7 @@ public class OrganizationHistory {
 	@LastModifiedBy
 	@Column(name = "updated_by")
 	protected String updatedBy;
+
+	@Column(name = "action_performed")
+	private String actionPerformed;
 }

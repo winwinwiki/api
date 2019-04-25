@@ -1,5 +1,6 @@
 package com.winwin.winwin.service;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -16,11 +18,14 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgSdgData;
 import com.winwin.winwin.entity.OrgSdgDataMapping;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrgSdgDataException;
 import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSdgSubGoalPayload;
+import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.repository.OrgHistoryRepository;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSdgDataRepository;
 
@@ -35,6 +40,9 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
+
+	@Autowired
+	OrgHistoryRepository orgHistoryRepository;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
@@ -92,102 +100,135 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 	@Override
 	public void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) throws OrgSdgDataException {
+		UserPayload user = getUserDetails();
 		HashMap<String, OrgSdgData> subGoalCodesMap = new HashMap<String, OrgSdgData>();
-		List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
-		if (null != sdgList) {
-			for (OrgSdgData sdgDataObj : sdgList) {
-				subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
+		if ( null != payloadList && null != user) {
+			List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
+			if (null != sdgList) {
+				for (OrgSdgData sdgDataObj : sdgList) {
+					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
+				}
 			}
+			for (OrgSdgDataMapPayload payload : payloadList) {
+				try {
+					OrgSdgDataMapping sdgDataMapObj = null;
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+					if (payload.getId() == null) {
+						sdgDataMapObj = new OrgSdgDataMapping();
+						sdgDataMapObj.setOrganizationId(orgId);
+
+						if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
+							OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+							sdgDataMapObj.setSdgData(orgSdgData);
+						} else {
+							LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
+							throw new OrgSdgDataException(
+									customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
+						}
+						sdgDataMapObj.setIsChecked(payload.getIsChecked());
+						sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+						sdgDataMapObj.setCreatedBy(user.getEmail());
+						sdgDataMapObj.setUpdatedBy(user.getEmail());
+						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+
+						if (null != sdgDataMapObj.getOrganizationId()) {
+							createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
+									OrganizationConstants.CREATE_SDG, "", null);
+						}
+					} else {
+						Boolean isValidSdgData = true;
+						Long goalCode = payload.getGoalCode();
+						String subGoalCode = payload.getSubGoalCode();
+						String goalName = payload.getGoalName();
+						String subGoalName = payload.getSubGoalName();
+
+						sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsById(payload.getId());
+
+						if (sdgDataMapObj == null) {
+							LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.not_found"));
+							throw new OrgSdgDataException(
+									customMessageSource.getMessage("org.sdgdata.error.not_found"));
+						}
+
+						if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
+							isValidSdgData = false;
+						}
+
+						if (null != goalCode && !(StringUtils.isEmpty(subGoalCode)) && !(StringUtils.isEmpty(goalName))
+								&& !(StringUtils.isEmpty(subGoalName))) {
+
+							if (null != sdgDataMapObj.getSdgData()) {
+
+								if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
+									isValidSdgData = false;
+								}
+								if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
+									isValidSdgData = false;
+								}
+								if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
+									isValidSdgData = false;
+								}
+								if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
+									isValidSdgData = false;
+								}
+
+							}
+						}
+
+						if (!isValidSdgData) {
+							LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.updated"));
+							throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
+						} else {
+							formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+							sdgDataMapObj.setIsChecked(payload.getIsChecked());
+							sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+
+							if (null != sdgDataMapObj.getOrganizationId()) {
+								createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
+										OrganizationConstants.UPDATE_SDG, "", null);
+							}
+						}
+
+					}
+
+				} catch (Exception e) {
+					if (payload.getId() == null) {
+						LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.created"), e);
+						throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
+					} else {
+						LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.updated"), e);
+						throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
+					}
+
+				}
+			} // end of loop for (OrgSdgDataMapPayload payload :
 		}
 
-		for (OrgSdgDataMapPayload payload : payloadList) {
-			try {
-				OrgSdgDataMapping sdgDataMapObj = null;
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				if (payload.getId() == null) {
-					sdgDataMapObj = new OrgSdgDataMapping();
-					sdgDataMapObj.setOrganizationId(orgId);
-
-					if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
-						OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
-						sdgDataMapObj.setSdgData(orgSdgData);
-					} else {
-						LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
-						throw new OrgSdgDataException(
-								customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
-					}
-					sdgDataMapObj.setIsChecked(payload.getIsChecked());
-					sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-					sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-					sdgDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
-					sdgDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-					orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-				} else {
-					Boolean isValidSdgData = true;
-					Long goalCode = payload.getGoalCode();
-					String subGoalCode = payload.getSubGoalCode();
-					String goalName = payload.getGoalName();
-					String subGoalName = payload.getSubGoalName();
-
-					sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsById(payload.getId());
-
-					if (sdgDataMapObj == null) {
-						LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.not_found"));
-						throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
-					}
-
-					if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
-						isValidSdgData = false;
-					}
-
-					if (null != goalCode && !(StringUtils.isEmpty(subGoalCode)) && !(StringUtils.isEmpty(goalName))
-							&& !(StringUtils.isEmpty(subGoalName))) {
-
-						if (null != sdgDataMapObj.getSdgData()) {
-
-							if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
-								isValidSdgData = false;
-							}
-							if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
-								isValidSdgData = false;
-							}
-							if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
-								isValidSdgData = false;
-							}
-							if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
-								isValidSdgData = false;
-							}
-
-						}
-					}
-
-					if (!isValidSdgData) {
-						LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.updated"));
-						throw new OrgSpiDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
-					} else {
-						formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-						sdgDataMapObj.setIsChecked(payload.getIsChecked());
-						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-						sdgDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-						orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-					}
-
-				}
-
-			} catch (Exception e) {
-				if (payload.getId() == null) {
-					LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.created"), e);
-					throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
-				} else {
-					LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.updated"), e);
-					throw new OrgSdgDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
-				}
-
-			}
-		} // end of loop for (OrgSdgDataMapPayload payload :
-
 	}// end of method createSdgDataMapping
+
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param action_performed
+	 * @param entity
+	 * @param entity_id
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String action_performed, String entity, Long entity_id) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(action_performed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+	}
 
 	@Override
 	public List<OrgSdgDataMapPayload> getSelectedSdgData(Long orgId) {
@@ -216,5 +257,19 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 		return payloadList;
 	}// end of method
+
+	/**
+	 * @param user
+	 * @return
+	 */
+	private UserPayload getUserDetails() {
+		UserPayload user = null;
+		if (null != SecurityContextHolder.getContext() && null != SecurityContextHolder.getContext().getAuthentication()
+				&& null != SecurityContextHolder.getContext().getAuthentication().getDetails()) {
+			user = (UserPayload) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+		}
+		return user;
+	}
 
 }

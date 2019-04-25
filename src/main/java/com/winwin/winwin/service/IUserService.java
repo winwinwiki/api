@@ -35,4 +35,6 @@ public interface IUserService {
 
 	void deleteUser(UserPayload payload, ExceptionResponse response);
 
+	public UserPayload getLoggedInUser(String accessToken, ExceptionResponse response);
+
 }

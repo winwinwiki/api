@@ -12,7 +12,7 @@ import com.winwin.winwin.payload.OrganizationNotePayload;
 public interface IOrganizationNoteService {
 	OrganizationNote createOrganizationNote(OrganizationNotePayload organizationNotePayload);
 
-	void removeOrganizationNote(Long noteId);
+	void removeOrganizationNote(Long noteId, Long orgId);
 
 	List<OrganizationNote> getOrganizationNoteList(Long id);
 
