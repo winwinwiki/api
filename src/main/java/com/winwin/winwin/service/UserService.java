@@ -42,6 +42,8 @@ import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.ConfirmForgotPasswordResult;
 import com.amazonaws.services.cognitoidp.model.DeliveryMediumType;
 import com.amazonaws.services.cognitoidp.model.ExpiredCodeException;
+import com.amazonaws.services.cognitoidp.model.GetUserRequest;
+import com.amazonaws.services.cognitoidp.model.GetUserResult;
 import com.amazonaws.services.cognitoidp.model.InternalErrorException;
 import com.amazonaws.services.cognitoidp.model.InvalidEmailRoleAccessPolicyException;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
@@ -91,9 +93,7 @@ public class UserService implements IUserService {
 	@SuppressWarnings("unused")
 	@Override
 	public void createUser(UserPayload payload, ExceptionResponse response) throws UserException {
-
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		AdminCreateUserRequest cognitoRequest = new AdminCreateUserRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail())
 				.withUserAttributes(new AttributeType().withName("custom:role").withValue(payload.getRole()),
@@ -107,68 +107,33 @@ public class UserService implements IUserService {
 
 		try {
 			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
-		} catch (ResourceNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UsernameExistsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidPasswordException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-		}
-
-		catch (UnsupportedUserStateException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | UsernameExistsException
+				| InvalidPasswordException | NotAuthorizedException | TooManyRequestsException
+				| UnsupportedUserStateException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
-
 		cognitoClient.shutdown();
 
 	}
 
 	@Override
 	public UserPayload getUserInfo(String userName, ExceptionResponse response) {
-
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		AdminGetUserRequest cognitoGetUserRequest = new AdminGetUserRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(userName);
-
-		UserPayload payload = new UserPayload();
-
+		UserPayload payload = null;
 		try {
 			AdminGetUserResult userResult = cognitoClient.adminGetUser(cognitoGetUserRequest);
-
 			List<AttributeType> userAttributes = userResult.getUserAttributes();
-
 			if (null != userAttributes) {
-
+				payload = new UserPayload();
 				for (AttributeType attribute : userAttributes) {
 					if (attribute.getName().equals("custom:role")) {
 						payload.setRole(attribute.getValue());
@@ -186,32 +151,14 @@ public class UserService implements IUserService {
 				}
 
 			}
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
+				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 		cognitoClient.shutdown();
 
 		return payload;
@@ -221,74 +168,46 @@ public class UserService implements IUserService {
 	public void updateUserInfo(UserPayload payload, ExceptionResponse response) {
 
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		AdminUpdateUserAttributesRequest cognitoUpdateUserRequest = new AdminUpdateUserAttributesRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
 
 		List<AttributeType> userAttributes = new ArrayList<AttributeType>();
-
 		if (!StringUtils.isEmpty(payload.getUserDisplayName())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("name");
 			attribute.setValue(payload.getUserDisplayName());
 			userAttributes.add(attribute);
-		}
-
-		if (!StringUtils.isEmpty(payload.getTeam())) {
+		} else if (!StringUtils.isEmpty(payload.getTeam())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:team");
 			attribute.setValue(payload.getTeam());
 			userAttributes.add(attribute);
-		}
-
-		if (!StringUtils.isEmpty(payload.getRole())) {
+		} else if (!StringUtils.isEmpty(payload.getRole())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:role");
 			attribute.setValue(payload.getRole());
 			userAttributes.add(attribute);
-		}
-
-		if (!StringUtils.isEmpty(payload.getIsActive())) {
+		} else if (!StringUtils.isEmpty(payload.getIsActive())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:isActive");
 			attribute.setValue(payload.getIsActive());
 			userAttributes.add(attribute);
-		}
-
-		if (!StringUtils.isEmpty(payload.getImageUrl())) {
+		} else if (!StringUtils.isEmpty(payload.getImageUrl())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("picture");
 			attribute.setValue(payload.getImageUrl());
 			userAttributes.add(attribute);
 		}
-
 		cognitoUpdateUserRequest.withUserAttributes(userAttributes);
 
 		try {
 			@SuppressWarnings("unused")
 			AdminUpdateUserAttributesResult userResult = cognitoClient
 					.adminUpdateUserAttributes(cognitoUpdateUserRequest);
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+				| TooManyRequestsException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -302,15 +221,12 @@ public class UserService implements IUserService {
 	@Override
 	public List<UserPayload> getUserList(ExceptionResponse response) {
 		List<UserPayload> payloadList = new ArrayList<UserPayload>();
-
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		ListUsersRequest cognitoGetListUserRequest = new ListUsersRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID"));
 
 		try {
 			ListUsersResult userResult = cognitoClient.listUsers(cognitoGetListUserRequest);
-
 			if (null != userResult) {
 				List<UserType> usersList = userResult.getUsers();
 
@@ -342,27 +258,14 @@ public class UserService implements IUserService {
 
 			}
 
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
+				| NotAuthorizedException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 		cognitoClient.shutdown();
 
 		return payloadList;
@@ -371,7 +274,6 @@ public class UserService implements IUserService {
 	@Override
 	public String getUserStatus(String userName, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		AdminGetUserRequest cognitoGetUserRequest = new AdminGetUserRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(userName);
 
@@ -381,32 +283,14 @@ public class UserService implements IUserService {
 			if (null != userResult) {
 				userStatus = userResult.getUserStatus();
 			}
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
+				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 		cognitoClient.shutdown();
 
 		return userStatus;
@@ -426,7 +310,6 @@ public class UserService implements IUserService {
 
 		AuthenticationResultType authenticationResult = null;
 		try {
-
 			AdminInitiateAuthResult result = cognitoClient.adminInitiateAuth(authRequest);
 
 			if (!StringUtils.isEmpty(result.getChallengeName())) {
@@ -455,50 +338,18 @@ public class UserService implements IUserService {
 			} else {
 				authenticationResult = result.getAuthenticationResult();
 			}
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+				| InvalidUserPoolConfigurationException | InvalidPasswordException | NotAuthorizedException
+				| TooManyRequestsException | UserNotConfirmedException | PasswordResetRequiredException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidUserPoolConfigurationException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidPasswordException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-		} catch (UserNotConfirmedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-
-		} catch (PasswordResetRequiredException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
-
 		cognitoClient.shutdown();
 
 		return authenticationResult;
@@ -509,46 +360,23 @@ public class UserService implements IUserService {
 	public void resetUserPassword(UserPayload payload, ExceptionResponse response) {
 
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		AdminResetUserPasswordRequest cognitoRequest = new AdminResetUserPasswordRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
 
 		try {
 			@SuppressWarnings("unused")
 			AdminResetUserPasswordResult resetUserPassResult = cognitoClient.adminResetUserPassword(cognitoRequest);
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+				| TooManyRequestsException | LimitExceededException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (LimitExceededException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
-
 		cognitoClient.shutdown();
 
 	}
@@ -556,7 +384,6 @@ public class UserService implements IUserService {
 	@Override
 	public void confirmResetPassword(UserSignInPayload payload, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		ConfirmForgotPasswordRequest cognitoRequest = new ConfirmForgotPasswordRequest()
 				.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID"))
 				.withConfirmationCode(payload.getConfirmationCode()).withPassword(payload.getNewPassword())
@@ -565,59 +392,19 @@ public class UserService implements IUserService {
 		try {
 			@SuppressWarnings("unused")
 			ConfirmForgotPasswordResult conForgotUserPassResult = cognitoClient.confirmForgotPassword(cognitoRequest);
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+				| TooManyFailedAttemptsException | InvalidPasswordException | NotAuthorizedException
+				| TooManyRequestsException | UserNotConfirmedException | LimitExceededException | CodeMismatchException
+				| ExpiredCodeException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyFailedAttemptsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidPasswordException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotConfirmedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-
-		} catch (LimitExceededException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (CodeMismatchException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (ExpiredCodeException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
-
 		cognitoClient.shutdown();
 
 	}
@@ -626,54 +413,19 @@ public class UserService implements IUserService {
 	public void resendConfirmationCode(UserPayload payload, ExceptionResponse response) {
 
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		ResendConfirmationCodeRequest cognitoRequest = new ResendConfirmationCodeRequest()
 				.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID")).withUsername(payload.getEmail());
-
 		try {
 			@SuppressWarnings("unused")
 			ResendConfirmationCodeResult confirmCodeResult = cognitoClient.resendConfirmationCode(cognitoRequest);
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+				| CodeDeliveryFailureException | InvalidPasswordException | NotAuthorizedException
+				| TooManyRequestsException | InvalidEmailRoleAccessPolicyException | LimitExceededException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (CodeDeliveryFailureException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidPasswordException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidEmailRoleAccessPolicyException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-
-		} catch (LimitExceededException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
@@ -686,101 +438,94 @@ public class UserService implements IUserService {
 	public void changePassword(UserSignInPayload payload, ExceptionResponse response) {
 
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-
 		ChangePasswordRequest cognitoRequest = new ChangePasswordRequest().withAccessToken(payload.getAccessToken())
 				.withPreviousPassword(payload.getPassword()).withProposedPassword(payload.getNewPassword());
 
 		try {
 			@SuppressWarnings("unused")
 			ChangePasswordResult changePassResult = cognitoClient.changePassword(cognitoRequest);
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+				| InvalidPasswordException | NotAuthorizedException | TooManyRequestsException
+				| UserNotConfirmedException | LimitExceededException | PasswordResetRequiredException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidPasswordException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotConfirmedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-
-		} catch (LimitExceededException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (PasswordResetRequiredException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
-
 		cognitoClient.shutdown();
-
 	}
 
 	@Override
 	public void deleteUser(UserPayload payload, ExceptionResponse response) {
 
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		AdminDeleteUserRequest cognitoRequest = new AdminDeleteUserRequest()
+				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
 		try {
-			AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
-			AdminDeleteUserRequest cognitoRequest = new AdminDeleteUserRequest()
-					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
-
 			@SuppressWarnings("unused")
 			AdminDeleteUserResult delPassResult = cognitoClient.adminDeleteUser(cognitoRequest);
-
 			cognitoClient.shutdown();
-
-		} catch (ResourceNotFoundException e) {
+		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
+				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (InvalidParameterException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (TooManyRequestsException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (NotAuthorizedException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
-		} catch (UserNotFoundException e) {
-			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
 
+	@Override
+	public UserPayload getLoggedInUser(String accessToken, ExceptionResponse response) {
+
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		GetUserRequest cognitoRequest = new GetUserRequest().withAccessToken(accessToken);
+		UserPayload payload = null;
+
+		try {
+			GetUserResult getUserResult = cognitoClient.getUser(cognitoRequest);
+			if (null != getUserResult) {
+				List<AttributeType> userAttributes = getUserResult.getUserAttributes();
+				if (null != userAttributes) {
+					payload = new UserPayload();
+					for (AttributeType attribute : userAttributes) {
+						if (attribute.getName().equals("custom:role")) {
+							payload.setRole(attribute.getValue());
+						} else if (attribute.getName().equals("custom:team")) {
+							payload.setTeam(attribute.getValue());
+						} else if (attribute.getName().equals("custom:isActive")) {
+							payload.setIsActive(attribute.getValue());
+						} else if (attribute.getName().equals("picture")) {
+							payload.setImageUrl(attribute.getValue());
+						} else if (attribute.getName().equals("name")) {
+							payload.setUserDisplayName(attribute.getValue());
+						} else if (attribute.getName().equals("email")) {
+							payload.setEmail(attribute.getValue());
+						}
+					}
+
+				}
+			}
+
+			cognitoClient.shutdown();
+
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+				| TooManyRequestsException | UserNotConfirmedException | PasswordResetRequiredException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		} catch (InternalErrorException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		}
+
+		return payload;
 	}
 
 	public AWSCognitoIdentityProvider getAmazonCognitoIdentityClient() {

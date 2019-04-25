@@ -12,10 +12,10 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 @Configuration
 public class BeanConfig {
 
-    @Bean
-    public MessageSource messageSource() {
-	ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-	messageSource.setBasename("winwinlabels");
-	return messageSource;
-    }
+	@Bean
+	public MessageSource messageSource() {
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+		messageSource.setBasename("winwinlabels");
+		return messageSource;
+	}
 }

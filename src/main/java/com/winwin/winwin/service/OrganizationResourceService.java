@@ -7,16 +7,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
 import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
+import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.repository.OrgHistoryRepository;
 import com.winwin.winwin.repository.OrganizationResourceCategoryRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 
@@ -35,6 +39,9 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	OrganizationResourceCategoryRepository organizationResourceCategoryRepository;
 
 	@Autowired
+	OrgHistoryRepository orgHistoryRepository;
+
+	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceService.class);
@@ -42,17 +49,28 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
-	public OrganizationResource createOrUpdateOrganizationResource(
-			OrganizationResourcePayLoad organizationResourcePayLoad) {
+	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayLoad orgResourcePayLoad) {
+		UserPayload user = getUserDetails();
 		OrganizationResource organizationResource = null;
-
 		try {
-			if (null != organizationResourcePayLoad) {
-				organizationResource = constructOrganizationResource(organizationResourcePayLoad);
+			if (null != orgResourcePayLoad && null != user) {
+				organizationResource = constructOrganizationResource(orgResourcePayLoad);
 				organizationResource = organizationResourceRepository.saveAndFlush(organizationResource);
+
+				if (null != organizationResource.getId()) {
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
+					OrganizationHistory orgHistory = new OrganizationHistory();
+					orgHistory.setOrganizationId(organizationResource.getOrganizationId());
+					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+					orgHistory.setUpdatedBy(user.getUserDisplayName());
+					orgHistory.setActionPerformed(OrganizationConstants.UPDATE_RESOURCE);
+					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+				}
 			}
 		} catch (Exception e) {
-			if (null != organizationResourcePayLoad.getId()) {
+			if (null != orgResourcePayLoad.getId()) {
 				LOGGER.error(customMessageSource.getMessage("org.resource.exception.updated"), e);
 			} else {
 				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
@@ -75,35 +93,35 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	}// end of method removeOrganizationResource
 
 	/**
-	 * @param organizationResourcePayLoad
+	 * @param orgResourcePayLoad
 	 * @return
 	 */
-	private OrganizationResource constructOrganizationResource(
-			OrganizationResourcePayLoad organizationResourcePayLoad) {
+	private OrganizationResource constructOrganizationResource(OrganizationResourcePayLoad orgResourcePayLoad) {
+		UserPayload user = getUserDetails();
 		OrganizationResource organizationResource = null;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = null;
 		try {
-			if (null != organizationResourcePayLoad.getId()) {
-				organizationResource = organizationResourceRepository.getOne(organizationResourcePayLoad.getId());
+			if (null != orgResourcePayLoad.getId() && null != user) {
+				organizationResource = organizationResourceRepository.getOne(orgResourcePayLoad.getId());
 			} else {
 				organizationResource = new OrganizationResource();
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organizationResource.setCreatedAt(sdf.parse(formattedDte));
-				organizationResource.setCreatedBy(OrganizationConstants.CREATED_BY);
+				organizationResource.setCreatedBy(user.getEmail());
 			}
 
 			if (organizationResource == null) {
-				throw new OrganizationResourceException("Org resource record not found for Id: "
-						+ organizationResourcePayLoad.getId() + " to update in DB ");
+				throw new OrganizationResourceException(
+						"Org resource record not found for Id: " + orgResourcePayLoad.getId() + " to update in DB ");
 			} else {
-				setOrganizationResourceCategory(organizationResourcePayLoad, organizationResource);
+				setOrganizationResourceCategory(orgResourcePayLoad, organizationResource);
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organizationResource.setOrganizationId(organizationResourcePayLoad.getOrganizationId());
-				organizationResource.setCount(organizationResourcePayLoad.getCount());
-				organizationResource.setDescription(organizationResourcePayLoad.getDescription());
+				organizationResource.setOrganizationId(orgResourcePayLoad.getOrganizationId());
+				organizationResource.setCount(orgResourcePayLoad.getCount());
+				organizationResource.setDescription(orgResourcePayLoad.getDescription());
 				organizationResource.setUpdatedAt(sdf.parse(formattedDte));
-				organizationResource.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+				organizationResource.setUpdatedBy(user.getEmail());
 
 			}
 
@@ -155,22 +173,24 @@ public class OrganizationResourceService implements IOrganizationResourceService
 
 	public OrganizationResourceCategory saveOrganizationResourceCategory(
 			OrganizationResourceCategoryPayLoad categoryFromPayLoad) {
+		UserPayload user = getUserDetails();
 		OrganizationResourceCategory category = new OrganizationResourceCategory();
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
-				category.setCategoryName(categoryFromPayLoad.getCategoryName());
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
+		if (null != user) {
+			try {
+				if (null != categoryFromPayLoad && !StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
+					category.setCategoryName(categoryFromPayLoad.getCategoryName());
+				}
+				category.setCreatedAt(sdf.parse(formattedDte));
+				category.setUpdatedAt(sdf.parse(formattedDte));
+				category.setCreatedBy(user.getEmail());
+				category.setUpdatedBy(user.getEmail());
+			} catch (Exception e) {
+				LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 			}
-
-			category.setCreatedAt(sdf.parse(formattedDte));
-			category.setUpdatedAt(sdf.parse(formattedDte));
-			category.setCreatedBy(OrganizationConstants.CREATED_BY);
-			category.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
-
 		return organizationResourceCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationResourceCategory
 
@@ -185,5 +205,19 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	public List<OrganizationResourceCategory> getOrganizationResourceCategoryList() {
 		return organizationResourceCategoryRepository.findAll();
 	}// end of method getOrganizationResourceCategoryList
+
+	/**
+	 * @param user
+	 * @return
+	 */
+	private UserPayload getUserDetails() {
+		UserPayload user = null;
+		if (null != SecurityContextHolder.getContext() && null != SecurityContextHolder.getContext().getAuthentication()
+				&& null != SecurityContextHolder.getContext().getAuthentication().getDetails()) {
+			user = (UserPayload) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+		}
+		return user;
+	}
 
 }

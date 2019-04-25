@@ -5,6 +5,7 @@ package com.winwin.winwin.service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -19,11 +21,14 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgSpiData;
 import com.winwin.winwin.entity.OrgSpiDataMapping;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrgSpiDataException;
 import com.winwin.winwin.payload.OrgSpiDataComponentsPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataIndicatorsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
+import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.repository.OrgHistoryRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataRepository;
 
@@ -39,6 +44,9 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 
 	@Autowired
 	OrgSpiDataMapRepository orgSpiDataMapRepository;
+
+	@Autowired
+	OrgHistoryRepository orgHistoryRepository;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
@@ -148,7 +156,8 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 
 	@Override
 	public void createSpiDataMapping(List<OrgSpiDataMapPayload> payloadList, Long orgId) throws OrgSpiDataException {
-		if (null != payloadList) {
+		UserPayload user = getUserDetails();
+		if (null != payloadList && null != user) {
 			for (OrgSpiDataMapPayload payload : payloadList) {
 				try {
 					OrgSpiDataMapping spiDataMapObj = null;
@@ -170,9 +179,16 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 						spiDataMapObj.setIsChecked(payload.getIsChecked());
 						spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-						spiDataMapObj.setCreatedBy(OrganizationConstants.CREATED_BY);
-						spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-						orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+						spiDataMapObj.setCreatedBy(user.getEmail());
+						spiDataMapObj.setUpdatedBy(user.getEmail());
+						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+
+						if (null != spiDataMapObj.getOrganizationId()) {
+
+							createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
+									OrganizationConstants.CREATE_SPI, "", null);
+						}
+
 					} else {
 						Boolean isValidSpiData = true;
 						Long dId = payload.getDimensionId();
@@ -228,8 +244,13 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 							formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 							spiDataMapObj.setIsChecked(payload.getIsChecked());
 							spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-							spiDataMapObj.setUpdatedBy(OrganizationConstants.UPDATED_BY);
-							orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+							spiDataMapObj.setUpdatedBy(user.getEmail());
+							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+
+							if (null != spiDataMapObj.getOrganizationId()) {
+								createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
+										OrganizationConstants.UPDATE_SPI, "", null);
+							}
 						}
 
 					}
@@ -249,6 +270,26 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 		}
 
 	}// end of method public void createSpiDataMapping(
+
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param action_performed
+	 * @param entity
+	 * @param entity_id
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String action_performed, String entity, Long entity_id) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(action_performed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+	}
 
 	@Override
 	public List<OrgSpiDataMapPayload> getSelectedSpiData(Long orgId) {
@@ -278,5 +319,19 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 
 		return payloadList;
 	}// end of method
+
+	/**
+	 * @param user
+	 * @return
+	 */
+	private UserPayload getUserDetails() {
+		UserPayload user = null;
+		if (null != SecurityContextHolder.getContext() && null != SecurityContextHolder.getContext().getAuthentication()
+				&& null != SecurityContextHolder.getContext().getAuthentication().getDetails()) {
+			user = (UserPayload) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+		}
+		return user;
+	}
 
 }

@@ -93,7 +93,7 @@ public class BaseController {
 		return new ResponseEntity<ResponseWrapper<String>>(new ResponseWrapper<String>(responseMsg), httpStatus);
 	}
 
-	protected ResponseEntity<ResponseWrapper<String>> sendMsgResponse(String responseMsg, HttpStatus httpStatus) {
+	public ResponseEntity<ResponseWrapper<String>> sendMsgResponse(String responseMsg, HttpStatus httpStatus) {
 		return new ResponseEntity<ResponseWrapper<String>>(new ResponseWrapper<String>(responseMsg), httpStatus);
 	}
 

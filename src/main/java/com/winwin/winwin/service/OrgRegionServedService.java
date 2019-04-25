@@ -11,6 +11,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -18,10 +19,13 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrgRegionServedException;
 import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
+import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
+import com.winwin.winwin.repository.OrgHistoryRepository;
 import com.winwin.winwin.repository.OrgRegionMasterRepository;
 import com.winwin.winwin.repository.OrgRegionServedRepository;
 
@@ -42,6 +46,9 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	private OrgRegionMasterRepository orgRegionMasterRepository;
 
 	@Autowired
+	OrgHistoryRepository orgHistoryRepository;
+
+	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgRegionServedService.class);
@@ -50,9 +57,10 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 	@Override
 	public List<OrgRegionServed> createOrgRegionServed(List<OrgRegionServedPayload> orgRegionPayloadlist) {
+		UserPayload user = getUserDetails();
 		List<OrgRegionServed> orgRegionList = null;
 		try {
-			if (null != orgRegionPayloadlist) {
+			if (null != orgRegionPayloadlist && null != user) {
 				orgRegionList = new ArrayList<OrgRegionServed>();
 				for (OrgRegionServedPayload payload : orgRegionPayloadlist) {
 					if (payload.getId() == null) {
@@ -61,14 +69,23 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
-						setOrgRegionMasterData(payload, orgRegionServed);
+						setOrgRegionMasterData(payload, orgRegionServed, user);
 
 						orgRegionServed.setOrgId(payload.getOrganizationId());
 						orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
 						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
-						orgRegionServed.setCreatedBy(OrganizationConstants.CREATED_BY);
-						orgRegionServed.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+						orgRegionServed.setCreatedBy(user.getEmail());
+						orgRegionServed.setUpdatedBy(user.getEmail());
 						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
+
+						if (null != orgRegionServed.getOrgId()) {
+							OrganizationHistory orgHistory = new OrganizationHistory();
+							orgHistory.setOrganizationId(orgRegionServed.getOrgId());
+							orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+							orgHistory.setUpdatedBy(user.getUserDisplayName());
+							orgHistory.setActionPerformed(OrganizationConstants.CREATE_REGION);
+							orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+						}
 
 						orgRegionList.add(orgRegionServed);
 
@@ -76,6 +93,9 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 					// for delete organization region served
 					else if (null != payload.getId() && !(payload.getIsActive())) {
 						OrgRegionServed region = null;
+						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
 						region = orgRegionServedRepository.findOrgRegionById(payload.getId());
 						if (region == null) {
 							LOGGER.info(customMessageSource.getMessage("org.region.error.not_found"));
@@ -83,9 +103,18 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 									customMessageSource.getMessage("org.region.error.not_found"));
 						} else {
 							region.setIsActive(payload.getIsActive());
-							region.setUpdatedAt(new Date(System.currentTimeMillis()));
-							region.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+							region.setUpdatedAt(sdf.parse(formattedDte));
+							region.setUpdatedBy(user.getEmail());
 							region = orgRegionServedRepository.saveAndFlush(region);
+
+							if (null != region.getOrgId()) {
+								OrganizationHistory orgHistory = new OrganizationHistory();
+								orgHistory.setOrganizationId(region.getOrgId());
+								orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+								orgHistory.setUpdatedBy(user.getUserDisplayName());
+								orgHistory.setActionPerformed(OrganizationConstants.UPDATE_REGION);
+								orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+							}
 
 							orgRegionList.add(region);
 						}
@@ -105,14 +134,14 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	 * @param payload
 	 * @param region
 	 */
-	private void setOrgRegionMasterData(OrgRegionServedPayload payload, OrgRegionServed region) {
+	private void setOrgRegionMasterData(OrgRegionServedPayload payload, OrgRegionServed region, UserPayload user) {
 		OrgRegionMaster regionMaster = null;
 		try {
 			if (null != payload.getRegion()) {
 				Long regionMasterId = payload.getRegion().getRegionId();
 				if (null != regionMasterId) {
 					if (regionMasterId.equals(REGION_ID)) {
-						regionMaster = saveOrganizationRegionMaster(payload.getRegion());
+						regionMaster = saveOrganizationRegionMaster(payload.getRegion(), user);
 						LOGGER.info(customMessageSource.getMessage("org.region.master.success.created"));
 					} else {
 						regionMaster = orgRegionMasterRepository.getOne(regionMasterId);
@@ -131,7 +160,7 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 		}
 	}
 
-	public OrgRegionMaster saveOrganizationRegionMaster(OrgRegionMasterPayload payload) {
+	public OrgRegionMaster saveOrganizationRegionMaster(OrgRegionMasterPayload payload, UserPayload user) {
 		OrgRegionMaster region = new OrgRegionMaster();
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -141,23 +170,37 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 			}
 			region.setCreatedAt(sdf.parse(formattedDte));
 			region.setUpdatedAt(sdf.parse(formattedDte));
-			region.setCreatedBy(OrganizationConstants.CREATED_BY);
-			region.setUpdatedBy(OrganizationConstants.UPDATED_BY);
+			region.setCreatedBy(user.getEmail());
+			region.setUpdatedBy(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
 		}
 
 		return orgRegionMasterRepository.saveAndFlush(region);
 	}// end of method saveOrganizationRegionMaster
-	
+
 	@Override
-	public List<OrgRegionServed> getOrgRegionServedList() {
-		return orgRegionServedRepository.findAllOrgRegionsList();
+	public List<OrgRegionServed> getOrgRegionServedList(Long orgId) {
+		return orgRegionServedRepository.findAllOrgRegionsList(orgId);
 	}
 
 	@Override
 	public List<OrgRegionMaster> getOrgRegionMasterList() {
 		return orgRegionMasterRepository.findAll();
+	}
+
+	/**
+	 * @param user
+	 * @return
+	 */
+	private UserPayload getUserDetails() {
+		UserPayload user = null;
+		if (null != SecurityContextHolder.getContext() && null != SecurityContextHolder.getContext().getAuthentication()
+				&& null != SecurityContextHolder.getContext().getAuthentication().getDetails()) {
+			user = (UserPayload) SecurityContextHolder.getContext().getAuthentication().getDetails();
+
+		}
+		return user;
 	}
 
 }

@@ -9,13 +9,13 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
@@ -60,6 +60,7 @@ import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
+import com.winwin.winwin.service.UserService;
 
 /**
  * @author ArvindKhatik
@@ -97,6 +98,9 @@ public class OrganizationController extends BaseController {
 	OrgSdgDataService orgSdgDataService;
 
 	@Autowired
+	UserService userService;
+
+	@Autowired
 	OrganizationNoteService organizationNoteService;
 
 	@Autowired
@@ -105,22 +109,27 @@ public class OrganizationController extends BaseController {
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrganization(@RequestBody OrganizationPayload organizationPayload) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
-		try {
-			organization = organizationService.createOrganization(organizationPayload);
-			payload = setOrganizationPayload(organization, payload);
 
-		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
+		if (null != organizationPayload) {
+			try {
+				organization = organizationService.createOrganization(organizationPayload);
+				payload = setOrganizationPayload(organization, payload);
+			} catch (Exception e) {
+				throw new OrganizationException(
+						customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
+			}
 		}
+
 		return sendSuccessResponse(payload);
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
@@ -150,10 +159,13 @@ public class OrganizationController extends BaseController {
 	 */
 	@RequestMapping(value = "", method = RequestMethod.PUT)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
-		Organization organization = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+		Organization organization = null;
+
 		try {
+
 			for (OrganizationPayload payload : orgPayloadList) {
 				organization = organizationRepository.findOrgById(payload.getId());
 				if (organization == null) {
@@ -175,10 +187,11 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrganizationList() throws OrganizationException {
-		List<Organization> orgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
+		List<Organization> orgList = null;
 		try {
 			orgList = organizationService.getOrganizationList();
 			if (orgList == null) {
@@ -199,11 +212,13 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrgDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
 		try {
 			organization = organizationRepository.findOrgById(id);
+
 			if (organization == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
@@ -275,17 +290,17 @@ public class OrganizationController extends BaseController {
 	// Code for organization data set start
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
-	public ResponseEntity<?> createOrganizationDataSet(
-			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
+	@PreAuthorize("hasAuthority('Administrator')")
+	public ResponseEntity<?> createOrganizationDataSet(@RequestBody OrganizationDataSetPayLoad orgDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet organizationDataSet = null;
 		OrganizationDataSetPayLoad payload = null;
 		OrganizationDataSetCategory category = null;
 		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		if (null != organizationDataSetPayLoad) {
-			try {
-				organizationDataSet = organizationDataSetService
-						.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
+
+		try {
+			if (null != orgDataSetPayLoad) {
+				organizationDataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(orgDataSetPayLoad);
 				if (null != organizationDataSet) {
 					payload = new OrganizationDataSetPayLoad();
 					payload.setId(organizationDataSet.getId());
@@ -303,14 +318,14 @@ public class OrganizationController extends BaseController {
 					payload.setIsActive(organizationDataSet.getIsActive());
 				}
 
-			} catch (Exception e) {
-				throw new OrganizationDataSetException(
-						customMessageSource.getMessage("org.dataset.error.created") + ": " + e.getMessage());
+			} else {
+				return sendErrorResponse("org.bad.request");
+
 			}
 
-		} else {
-			return sendErrorResponse("org.bad.request");
-
+		} catch (Exception e) {
+			throw new OrganizationDataSetException(
+					customMessageSource.getMessage("org.dataset.error.created") + ": " + e.getMessage());
 		}
 
 		return sendSuccessResponse(payload);
@@ -318,13 +333,14 @@ public class OrganizationController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> updateOrganizationDataSet(
-			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
-			throws OrganizationDataSetException {
+			@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad) throws OrganizationDataSetException {
 		OrganizationDataSet dataSet = null;
 		OrganizationDataSetCategory category = null;
 		OrganizationDataSetCategoryPayLoad payloadCategory = null;
 		OrganizationDataSetPayLoad payload = null;
+
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
 			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
@@ -335,6 +351,7 @@ public class OrganizationController extends BaseController {
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 				payload.setId(dataSet.getId());
 				category = dataSet.getOrganizationDataSetCategory();
+
 				if (null != category) {
 					payloadCategory = new OrganizationDataSetCategoryPayLoad();
 					payloadCategory.setId(category.getId());
@@ -357,12 +374,14 @@ public class OrganizationController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
-	public ResponseEntity<?> deleteOrganizationDataSet(
-			@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad) throws OrganizationDataSetException {
+	@PreAuthorize("hasAuthority('Administrator')")
+	public ResponseEntity<?> deleteOrganizationDataSet(@RequestBody OrganizationDataSetPayLoad orgDataSetPayLoad)
+			throws OrganizationDataSetException {
 		try {
-			if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
-				Long id = organizationDataSetPayLoad.getId();
+			if (null != orgDataSetPayLoad && null != orgDataSetPayLoad.getId()) {
+				Long id = orgDataSetPayLoad.getId();
 				OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(id);
+
 				if (dataSet == null) {
 					throw new OrganizationDataSetException(
 							customMessageSource.getMessage("org.dataset.error.not_found"));
@@ -381,6 +400,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrganizationDataSetList(@PathVariable("id") Long id)
 			throws OrganizationDataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
@@ -422,6 +442,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationDataSetCategoryException {
 		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
@@ -455,6 +476,7 @@ public class OrganizationController extends BaseController {
 	// Code for organization resource start
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -495,6 +517,7 @@ public class OrganizationController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> updateOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -541,6 +564,7 @@ public class OrganizationController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> deleteOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -566,6 +590,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrganizationResourceList(@PathVariable("id") Long id)
 			throws OrganizationResourceException {
 		List<OrganizationResource> orgResourceList = null;
@@ -606,6 +631,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationResourceCategoryException {
 		List<OrganizationResourceCategory> orgResourceCategoryList = null;
@@ -640,6 +666,7 @@ public class OrganizationController extends BaseController {
 	// Code for organization region served start
 	@RequestMapping(value = "/{id}/region", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrgRegions(@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList)
 			throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionServedList = null;
@@ -672,12 +699,13 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
-	public ResponseEntity<?> getOrgRegionsList() throws OrgRegionServedException {
+	@PreAuthorize("hasAuthority('Administrator')")
+	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionList = null;
 		OrgRegionServedPayload payload = null;
 		List<OrgRegionServedPayload> payloadList = null;
 		try {
-			orgRegionList = orgRegionServedService.getOrgRegionServedList();
+			orgRegionList = orgRegionServedService.getOrgRegionServedList(id);
 			if (orgRegionList == null) {
 				throw new OrgRegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
 			} else {
@@ -706,6 +734,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrgRegionsMasterList() throws OrgRegionServedException {
 		List<OrgRegionMaster> orgRegionMasterList = null;
 		OrgRegionMasterPayload payload = null;
@@ -736,6 +765,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization SPI data start
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrgSpiDataList() throws OrgSpiDataException {
 		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
 		try {
@@ -753,6 +783,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrgSpiDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		if (orgId == null)
@@ -772,6 +803,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		List<OrgSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
@@ -793,6 +825,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization SDG data start
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrgSdgDataList() throws OrgSdgDataException {
 		List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
 		try {
@@ -810,6 +843,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrgSdgDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		if (orgId == null)
@@ -829,6 +863,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		List<OrgSdgDataMapPayload> payloadList = null;
 		if (orgId == null)
@@ -849,10 +884,12 @@ public class OrganizationController extends BaseController {
 	// Code for organization Program Details start
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createProgram(@RequestBody OrganizationPayload organizationPayload,
 			@PathVariable("id") Long orgId) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
+
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
@@ -867,6 +904,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId) throws OrganizationException {
 		List<Organization> prgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
@@ -893,6 +931,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.DELETE)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> deleteProgram(@RequestBody OrganizationPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
@@ -922,9 +961,11 @@ public class OrganizationController extends BaseController {
 	 */
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.PUT)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> updateProgramDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
 		Organization organization = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+
 		try {
 			for (OrganizationPayload payload : orgPayloadList) {
 				organization = organizationRepository.findOrgById(payload.getId());
@@ -949,6 +990,7 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization Chart start
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getSuborganizationList(@PathVariable("id") Long orgId) throws OrganizationException {
 		Organization organization = null;
 		OrgChartPayload payload = new OrgChartPayload();
@@ -970,9 +1012,11 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createSuborganization(@RequestBody SubOrganizationPayload subOrganizationPayload) {
 		OrgDivisionPayload payload = null;
 		Organization organization = null;
+
 		try {
 			organization = organizationService.createSubOrganization(subOrganizationPayload);
 			if (null != organization) {
@@ -1007,6 +1051,7 @@ public class OrganizationController extends BaseController {
 	// Code for organization notes start
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createOrgNote(@RequestBody OrganizationNotePayload organizationNotePayload,
 			@PathVariable("id") Long orgId) {
 		OrganizationNote note = null;
@@ -1025,6 +1070,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getorgNotesList(@PathVariable("id") Long orgId) throws OrganizationException {
 		List<OrganizationNote> orgNoteList = null;
 		OrganizationNotePayload payload = new OrganizationNotePayload();
@@ -1051,6 +1097,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> deleteOrgNote(@RequestBody OrganizationNotePayload organizationNotePayLoad) {
 		try {
 			if (null != organizationNotePayLoad && null != organizationNotePayLoad.getNoteId()) {
@@ -1059,7 +1106,7 @@ public class OrganizationController extends BaseController {
 				if (note == null) {
 					throw new OrganizationException(customMessageSource.getMessage("org.note.error.not_found"));
 				}
-				organizationNoteService.removeOrganizationNote(noteId);
+				organizationNoteService.removeOrganizationNote(noteId, organizationNotePayLoad.getOrganizationId());
 
 			} else {
 				return sendErrorResponse("org.bad.request");
@@ -1075,6 +1122,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/{id}/history", method = RequestMethod.GET)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getOrgHistoy(@PathVariable("id") Long orgId) {
 		List<OrgHistoryPayload> payloadList = null;
 		try {
