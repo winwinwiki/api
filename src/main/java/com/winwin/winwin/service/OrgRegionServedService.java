@@ -4,6 +4,7 @@
 package com.winwin.winwin.service;
 
 import java.util.Date;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,13 +79,10 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 						orgRegionServed.setUpdatedBy(user.getEmail());
 						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
-						if (null != orgRegionServed.getOrgId()) {
-							OrganizationHistory orgHistory = new OrganizationHistory();
-							orgHistory.setOrganizationId(orgRegionServed.getOrgId());
-							orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-							orgHistory.setUpdatedBy(user.getUserDisplayName());
-							orgHistory.setActionPerformed(OrganizationConstants.CREATE_REGION);
-							orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {
+							createOrgHistory(user, orgRegionServed.getOrgId(), sdf, formattedDte,
+									OrganizationConstants.CREATE, OrganizationConstants.REGION,
+									orgRegionServed.getId());
 						}
 
 						orgRegionList.add(orgRegionServed);
@@ -107,13 +105,9 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 							region.setUpdatedBy(user.getEmail());
 							region = orgRegionServedRepository.saveAndFlush(region);
 
-							if (null != region.getOrgId()) {
-								OrganizationHistory orgHistory = new OrganizationHistory();
-								orgHistory.setOrganizationId(region.getOrgId());
-								orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-								orgHistory.setUpdatedBy(user.getUserDisplayName());
-								orgHistory.setActionPerformed(OrganizationConstants.UPDATE_REGION);
-								orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+							if (null != region && null != region.getOrgId()) {
+								createOrgHistory(user, region.getOrgId(), sdf, formattedDte,
+										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId());
 							}
 
 							orgRegionList.add(region);
@@ -201,6 +195,28 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 		}
 		return user;
+	}
+
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param actionPerformed
+	 * @param entity
+	 * @param entityId
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String actionPerformed, String entity, Long entityId) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntity(entity);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(actionPerformed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 
 }

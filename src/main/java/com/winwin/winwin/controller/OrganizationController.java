@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
@@ -138,7 +139,7 @@ public class OrganizationController extends BaseController {
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 				}
-				organizationService.deleteOrganization(id);
+				organizationService.deleteOrganization(id, OrganizationConstants.ORGANIZATION);
 
 			} else {
 				return sendErrorResponse("org.bad.request");
@@ -171,7 +172,8 @@ public class OrganizationController extends BaseController {
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 				} else {
-					organization = organizationService.updateOrgDetails(payload, organization);
+					organization = organizationService.updateOrgDetails(payload, organization,
+							OrganizationConstants.ORGANIZATION);
 					payload = setOrganizationPayload(organization, payload);
 					payloadList.add(payload);
 				}
@@ -940,7 +942,7 @@ public class OrganizationController extends BaseController {
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				}
-				organizationService.deleteOrganization(id);
+				organizationService.deleteOrganization(id, OrganizationConstants.PROGRAM);
 
 			} else {
 				return sendErrorResponse("org.bad.request");
@@ -972,7 +974,8 @@ public class OrganizationController extends BaseController {
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				} else {
-					organization = organizationService.updateOrgDetails(payload, organization);
+					organization = organizationService.updateOrgDetails(payload, organization,
+							OrganizationConstants.PROGRAM);
 					payload = setOrganizationPayload(organization, payload);
 					payloadList.add(payload);
 				}
