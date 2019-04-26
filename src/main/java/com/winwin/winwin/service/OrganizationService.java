@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -466,15 +467,20 @@ public class OrganizationService implements IOrganizationService {
 		List<OrgHistoryPayload> payloadList = null;
 
 		try {
+
 			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
 
 			if (null != orgHistoryList) {
 				payloadList = new ArrayList<OrgHistoryPayload>();
+				Organization organization = organizationRepository.findOrgById(orgId);
 
 				for (OrganizationHistory history : orgHistoryList) {
 					OrgHistoryPayload payload = new OrgHistoryPayload();
 					payload.setId(history.getId());
-					payload.setEntityId(history.getEntityId());
+
+					if (null != organization) {
+						payload.setParentName(organization.getName());
+					}
 					payload.setEntity(history.getEntity());
 					payload.setActionPerformed(history.getActionPerformed());
 					payload.setModifiedBy(history.getUpdatedBy());
