@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
+import com.winwin.winwin.payload.UserSignInResponsePayload;
 import com.winwin.winwin.service.UserService;
 
 import io.micrometer.core.instrument.util.StringUtils;
@@ -40,6 +42,7 @@ public class UserController extends BaseController {
 
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> createUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != payload) {
@@ -60,6 +63,8 @@ public class UserController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		AuthenticationResultType authenticationResult = null;
 		UserSignInPayload userSignInPayload = null;
+		UserSignInResponsePayload userSignInResPayload = null;
+
 		if (null != payload) {
 			if (!StringUtils.isEmpty(payload.getUserName())) {
 				if (isNewUser(payload.getUserName(), exceptionResponse) && payload.getNewPassword() == null) {
@@ -75,6 +80,17 @@ public class UserController extends BaseController {
 				}
 				authenticationResult = userService.userSignIn(payload, exceptionResponse);
 
+				if (null != authenticationResult) {
+					if (!StringUtils.isEmpty(authenticationResult.getAccessToken())) {
+						UserPayload userPayload = userService.getLoggedInUser(authenticationResult.getAccessToken(),
+								exceptionResponse);
+						userSignInResPayload = new UserSignInResponsePayload();
+						userSignInResPayload.setAuthResult(authenticationResult);
+						userSignInResPayload.setUserDetails(userPayload);
+					}
+
+				}
+
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
@@ -87,11 +103,12 @@ public class UserController extends BaseController {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
 
-		return sendSuccessResponse(authenticationResult, HttpStatus.OK);
+		return sendSuccessResponse(userSignInResPayload, HttpStatus.OK);
 
 	}
 
 	@RequestMapping(value = "info", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getUserInfo(@Valid @RequestBody UserPayload userPayload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		UserPayload payload = null;
@@ -117,6 +134,7 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "updateInfo", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody List<UserPayload> userPayloadList) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		UserPayload payload = null;
@@ -158,6 +176,7 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> getUserList() {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		List<UserPayload> payloadList = null;
@@ -247,6 +266,7 @@ public class UserController extends BaseController {
 
 	@RequestMapping(value = "changePassword", method = RequestMethod.POST)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> changeUserPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -272,6 +292,7 @@ public class UserController extends BaseController {
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
 	@Transactional
+	@PreAuthorize("hasAuthority('Administrator')")
 	public ResponseEntity<?> deleteUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 

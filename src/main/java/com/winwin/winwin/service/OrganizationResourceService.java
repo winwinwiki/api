@@ -1,6 +1,7 @@
 package com.winwin.winwin.service;
 
 import java.util.Date;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import org.slf4j.Logger;
@@ -51,22 +52,18 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	@Override
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayLoad orgResourcePayLoad) {
 		UserPayload user = getUserDetails();
-		OrganizationResource organizationResource = null;
+		OrganizationResource orgResource = null;
 		try {
 			if (null != orgResourcePayLoad && null != user) {
-				organizationResource = constructOrganizationResource(orgResourcePayLoad);
-				organizationResource = organizationResourceRepository.saveAndFlush(organizationResource);
+				orgResource = constructOrganizationResource(orgResourcePayLoad);
+				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
 
-				if (null != organizationResource.getId()) {
+				if (null != orgResource && null != orgResource.getOrganizationId()) {
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(organizationResource.getOrganizationId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.UPDATE_RESOURCE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+					createOrgHistory(user, orgResource.getOrganizationId(), sdf, formattedDte,
+							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId());
 				}
 			}
 		} catch (Exception e) {
@@ -77,18 +74,32 @@ public class OrganizationResourceService implements IOrganizationResourceService
 			}
 
 		}
-		return organizationResource;
+		return orgResource;
 
 	}// end of method createOrUpdateOrganizationResource
 
 	@Override
 	public void removeOrganizationResource(Long resourceId) {
 		OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
-		if (null != resource) {
-			resource.setIsActive(false);
-		}
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+		UserPayload user = getUserDetails();
+		try {
+			if (null != resource && null != user) {
+				resource.setUpdatedAt(sdf.parse(formattedDte));
+				resource.setUpdatedBy(user.getEmail());
+				resource.setIsActive(false);
 
-		organizationResourceRepository.saveAndFlush(resource);
+				organizationResourceRepository.saveAndFlush(resource);
+
+				if (null != resource) {
+					createOrgHistory(user, resource.getOrganizationId(), sdf, formattedDte,
+							OrganizationConstants.DELETE, "", null);
+				}
+			}
+		} catch (ParseException e) {
+			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
+		}
 
 	}// end of method removeOrganizationResource
 
@@ -218,6 +229,28 @@ public class OrganizationResourceService implements IOrganizationResourceService
 
 		}
 		return user;
+	}
+
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param actionPerformed
+	 * @param entity
+	 * @param entityId
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String actionPerformed, String entity, Long entityId) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntity(entity);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(actionPerformed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 
 }
