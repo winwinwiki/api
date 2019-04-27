@@ -51,4 +51,5 @@ public class OrganizationHistory {
 
 	@Column(name = "action_performed")
 	private String actionPerformed;
+
 }

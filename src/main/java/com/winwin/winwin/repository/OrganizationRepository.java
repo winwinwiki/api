@@ -12,7 +12,7 @@ import com.winwin.winwin.entity.Organization;
  * @author ArvindKhatik
  *
  */
-public interface OrganizationRepository extends JpaRepository<Organization, Long> {
+public interface OrganizationRepository extends JpaRepository<Organization, Long>, OrganizationFilterRepository {
 	@Query(value = "select * from organization where id = :id", nativeQuery = true)
 	Organization findOrgById(@Param("id") Long id);
 
@@ -30,4 +30,6 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 
 	@Query(value = "select * from organization ORDER BY id DESC LIMIT 1", nativeQuery = true)
 	Organization findLastOrg();
+
+	List<Organization> findByNameIgnoreCaseContaining(String name);
 }
