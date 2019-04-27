@@ -177,22 +177,27 @@ public class UserService implements IUserService {
 			attribute.setName("name");
 			attribute.setValue(payload.getUserDisplayName());
 			userAttributes.add(attribute);
-		} else if (!StringUtils.isEmpty(payload.getTeam())) {
+		}
+
+		if (!StringUtils.isEmpty(payload.getTeam())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:team");
 			attribute.setValue(payload.getTeam());
 			userAttributes.add(attribute);
-		} else if (!StringUtils.isEmpty(payload.getRole())) {
+		}
+		if (!StringUtils.isEmpty(payload.getRole())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:role");
 			attribute.setValue(payload.getRole());
 			userAttributes.add(attribute);
-		} else if (!StringUtils.isEmpty(payload.getIsActive())) {
+		}
+		if (!StringUtils.isEmpty(payload.getIsActive())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("custom:isActive");
 			attribute.setValue(payload.getIsActive());
 			userAttributes.add(attribute);
-		} else if (!StringUtils.isEmpty(payload.getImageUrl())) {
+		}
+		if (!StringUtils.isEmpty(payload.getImageUrl())) {
 			AttributeType attribute = new AttributeType();
 			attribute.setName("picture");
 			attribute.setValue(payload.getImageUrl());
