@@ -21,8 +21,9 @@ import lombok.ToString;
 @ToString
 public class OrgHistoryPayload {
 	Long id;
-	String entity;
-	String parentName;
+	String entityType;
+	String entityName;
+	String parentEntityName;
 	String actionPerformed;
 	String modifiedBy;
 	Date modifiedAt;

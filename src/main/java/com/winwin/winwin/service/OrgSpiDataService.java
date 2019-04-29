@@ -186,7 +186,8 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 						if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
 
 							createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
-									OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId());
+									OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+									spiDataMapObj.getSpiData().getIndicatorName());
 						}
 
 					} else {
@@ -244,7 +245,8 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 
 							if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
 								createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
-										OrganizationConstants.UPDATE, OrganizationConstants.SPI, spiDataMapObj.getId());
+										OrganizationConstants.UPDATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+										spiDataMapObj.getSpiData().getIndicatorName());
 							}
 						}
 
@@ -272,16 +274,18 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);

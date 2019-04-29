@@ -63,7 +63,8 @@ public class OrganizationResourceService implements IOrganizationResourceService
 					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 					createOrgHistory(user, orgResource.getOrganizationId(), sdf, formattedDte,
-							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId());
+							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+							orgResource.getDescription());
 				}
 			}
 		} catch (Exception e) {
@@ -94,7 +95,7 @@ public class OrganizationResourceService implements IOrganizationResourceService
 
 				if (null != resource) {
 					createOrgHistory(user, resource.getOrganizationId(), sdf, formattedDte,
-							OrganizationConstants.DELETE, "", null);
+							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription());
 				}
 			}
 		} catch (ParseException e) {
@@ -237,16 +238,18 @@ public class OrganizationResourceService implements IOrganizationResourceService
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);

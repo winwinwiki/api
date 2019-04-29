@@ -59,7 +59,7 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 
 				if (null != note && null != note.getOrganizationId()) {
 					createOrgHistory(user, note.getOrganizationId(), sdf, formattedDte, OrganizationConstants.CREATE,
-							OrganizationConstants.NOTE, note.getId());
+							OrganizationConstants.NOTE, note.getId(), note.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -77,10 +77,15 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 
 		if (null != orgId && null != user) {
 			try {
-				organizationNoteRepository.deleteById(noteId);
+				OrganizationNote note = organizationNoteRepository.getOne(noteId);
+				if (null != note) {
 
-				createOrgHistory(user, orgId, sdf, formattedDte, OrganizationConstants.DELETE,
-						OrganizationConstants.NOTE, noteId);
+					organizationNoteRepository.deleteById(noteId);
+
+					createOrgHistory(user, orgId, sdf, formattedDte, OrganizationConstants.DELETE,
+							OrganizationConstants.NOTE, note.getId(), note.getName());
+
+				}
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.note.error.deleted"), e);
 			}
@@ -114,16 +119,18 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);
