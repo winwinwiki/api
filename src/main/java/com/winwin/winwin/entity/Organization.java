@@ -59,11 +59,13 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "description")
 	private String description;
 
-	@Column(name = "naics_code")
-	private String naicsCode;
+	@ManyToOne
+	@JoinColumn(name = "naics_code")
+	private OrgNaicsData naicsCode;
 
-	@Column(name = "ntee_code")
-	private String nteeCode;
+	@ManyToOne
+	@JoinColumn(name = "ntee_code")
+	private OrgNteeData nteeCode;
 
 	@Column(name = "priority")
 	private String priority = "Normal";

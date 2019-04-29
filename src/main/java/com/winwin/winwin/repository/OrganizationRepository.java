@@ -31,5 +31,11 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization ORDER BY id DESC LIMIT 1", nativeQuery = true)
 	Organization findLastOrg();
 
-	List<Organization> findByNameIgnoreCaseContaining(String name);
+	@Query(value = "select * from organization where type = 'organization' "
+			+ " AND is_Active = true AND name ILIKE :name", nativeQuery = true)
+	List<Organization> findByNameIgnoreCaseContaining(@Param("name") String name);
+
+	@Query(value = "select * from organization where type = 'program' AND parent_id = :orgId "
+			+ " AND is_Active = true and name ILIKE :name", nativeQuery = true)
+	List<Organization> findProgramByNameIgnoreCaseContaining(@Param("orgId") Long orgId, @Param("name") String name);
 }

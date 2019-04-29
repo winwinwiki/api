@@ -30,7 +30,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		sb.append(" and (coalesce(o.assets,0) >= :minAssets and coalesce(o.assets,0) <= :maxAssets) ");
 
 		if (StringUtils.isNullOrEmpty(payload.getSectorLevel()))
-			sb.append(" and (o.sector_level IS NOT DISTINCT FROM :sectorLevel and) ");
+			sb.append(" and (o.sector_level IS NOT DISTINCT FROM :sectorLevel ) ");
 
 		if (StringUtils.isNullOrEmpty(payload.getTagStatus()))
 			sb.append(" and o.tag_status IS NOT DISTINCT FROM :tagStatus ");
@@ -41,10 +41,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (StringUtils.isNullOrEmpty(payload.getEditedBy()))
 			sb.append(" and o.updated_by IS NOT DISTINCT FROM :editedBy ");
 
-		if (StringUtils.isNullOrEmpty(payload.getNteeCode()))
+		if (payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
 
-		if (StringUtils.isNullOrEmpty(payload.getNaicsCode()))
+		if (payload.getNaicsCode() != 0)
 			sb.append(" and o.naics_code IS NOT DISTINCT FROM :naicsCode ");
 
 		if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SPI")) {
@@ -89,10 +89,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (StringUtils.isNullOrEmpty(payload.getPriority()))
 			filterQuery.setParameter("priority", payload.getPriority());
 
-		if (StringUtils.isNullOrEmpty(payload.getNteeCode()))
+		if (payload.getNteeCode() != 0)
 			filterQuery.setParameter("nteeCode", payload.getNteeCode());
 
-		if (StringUtils.isNullOrEmpty(payload.getNaicsCode()))
+		if (payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
 
 		if (StringUtils.isNullOrEmpty(payload.getEditedBy()))

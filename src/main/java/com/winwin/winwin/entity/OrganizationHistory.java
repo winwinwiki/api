@@ -52,4 +52,10 @@ public class OrganizationHistory {
 	@Column(name = "action_performed")
 	private String actionPerformed;
 
+	@Column(name = "entity")
+	private String entity;
+
+	@Column(name = "entity_id")
+	private Long entityId;
+
 }

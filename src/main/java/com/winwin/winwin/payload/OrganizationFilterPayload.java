@@ -12,8 +12,8 @@ public class OrganizationFilterPayload {
 	private String tagStatus;
 	private String priority;
 	private String editedBy;
-	private String nteeCode;
-	private String naicsCode;
+	private Long nteeCode;
+	private Long naicsCode;
 	private float revenueMin = 0.0f;
 	private float revenueMax = Float.MAX_VALUE;
 	private float assestsMin = 0.0f;
