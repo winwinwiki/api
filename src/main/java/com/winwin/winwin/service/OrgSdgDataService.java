@@ -135,7 +135,8 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 							createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
-									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId());
+									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+									sdgDataMapObj.getSdgData().getShortName());
 						}
 					} else {
 						Boolean isValidSdgData = true;
@@ -186,7 +187,8 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 								createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
-										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId());
+										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+										sdgDataMapObj.getSdgData().getShortName());
 							}
 						}
 
@@ -213,16 +215,18 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);

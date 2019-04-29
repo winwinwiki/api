@@ -66,11 +66,11 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 					if (null != orgDataSetPayLoad.getId()) {
 						createOrgHistory(user, organizationDataSet.getOrganizationId(), sdf, formattedDte,
 								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
-								organizationDataSet.getId());
+								organizationDataSet.getId(), organizationDataSet.getDescription());
 					} else {
 						createOrgHistory(user, organizationDataSet.getOrganizationId(), sdf, formattedDte,
 								OrganizationConstants.CREATE, OrganizationConstants.DATASET,
-								organizationDataSet.getId());
+								organizationDataSet.getId(), organizationDataSet.getDescription());
 					}
 
 				}
@@ -105,7 +105,7 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 
 				if (null != dataSet) {
 					createOrgHistory(user, dataSet.getOrganizationId(), sdf, formattedDte, OrganizationConstants.DELETE,
-							OrganizationConstants.DATASET, dataSet.getId());
+							OrganizationConstants.DATASET, dataSet.getId(), dataSet.getDescription());
 				}
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.error.deleted"), e);
@@ -244,20 +244,23 @@ public class OrganizationDataSetService implements IOrganizationDataSetService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);
 		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
+
 
 }

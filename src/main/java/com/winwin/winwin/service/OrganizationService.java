@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +90,7 @@ public class OrganizationService implements IOrganizationService {
 
 				if (null != organization.getId()) {
 					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
-							OrganizationConstants.ORGANIZATION, organization.getId());
+							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 				}
 
 			}
@@ -119,7 +118,7 @@ public class OrganizationService implements IOrganizationService {
 
 					if (null != organization) {
 						createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.DELETE,
-								type, organization.getId());
+								type, organization.getId(), organization.getName());
 					}
 				}
 			} catch (Exception e) {
@@ -190,7 +189,7 @@ public class OrganizationService implements IOrganizationService {
 
 				if (null != organization) {
 					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.UPDATE, type,
-							organization.getId());
+							organization.getId(), organization.getName());
 				}
 			} catch (ParseException e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
@@ -320,7 +319,7 @@ public class OrganizationService implements IOrganizationService {
 
 				if (null != organization) {
 					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
-							OrganizationConstants.PROGRAM, organization.getId());
+							OrganizationConstants.PROGRAM, organization.getId(), organization.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -452,7 +451,7 @@ public class OrganizationService implements IOrganizationService {
 
 				if (null != organization) {
 					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
-							OrganizationConstants.ORGANIZATION, organization.getId());
+							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -479,9 +478,10 @@ public class OrganizationService implements IOrganizationService {
 					payload.setId(history.getId());
 
 					if (null != organization) {
-						payload.setParentName(organization.getName());
+						payload.setParentEntityName(organization.getName());
 					}
-					payload.setEntity(history.getEntity());
+					payload.setEntityType(history.getEntityType());
+					payload.setEntityName(history.getEntityName());
 					payload.setActionPerformed(history.getActionPerformed());
 					payload.setModifiedBy(history.getUpdatedBy());
 					payload.setModifiedAt(history.getUpdatedAt());
@@ -516,16 +516,18 @@ public class OrganizationService implements IOrganizationService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);

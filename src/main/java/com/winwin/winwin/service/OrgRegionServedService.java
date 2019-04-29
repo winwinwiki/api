@@ -81,8 +81,8 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {
 							createOrgHistory(user, orgRegionServed.getOrgId(), sdf, formattedDte,
-									OrganizationConstants.CREATE, OrganizationConstants.REGION,
-									orgRegionServed.getId());
+									OrganizationConstants.CREATE, OrganizationConstants.REGION, orgRegionServed.getId(),
+									orgRegionServed.getRegionMaster().getRegionName());
 						}
 
 						orgRegionList.add(orgRegionServed);
@@ -107,7 +107,8 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 
 							if (null != region && null != region.getOrgId()) {
 								createOrgHistory(user, region.getOrgId(), sdf, formattedDte,
-										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId());
+										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId(),
+										region.getRegionMaster().getRegionName());
 							}
 
 							orgRegionList.add(region);
@@ -203,16 +204,18 @@ public class OrgRegionServedService implements IOrgRegionServedService {
 	 * @param sdf
 	 * @param formattedDte
 	 * @param actionPerformed
-	 * @param entity
+	 * @param entityType
 	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entity, Long entityId) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
 		orgHistory.setEntityId(entityId);
-		orgHistory.setEntity(entity);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
 		orgHistory.setActionPerformed(actionPerformed);
