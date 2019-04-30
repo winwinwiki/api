@@ -38,6 +38,6 @@ public class OrgNteeData {
 	@Column(name = "code")
 	private String code;
 
-	@Column(name = "defination")
-	private String defination;
+	@Column(name = "description")
+	private String description;
 }
