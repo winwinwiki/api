@@ -26,14 +26,22 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where (coalesce(o.revenue,0) >= :minRevenue and coalesce(o.revenue,0) <= :maxRevenue ) ");
+		sb.append(" where  is_Active = true ");
+		sb.append(" and (coalesce(o.revenue,0) >= :minRevenue and coalesce(o.revenue,0) <= :maxRevenue ) ");
 		sb.append(" and (coalesce(o.assets,0) >= :minAssets and coalesce(o.assets,0) <= :maxAssets) ");
 
-		if (!StringUtils.isNullOrEmpty(payload.getSectorLevel()))
-			sb.append(" and (o.sector_level IS NOT DISTINCT FROM :sectorLevel ) ");
+		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
+//			String inQuery = "( ";
+//			int i = 0;
+//			for (; i < payload.getSectorLevel().size() - 1; i++)
+//				inQuery = inQuery + ":sectorLevel" + i + " , ";
+//			inQuery = inQuery + " :sectorLevel" + i + " ) ";
+//			sb.append(" and ( o.sector_level IN ").append(inQuery).append(" ) ");
+			sb.append(" and (o.sector_level IN :sectorLevel)");
+		}
 
-		if (!StringUtils.isNullOrEmpty(payload.getTagStatus()))
-			sb.append(" and o.tag_status IS NOT DISTINCT FROM :tagStatus ");
+		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
+			sb.append(" and (o.tag_status IN :tagStatus)");
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
@@ -80,10 +88,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		filterQuery.setParameter("minAssets", payload.getAssestsMin());
 		filterQuery.setParameter("maxAssets", payload.getAssestsMax());
 
-		if (!StringUtils.isNullOrEmpty(payload.getSectorLevel()))
+		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
 
-		if (!StringUtils.isNullOrEmpty(payload.getTagStatus()))
+		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
 			filterQuery.setParameter("tagStatus", payload.getTagStatus());
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
@@ -112,7 +120,6 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getGoalCode()))
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
-
 		List<Organization> organizationList = filterQuery.getResultList();
 		return organizationList;
 	}

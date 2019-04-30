@@ -224,7 +224,6 @@ public class OrganizationController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
 		return sendSuccessResponse(payloadList);

@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrganizationFilterPayload {
-	private String sectorLevel;
-	private String tagStatus;
+	private List<String> sectorLevel;
+	private List<String> tagStatus;
 	private String priority;
 	private String editedBy;
 	private Long nteeCode;
