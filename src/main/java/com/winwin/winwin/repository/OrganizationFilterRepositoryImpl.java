@@ -27,8 +27,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		StringBuilder sb = new StringBuilder();
 		sb.append(" where  is_Active = true ");
-		sb.append(" and (coalesce(o.revenue,0) >= :minRevenue and coalesce(o.revenue,0) <= :maxRevenue ) ");
-		sb.append(" and (coalesce(o.assets,0) >= :minAssets and coalesce(o.assets,0) <= :maxAssets) ");
+
+		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
+		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
 //			String inQuery = "( ";
@@ -85,8 +86,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		filterQuery.setParameter("minRevenue", payload.getRevenueMin());
 		filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
-		filterQuery.setParameter("minAssets", payload.getAssestsMin());
-		filterQuery.setParameter("maxAssets", payload.getAssestsMax());
+		filterQuery.setParameter("minAssets", payload.getAssetsMin());
+		filterQuery.setParameter("maxAssets", payload.getAssetsMax());
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());

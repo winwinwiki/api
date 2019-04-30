@@ -16,10 +16,10 @@ public class OrganizationFilterPayload {
 	private String editedBy;
 	private Long nteeCode;
 	private Long naicsCode;
-	private float revenueMin = 0.0f;
-	private float revenueMax = Float.MAX_VALUE;
-	private float assestsMin = 0.0f;
-	private float assestsMax = Float.MAX_VALUE;
+	private long revenueMin = 0;
+	private long revenueMax = Long.MAX_VALUE;
+	private long assetsMin = 0;
+	private long assetsMax = Long.MAX_VALUE;
 	private String frameworkTag;
 	private String indicatorId;
 	private String dimensionId;
