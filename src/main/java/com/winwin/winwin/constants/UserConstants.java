@@ -7,8 +7,8 @@ package com.winwin.winwin.constants;
 public class UserConstants {
 
 	public static final String ROLE_ADMIN = "Administrator";
-	public static final String ROLE_DATASEEDER = "ROLE_DATASEEDER";
-	public static final String ROLE_CONTENTMANAGER = "ROLE_CONTENTMANAGER";
-	public static final String ROLE_READER = "ROLE_READER";
+	public static final String ROLE_DATASEEDER = "DataSeeder";
+	public static final String ROLE_CONTENTMANAGER = "ContentManager";
+	public static final String ROLE_READER = "Reader";
 
 }

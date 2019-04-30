@@ -102,7 +102,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	public void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) throws OrgSdgDataException {
 		UserPayload user = getUserDetails();
 		HashMap<String, OrgSdgData> subGoalCodesMap = new HashMap<String, OrgSdgData>();
-		if ( null != payloadList && null != user) {
+		if (null != payloadList && null != user) {
 			List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
 			if (null != sdgList) {
 				for (OrgSdgData sdgDataObj : sdgList) {
@@ -133,9 +133,10 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 						sdgDataMapObj.setUpdatedBy(user.getEmail());
 						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
-						if (null != sdgDataMapObj.getOrganizationId()) {
+						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 							createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
-									OrganizationConstants.CREATE_SDG, "", null);
+									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+									sdgDataMapObj.getSdgData().getShortName());
 						}
 					} else {
 						Boolean isValidSdgData = true;
@@ -163,14 +164,11 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 
 								if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
 									isValidSdgData = false;
-								}
-								if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
+								} else if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
 									isValidSdgData = false;
-								}
-								if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
+								} else if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
 									isValidSdgData = false;
-								}
-								if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
+								} else if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
 									isValidSdgData = false;
 								}
 
@@ -187,9 +185,10 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
-							if (null != sdgDataMapObj.getOrganizationId()) {
+							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 								createOrgHistory(user, sdgDataMapObj.getOrganizationId(), sdf, formattedDte,
-										OrganizationConstants.UPDATE_SDG, "", null);
+										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+										sdgDataMapObj.getSdgData().getShortName());
 							}
 						}
 
@@ -215,18 +214,22 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	 * @param orgId
 	 * @param sdf
 	 * @param formattedDte
-	 * @param action_performed
-	 * @param entity
-	 * @param entity_id
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String action_performed, String entity, Long entity_id) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
-		orgHistory.setActionPerformed(action_performed);
+		orgHistory.setActionPerformed(actionPerformed);
 		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 

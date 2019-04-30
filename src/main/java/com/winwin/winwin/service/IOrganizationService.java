@@ -18,9 +18,9 @@ public interface IOrganizationService {
 
 	Organization createProgram(OrganizationPayload organizationPayload);
 
-	void deleteOrganization(Long id);
+	void deleteOrganization(Long id, String type);
 
-	Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization);
+	Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization, String type);
 
 	List<Organization> getOrganizationList();
 

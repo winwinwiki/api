@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
 import com.winwin.winwin.entity.Organization;
@@ -88,7 +89,8 @@ public class ProgramController extends BaseController {
 	// Code for program data set start
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@Transactional
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
 		OrganizationPayload payload = null;
@@ -163,7 +165,8 @@ public class ProgramController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> createProgrmDataSet(
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
@@ -207,8 +210,9 @@ public class ProgramController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
-	@PreAuthorize("hasAuthority('Administrator')")
-	public ResponseEntity<?> updateOrganizationDataSet(
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> updateProgramDataSet(
 			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
 			throws OrganizationDataSetException {
 		OrganizationDataSet dataSet = null;
@@ -247,9 +251,10 @@ public class ProgramController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
-	@PreAuthorize("hasAuthority('Administrator')")
-	public ResponseEntity<?> deleteOrganizationDataSet(
-			@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad) throws OrganizationDataSetException {
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> deleteProgramDataSet(@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
+			throws OrganizationDataSetException {
 		try {
 			if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 				Long id = organizationDataSetPayLoad.getId();
@@ -272,9 +277,9 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
-	public ResponseEntity<?> getOrganizationDataSetList(@PathVariable("id") Long id)
-			throws OrganizationDataSetException {
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
+	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) throws OrganizationDataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
 		OrganizationDataSetPayLoad payload = null;
 		OrganizationDataSetCategory category = null;
@@ -314,7 +319,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationDataSetCategoryException {
 		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
@@ -348,7 +354,8 @@ public class ProgramController extends BaseController {
 	// Code for program resource start
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> createOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -389,7 +396,8 @@ public class ProgramController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> updateOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -436,7 +444,8 @@ public class ProgramController extends BaseController {
 
 	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> deleteOrganizationResource(
 			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
 			throws OrganizationResourceException {
@@ -462,7 +471,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrganizationResourceList(@PathVariable("id") Long id)
 			throws OrganizationResourceException {
 		List<OrganizationResource> orgResourceList = null;
@@ -504,7 +514,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') ")
 	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
 			throws OrganizationResourceCategoryException {
 		List<OrganizationResourceCategory> orgResourceCategoryList = null;
@@ -539,7 +550,8 @@ public class ProgramController extends BaseController {
 	// Code for program region served start
 	@RequestMapping(value = "/{id}/region", method = RequestMethod.POST)
 	@Transactional
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') ")
 	public ResponseEntity<?> createOrgRegions(@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList)
 			throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionServedList = null;
@@ -572,7 +584,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws OrgRegionServedException {
 		List<OrgRegionServed> orgRegionList = null;
 		OrgRegionServedPayload payload = null;
@@ -607,7 +620,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') ")
 	public ResponseEntity<?> getOrgRegionsMasterList() throws OrgRegionServedException {
 		List<OrgRegionMaster> orgRegionMasterList = null;
 		OrgRegionMasterPayload payload = null;
@@ -636,7 +650,8 @@ public class ProgramController extends BaseController {
 
 	// Code for program SPI data start
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> getOrgSpiDataList() throws OrgSpiDataException {
 		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
 		try {
@@ -654,7 +669,8 @@ public class ProgramController extends BaseController {
 
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
 	@Transactional
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrgSpiDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		if (orgId == null)
@@ -674,7 +690,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws OrgSpiDataException {
 		List<OrgSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
@@ -696,7 +713,8 @@ public class ProgramController extends BaseController {
 
 	// Code for program SDG data start
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> getOrgSdgDataList() throws OrgSdgDataException {
 		List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
 		try {
@@ -714,7 +732,8 @@ public class ProgramController extends BaseController {
 
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
 	@Transactional
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrgSdgDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		if (orgId == null)
@@ -734,7 +753,8 @@ public class ProgramController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws OrgSdgDataException {
 		List<OrgSdgDataMapPayload> payloadList = null;
 		if (orgId == null)

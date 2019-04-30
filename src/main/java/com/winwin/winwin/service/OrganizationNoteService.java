@@ -57,13 +57,9 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 				note.setUpdatedBy(user.getEmail());
 				note = organizationNoteRepository.saveAndFlush(note);
 
-				if (null != note.getOrganizationId()) {
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(note.getId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.CREATE_NOTE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+				if (null != note && null != note.getOrganizationId()) {
+					createOrgHistory(user, note.getOrganizationId(), sdf, formattedDte, OrganizationConstants.CREATE,
+							OrganizationConstants.NOTE, note.getId(), note.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -76,24 +72,24 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 	@Override
 	public void removeOrganizationNote(Long noteId, Long orgId) {
 		UserPayload user = getUserDetails();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
-		if (null != user) {
-			organizationNoteRepository.deleteById(noteId);
-			if (null != orgId) {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				OrganizationHistory orgHistory = new OrganizationHistory();
-				orgHistory.setOrganizationId(orgId);
-				try {
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.DELETE_NOTE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
-				} catch (ParseException e) {
-					LOGGER.error(customMessageSource.getMessage("org.note.error.deleted"), e);
+		if (null != orgId && null != user) {
+			try {
+				OrganizationNote note = organizationNoteRepository.getOne(noteId);
+				if (null != note) {
+
+					organizationNoteRepository.deleteById(noteId);
+
+					createOrgHistory(user, orgId, sdf, formattedDte, OrganizationConstants.DELETE,
+							OrganizationConstants.NOTE, note.getId(), note.getName());
+
 				}
-
+			} catch (Exception e) {
+				LOGGER.error(customMessageSource.getMessage("org.note.error.deleted"), e);
 			}
+
 		}
 
 	}
@@ -115,6 +111,30 @@ public class OrganizationNoteService implements IOrganizationNoteService {
 
 		}
 		return user;
+	}
+
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(actionPerformed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 
 }

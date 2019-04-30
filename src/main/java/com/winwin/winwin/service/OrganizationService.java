@@ -90,12 +90,8 @@ public class OrganizationService implements IOrganizationService {
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(organization.getId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.CREATE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
+							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 				}
 
 			}
@@ -107,8 +103,10 @@ public class OrganizationService implements IOrganizationService {
 	}
 
 	@Override
-	public void deleteOrganization(Long id) {
+	public void deleteOrganization(Long id, String type) {
 		UserPayload user = getUserDetails();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 		if (null != user) {
 			try {
@@ -117,18 +115,11 @@ public class OrganizationService implements IOrganizationService {
 					organization.setIsActive(false);
 					organization.getAddress().setIsActive(false);
 					addressRepository.saveAndFlush(organization.getAddress());
-					organizationRepository.saveAndFlush(organization);
+					organization = organizationRepository.saveAndFlush(organization);
 
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-					if (null != organization.getId()) {
-						OrganizationHistory orgHistory = new OrganizationHistory();
-						orgHistory.setOrganizationId(organization.getId());
-						orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-						orgHistory.setUpdatedBy(user.getUserDisplayName());
-						orgHistory.setActionPerformed(OrganizationConstants.DELETE);
-						orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
-
+					if (null != organization) {
+						createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.DELETE,
+								type, organization.getId(), organization.getName());
 					}
 				}
 			} catch (Exception e) {
@@ -139,7 +130,8 @@ public class OrganizationService implements IOrganizationService {
 	}
 
 	@Override
-	public Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization) {
+	public Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization,
+			String type) {
 		@SuppressWarnings("unused")
 		OrgClassificationMapping orgClassificationMapping = new OrgClassificationMapping();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -195,13 +187,9 @@ public class OrganizationService implements IOrganizationService {
 
 				organization = organizationRepository.saveAndFlush(organization);
 
-				if (null != organization.getId()) {
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(organization.getId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.UPDATE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+				if (null != organization) {
+					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.UPDATE, type,
+							organization.getId(), organization.getName());
 				}
 			} catch (ParseException e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
@@ -336,13 +324,9 @@ public class OrganizationService implements IOrganizationService {
 				organization.setUpdatedBy(user.getEmail());
 				organization = organizationRepository.saveAndFlush(organization);
 
-				if (null != organization.getId()) {
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(organization.getId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.CREATE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+				if (null != organization) {
+					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
+							OrganizationConstants.PROGRAM, organization.getId(), organization.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -472,13 +456,9 @@ public class OrganizationService implements IOrganizationService {
 				organization.setUpdatedBy(user.getEmail());
 				organization = organizationRepository.saveAndFlush(organization);
 
-				if (null != organization.getId()) {
-					OrganizationHistory orgHistory = new OrganizationHistory();
-					orgHistory.setOrganizationId(organization.getId());
-					orgHistory.setUpdatedAt(sdf.parse(formattedDte));
-					orgHistory.setUpdatedBy(user.getUserDisplayName());
-					orgHistory.setActionPerformed(OrganizationConstants.CREATE);
-					orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+				if (null != organization) {
+					createOrgHistory(user, organization.getId(), sdf, formattedDte, OrganizationConstants.CREATE,
+							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 				}
 			}
 		} catch (Exception e) {
@@ -493,14 +473,23 @@ public class OrganizationService implements IOrganizationService {
 		List<OrgHistoryPayload> payloadList = null;
 
 		try {
+
 			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
 
 			if (null != orgHistoryList) {
 				payloadList = new ArrayList<OrgHistoryPayload>();
+				Organization organization = organizationRepository.findOrgById(orgId);
 
 				for (OrganizationHistory history : orgHistoryList) {
 					OrgHistoryPayload payload = new OrgHistoryPayload();
 					payload.setId(history.getId());
+
+					if (null != organization) {
+						payload.setParentEntityName(organization.getName());
+					}
+					payload.setEntityType(history.getEntityType());
+					payload.setEntityName(history.getEntityName());
+					payload.setActionPerformed(history.getActionPerformed());
 					payload.setModifiedBy(history.getUpdatedBy());
 					payload.setModifiedAt(history.getUpdatedAt());
 
@@ -528,9 +517,28 @@ public class OrganizationService implements IOrganizationService {
 		return user;
 	}
 
-	private List<Organization> getOrganizationByFilter() {
-
-		return new ArrayList<>();
+	/**
+	 * @param user
+	 * @param orgId
+	 * @param sdf
+	 * @param formattedDte
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
+	 * @throws ParseException
+	 */
+	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
+		OrganizationHistory orgHistory = new OrganizationHistory();
+		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
+		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+		orgHistory.setUpdatedBy(user.getUserDisplayName());
+		orgHistory.setActionPerformed(actionPerformed);
+		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 
 }

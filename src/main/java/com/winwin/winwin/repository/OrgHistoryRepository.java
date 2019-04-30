@@ -14,7 +14,7 @@ import com.winwin.winwin.entity.OrganizationHistory;
  */
 public interface OrgHistoryRepository extends JpaRepository<OrganizationHistory, Long> {
 
-	@Query(value = " select * from org_history where organization_id = :orgId", nativeQuery = true)
+	@Query(value = " select * from org_history where organization_id = :orgId order by id desc", nativeQuery = true)
 	List<OrganizationHistory> findOrgHistoryDetails(@Param("orgId") Long orgId);
 
 }

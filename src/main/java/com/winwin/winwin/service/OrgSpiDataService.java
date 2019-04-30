@@ -183,10 +183,11 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 						spiDataMapObj.setUpdatedBy(user.getEmail());
 						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
-						if (null != spiDataMapObj.getOrganizationId()) {
+						if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
 
 							createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
-									OrganizationConstants.CREATE_SPI, "", null);
+									OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+									spiDataMapObj.getSpiData().getIndicatorName());
 						}
 
 					} else {
@@ -217,20 +218,15 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 							if (null != spiDataMapObj.getSpiData()) {
 								if (dId != spiDataMapObj.getSpiData().getDimensionId()) {
 									isValidSpiData = false;
-								}
-								if (!cId.equals(spiDataMapObj.getSpiData().getComponentId())) {
+								} else if (!cId.equals(spiDataMapObj.getSpiData().getComponentId())) {
 									isValidSpiData = false;
-								}
-								if (!indId.equals(spiDataMapObj.getSpiData().getIndicatorId())) {
+								} else if (!indId.equals(spiDataMapObj.getSpiData().getIndicatorId())) {
 									isValidSpiData = false;
-								}
-								if (!dName.equals(spiDataMapObj.getSpiData().getDimensionName())) {
+								} else if (!dName.equals(spiDataMapObj.getSpiData().getDimensionName())) {
 									isValidSpiData = false;
-								}
-								if (!cName.equals(spiDataMapObj.getSpiData().getComponentName())) {
+								} else if (!cName.equals(spiDataMapObj.getSpiData().getComponentName())) {
 									isValidSpiData = false;
-								}
-								if (!indName.equals(spiDataMapObj.getSpiData().getIndicatorName())) {
+								} else if (!indName.equals(spiDataMapObj.getSpiData().getIndicatorName())) {
 									isValidSpiData = false;
 								}
 
@@ -247,9 +243,10 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 							spiDataMapObj.setUpdatedBy(user.getEmail());
 							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
-							if (null != spiDataMapObj.getOrganizationId()) {
+							if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
 								createOrgHistory(user, spiDataMapObj.getOrganizationId(), sdf, formattedDte,
-										OrganizationConstants.UPDATE_SPI, "", null);
+										OrganizationConstants.UPDATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+										spiDataMapObj.getSpiData().getIndicatorName());
 							}
 						}
 
@@ -276,18 +273,22 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	 * @param orgId
 	 * @param sdf
 	 * @param formattedDte
-	 * @param action_performed
-	 * @param entity
-	 * @param entity_id
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
 	 * @throws ParseException
 	 */
 	private void createOrgHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String action_performed, String entity, Long entity_id) throws ParseException {
+			String actionPerformed, String entityType, Long entityId, String entityName) throws ParseException {
 		OrganizationHistory orgHistory = new OrganizationHistory();
 		orgHistory.setOrganizationId(orgId);
+		orgHistory.setEntityId(entityId);
+		orgHistory.setEntityName(entityName);
+		orgHistory.setEntityType(entityType);
 		orgHistory.setUpdatedAt(sdf.parse(formattedDte));
 		orgHistory.setUpdatedBy(user.getUserDisplayName());
-		orgHistory.setActionPerformed(action_performed);
+		orgHistory.setActionPerformed(actionPerformed);
 		orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 	}
 

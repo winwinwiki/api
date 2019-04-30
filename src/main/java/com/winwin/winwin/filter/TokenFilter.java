@@ -69,6 +69,8 @@ public class TokenFilter extends HttpFilter {
 				filterchain.doFilter(request, response);
 			}
 
+		}else{
+			response.sendError(400, "Token Found as null");
 		}
 	}
 

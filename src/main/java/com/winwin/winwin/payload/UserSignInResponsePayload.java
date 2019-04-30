@@ -1,6 +1,6 @@
 package com.winwin.winwin.payload;
 
-import java.util.Date;
+import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -19,13 +19,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrgHistoryPayload {
-	Long id;
-	String entityType;
-	String entityName;
-	String parentEntityName;
-	String actionPerformed;
-	String modifiedBy;
-	Date modifiedAt;
-
+public class UserSignInResponsePayload {
+	AuthenticationResultType authResult;
+	UserPayload userDetails;
 }
