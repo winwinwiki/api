@@ -27,6 +27,7 @@ import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgDepartmentPayload;
 import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrgHistoryPayload;
+import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -180,8 +181,7 @@ public class OrganizationService implements IOrganizationService {
 				orgClassificationMapping = addClassification(organizationPayload, organization);
 
 				/*
-				 * if (orgClassificationMapping == null) { throw new
-				 * OrganizationException(
+				 * if (orgClassificationMapping == null) { throw new OrganizationException(
 				 * "Request to update classification is invalid"); }
 				 */
 
@@ -284,6 +284,13 @@ public class OrganizationService implements IOrganizationService {
 	public List<Organization> getOrganizationList() {
 		return organizationRepository.findAllOrganizationList();
 	}// end of method getOrganizationList
+
+	public List<Organization> getOrganizationList(OrganizationFilterPayload payload) {
+		if (payload.getNameSearch() != null)
+			return organizationRepository.findByNameIgnoreCaseContaining(payload.getNameSearch());
+		else
+			return organizationRepository.filterOrganization(payload);
+	}
 
 	@Override
 	public List<Organization> getProgramList(Long orgId) {

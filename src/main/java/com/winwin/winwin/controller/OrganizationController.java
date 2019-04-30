@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazonaws.util.StringUtils;
+import com.winwin.winwin.entity.OrgNaicsData;
+import com.winwin.winwin.entity.OrgNteeData;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
@@ -46,6 +50,7 @@ import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
+import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
@@ -55,6 +60,8 @@ import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
+import com.winwin.winwin.service.OrgNaicsDataService;
+import com.winwin.winwin.service.OrgNteeDataService;
 import com.winwin.winwin.service.OrgRegionServedService;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
@@ -107,6 +114,11 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	OrganizationNoteRepository organizationNoteRepository;
+
+	@Autowired
+	OrgNaicsDataService naicsDataService;
+	@Autowired
+	OrgNteeDataService nteeDataService;
 
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -194,12 +206,14 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getOrganizationList() throws OrganizationException {
+	public ResponseEntity<?> getOrganizationList(@RequestParam OrganizationFilterPayload filterPayload) throws OrganizationException {
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
 		List<Organization> orgList = null;
 		try {
-			orgList = organizationService.getOrganizationList();
+
+			orgList = organizationService.getOrganizationList(filterPayload);
+
 			if (orgList == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
@@ -210,6 +224,7 @@ public class OrganizationController extends BaseController {
 
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
@@ -933,14 +948,18 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId) throws OrganizationException {
+	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId,
+			@RequestParam(name = "name", required = false) String name) throws OrganizationException {
 		List<Organization> prgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
-			prgList = organizationService.getProgramList(orgId);
+			if (StringUtils.isNullOrEmpty(name))
+				prgList = organizationService.getProgramList(orgId);
+			else
+				prgList = organizationRepository.findProgramByNameIgnoreCaseContaining(orgId, name);
 			if (prgList == null) {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {
@@ -1170,6 +1189,34 @@ public class OrganizationController extends BaseController {
 				return sendErrorResponse("org.bad.request");
 
 			}
+
+		} catch (Exception e) {
+			return sendExceptionResponse(e, "org.history.error.list");
+		}
+		return sendSuccessResponse(payloadList);
+	}
+
+	@RequestMapping(value = "/naics_data", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
+	public ResponseEntity<?> getOrgNaicsData() {
+		List<OrgNaicsData> payloadList = null;
+		try {
+
+			payloadList = naicsDataService.getAllOrgNaicsData();
+
+		} catch (Exception e) {
+			return sendExceptionResponse(e, "org.history.error.list");
+		}
+		return sendSuccessResponse(payloadList);
+	}
+
+	@RequestMapping(value = "/ntee_data", method = RequestMethod.GET)
+	@PreAuthorize("hasAuthority('Administrator')")
+	public ResponseEntity<?> getOrgNteeData() {
+		List<OrgNteeData> payloadList = null;
+		try {
+
+			payloadList = nteeDataService.getAllOrgNteeData();
 
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "org.history.error.list");
