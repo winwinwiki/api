@@ -211,7 +211,6 @@ public class OrganizationController extends BaseController {
 		OrganizationPayload payload = null;
 		List<Organization> orgList = null;
 		try {
-
 			orgList = organizationService.getOrganizationList(filterPayload);
 
 			if (orgList == null) {
@@ -224,7 +223,6 @@ public class OrganizationController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
@@ -1198,7 +1196,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/naics_data", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('Administrator')")
-	public ResponseEntity<?> getOrgNaicsData() {
+	public ResponseEntity<?> getOrgNaicsData(@RequestParam(name = "search", required = false) String search) {
 		List<OrgNaicsData> payloadList = null;
 		try {
 
@@ -1212,7 +1210,7 @@ public class OrganizationController extends BaseController {
 
 	@RequestMapping(value = "/ntee_data", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('Administrator')")
-	public ResponseEntity<?> getOrgNteeData() {
+	public ResponseEntity<?> getOrgNteeData(@RequestParam(name = "search", required = false) String search) {
 		List<OrgNteeData> payloadList = null;
 		try {
 
