@@ -206,7 +206,7 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getOrganizationList(@RequestParam OrganizationFilterPayload filterPayload) throws OrganizationException {
+	public ResponseEntity<?> getOrganizationList(OrganizationFilterPayload filterPayload) throws OrganizationException {
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
 		List<Organization> orgList = null;
