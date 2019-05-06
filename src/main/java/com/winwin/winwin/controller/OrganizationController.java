@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.amazonaws.util.StringUtils;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.OrgNaicsData;
@@ -947,18 +946,16 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId,
-			@RequestParam(name = "name", required = false) String name) throws OrganizationException {
+	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId, OrganizationFilterPayload filterPayload)
+			throws OrganizationException {
 		List<Organization> prgList = null;
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
 		OrganizationPayload payload = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
-			if (StringUtils.isNullOrEmpty(name))
-				prgList = organizationService.getProgramList(orgId);
-			else
-				prgList = organizationRepository.findProgramByNameIgnoreCaseContaining(orgId, name);
+
+			prgList = organizationService.getProgramList(orgId, filterPayload);
 			if (prgList == null) {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {

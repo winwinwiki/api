@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.util.StringUtils;
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 
@@ -21,13 +22,16 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	EntityManager entityManager;
 
 	@Override
-	public List<Organization> filterOrganization(OrganizationFilterPayload payload) {
+	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId) {
 		// TODO Auto-generated method stub
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
 		boolean spi = false;
 		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where  o.is_Active = true and type = 'organization' ");
+		sb.append(" where  o.is_Active = true and type = :type ");
+
+		if (type.equals(OrganizationConstants.PROGRAM))
+			sb.append(" and o.parent_id = :orgId ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -48,8 +52,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
 
-		if (!StringUtils.isNullOrEmpty(payload.getEditedBy()))
-			sb.append(" and o.updated_by IS NOT DISTINCT FROM :editedBy ");
+		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
+			sb.append(" and o.updated_by IN :editedBy ");
 
 		if (payload.getNteeCode() != null && payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
@@ -86,6 +90,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
 
+		filterQuery.setParameter("type", type);
+
+		if (type.equals(OrganizationConstants.PROGRAM))
+			filterQuery.setParameter("orgId", orgId);
+
 		filterQuery.setParameter("minRevenue", payload.getRevenueMin());
 		filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
 		filterQuery.setParameter("minAssets", payload.getAssetsMin());
@@ -106,7 +115,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
 
-		if (!StringUtils.isNullOrEmpty(payload.getEditedBy()))
+		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
 			filterQuery.setParameter("editedBy", payload.getEditedBy());
 
 		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)

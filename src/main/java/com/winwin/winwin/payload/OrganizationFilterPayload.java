@@ -13,7 +13,7 @@ public class OrganizationFilterPayload {
 	private List<String> sectorLevel;
 	private List<String> tagStatus;
 	private String priority;
-	private String editedBy;
+	private List<String> editedBy;
 	private Long nteeCode;
 	private Long naicsCode;
 	private long revenueMin = 0;
