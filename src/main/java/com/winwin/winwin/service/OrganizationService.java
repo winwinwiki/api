@@ -289,7 +289,14 @@ public class OrganizationService implements IOrganizationService {
 		if (payload.getNameSearch() != null)
 			return organizationRepository.findByNameIgnoreCaseContaining(payload.getNameSearch());
 		else
-			return organizationRepository.filterOrganization(payload);
+			return organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null);
+	}
+
+	public List<Organization> getProgramList(Long orgId, OrganizationFilterPayload payload) {
+		if (payload.getNameSearch() != null)
+			return organizationRepository.findProgramByNameIgnoreCaseContaining(payload.getNameSearch(), orgId);
+		else
+			return organizationRepository.filterOrganization(payload, OrganizationConstants.PROGRAM, orgId);
 	}
 
 	@Override
