@@ -66,6 +66,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			query.append("join org_spi_mapping osm on o.id=osm.organization_id join ")
 					.append(" org_spi_data osd on osm.spi_id = osd.id ");
 
+			sb.append(" AND osm.is_checked = true ");
 			if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()))
 				sb.append(" and osd.indicator_id IS NOT DISTINCT FROM :indicatorId ");
 
@@ -78,6 +79,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		} else if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SDG")) {
 			query.append("join org_sdg_mapping osm on o.id=osm.organization_id join "
 					+ " org_sdg_data osd on osm.sdg_id = osd.id ");
+
+			sb.append(" AND osm.is_checked = true ");
 
 			if (!StringUtils.isNullOrEmpty(payload.getShortNameCode()))
 				sb.append(" and osd.short_name_code IS NOT DISTINCT FROM :shortNameCode ");
