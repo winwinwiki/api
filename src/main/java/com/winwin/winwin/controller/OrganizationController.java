@@ -51,6 +51,7 @@ import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
+import com.winwin.winwin.payload.OrganizationFilterResponse;
 import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
@@ -208,11 +209,11 @@ public class OrganizationController extends BaseController {
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrganizationList(OrganizationFilterPayload filterPayload) throws OrganizationException {
 		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+
 		OrganizationPayload payload = null;
 		List<Organization> orgList = null;
 		try {
 			orgList = organizationService.getOrganizationList(filterPayload);
-
 			if (orgList == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
@@ -225,7 +226,7 @@ public class OrganizationController extends BaseController {
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
 		}
-		return sendSuccessResponse(payloadList);
+		return sendSuccessResponse(new OrganizationFilterResponse(filterPayload, payloadList));
 
 	}
 

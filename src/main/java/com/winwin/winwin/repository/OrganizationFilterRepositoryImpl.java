@@ -24,9 +24,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	public List<Organization> filterOrganization(OrganizationFilterPayload payload) {
 		// TODO Auto-generated method stub
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
-
+		boolean spi = false;
+		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where  is_Active = true ");
+		sb.append(" where  o.is_Active = true and type = 'organization' ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -38,11 +39,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 //				inQuery = inQuery + ":sectorLevel" + i + " , ";
 //			inQuery = inQuery + " :sectorLevel" + i + " ) ";
 //			sb.append(" and ( o.sector_level IN ").append(inQuery).append(" ) ");
-			sb.append(" and (o.sector_level IN :sectorLevel)");
+			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 
 		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
-			sb.append(" and (o.tag_status IN :tagStatus)");
+			sb.append(" and (o.tag_status IN :tagStatus) ");
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
@@ -58,8 +59,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SPI")) {
 
-			query.append("join org_spi_mapping osm on o.id=osm.organization_id join "
-					+ " org_spi_data osd on osm.spi_id = osd.id ");
+			query.append("join org_spi_mapping osm on o.id=osm.organization_id join ")
+					.append(" org_spi_data osd on osm.spi_id = osd.id ");
 
 			if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()))
 				sb.append(" and osd.indicator_id IS NOT DISTINCT FROM :indicatorId ");
@@ -67,9 +68,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			if (!StringUtils.isNullOrEmpty(payload.getComponentId()))
 				sb.append(" and osd.component_id IS NOT DISTINCT FROM :componentId ");
 
-			if (!StringUtils.isNullOrEmpty(payload.getDimensionId()))
+			if (payload.getDimensionId() != 0)
 				sb.append(" and osd.dimension_id IS NOT DISTINCT FROM :dimensionId ");
-
+			spi = true;
 		} else if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SDG")) {
 			query.append("join org_sdg_mapping osm on o.id=osm.organization_id join "
 					+ " org_sdg_data osd on osm.sdg_id = osd.id ");
@@ -77,8 +78,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			if (!StringUtils.isNullOrEmpty(payload.getShortNameCode()))
 				sb.append(" and osd.short_name_code IS NOT DISTINCT FROM :shortNameCode ");
 
-			if (!StringUtils.isNullOrEmpty(payload.getGoalCode()))
+			if (payload.getGoalCode() != 0)
 				sb.append(" and osd.goal_code IS NOT DISTINCT FROM :goalCode");
+			sdg = true;
 		}
 
 		query.append(sb);
@@ -107,21 +109,23 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getEditedBy()))
 			filterQuery.setParameter("editedBy", payload.getEditedBy());
 
-		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()))
+		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)
 			filterQuery.setParameter("indicatorId", payload.getIndicatorId());
 
-		if (!StringUtils.isNullOrEmpty(payload.getComponentId()))
+		if (!StringUtils.isNullOrEmpty(payload.getComponentId()) && spi)
 			filterQuery.setParameter("componentId", payload.getComponentId());
 
-		if (!StringUtils.isNullOrEmpty(payload.getDimensionId()))
+		if (payload.getDimensionId() != 0 && spi)
 			filterQuery.setParameter("dimensionId", payload.getDimensionId());
 
-		if (!StringUtils.isNullOrEmpty(payload.getShortNameCode()))
+		if (!StringUtils.isNullOrEmpty(payload.getShortNameCode()) && sdg)
 			filterQuery.setParameter("shortNameCode", payload.getShortNameCode());
 
-		if (!StringUtils.isNullOrEmpty(payload.getGoalCode()))
+		if (payload.getGoalCode() != 0 && sdg)
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
+
 		List<Organization> organizationList = filterQuery.getResultList();
+
 		return organizationList;
 	}
 

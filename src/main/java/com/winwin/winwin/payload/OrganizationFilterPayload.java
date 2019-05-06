@@ -22,9 +22,9 @@ public class OrganizationFilterPayload {
 	private long assetsMax = Long.MAX_VALUE;
 	private String frameworkTag;
 	private String indicatorId;
-	private String dimensionId;
+	private long dimensionId;
 	private String componentId;
 	private String nameSearch;
 	private String shortNameCode;
-	private String goalCode;
+	private long goalCode;
 }
