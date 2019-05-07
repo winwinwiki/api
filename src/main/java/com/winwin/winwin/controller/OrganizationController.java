@@ -2,6 +2,7 @@ package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.constants.UserConstants;
@@ -47,14 +49,16 @@ import com.winwin.winwin.payload.OrgSdgDataMapPayload;
 import com.winwin.winwin.payload.OrgSdgGoalPayload;
 import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
+import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationFilterResponse;
 import com.winwin.winwin.payload.OrganizationNotePayload;
-import com.winwin.winwin.payload.OrganizationPayload;
+import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
+import com.winwin.winwin.payload.OrganizationResponsePayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
@@ -70,6 +74,7 @@ import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CsvUtils;
 
 /**
  * @author ArvindKhatik
@@ -125,14 +130,40 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrganization(@RequestBody OrganizationPayload organizationPayload) {
+	public ResponseEntity<?> createOrganization(@RequestBody OrganizationRequestPayload organizationPayload) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		OrganizationResponsePayload payload = null;
 
 		if (null != organizationPayload) {
 			try {
 				organization = organizationService.createOrganization(organizationPayload);
-				payload = setOrganizationPayload(organization, payload);
+				payload = setOrganizationPayload(organization);
+			} catch (Exception e) {
+				throw new OrganizationException(
+						customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
+			}
+		}
+
+		return sendSuccessResponse(payload);
+	}
+
+	@RequestMapping(value = "/addAll", method = RequestMethod.POST)
+	@Transactional
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> createOrganization(@RequestParam("file") MultipartFile file) {
+		List<OrganizationRequestPayload> organizationPayload = new ArrayList<>();
+
+		List<Organization> organizationList = null;
+		List<OrganizationResponsePayload> payload = null;
+
+		if (null != file) {
+			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
+			organizationPayload = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+					.collect(Collectors.toList());
+			try {
+				organizationList = organizationService.createOrganizations(organizationPayload);
+				payload = setOrganizationPayload(organizationList);
 			} catch (Exception e) {
 				throw new OrganizationException(
 						customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
@@ -145,7 +176,7 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
-	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationPayload organizationPayLoad) {
+	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationRequestPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
 				Long id = organizationPayLoad.getId();
@@ -176,21 +207,21 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
-		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationRequestPayload> orgPayloadList) {
+		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
 		Organization organization = null;
 
 		try {
 
-			for (OrganizationPayload payload : orgPayloadList) {
+			for (OrganizationRequestPayload payload : orgPayloadList) {
 				organization = organizationRepository.findOrgById(payload.getId());
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 				} else {
 					organization = organizationService.updateOrgDetails(payload, organization,
 							OrganizationConstants.ORGANIZATION);
-					payload = setOrganizationPayload(organization, payload);
-					payloadList.add(payload);
+					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
+					payloadList.add(responsePayload);
 				}
 
 			}
@@ -207,9 +238,8 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrganizationList(OrganizationFilterPayload filterPayload) throws OrganizationException {
-		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
-
-		OrganizationPayload payload = null;
+		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
+		OrganizationResponsePayload payload = null;
 		List<Organization> orgList = null;
 		try {
 			orgList = organizationService.getOrganizationList(filterPayload);
@@ -217,7 +247,7 @@ public class OrganizationController extends BaseController {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
 				for (Organization organization : orgList) {
-					payload = setOrganizationPayload(organization, payload);
+					payload = setOrganizationPayload(organization);
 					payloadList.add(payload);
 				}
 
@@ -235,14 +265,14 @@ public class OrganizationController extends BaseController {
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		OrganizationResponsePayload payload = null;
 		try {
 			organization = organizationRepository.findOrgById(id);
 
 			if (organization == null) {
 				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
 			} else {
-				payload = setOrganizationPayload(organization, payload);
+				payload = setOrganizationPayload(organization);
 
 			}
 
@@ -258,10 +288,18 @@ public class OrganizationController extends BaseController {
 	 * @param payload
 	 * @return
 	 */
-	private OrganizationPayload setOrganizationPayload(Organization organization, OrganizationPayload payload) {
+	private List<OrganizationResponsePayload> setOrganizationPayload(List<Organization> organizationList) {
+		List<OrganizationResponsePayload> payload = new ArrayList<>();
+		for (int i = 0; i < organizationList.size(); i++)
+			payload.add(setOrganizationPayload(organizationList.get(i)));
+		return payload;
+	}
+
+	private OrganizationResponsePayload setOrganizationPayload(Organization organization) {
 		AddressPayload addressPayload;
+		OrganizationResponsePayload payload = null;
 		if (null != organization) {
-			payload = new OrganizationPayload();
+			payload = new OrganizationResponsePayload();
 			payload.setId(organization.getId());
 			if (null != organization.getAddress()) {
 				addressPayload = new AddressPayload();
@@ -925,16 +963,16 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createProgram(@RequestBody OrganizationPayload organizationPayload,
+	public ResponseEntity<?> createProgram(@RequestBody OrganizationRequestPayload organizationPayload,
 			@PathVariable("id") Long orgId) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		OrganizationResponsePayload payload = null;
 
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
 			organization = organizationService.createProgram(organizationPayload);
-			payload = setOrganizationPayload(organization, payload);
+			payload = setOrganizationPayload(organization);
 
 		} catch (Exception e) {
 			throw new OrganizationException(
@@ -949,8 +987,7 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId, OrganizationFilterPayload filterPayload)
 			throws OrganizationException {
 		List<Organization> prgList = null;
-		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
-		OrganizationPayload payload = null;
+		List<OrganizationResponsePayload> payloadList = new ArrayList<OrganizationResponsePayload>();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
@@ -960,8 +997,8 @@ public class OrganizationController extends BaseController {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {
 				for (Organization organization : prgList) {
-					payload = setOrganizationPayload(organization, payload);
-					payloadList.add(payload);
+					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
+					payloadList.add(responsePayload);
 				}
 
 			}
@@ -976,7 +1013,7 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> deleteProgram(@RequestBody OrganizationPayload organizationPayLoad) {
+	public ResponseEntity<?> deleteProgram(@RequestBody OrganizationRequestPayload organizationPayLoad) {
 		try {
 			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
 				Long id = organizationPayLoad.getId();
@@ -1007,20 +1044,20 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateProgramDetails(@RequestBody List<OrganizationPayload> orgPayloadList) {
+	public ResponseEntity<?> updateProgramDetails(@RequestBody List<OrganizationRequestPayload> orgPayloadList) {
 		Organization organization = null;
-		List<OrganizationPayload> payloadList = new ArrayList<OrganizationPayload>();
+		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
 
 		try {
-			for (OrganizationPayload payload : orgPayloadList) {
+			for (OrganizationRequestPayload payload : orgPayloadList) {
 				organization = organizationRepository.findOrgById(payload.getId());
 				if (organization == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				} else {
 					organization = organizationService.updateOrgDetails(payload, organization,
 							OrganizationConstants.PROGRAM);
-					payload = setOrganizationPayload(organization, payload);
-					payloadList.add(payload);
+					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
+					payloadList.add(responsePayload);
 				}
 
 			}
@@ -1237,6 +1274,49 @@ public class OrganizationController extends BaseController {
 			payload.setCreatedAt(organizationNote.getCreatedAt());
 
 		}
+		return payload;
+	}
+
+	private OrganizationRequestPayload setOrganizationPayload(OrganizationCsvPayload csv) {
+		OrganizationRequestPayload payload = new OrganizationRequestPayload();
+		AddressPayload address = new AddressPayload();
+		address.setCity(csv.getCity());
+		address.setCountry(csv.getCountry());
+		address.setCounty(csv.getCounty());
+		address.setPlaceId(csv.getPlaceId());
+		address.setState(csv.getState());
+		address.setStreet(csv.getStreet());
+		address.setZip(csv.getZip());
+		payload.setAddress(address);
+		payload.setAssets(csv.getAssets());
+		payload.setBusinessModel(csv.getBusinessModel());
+		payload.setClassificationId(csv.getClassificationId());
+		payload.setContactInfo(csv.getContactInfo());
+		payload.setDescription(csv.getDescription());
+		payload.setFacebookUrl(csv.getFacebookUrl());
+		payload.setIsActive(csv.getIsActive());
+		payload.setIsTaggingReady(csv.getIsTaggingReady());
+		payload.setLinkedinUrl(payload.getLinkedinUrl());
+		payload.setMissionStatement(csv.getMissionStatement());
+		payload.setNaicsCode(csv.getNaicsCode());
+		payload.setName(csv.getName());
+		payload.setNteeCode(csv.getNteeCode());
+		payload.setParentId(csv.getParentId());
+		payload.setPopulationServed(csv.getPopulationServed());
+		payload.setPriority(csv.getPriority());
+		payload.setPurpose(csv.getPurpose());
+		payload.setRevenue(csv.getRevenue());
+		payload.setSector(csv.getSector());
+		payload.setSectorLevel(csv.getSectorLevel());
+		payload.setSelfInterest(csv.getSelfInterest());
+		payload.setSectorLevelName(csv.getSectorLevelName());
+		payload.setStatus(csv.getStatus());
+		payload.setTagStatus(csv.getTagStatus());
+		payload.setTotalAssets(csv.getTotalAssets());
+		payload.setTwitterUrl(csv.getTwitterUrl());
+		payload.setValues(csv.getValues());
+		payload.setWebsiteUrl(csv.getWebsiteUrl());
+
 		return payload;
 	}
 }
