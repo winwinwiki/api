@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class OrganizationFilterResponse {
 
 	private OrganizationFilterPayload filter;
-	private List<OrganizationPayload> payload;
+	private List<OrganizationResponsePayload> payload;
 }

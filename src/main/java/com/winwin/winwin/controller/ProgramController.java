@@ -41,9 +41,9 @@ import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
 import com.winwin.winwin.payload.OrgSpiDataMapPayload;
 import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
-import com.winwin.winwin.payload.OrganizationPayload;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
+import com.winwin.winwin.payload.OrganizationResponsePayload;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -93,13 +93,13 @@ public class ProgramController extends BaseController {
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
-		OrganizationPayload payload = null;
+		OrganizationResponsePayload payload = null;
 		try {
 			organization = organizationRepository.findOrgById(id);
 			if (organization == null) {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {
-				payload = setProgramPayload(organization, payload);
+				payload = setProgramPayload(organization);
 
 			}
 
@@ -115,10 +115,11 @@ public class ProgramController extends BaseController {
 	 * @param payload
 	 * @return
 	 */
-	private OrganizationPayload setProgramPayload(Organization organization, OrganizationPayload payload) {
+	private OrganizationResponsePayload setProgramPayload(Organization organization) {
 		AddressPayload addressPayload;
+		OrganizationResponsePayload payload = null;
 		if (null != organization) {
-			payload = new OrganizationPayload();
+			payload = new OrganizationResponsePayload();
 			payload.setId(organization.getId());
 			if (null != organization.getAddress()) {
 				addressPayload = new AddressPayload();

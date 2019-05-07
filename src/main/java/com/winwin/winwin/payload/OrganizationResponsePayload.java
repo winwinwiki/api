@@ -10,17 +10,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * @author ArvindKhatik
- *
- */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrganizationPayload {
+public class OrganizationResponsePayload {
 	Long id;
 	AddressPayload address;
 	String name;

@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -19,6 +20,8 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.OrgClassificationMapping;
+import com.winwin.winwin.entity.OrgNaicsData;
+import com.winwin.winwin.entity.OrgNteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrganizationException;
@@ -28,13 +31,15 @@ import com.winwin.winwin.payload.OrgDepartmentPayload;
 import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrgHistoryPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
-import com.winwin.winwin.payload.OrganizationPayload;
+import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
 import com.winwin.winwin.repository.OrgHistoryRepository;
+import com.winwin.winwin.repository.OrgNaicsDataRepository;
+import com.winwin.winwin.repository.OrgNteeDataRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 
 /**
@@ -59,12 +64,18 @@ public class OrganizationService implements IOrganizationService {
 	OrgHistoryRepository orgHistoryRepository;
 
 	@Autowired
+	OrgNaicsDataRepository naicsRepository;
+
+	@Autowired
+	OrgNteeDataRepository nteeRepository;
+
+	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationService.class);
 
 	@Override
-	public Organization createOrganization(OrganizationPayload organizationPayload) {
+	public Organization createOrganization(OrganizationRequestPayload organizationPayload) {
 		Organization organization = null;
 		UserPayload user = getUserDetails();
 		try {
@@ -79,6 +90,14 @@ public class OrganizationService implements IOrganizationService {
 				organization.setDescription(organizationPayload.getDescription());
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress(), user);
+				}
+				if (organizationPayload.getNaicsCode() != null) {
+					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					organization.setNaicsCode(naicsCode);
+				}
+				if (organizationPayload.getNteeCode() != null) {
+					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					organization.setNteeCode(naicsCode);
 				}
 				organization.setType(OrganizationConstants.ORGANIZATION);
 				organization.setParentId(organizationPayload.getParentId());
@@ -100,6 +119,20 @@ public class OrganizationService implements IOrganizationService {
 		}
 
 		return organization;
+	}
+
+	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList) {
+
+		List<Organization> organizationList = new ArrayList<>();
+		Iterator<OrganizationRequestPayload> itr = organizationPayloadList.iterator();
+		while (itr.hasNext()) {
+			Organization org = createOrganization(itr.next());
+			if (org != null)
+				organizationList.add(org);
+			else
+				itr.remove();
+		}
+		return organizationList;
 	}
 
 	@Override
@@ -130,7 +163,7 @@ public class OrganizationService implements IOrganizationService {
 	}
 
 	@Override
-	public Organization updateOrgDetails(OrganizationPayload organizationPayload, Organization organization,
+	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type) {
 		@SuppressWarnings("unused")
 		OrgClassificationMapping orgClassificationMapping = new OrgClassificationMapping();
@@ -155,8 +188,16 @@ public class OrganizationService implements IOrganizationService {
 				organization.setRevenue(organizationPayload.getRevenue());
 				organization.setAssets(organizationPayload.getAssets());
 				organization.setSectorLevelName(organizationPayload.getSectorLevelName());
-				organization.setNaicsCode(organizationPayload.getNaicsCode());
-				organization.setNteeCode(organizationPayload.getNteeCode());
+
+				if (organizationPayload.getNaicsCode() != null) {
+					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					organization.setNaicsCode(naicsCode);
+				}
+				if (organizationPayload.getNteeCode() != null) {
+					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					organization.setNteeCode(naicsCode);
+				}
+
 				organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
 				organization.setFacebookUrl(organizationPayload.getFacebookUrl());
 				organization.setLinkedinUrl(organizationPayload.getLinkedinUrl());
@@ -253,7 +294,7 @@ public class OrganizationService implements IOrganizationService {
 		return false;
 	}
 
-	public OrgClassificationMapping addClassification(OrganizationPayload organizationPayload,
+	public OrgClassificationMapping addClassification(OrganizationRequestPayload organizationPayload,
 			Organization organization) {
 		Classification classification = null;
 		OrgClassificationMapping orgClassificationMapping = null;
@@ -305,7 +346,7 @@ public class OrganizationService implements IOrganizationService {
 	}// end of method getOrganizationList
 
 	@Override
-	public Organization createProgram(OrganizationPayload organizationPayload) {
+	public Organization createProgram(OrganizationRequestPayload organizationPayload) {
 		UserPayload user = getUserDetails();
 
 		Organization organization = null;
@@ -322,6 +363,15 @@ public class OrganizationService implements IOrganizationService {
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress(), user);
 				}
+				if (organizationPayload.getNaicsCode() != null) {
+					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					organization.setNaicsCode(naicsCode);
+				}
+				if (organizationPayload.getNteeCode() != null) {
+					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					organization.setNteeCode(naicsCode);
+				}
+
 				organization.setType(OrganizationConstants.PROGRAM);
 				organization.setParentId(organizationPayload.getParentId());
 				organization.setAddress(address);
