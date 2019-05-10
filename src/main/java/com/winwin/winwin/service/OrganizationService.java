@@ -81,7 +81,12 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			if (null != organizationPayload && null != user) {
 				Address address = new Address();
-				organization = new Organization();
+				if (organizationPayload.getId() != null)
+					organization = organizationRepository.findOrgById(organizationPayload.getId());
+
+				if (organization == null)
+					organization = new Organization();
+
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organization.setName(organizationPayload.getName());
@@ -126,6 +131,7 @@ public class OrganizationService implements IOrganizationService {
 		List<Organization> organizationList = new ArrayList<>();
 		Iterator<OrganizationRequestPayload> itr = organizationPayloadList.iterator();
 		while (itr.hasNext()) {
+
 			Organization org = createOrganization(itr.next());
 			if (org != null)
 				organizationList.add(org);
