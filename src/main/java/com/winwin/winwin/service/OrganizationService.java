@@ -28,7 +28,6 @@ import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgChartPayload;
 import com.winwin.winwin.payload.OrgDepartmentPayload;
-import com.winwin.winwin.payload.OrgDivisionPayload;
 import com.winwin.winwin.payload.OrgHistoryPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
@@ -81,7 +80,12 @@ public class OrganizationService implements IOrganizationService {
 		try {
 			if (null != organizationPayload && null != user) {
 				Address address = new Address();
-				organization = new Organization();
+				if (organizationPayload.getId() != null)
+					organization = organizationRepository.findOrgById(organizationPayload.getId());
+
+				if (organization == null)
+					organization = new Organization();
+
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organization.setName(organizationPayload.getName());
@@ -126,6 +130,7 @@ public class OrganizationService implements IOrganizationService {
 		List<Organization> organizationList = new ArrayList<>();
 		Iterator<OrganizationRequestPayload> itr = organizationPayloadList.iterator();
 		while (itr.hasNext()) {
+
 			Organization org = createOrganization(itr.next());
 			if (org != null)
 				organizationList.add(org);
@@ -395,41 +400,20 @@ public class OrganizationService implements IOrganizationService {
 
 	@Override
 	public OrgChartPayload getOrgCharts(Organization organization, Long orgId) {
-		List<Organization> divisions = organizationRepository.findAllDivisionList(orgId);
-		List<Organization> departments = organizationRepository.findAllDepartmentList();
+		List<Organization> children = organizationRepository.findAllChildren(orgId);
 		OrgChartPayload payload = new OrgChartPayload();
+		List<OrgChartPayload> child = new ArrayList<>();
+		for (Organization childOrg : children) {
+			child.add(getOrgCharts(childOrg, childOrg.getId()));
+		}
+		payload.setChildren(child);
 		try {
 			AddressPayload orgAddress = null;
 			payload.setId(organization.getId());
 			payload.setName(organization.getName());
 			orgAddress = getLocationPayload(organization, orgAddress);
 			payload.setLocation(orgAddress);
-			payload.setChildrenType(OrganizationConstants.DIVISION);
 
-			if (null != divisions) {
-				List<OrgDivisionPayload> divisionPayloadList = new ArrayList<OrgDivisionPayload>();
-				HashMap<Long, List<OrgDepartmentPayload>> orgDeptMap = new HashMap<Long, List<OrgDepartmentPayload>>();
-				if (null != departments) {
-					setOrgDepartmentsMap(departments, orgDeptMap);
-				}
-
-				for (Organization orgDivision : divisions) {
-					OrgDivisionPayload divPayload = new OrgDivisionPayload();
-					AddressPayload divAddress = null;
-					divPayload.setId(orgDivision.getId());
-					divPayload.setName(orgDivision.getName());
-					divAddress = getLocationPayload(orgDivision, divAddress);
-					divPayload.setLocation(divAddress);
-					divPayload.setChildrenType(OrganizationConstants.DEPARTMENT);
-
-					if (!orgDeptMap.isEmpty()) {
-						divPayload.setChildren(orgDeptMap.get(orgDivision.getId()));
-					}
-					divisionPayloadList.add(divPayload);
-				}
-
-				payload.setChildren(divisionPayloadList);
-			} // end of if( null != divisions)
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.chart.error.list"), e);
 		}

@@ -23,7 +23,6 @@ public class OrgChartPayload {
 	Long id;
 	String name;
 	AddressPayload location;
-	String childrenType;
-	List<OrgDivisionPayload> children;
+	List<OrgChartPayload> children;
 
 }

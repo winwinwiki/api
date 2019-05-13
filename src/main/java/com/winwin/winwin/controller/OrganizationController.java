@@ -151,7 +151,7 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrganization(@RequestParam("file") MultipartFile file) {
+	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
 		List<OrganizationRequestPayload> organizationPayload = new ArrayList<>();
 
 		List<Organization> organizationList = null;
@@ -171,6 +171,36 @@ public class OrganizationController extends BaseController {
 		}
 
 		return sendSuccessResponse(payload);
+	}
+
+	@RequestMapping(value = "/updateAll", method = RequestMethod.POST)
+	@Transactional
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> updateOrganizations(@RequestParam("file") MultipartFile file) {
+		List<OrganizationRequestPayload> organizationPayload = new ArrayList<>();
+
+		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
+
+		if (null != file) {
+			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
+			organizationPayload = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+					.collect(Collectors.toList());
+			for (OrganizationRequestPayload payload : organizationPayload) {
+				Organization organization = organizationRepository.findOrgById(payload.getId());
+				if (organization == null) {
+					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+				} else {
+					organization = organizationService.updateOrgDetails(payload, organization,
+							OrganizationConstants.ORGANIZATION);
+					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
+					payloadList.add(responsePayload);
+				}
+
+			}
+		}
+
+		return sendSuccessResponse(payloadList);
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
@@ -1230,7 +1260,8 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/naics_data", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgNaicsData(@RequestParam(name = "search", required = false) String search) {
 		List<OrgNaicsData> payloadList = null;
 		try {
@@ -1244,7 +1275,8 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/ntee_data", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('Administrator')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgNteeData(@RequestParam(name = "search", required = false) String search) {
 		List<OrgNteeData> payloadList = null;
 		try {
