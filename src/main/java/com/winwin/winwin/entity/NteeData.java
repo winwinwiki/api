@@ -5,8 +5,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -17,7 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * @author ArvindKhatik
+ * @author ManoharK
  *
  */
 @AllArgsConstructor
@@ -27,20 +25,19 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_spi_mapping")
-public class OrgSpiDataMapping extends AbstractAuditableEntity {
+@Table(name = "ntee_data")
+public class NteeData {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@Column(name = "organization_id")
-	private Long organizationId;
+	@Column(name = "name")
+	private String name;
 
-	@ManyToOne
-	@JoinColumn(name = "spi_id")
-	private SpiData spiData;
-	
-	@Column(name = "is_checked")
-	private Boolean isChecked = false;
+	@Column(name = "code")
+	private String code;
+
+	@Column(name = "description")
+	private String description;
 }

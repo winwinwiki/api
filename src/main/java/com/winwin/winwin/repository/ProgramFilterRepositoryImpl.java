@@ -10,28 +10,27 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.util.StringUtils;
-import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 
 @Repository
 @Transactional(readOnly = true)
-public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepository {
+public class ProgramFilterRepositoryImpl implements ProgramFilterRepository {
 
 	@PersistenceContext
 	EntityManager entityManager;
 
 	@Override
-	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId) {
+	public List<Program> filterProgram(OrganizationFilterPayload payload, String type, Long orgId) {
 		// TODO Auto-generated method stub
-		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
+		StringBuilder query = new StringBuilder("select distinct o.* from program o ");
 		boolean spi = false;
 		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where  o.is_Active = true and type = :type ");
+		sb.append(" where  o.is_Active = true ");
 
-		if (type.equals(OrganizationConstants.PROGRAM))
-			sb.append(" and o.parent_id = :orgId ");
+		// if (type.equals(OrganizationConstants.PROGRAM))
+		sb.append(" and o.org_id = :orgId ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -63,7 +62,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SPI")) {
 
-			query.append("join org_spi_mapping osm on o.id=osm.organization_id join ")
+			query.append("join program_spi_mapping osm on o.id=osm.program_id join ")
 					.append(" spi_data osd on osm.spi_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -77,7 +76,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 				sb.append(" and osd.dimension_id IS NOT DISTINCT FROM :dimensionId ");
 			spi = true;
 		} else if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SDG")) {
-			query.append("join org_sdg_mapping osm on o.id=osm.organization_id join "
+			query.append("join program_sdg_mapping osm on o.id=osm.program_id join "
 					+ " sdg_data osd on osm.sdg_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -91,12 +90,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		}
 
 		query.append(sb);
-		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
+		Query filterQuery = entityManager.createNativeQuery(query.toString(), Program.class);
 
-		filterQuery.setParameter("type", type);
+		// filterQuery.setParameter("type", type);
 
-		if (type.equals(OrganizationConstants.PROGRAM))
-			filterQuery.setParameter("orgId", orgId);
+		// if (type.equals(OrganizationConstants.PROGRAM))
+		filterQuery.setParameter("orgId", orgId);
 
 		filterQuery.setParameter("minRevenue", payload.getRevenueMin());
 		filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
@@ -136,9 +135,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getGoalCode() != 0 && sdg)
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
 
-		List<Organization> organizationList = filterQuery.getResultList();
+		List<Program> programList = filterQuery.getResultList();
 
-		return organizationList;
+		return programList;
 	}
-
 }

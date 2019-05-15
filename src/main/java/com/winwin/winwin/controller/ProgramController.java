@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.OrgRegionMaster;
 import com.winwin.winwin.entity.OrgRegionServed;
-import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationDataSetCategory;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationResourceCategory;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.OrgRegionServedException;
 import com.winwin.winwin.exception.OrgSdgDataException;
 import com.winwin.winwin.exception.OrgSpiDataException;
@@ -32,7 +32,6 @@ import com.winwin.winwin.exception.OrganizationDataSetException;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.exception.OrganizationResourceCategoryException;
 import com.winwin.winwin.exception.OrganizationResourceException;
-import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrgRegionMasterPayload;
 import com.winwin.winwin.payload.OrgRegionServedPayload;
 import com.winwin.winwin.payload.OrgSdgDataMapPayload;
@@ -43,15 +42,17 @@ import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
 import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
 import com.winwin.winwin.payload.OrganizationResourcePayLoad;
-import com.winwin.winwin.payload.OrganizationResponsePayload;
+import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.OrgRegionServedService;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationResourceService;
+import com.winwin.winwin.service.ProgramService;
 
 /**
  * @author ArvindKhatik
@@ -86,20 +87,26 @@ public class ProgramController extends BaseController {
 	@Autowired
 	OrgSdgDataService orgSdgDataService;
 
+	@Autowired
+	ProgramService programService;
+
+	@Autowired
+	ProgramRepository programRepository;
+
 	// Code for program data set start
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDetails(@PathVariable("id") Long id) {
-		Organization organization = null;
-		OrganizationResponsePayload payload = null;
+		Program program = null;
+		ProgramResponsePayload payload = null;
 		try {
-			organization = organizationRepository.findOrgById(id);
-			if (organization == null) {
+			program = programRepository.findProgramById(id);
+			if (program == null) {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {
-				payload = setProgramPayload(organization);
+				payload = programService.getProgramResponseFromProgram(program);
 
 			}
 
@@ -108,60 +115,6 @@ public class ProgramController extends BaseController {
 		}
 		return sendSuccessResponse(payload);
 
-	}
-
-	/**
-	 * @param organization
-	 * @param payload
-	 * @return
-	 */
-	private OrganizationResponsePayload setProgramPayload(Organization organization) {
-		AddressPayload addressPayload;
-		OrganizationResponsePayload payload = null;
-		if (null != organization) {
-			payload = new OrganizationResponsePayload();
-			payload.setId(organization.getId());
-			if (null != organization.getAddress()) {
-				addressPayload = new AddressPayload();
-				addressPayload.setId(organization.getAddress().getId());
-				addressPayload.setCountry(organization.getAddress().getCountry());
-				addressPayload.setState(organization.getAddress().getState());
-				addressPayload.setCity(organization.getAddress().getCity());
-				addressPayload.setCounty(organization.getAddress().getCounty());
-				addressPayload.setZip(organization.getAddress().getZip());
-				addressPayload.setStreet(organization.getAddress().getStreet());
-				addressPayload.setPlaceId(organization.getAddress().getPlaceId());
-				payload.setAddress(addressPayload);
-			}
-			payload.setName(organization.getName());
-			payload.setRevenue(organization.getRevenue());
-			payload.setAssets(organization.getAssets());
-			payload.setSector(organization.getSector());
-			payload.setSectorLevel(organization.getSectorLevel());
-			payload.setSectorLevelName(organization.getSectorLevelName());
-			payload.setDescription(organization.getDescription());
-			payload.setNaicsCode(organization.getNaicsCode());
-			payload.setNteeCode(organization.getNteeCode());
-			payload.setPriority(organization.getPriority());
-			payload.setParentId(organization.getParentId());
-			payload.setIsActive(organization.getIsActive());
-			payload.setTagStatus(organization.getTagStatus());
-			payload.setTotalAssets(organization.getAssets());
-			payload.setWebsiteUrl(organization.getWebsiteUrl());
-			payload.setFacebookUrl(organization.getFacebookUrl());
-			payload.setLinkedinUrl(organization.getLinkedinUrl());
-			payload.setTwitterUrl(organization.getTwitterUrl());
-			payload.setValues(organization.getValues());
-			payload.setPurpose(organization.getPurpose());
-			payload.setSelfInterest(organization.getSelfInterest());
-			payload.setBusinessModel(organization.getBusinessModel());
-			payload.setMissionStatement(organization.getMissionStatement());
-			payload.setContactInfo(organization.getContactInfo());
-			payload.setPopulationServed(organization.getPopulationServed());
-			payload.setTagStatus(organization.getTagStatus());
-
-		}
-		return payload;
 	}
 
 	@Transactional

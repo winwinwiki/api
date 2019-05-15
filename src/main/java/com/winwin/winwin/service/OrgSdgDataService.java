@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.entity.OrgSdgData;
+import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.OrgSdgDataMapping;
 import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrgSdgDataException;
@@ -52,19 +52,19 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	@Override
 	public List<OrgSdgGoalPayload> getSdgDataForResponse() {
 		List<OrgSdgGoalPayload> payloadList = null;
-		List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
+		List<SdgData> sdgList = orgSdgDataRepository.findAll();
 		if (null != sdgList) {
-			HashMap<Long, List<OrgSdgData>> sdgDataMap = new HashMap<Long, List<OrgSdgData>>();
+			HashMap<Long, List<SdgData>> sdgDataMap = new HashMap<Long, List<SdgData>>();
 			payloadList = new ArrayList<OrgSdgGoalPayload>();
 			setSdgDataMap(sdgList, sdgDataMap);
 
 			if ((!sdgDataMap.isEmpty())) {
-				for (List<OrgSdgData> sdgDataList : sdgDataMap.values()) {
+				for (List<SdgData> sdgDataList : sdgDataMap.values()) {
 					OrgSdgGoalPayload sdgGoalPayload = new OrgSdgGoalPayload();
 					List<OrgSdgSubGoalPayload> subGoalsList = new ArrayList<OrgSdgSubGoalPayload>();
 					sdgGoalPayload.setGoalCode(sdgDataList.get(0).getGoalCode());
 					sdgGoalPayload.setGoalName(sdgDataList.get(0).getGoalName());
-					for (OrgSdgData sdgdata : sdgDataList) {
+					for (SdgData sdgdata : sdgDataList) {
 						OrgSdgSubGoalPayload subGoalPayload = new OrgSdgSubGoalPayload();
 						subGoalPayload.setSubGoalCode(sdgdata.getShortNameCode());
 						subGoalPayload.setSubGoalName(sdgdata.getShortName());
@@ -85,10 +85,10 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	 * @param sdgList
 	 * @param sdgDataMap
 	 */
-	private void setSdgDataMap(List<OrgSdgData> sdgList, HashMap<Long, List<OrgSdgData>> sdgDataMap) {
-		for (OrgSdgData sdgDataObj : sdgList) {
+	private void setSdgDataMap(List<SdgData> sdgList, HashMap<Long, List<SdgData>> sdgDataMap) {
+		for (SdgData sdgDataObj : sdgList) {
 			if (!sdgDataMap.containsKey(sdgDataObj.getGoalCode())) {
-				List<OrgSdgData> subGoals = new ArrayList<OrgSdgData>();
+				List<SdgData> subGoals = new ArrayList<SdgData>();
 				subGoals.add(sdgDataObj);
 
 				sdgDataMap.put(sdgDataObj.getGoalCode(), subGoals);
@@ -101,11 +101,11 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 	@Override
 	public void createSdgDataMapping(List<OrgSdgDataMapPayload> payloadList, Long orgId) throws OrgSdgDataException {
 		UserPayload user = getUserDetails();
-		HashMap<String, OrgSdgData> subGoalCodesMap = new HashMap<String, OrgSdgData>();
+		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<OrgSdgData> sdgList = orgSdgDataRepository.findAll();
+			List<SdgData> sdgList = orgSdgDataRepository.findAll();
 			if (null != sdgList) {
-				for (OrgSdgData sdgDataObj : sdgList) {
+				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
 				}
 			}
@@ -119,7 +119,7 @@ public class OrgSdgDataService implements IOrgSdgDataService {
 						sdgDataMapObj.setOrganizationId(orgId);
 
 						if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
-							OrgSdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+							SdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
 							sdgDataMapObj.setSdgData(orgSdgData);
 						} else {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));

@@ -37,4 +37,6 @@ public interface IUserService {
 
 	public UserPayload getLoggedInUser(String accessToken, ExceptionResponse response);
 
+	UserPayload getCurrentUserDetails();
+
 }

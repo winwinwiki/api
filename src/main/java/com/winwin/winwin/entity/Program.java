@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -16,10 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * @author ArvindKhatik
- *
- */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -27,8 +24,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "organization")
-public class Organization extends AbstractAuditableEntity {
+@Table(name = "program")
+public class Program extends AbstractAuditableEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -40,9 +37,6 @@ public class Organization extends AbstractAuditableEntity {
 
 	@Column(name = "name")
 	private String name;
-
-	@Column(name = "ein")
-	private String ein;
 
 	@Column(name = "revenue")
 	private Long revenue;
@@ -73,11 +67,9 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "priority")
 	private String priority = "Normal";
 
-	@Column(name = "parent_id")
-	private Long parentId;
-
-	@Column(name = "type")
-	private String type;
+	@OneToOne
+	@JoinColumn(name = "org_id")
+	private Organization orgId;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;

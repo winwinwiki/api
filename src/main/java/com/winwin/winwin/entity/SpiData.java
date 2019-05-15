@@ -1,12 +1,11 @@
+/**
+ * 
+ */
 package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -27,21 +26,28 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_sdg_mapping")
-public class OrgSdgDataMapping extends AbstractAuditableEntity {
+@Table(name = "spi_data")
+public class SpiData {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "organization_id")
-	private Long organizationId;
+	@Column(name = "dimension_id")
+	private Long dimensionId;
 
-	@ManyToOne
-	@JoinColumn(name = "sdg_id")
-	private SdgData sdgData;
-	
-	@Column(name = "is_checked")
-	private Boolean isChecked = false;
+	@Column(name = "dimension_name")
+	private String dimensionName;
+
+	@Column(name = "component_id")
+	private String componentId;
+
+	@Column(name = "component_name")
+	private String componentName;
+
+	@Column(name = "indicator_id")
+	private String indicatorId;
+
+	@Column(name = "indicator_name")
+	private String indicatorName;
 
 }

@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.winwin.winwin.entity.OrgNaicsData;
+import com.winwin.winwin.entity.NaicsData;
 
-public interface OrgNaicsDataRepository extends JpaRepository<OrgNaicsData, Long> {
-	List<OrgNaicsData> findByNameContainingIgnoreCase(String name);
+public interface OrgNaicsDataRepository extends JpaRepository<NaicsData, Long> {
+	List<NaicsData> findByNameContainingIgnoreCase(String name);
 }

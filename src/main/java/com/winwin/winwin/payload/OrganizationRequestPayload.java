@@ -17,6 +17,7 @@ public class OrganizationRequestPayload {
 	Long id;
 	AddressPayload address;
 	String name;
+	String ein;
 	Long revenue;
 	Long assets;
 	String sector;

@@ -19,7 +19,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.entity.OrgSpiData;
+import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.entity.OrgSpiDataMapping;
 import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrgSpiDataException;
@@ -56,26 +56,26 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	@Override
 	public List<OrgSpiDataDimensionsPayload> getSpiDataForResponse() {
 		List<OrgSpiDataDimensionsPayload> dimensionPayloadList = null;
-		List<OrgSpiData> spiList = orgSpiDataRepository.findAll();
+		List<SpiData> spiList = orgSpiDataRepository.findAll();
 		if (null != spiList) {
-			HashMap<Long, List<OrgSpiData>> spiDimensionsMap = new HashMap<Long, List<OrgSpiData>>();
+			HashMap<Long, List<SpiData>> spiDimensionsMap = new HashMap<Long, List<SpiData>>();
 			setSpiDimensionsMap(spiList, spiDimensionsMap);
 
 			if ((!spiDimensionsMap.isEmpty())) {
 				dimensionPayloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
-				for (List<OrgSpiData> spiComponentsList : spiDimensionsMap.values()) {
+				for (List<SpiData> spiComponentsList : spiDimensionsMap.values()) {
 					OrgSpiDataDimensionsPayload dimensionPayloadObj = new OrgSpiDataDimensionsPayload();
 					dimensionPayloadObj.setDimensionId(spiComponentsList.get(0).getDimensionId());
 					dimensionPayloadObj.setDimensionName(spiComponentsList.get(0).getDimensionName());
 
-					HashMap<String, List<OrgSpiData>> spiComponentsMap = new HashMap<String, List<OrgSpiData>>();
+					HashMap<String, List<SpiData>> spiComponentsMap = new HashMap<String, List<SpiData>>();
 					setSpiComponentsMap(spiComponentsList, spiComponentsMap);
 
 					HashMap<String, List<OrgSpiDataIndicatorsPayload>> spiIndicatorsMap = new HashMap<String, List<OrgSpiDataIndicatorsPayload>>();
 					setSpiIndicatorsMap(spiComponentsList, spiIndicatorsMap);
 
 					List<OrgSpiDataComponentsPayload> componentPayloadList = new ArrayList<OrgSpiDataComponentsPayload>();
-					for (List<OrgSpiData> splittedComponentsList : spiComponentsMap.values()) {
+					for (List<SpiData> splittedComponentsList : spiComponentsMap.values()) {
 						OrgSpiDataComponentsPayload componentPayloadObj = new OrgSpiDataComponentsPayload();
 						componentPayloadObj.setComponentId(splittedComponentsList.get(0).getComponentId());
 						componentPayloadObj.setComponentName(splittedComponentsList.get(0).getComponentName());
@@ -100,10 +100,10 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	 * @param spiList
 	 * @param spiDimensionsMap
 	 */
-	private void setSpiDimensionsMap(List<OrgSpiData> spiList, HashMap<Long, List<OrgSpiData>> spiDimensionsMap) {
-		for (OrgSpiData spiDataObj : spiList) {
+	private void setSpiDimensionsMap(List<SpiData> spiList, HashMap<Long, List<SpiData>> spiDimensionsMap) {
+		for (SpiData spiDataObj : spiList) {
 			if (!spiDimensionsMap.containsKey(spiDataObj.getDimensionId())) {
-				List<OrgSpiData> components = new ArrayList<OrgSpiData>();
+				List<SpiData> components = new ArrayList<SpiData>();
 				components.add(spiDataObj);
 
 				spiDimensionsMap.put(spiDataObj.getDimensionId(), components);
@@ -117,10 +117,10 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	 * @param spiList
 	 * @param spiComponentsMap
 	 */
-	private void setSpiComponentsMap(List<OrgSpiData> spiList, HashMap<String, List<OrgSpiData>> spiComponentsMap) {
-		for (OrgSpiData spiDataObj : spiList) {
+	private void setSpiComponentsMap(List<SpiData> spiList, HashMap<String, List<SpiData>> spiComponentsMap) {
+		for (SpiData spiDataObj : spiList) {
 			if (!spiComponentsMap.containsKey(spiDataObj.getComponentId())) {
-				List<OrgSpiData> components = new ArrayList<OrgSpiData>();
+				List<SpiData> components = new ArrayList<SpiData>();
 				components.add(spiDataObj);
 
 				spiComponentsMap.put(spiDataObj.getComponentId(), components);
@@ -134,9 +134,9 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 	 * @param spiList
 	 * @param spiIndicatorsMap
 	 */
-	private void setSpiIndicatorsMap(List<OrgSpiData> spiList,
+	private void setSpiIndicatorsMap(List<SpiData> spiList,
 			HashMap<String, List<OrgSpiDataIndicatorsPayload>> spiIndicatorsMap) {
-		for (OrgSpiData spiDataObj : spiList) {
+		for (SpiData spiDataObj : spiList) {
 			OrgSpiDataIndicatorsPayload payload = new OrgSpiDataIndicatorsPayload();
 			if (!StringUtils.isEmpty(spiDataObj.getIndicatorId())) {
 				payload.setIndicatorId(spiDataObj.getIndicatorId());
@@ -172,7 +172,7 @@ public class OrgSpiDataService implements IOrgSpiDataService {
 						String indId = payload.getIndicatorId();
 
 						if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))) {
-							OrgSpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
+							SpiData orgSpiDataObj = orgSpiDataRepository.findSpiObjByIds(dId, cId, indId);
 							spiDataMapObj.setSpiData(orgSpiDataObj);
 						}
 

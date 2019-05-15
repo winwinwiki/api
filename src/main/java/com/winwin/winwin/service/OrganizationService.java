@@ -20,8 +20,8 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.OrgClassificationMapping;
-import com.winwin.winwin.entity.OrgNaicsData;
-import com.winwin.winwin.entity.OrgNteeData;
+import com.winwin.winwin.entity.NaicsData;
+import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.exception.OrganizationException;
@@ -96,11 +96,11 @@ public class OrganizationService implements IOrganizationService {
 					address = saveAddress(organizationPayload.getAddress(), user);
 				}
 				if (organizationPayload.getNaicsCode() != null) {
-					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 					organization.setNaicsCode(naicsCode);
 				}
 				if (organizationPayload.getNteeCode() != null) {
-					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
 					organization.setNteeCode(naicsCode);
 				}
 				organization.setType(OrganizationConstants.ORGANIZATION);
@@ -195,11 +195,11 @@ public class OrganizationService implements IOrganizationService {
 				organization.setSectorLevelName(organizationPayload.getSectorLevelName());
 
 				if (organizationPayload.getNaicsCode() != null) {
-					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 					organization.setNaicsCode(naicsCode);
 				}
 				if (organizationPayload.getNteeCode() != null) {
-					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
 					organization.setNteeCode(naicsCode);
 				}
 
@@ -369,11 +369,11 @@ public class OrganizationService implements IOrganizationService {
 					address = saveAddress(organizationPayload.getAddress(), user);
 				}
 				if (organizationPayload.getNaicsCode() != null) {
-					OrgNaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 					organization.setNaicsCode(naicsCode);
 				}
 				if (organizationPayload.getNteeCode() != null) {
-					OrgNteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+					NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
 					organization.setNteeCode(naicsCode);
 				}
 

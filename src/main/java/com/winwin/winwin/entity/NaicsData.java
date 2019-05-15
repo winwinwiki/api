@@ -2,6 +2,8 @@ package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -13,7 +15,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * @author ArvindKhatik
+ * @author ManoharK
  *
  */
 @AllArgsConstructor
@@ -23,22 +25,16 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_sdg_data")
-public class OrgSdgData {
+@Table(name = "naics_data")
+public class NaicsData {
+
 	@Id
-	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@Column(name = "goal_code")
-	private Long goalCode;
+	@Column(name = "name")
+	private String name;
 
-	@Column(name = "goal_name")
-	private String goalName;
-
-	@Column(name = "short_name_code")
-	private String shortNameCode;
-
-	@Column(name = "short_name")
-	private String shortName;
-
+	@Column(name = "code")
+	private String code;
 }

@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -14,10 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * @author ManoharK
- *
- */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -25,19 +23,20 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Entity
-@Table(name = "org_ntee_data")
-public class OrgNteeData {
-
+@Table(name = "program_spi_mapping")
+public class ProgramSpiDataMapping {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "name")
-	private String name;
+	@Column(name = "program_id")
+	private Long program_id;
 
-	@Column(name = "code")
-	private String code;
+	@ManyToOne
+	@JoinColumn(name = "sdg_id")
+	private SpiData spiData;
 
-	@Column(name = "description")
-	private String description;
+	@Column(name = "is_checked")
+	private Boolean isChecked = false;
 }
