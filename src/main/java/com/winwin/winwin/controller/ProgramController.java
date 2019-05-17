@@ -17,42 +17,48 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.constants.UserConstants;
-import com.winwin.winwin.entity.OrgRegionMaster;
-import com.winwin.winwin.entity.OrgRegionServed;
-import com.winwin.winwin.entity.OrganizationDataSet;
-import com.winwin.winwin.entity.OrganizationDataSetCategory;
-import com.winwin.winwin.entity.OrganizationResource;
-import com.winwin.winwin.entity.OrganizationResourceCategory;
+import com.winwin.winwin.entity.DataSetCategory;
+import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.Program;
-import com.winwin.winwin.exception.OrgRegionServedException;
-import com.winwin.winwin.exception.OrgSdgDataException;
-import com.winwin.winwin.exception.OrgSpiDataException;
-import com.winwin.winwin.exception.OrganizationDataSetCategoryException;
-import com.winwin.winwin.exception.OrganizationDataSetException;
+import com.winwin.winwin.entity.ProgramDataSet;
+import com.winwin.winwin.entity.ProgramRegionServed;
+import com.winwin.winwin.entity.ProgramResource;
+import com.winwin.winwin.entity.RegionMaster;
+import com.winwin.winwin.entity.ResourceCategory;
+import com.winwin.winwin.exception.DataSetCategoryException;
+import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.exception.OrganizationException;
-import com.winwin.winwin.exception.OrganizationResourceCategoryException;
-import com.winwin.winwin.exception.OrganizationResourceException;
-import com.winwin.winwin.payload.OrgRegionMasterPayload;
-import com.winwin.winwin.payload.OrgRegionServedPayload;
-import com.winwin.winwin.payload.OrgSdgDataMapPayload;
-import com.winwin.winwin.payload.OrgSdgGoalPayload;
-import com.winwin.winwin.payload.OrgSpiDataDimensionsPayload;
-import com.winwin.winwin.payload.OrgSpiDataMapPayload;
-import com.winwin.winwin.payload.OrganizationDataSetCategoryPayLoad;
-import com.winwin.winwin.payload.OrganizationDataSetPayLoad;
-import com.winwin.winwin.payload.OrganizationResourceCategoryPayLoad;
-import com.winwin.winwin.payload.OrganizationResourcePayLoad;
+import com.winwin.winwin.exception.RegionServedException;
+import com.winwin.winwin.exception.ResourceCategoryException;
+import com.winwin.winwin.exception.ResourceException;
+import com.winwin.winwin.exception.SdgDataException;
+import com.winwin.winwin.exception.SpiDataException;
+import com.winwin.winwin.payload.DataSetCategoryPayLoad;
+import com.winwin.winwin.payload.OrganizationRegionServedPayload;
+import com.winwin.winwin.payload.ProgramDataSetPayLoad;
+import com.winwin.winwin.payload.ProgramRegionServedPayload;
+import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ProgramResponsePayload;
-import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationRepository;
-import com.winwin.winwin.repository.OrganizationResourceRepository;
+import com.winwin.winwin.payload.ProgramSdgDataMapPayload;
+import com.winwin.winwin.payload.ProgramSpiDataMapPayload;
+import com.winwin.winwin.payload.RegionMasterPayload;
+import com.winwin.winwin.payload.ResourceCategoryPayLoad;
+import com.winwin.winwin.payload.SdgGoalPayload;
+import com.winwin.winwin.payload.SpiDataDimensionsPayload;
+import com.winwin.winwin.repository.ProgramDataSetRepository;
 import com.winwin.winwin.repository.ProgramRepository;
-import com.winwin.winwin.service.OrgRegionServedService;
+import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
-import com.winwin.winwin.service.OrganizationDataSetService;
-import com.winwin.winwin.service.OrganizationResourceService;
+import com.winwin.winwin.service.OrganizationRegionServedService;
+import com.winwin.winwin.service.ProgramDataSetService;
+import com.winwin.winwin.service.ProgramRegionServedService;
+import com.winwin.winwin.service.ProgramResourceService;
+import com.winwin.winwin.service.ProgramSdgDataService;
 import com.winwin.winwin.service.ProgramService;
+import com.winwin.winwin.service.ProgramSpiDataService;
+import com.winwin.winwin.service.SdgDataService;
+import com.winwin.winwin.service.SpiDataService;
 
 /**
  * @author ArvindKhatik
@@ -64,34 +70,44 @@ import com.winwin.winwin.service.ProgramService;
 public class ProgramController extends BaseController {
 
 	@Autowired
-	private OrganizationRepository organizationRepository;
+	private OrganizationRegionServedService orgRegionServedService;
 
 	@Autowired
-	private OrganizationDataSetService organizationDataSetService;
-
-	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-
-	@Autowired
-	private OrganizationResourceService organizationResourceService;
-
-	@Autowired
-	private OrganizationResourceRepository organizationResourceRepository;
-
-	@Autowired
-	private OrgRegionServedService orgRegionServedService;
+	private ProgramRegionServedService programRegionServedService;
 
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
 
 	@Autowired
+	SpiDataService spiDataService;
+	@Autowired
+	SdgDataService sdgDataService;
+
+	@Autowired
 	OrgSdgDataService orgSdgDataService;
+
+	@Autowired
+	ProgramSdgDataService programSdgDataService;
+	@Autowired
+	ProgramSpiDataService programSpiDataService;
 
 	@Autowired
 	ProgramService programService;
 
 	@Autowired
 	ProgramRepository programRepository;
+
+	@Autowired
+	ProgramDataSetRepository programDataSetRepository;
+
+	@Autowired
+	ProgramDataSetService programDataSetService;
+
+	@Autowired
+	ProgramResourceService programResourceService;
+
+	@Autowired
+	private ProgramResourceRepository programResourceRepository;
 
 	// Code for program data set start
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
@@ -121,36 +137,35 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createProgrmDataSet(
-			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
-			throws OrganizationDataSetException {
-		OrganizationDataSet organizationDataSet = null;
-		OrganizationDataSetPayLoad payload = null;
-		OrganizationDataSetCategory category = null;
-		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		if (null != organizationDataSetPayLoad) {
+	public ResponseEntity<?> createProgrmDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
+			throws DataSetException {
+		ProgramDataSet programDataSet = null;
+		ProgramDataSetPayLoad payload = null;
+		DataSetCategory category = null;
+		DataSetCategoryPayLoad payloadCategory = null;
+
+		if (null != programDataSetPayLoad) {
 			try {
-				organizationDataSet = organizationDataSetService
-						.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
-				if (null != organizationDataSet) {
-					payload = new OrganizationDataSetPayLoad();
-					payload.setId(organizationDataSet.getId());
-					category = organizationDataSet.getOrganizationDataSetCategory();
+				programDataSet = programDataSetService.createOrUpdateProgramDataSet(programDataSetPayLoad);
+				if (null != programDataSet) {
+					payload = new ProgramDataSetPayLoad();
+					payload.setId(programDataSet.getId());
+					category = programDataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new OrganizationDataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
-					payload.setOrganizationDataSetCategory(payloadCategory);
-					payload.setOrganizationId(organizationDataSet.getOrganizationId());
-					payload.setDescription(organizationDataSet.getDescription());
-					payload.setType(organizationDataSet.getType());
-					payload.setUrl(organizationDataSet.getUrl());
-					payload.setIsActive(organizationDataSet.getIsActive());
+					payload.setDataSetCategory(payloadCategory);
+					payload.setProgramId(programDataSet.getProgramId());
+					payload.setDescription(programDataSet.getDescription());
+					payload.setType(programDataSet.getType());
+					payload.setUrl(programDataSet.getUrl());
+					payload.setIsActive(programDataSet.getIsActive());
 				}
 
 			} catch (Exception e) {
-				throw new OrganizationDataSetException(
+				throw new DataSetException(
 						customMessageSource.getMessage("prog.dataset.error.created") + ": " + e.getMessage());
 			}
 
@@ -166,30 +181,31 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateProgramDataSet(
-			@Valid @RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
-			throws OrganizationDataSetException {
-		OrganizationDataSet dataSet = null;
-		OrganizationDataSetCategory category = null;
-		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		OrganizationDataSetPayLoad payload = null;
-		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
-			Long id = organizationDataSetPayLoad.getId();
-			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
+	public ResponseEntity<?> updateProgramDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
+			throws DataSetException {
+		ProgramDataSet dataSet = null;
+		DataSetCategory category = null;
+		DataSetCategoryPayLoad payloadCategory = null;
+		ProgramDataSetPayLoad payload = null;
+		if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
+			Long id = programDataSetPayLoad.getId();
+			dataSet = programDataSetRepository.findProgramDataSetById(id);
 			if (dataSet == null) {
-				throw new OrganizationDataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
+				throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
 			} else {
-				payload = new OrganizationDataSetPayLoad();
-				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
+				payload = new ProgramDataSetPayLoad();
+				dataSet = programDataSetService.createOrUpdateProgramDataSet(programDataSetPayLoad);
 				payload.setId(dataSet.getId());
-				category = dataSet.getOrganizationDataSetCategory();
+				category = dataSet.getDataSetCategory();
 				if (null != category) {
-					payloadCategory = new OrganizationDataSetCategoryPayLoad();
+					payloadCategory = new DataSetCategoryPayLoad();
 					payloadCategory.setId(category.getId());
 					payloadCategory.setCategoryName(category.getCategoryName());
 				}
-				payload.setOrganizationDataSetCategory(payloadCategory);
-				payload.setOrganizationId(dataSet.getOrganizationId());
+				payload.setDataSetCategory(payloadCategory);
+				payload.setOrganizationId(programDataSetPayLoad.getOrganizationId());
+				payload.setProgramId(programDataSetPayLoad.getProgramId());
+
 				payload.setDescription(dataSet.getDescription());
 				payload.setType(dataSet.getType());
 				payload.setUrl(dataSet.getUrl());
@@ -207,24 +223,23 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> deleteProgramDataSet(@RequestBody OrganizationDataSetPayLoad organizationDataSetPayLoad)
-			throws OrganizationDataSetException {
+	public ResponseEntity<?> deleteProgramDataSet(@RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
+			throws DataSetException {
 		try {
-			if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
-				Long id = organizationDataSetPayLoad.getId();
-				OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(id);
+			if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
+				Long id = programDataSetPayLoad.getId();
+				ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(id);
 				if (dataSet == null) {
-					throw new OrganizationDataSetException(
-							customMessageSource.getMessage("prog.dataset.error.not_found"));
+					throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
 				}
-				// organizationDataSetService.removeOrganizationDataSet(id);
+				programDataSetService.removeProgramDataSet(id, programDataSetPayLoad.getOrganizationId());
 			} else {
 				return sendErrorResponse("org.bad.request");
 
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationDataSetException(
+			throw new DataSetException(
 					customMessageSource.getMessage("prog.dataset.error.deleted") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse("prog.dataset.success.deleted");
@@ -233,29 +248,29 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) throws OrganizationDataSetException {
-		List<OrganizationDataSet> orgDataSetList = null;
-		OrganizationDataSetPayLoad payload = null;
-		OrganizationDataSetCategory category = null;
-		OrganizationDataSetCategoryPayLoad payloadCategory = null;
-		List<OrganizationDataSetPayLoad> payloadList = null;
+	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) throws DataSetException {
+		List<ProgramDataSet> programDataSetList = null;
+		ProgramDataSetPayLoad payload = null;
+		DataSetCategory category = null;
+		DataSetCategoryPayLoad payloadCategory = null;
+		List<ProgramDataSetPayLoad> payloadList = null;
 		try {
-			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
-			if (orgDataSetList == null) {
-				throw new OrganizationDataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
+			programDataSetList = programDataSetService.getProgramDataSetList(id);
+			if (programDataSetList == null) {
+				throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrganizationDataSetPayLoad>();
-				for (OrganizationDataSet dataSet : orgDataSetList) {
-					payload = new OrganizationDataSetPayLoad();
+				payloadList = new ArrayList<>();
+				for (ProgramDataSet dataSet : programDataSetList) {
+					payload = new ProgramDataSetPayLoad();
 					payload.setId(dataSet.getId());
-					category = dataSet.getOrganizationDataSetCategory();
+					category = dataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new OrganizationDataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
-					payload.setOrganizationDataSetCategory(payloadCategory);
-					payload.setOrganizationId(dataSet.getOrganizationId());
+					payload.setDataSetCategory(payloadCategory);
+					payload.setProgramId(dataSet.getProgramId());
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());
 					payload.setUrl(dataSet.getUrl());
@@ -265,7 +280,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationDataSetException(
+			throw new DataSetException(
 					customMessageSource.getMessage("prog.dataset.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
@@ -275,20 +290,20 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
-			throws OrganizationDataSetCategoryException {
-		List<OrganizationDataSetCategory> orgDataSetCategoryList = null;
-		List<OrganizationDataSetCategoryPayLoad> payloadList = null;
-		OrganizationDataSetCategoryPayLoad payload = null;
+	public ResponseEntity<?> getDataSetCategoryList(HttpServletResponse httpServletResponce)
+			throws DataSetCategoryException {
+		List<DataSetCategory> dataSetCategoryList = null;
+		List<DataSetCategoryPayLoad> payloadList = null;
+		DataSetCategoryPayLoad payload = null;
 		try {
-			orgDataSetCategoryList = organizationDataSetService.getOrganizationDataSetCategoryList();
-			if (orgDataSetCategoryList == null) {
-				throw new OrganizationDataSetCategoryException(
+			dataSetCategoryList = programDataSetService.getDataSetCategoryList();
+			if (dataSetCategoryList == null) {
+				throw new DataSetCategoryException(
 						customMessageSource.getMessage("prog.dataset.category.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrganizationDataSetCategoryPayLoad>();
-				for (OrganizationDataSetCategory category : orgDataSetCategoryList) {
-					payload = new OrganizationDataSetCategoryPayLoad();
+				payloadList = new ArrayList<>();
+				for (DataSetCategory category : dataSetCategoryList) {
+					payload = new DataSetCategoryPayLoad();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
 					payloadList.add(payload);
@@ -296,7 +311,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationDataSetCategoryException(
+			throw new DataSetCategoryException(
 					customMessageSource.getMessage("prog.dataset.category.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
@@ -310,34 +325,32 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrganizationResource(
-			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
-			throws OrganizationResourceException {
-		OrganizationResource organizationResource = null;
-		OrganizationResourcePayLoad payload = null;
-		OrganizationResourceCategory category = null;
-		OrganizationResourceCategoryPayLoad payloadCategory = null;
-		if (null != organizationResourcePayLoad) {
+	public ResponseEntity<?> createProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
+			throws ResourceException {
+		ProgramResource programResource = null;
+		ProgramResourcePayLoad payload = null;
+		ResourceCategory category = null;
+		ResourceCategoryPayLoad payloadCategory = null;
+		if (null != programResourcePayLoad) {
 			try {
-				organizationResource = organizationResourceService
-						.createOrUpdateOrganizationResource(organizationResourcePayLoad);
-				if (null != organizationResource) {
-					payload = new OrganizationResourcePayLoad();
-					payload.setId(organizationResource.getId());
-					category = organizationResource.getOrganizationResourceCategory();
+				programResource = programResourceService.createOrUpdateProgramResource(programResourcePayLoad);
+				if (null != programResource) {
+					payload = new ProgramResourcePayLoad();
+					payload.setId(programResource.getId());
+					category = programResource.getResourceCategory();
 					if (null != category) {
-						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
-					payload.setOrganizationResourceCategory(payloadCategory);
-					payload.setOrganizationId(organizationResource.getOrganizationId());
-					payload.setCount(organizationResource.getCount());
-					payload.setDescription(organizationResource.getDescription());
-					payload.setIsActive(organizationResource.getIsActive());
+					payload.setResourceCategory(payloadCategory);
+					payload.setProgramId(programResource.getProgramId());
+					payload.setCount(programResource.getCount());
+					payload.setDescription(programResource.getDescription());
+					payload.setIsActive(programResource.getIsActive());
 				}
 			} catch (Exception e) {
-				throw new OrganizationResourceException(
+				throw new ResourceException(
 						customMessageSource.getMessage("prog.resource.error.created") + ": " + e.getMessage());
 			}
 
@@ -352,36 +365,33 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateOrganizationResource(
-			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
-			throws OrganizationResourceException {
-		OrganizationResource organizationResource = null;
-		OrganizationResourceCategory category = null;
-		OrganizationResourceCategoryPayLoad payloadCategory = null;
-		OrganizationResourcePayLoad payload = null;
+	public ResponseEntity<?> updateProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
+			throws ResourceException {
+		ProgramResource programResource = null;
+		ResourceCategory category = null;
+		ResourceCategoryPayLoad payloadCategory = null;
+		ProgramResourcePayLoad payload = null;
 		try {
-			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
-				Long id = organizationResourcePayLoad.getId();
-				organizationResource = organizationResourceRepository.findOrgResourceById(id);
-				if (organizationResource == null) {
-					throw new OrganizationResourceException(
-							customMessageSource.getMessage("prog.resource.error.not_found"));
+			if (null != programResourcePayLoad && null != programResourcePayLoad.getId()) {
+				Long id = programResourcePayLoad.getId();
+				programResource = programResourceRepository.findProgramResourceById(id);
+				if (programResource == null) {
+					throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
 				} else {
-					organizationResource = organizationResourceService
-							.createOrUpdateOrganizationResource(organizationResourcePayLoad);
-					payload = new OrganizationResourcePayLoad();
-					payload.setId(organizationResource.getId());
-					category = organizationResource.getOrganizationResourceCategory();
+					programResource = programResourceService.createOrUpdateProgramResource(programResourcePayLoad);
+					payload = new ProgramResourcePayLoad();
+					payload.setId(programResource.getId());
+					category = programResource.getResourceCategory();
 					if (null != category) {
-						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
-					payload.setOrganizationResourceCategory(payloadCategory);
-					payload.setOrganizationId(organizationResource.getOrganizationId());
-					payload.setCount(organizationResource.getCount());
-					payload.setDescription(organizationResource.getDescription());
-					payload.setIsActive(organizationResource.getIsActive());
+					payload.setResourceCategory(payloadCategory);
+					payload.setProgramId(programResource.getProgramId());
+					payload.setCount(programResource.getCount());
+					payload.setDescription(programResource.getDescription());
+					payload.setIsActive(programResource.getIsActive());
 				}
 
 			} else {
@@ -390,7 +400,7 @@ public class ProgramController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationResourceException(
+			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.updated") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payload);
@@ -400,25 +410,23 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> deleteOrganizationResource(
-			@Valid @RequestBody OrganizationResourcePayLoad organizationResourcePayLoad)
-			throws OrganizationResourceException {
+	public ResponseEntity<?> deleteProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
+			throws ResourceException {
 		try {
-			if (null != organizationResourcePayLoad && null != organizationResourcePayLoad.getId()) {
-				Long id = organizationResourcePayLoad.getId();
-				OrganizationResource organizationResource = organizationResourceRepository.findOrgResourceById(id);
-				if (organizationResource == null) {
-					throw new OrganizationResourceException(
-							customMessageSource.getMessage("prog.resource.error.not_found"));
+			if (null != programResourcePayLoad && null != programResourcePayLoad.getId()) {
+				Long id = programResourcePayLoad.getId();
+				ProgramResource programResource = programResourceRepository.findProgramResourceById(id);
+				if (programResource == null) {
+					throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
 				}
-				organizationResourceService.removeOrganizationResource(id);
+				programResourceService.removeProgramResource(id, programResourcePayLoad.getOrganizationId());
 			} else {
 				return sendErrorResponse("org.bad.request");
 
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationResourceException(
+			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.deleted") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse("prog.resource.success.deleted");
@@ -427,31 +435,29 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getOrganizationResourceList(@PathVariable("id") Long id)
-			throws OrganizationResourceException {
-		List<OrganizationResource> orgResourceList = null;
-		OrganizationResourcePayLoad payload = null;
-		OrganizationResourceCategory category = null;
-		OrganizationResourceCategoryPayLoad payloadCategory = null;
-		List<OrganizationResourcePayLoad> payloadList = null;
+	public ResponseEntity<?> getProgramResourceList(@PathVariable("id") Long id) throws ResourceException {
+		List<ProgramResource> programResourceList = null;
+		ProgramResourcePayLoad payload = null;
+		ResourceCategory category = null;
+		ResourceCategoryPayLoad payloadCategory = null;
+		List<ProgramResourcePayLoad> payloadList = null;
 		try {
-			orgResourceList = organizationResourceService.getOrganizationResourceList(id);
-			if (orgResourceList == null) {
-				throw new OrganizationResourceException(
-						customMessageSource.getMessage("prog.resource.error.not_found"));
+			programResourceList = programResourceService.getProgramResourceList(id);
+			if (programResourceList == null) {
+				throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrganizationResourcePayLoad>();
-				for (OrganizationResource resource : orgResourceList) {
-					payload = new OrganizationResourcePayLoad();
+				payloadList = new ArrayList<>();
+				for (ProgramResource resource : programResourceList) {
+					payload = new ProgramResourcePayLoad();
 					payload.setId(resource.getId());
-					category = resource.getOrganizationResourceCategory();
+					category = resource.getResourceCategory();
 					if (null != category) {
-						payloadCategory = new OrganizationResourceCategoryPayLoad();
+						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
-					payload.setOrganizationResourceCategory(payloadCategory);
-					payload.setOrganizationId(resource.getOrganizationId());
+					payload.setResourceCategory(payloadCategory);
+					payload.setProgramId(resource.getProgramId());
 					payload.setCount(resource.getCount());
 					payload.setDescription(resource.getDescription());
 					payload.setIsActive(resource.getIsActive());
@@ -460,7 +466,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationResourceException(
+			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
@@ -470,21 +476,21 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
-			throws OrganizationResourceCategoryException {
-		List<OrganizationResourceCategory> orgResourceCategoryList = null;
-		OrganizationResourceCategoryPayLoad payload = null;
-		List<OrganizationResourceCategoryPayLoad> payloadList = null;
+	public ResponseEntity<?> getResourceCategoryList(HttpServletResponse httpServletResponce)
+			throws ResourceCategoryException {
+		List<ResourceCategory> resourceCategoryList = null;
+		ResourceCategoryPayLoad payload = null;
+		List<ResourceCategoryPayLoad> payloadList = null;
 
 		try {
-			orgResourceCategoryList = organizationResourceService.getOrganizationResourceCategoryList();
-			if (orgResourceCategoryList == null) {
-				throw new OrganizationResourceCategoryException(
+			resourceCategoryList = programResourceService.getResourceCategoryList();
+			if (resourceCategoryList == null) {
+				throw new ResourceCategoryException(
 						customMessageSource.getMessage("prog.resource.category.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrganizationResourceCategoryPayLoad>();
-				for (OrganizationResourceCategory category : orgResourceCategoryList) {
-					payload = new OrganizationResourceCategoryPayLoad();
+				payloadList = new ArrayList<>();
+				for (ResourceCategory category : resourceCategoryList) {
+					payload = new ResourceCategoryPayLoad();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
 					payloadList.add(payload);
@@ -492,7 +498,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationResourceCategoryException(
+			throw new ResourceCategoryException(
 					customMessageSource.getMessage("prog.resource.category.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
@@ -506,20 +512,21 @@ public class ProgramController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> createOrgRegions(@RequestBody List<OrgRegionServedPayload> orgRegionServedPayloadList)
-			throws OrgRegionServedException {
-		List<OrgRegionServed> orgRegionServedList = null;
-		List<OrgRegionServedPayload> payloadList = null;
-		OrgRegionServedPayload payload = null;
+	public ResponseEntity<?> createOrgRegions(
+			@RequestBody List<OrganizationRegionServedPayload> orgRegionServedPayloadList)
+			throws RegionServedException {
+		List<OrganizationRegionServed> orgRegionServedList = null;
+		List<OrganizationRegionServedPayload> payloadList = null;
+		OrganizationRegionServedPayload payload = null;
 		try {
 			orgRegionServedList = orgRegionServedService.createOrgRegionServed(orgRegionServedPayloadList);
 			if (null != orgRegionServedList) {
-				payloadList = new ArrayList<OrgRegionServedPayload>();
-				for (OrgRegionServed region : orgRegionServedList) {
-					payload = new OrgRegionServedPayload();
+				payloadList = new ArrayList<OrganizationRegionServedPayload>();
+				for (OrganizationRegionServed region : orgRegionServedList) {
+					payload = new OrganizationRegionServedPayload();
 					payload.setId(region.getId());
 					if (null != region.getRegionMaster()) {
-						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
+						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
 						payload.setRegion(regionMasterPayload);
@@ -531,7 +538,7 @@ public class ProgramController extends BaseController {
 				}
 			}
 		} catch (Exception e) {
-			throw new OrgRegionServedException(
+			throw new RegionServedException(
 					customMessageSource.getMessage("prog.region.error.created") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
@@ -540,26 +547,26 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws OrgRegionServedException {
-		List<OrgRegionServed> orgRegionList = null;
-		OrgRegionServedPayload payload = null;
-		List<OrgRegionServedPayload> payloadList = null;
+	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws RegionServedException {
+		List<ProgramRegionServed> programRegionList = null;
+		ProgramRegionServedPayload payload = null;
+		List<ProgramRegionServedPayload> payloadList = null;
 		try {
-			orgRegionList = orgRegionServedService.getOrgRegionServedList(id);
-			if (orgRegionList == null) {
-				throw new OrgRegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
+			programRegionList = programRegionServedService.getProgramRegionServedList(id);
+			if (programRegionList == null) {
+				throw new RegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrgRegionServedPayload>();
-				for (OrgRegionServed region : orgRegionList) {
-					payload = new OrgRegionServedPayload();
+				payloadList = new ArrayList<>();
+				for (ProgramRegionServed region : programRegionList) {
+					payload = new ProgramRegionServedPayload();
 					payload.setId(region.getId());
 					if (null != region.getRegionMaster()) {
-						OrgRegionMasterPayload regionMasterPayload = new OrgRegionMasterPayload();
+						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setOrganizationId(region.getOrgId());
+					payload.setProgramId(region.getProgramId());
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 
@@ -567,7 +574,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrgRegionServedException(customMessageSource.getMessage("prog.region.error.list"));
+			throw new RegionServedException(customMessageSource.getMessage("prog.region.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -576,18 +583,18 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> getOrgRegionsMasterList() throws OrgRegionServedException {
-		List<OrgRegionMaster> orgRegionMasterList = null;
-		OrgRegionMasterPayload payload = null;
-		List<OrgRegionMasterPayload> payloadList = null;
+	public ResponseEntity<?> getProgramRegionsMasterList() throws RegionServedException {
+		List<RegionMaster> orgRegionMasterList = null;
+		RegionMasterPayload payload = null;
+		List<RegionMasterPayload> payloadList = null;
 		try {
 			orgRegionMasterList = orgRegionServedService.getOrgRegionMasterList();
 			if (orgRegionMasterList == null) {
-				throw new OrgRegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
+				throw new RegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
 			} else {
-				payloadList = new ArrayList<OrgRegionMasterPayload>();
-				for (OrgRegionMaster region : orgRegionMasterList) {
-					payload = new OrgRegionMasterPayload();
+				payloadList = new ArrayList<RegionMasterPayload>();
+				for (RegionMaster region : orgRegionMasterList) {
+					payload = new RegionMasterPayload();
 					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
 					payloadList.add(payload);
@@ -595,7 +602,7 @@ public class ProgramController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrgRegionServedException(customMessageSource.getMessage("prog.region.error.list"));
+			throw new RegionServedException(customMessageSource.getMessage("prog.region.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -606,16 +613,16 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgSpiDataList() throws OrgSpiDataException {
-		List<OrgSpiDataDimensionsPayload> payloadList = new ArrayList<OrgSpiDataDimensionsPayload>();
+	public ResponseEntity<?> getOrgSpiDataList() throws SpiDataException {
+		List<SpiDataDimensionsPayload> payloadList = new ArrayList<SpiDataDimensionsPayload>();
 		try {
-			payloadList = orgSpiDataService.getSpiDataForResponse();
+			payloadList = spiDataService.getSpiDataForResponse();
 			if (payloadList == null) {
-				throw new OrgSpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
+				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
 			}
 
 		} catch (Exception e) {
-			throw new OrgSpiDataException(customMessageSource.getMessage("prog.spidata.error.list"));
+			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -625,15 +632,15 @@ public class ProgramController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrgSpiDataMapPayload> payloadList,
-			@PathVariable("id") Long orgId) throws OrgSpiDataException {
+	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<ProgramSpiDataMapPayload> payloadList,
+			@PathVariable("id") Long orgId) throws SpiDataException {
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 		if (null != payloadList) {
 			try {
-				orgSpiDataService.createSpiDataMapping(payloadList, orgId);
+				programSpiDataService.createSpiDataMapping(payloadList, orgId);
 			} catch (Exception e) {
-				throw new OrgSpiDataException(customMessageSource.getMessage("prog.spidata.error.created"));
+				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.created"));
 			}
 			return sendSuccessResponse("prog.spidata.success.created");
 
@@ -646,20 +653,20 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws OrgSpiDataException {
-		List<OrgSpiDataMapPayload> payloadList = null;
+	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws SpiDataException {
+		List<ProgramSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 
 		try {
-			payloadList = orgSpiDataService.getSelectedSpiData(orgId);
+			payloadList = programSpiDataService.getSelectedSpiData(orgId);
 
 			if (payloadList == null) {
-				throw new OrgSpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
+				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
 			}
 
 		} catch (Exception e) {
-			throw new OrgSpiDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
+			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -669,16 +676,16 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgSdgDataList() throws OrgSdgDataException {
-		List<OrgSdgGoalPayload> payloadList = new ArrayList<OrgSdgGoalPayload>();
+	public ResponseEntity<?> getOrgSdgDataList() throws SdgDataException {
+		List<SdgGoalPayload> payloadList = new ArrayList<SdgGoalPayload>();
 		try {
-			payloadList = orgSdgDataService.getSdgDataForResponse();
+			payloadList = sdgDataService.getSdgDataForResponse();
 			if (payloadList == null) {
-				throw new OrgSdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
+				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
 			}
 
 		} catch (Exception e) {
-			throw new OrgSdgDataException(customMessageSource.getMessage("prog.sdgdata.error.list"));
+			throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -688,15 +695,15 @@ public class ProgramController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrgSdgDataMapPayload> payloadList,
-			@PathVariable("id") Long orgId) throws OrgSdgDataException {
+	public ResponseEntity<?> createProgramSdgDataMapping(@RequestBody List<ProgramSdgDataMapPayload> payloadList,
+			@PathVariable("id") Long orgId) throws SdgDataException {
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 		if (null != payloadList) {
 			try {
-				orgSdgDataService.createSdgDataMapping(payloadList, orgId);
+				programSdgDataService.createSdgDataMapping(payloadList, orgId);
 			} catch (Exception e) {
-				throw new OrgSdgDataException(customMessageSource.getMessage("prog.sdgdata.error.created"));
+				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.created"));
 			}
 			return sendSuccessResponse("prog.sdgdata.success.created");
 
@@ -709,18 +716,18 @@ public class ProgramController extends BaseController {
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws OrgSdgDataException {
-		List<OrgSdgDataMapPayload> payloadList = null;
+	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws SdgDataException {
+		List<ProgramSdgDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 		try {
-			payloadList = orgSdgDataService.getSelectedSdgData(orgId);
+			payloadList = programSdgDataService.getSelectedSdgData(orgId);
 
 			if (payloadList == null) {
-				throw new OrgSdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
+				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
 			}
 		} catch (Exception e) {
-			throw new OrgSdgDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
+			throw new SdgDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
 		}
 		return sendSuccessResponse(payloadList);
 

@@ -36,7 +36,7 @@ public class OrganizationDataSet extends AbstractAuditableEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "category_id")
-	private OrganizationDataSetCategory organizationDataSetCategory;
+	private DataSetCategory dataSetCategory;
 
 	@Column(name = "organization_id")
 	private Long organizationId;
@@ -49,7 +49,7 @@ public class OrganizationDataSet extends AbstractAuditableEntity {
 
 	@Column(name = "url")
 	private String url;
-	
+
 	@Column(name = "is_active")
 	private Boolean isActive = true;
 

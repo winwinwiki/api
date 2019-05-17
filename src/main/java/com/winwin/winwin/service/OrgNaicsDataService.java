@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.winwin.winwin.entity.NaicsData;
-import com.winwin.winwin.repository.OrgNaicsDataRepository;
+import com.winwin.winwin.repository.NaicsDataRepository;
 
 @Service
 public class OrgNaicsDataService {
 
 	@Autowired
-	private OrgNaicsDataRepository naicsDataRepository;
+	private NaicsDataRepository naicsDataRepository;
 
 	public List<NaicsData> getAllOrgNaicsData() {
 		return naicsDataRepository.findAll();

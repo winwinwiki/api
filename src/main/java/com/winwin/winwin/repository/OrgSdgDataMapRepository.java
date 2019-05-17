@@ -6,16 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.winwin.winwin.entity.OrgSdgDataMapping;
+import com.winwin.winwin.entity.OrganizationSdgData;
 
 /**
  * @author ArvindKhatik
  *
  */
-public interface OrgSdgDataMapRepository extends JpaRepository<OrgSdgDataMapping, Long> {
+public interface OrgSdgDataMapRepository extends JpaRepository<OrganizationSdgData, Long> {
 	@Query(value = "select * from org_sdg_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
-	List<OrgSdgDataMapping> getOrgSdgMapDataByOrgId(Long orgId);
+	List<OrganizationSdgData> getOrgSdgMapDataByOrgId(Long orgId);
 
 	@Query(value = "select * from org_sdg_mapping where id = :id", nativeQuery = true)
-	OrgSdgDataMapping findSdgSelectedTagsById(@Param("id") Long id);
+	OrganizationSdgData findSdgSelectedTagsById(@Param("id") Long id);
 }

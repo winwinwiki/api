@@ -6,17 +6,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.winwin.winwin.entity.OrgSpiDataMapping;
+import com.winwin.winwin.entity.OrganizationSpiData;
 
 /**
  * @author ArvindKhatik
  *
  */
-public interface OrgSpiDataMapRepository extends JpaRepository<OrgSpiDataMapping, Long> {
+public interface OrgSpiDataMapRepository extends JpaRepository<OrganizationSpiData, Long> {
 
 	@Query(value = "select * from org_spi_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
-	List<OrgSpiDataMapping> getOrgSpiMapDataByOrgId(@Param(value = "orgId") Long orgId);
+	List<OrganizationSpiData> getOrgSpiMapDataByOrgId(@Param(value = "orgId") Long orgId);
 
 	@Query(value = "select * from org_spi_mapping where id = :id", nativeQuery = true)
-	OrgSpiDataMapping findSpiSelectedTagsById(@Param("id") Long id);
+	OrganizationSpiData findSpiSelectedTagsById(@Param("id") Long id);
 }
