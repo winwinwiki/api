@@ -21,7 +21,7 @@ import com.winwin.winwin.controller.BaseController;
 import com.winwin.winwin.entity.ApplicationUser;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.service.impl.UserServiceImpl;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -37,7 +37,7 @@ public class TokenFilter extends HttpFilter {
 	BaseController baseController;
 
 	@Autowired
-	UserService userService;
+	UserServiceImpl userService;
 
 	@Override
 	public void destroy() {

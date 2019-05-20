@@ -1,7 +1,7 @@
 package com.winwin.winwin.payload;
 
-import com.winwin.winwin.entity.OrgNaicsData;
-import com.winwin.winwin.entity.OrgNteeData;
+import com.winwin.winwin.entity.NaicsData;
+import com.winwin.winwin.entity.NteeData;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -26,8 +26,8 @@ public class OrganizationResponsePayload {
 	String sectorLevel;
 	String sectorLevelName;
 	String description;
-	OrgNaicsData naicsCode;
-	OrgNteeData nteeCode;
+	NaicsData naicsCode;
+	NteeData nteeCode;
 	String status;
 	String priority;
 	Long parentId;
@@ -47,5 +47,5 @@ public class OrganizationResponsePayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-
+	private String adminUrl;
 }

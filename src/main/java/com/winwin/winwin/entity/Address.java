@@ -29,32 +29,34 @@ import lombok.ToString;
 public class Address extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(name = "country")
 	private String country;
-	
+
 	@Column(name = "is_active")
 	private Boolean isActive = true;
-	
+
 	@Column(name = "state")
 	private String state;
-	
+
 	@Column(name = "city")
 	private String city;
-	
+
 	@Column(name = "county")
 	private String county;
-	
+
 	@Column(name = "zip")
 	private Long zip;
-	
+
 	@Column(name = "street")
 	private String street;
-	
+
 	@Column(name = "place_id")
 	private String placeId;
-	
-	
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
+
 }

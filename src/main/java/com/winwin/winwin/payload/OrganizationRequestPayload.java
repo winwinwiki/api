@@ -17,6 +17,7 @@ public class OrganizationRequestPayload {
 	Long id;
 	AddressPayload address;
 	String name;
+	String ein;
 	Long revenue;
 	Long assets;
 	String sector;
@@ -44,4 +45,5 @@ public class OrganizationRequestPayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
+	private String adminUrl;
 }

@@ -22,16 +22,18 @@ import lombok.ToString;
 @ToString
 @Entity
 @Table(name = "classification")
-public class Classification extends AbstractAuditableEntity{
+public class Classification extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(name = "name")
 	private String name;
-	
+
 	@Column(name = "sub_class_name")
-	private String subClassName;	
-	
+	private String subClassName;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

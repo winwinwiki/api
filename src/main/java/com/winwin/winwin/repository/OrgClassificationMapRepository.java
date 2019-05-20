@@ -4,9 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.winwin.winwin.entity.OrgClassificationMapping;
+import com.winwin.winwin.entity.OrganizationClassification;
 
-public interface OrgClassificationMapRepository extends JpaRepository<OrgClassificationMapping, Long> {
+public interface OrgClassificationMapRepository extends JpaRepository<OrganizationClassification, Long> {
 	@Query(value = "select * from org_classification_mapping where org_id = :id", nativeQuery = true)
-	OrgClassificationMapping findMappingForOrg(@Param("id") Long id);
-}	
+	OrganizationClassification findMappingForOrg(@Param("id") Long id);
+}

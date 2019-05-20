@@ -24,7 +24,7 @@ import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.payload.UserSignInResponsePayload;
-import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.service.impl.UserServiceImpl;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -37,7 +37,7 @@ import io.micrometer.core.instrument.util.StringUtils;
 public class UserController extends BaseController {
 
 	@Autowired
-	UserService userService;
+	UserServiceImpl userService;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;

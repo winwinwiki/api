@@ -36,7 +36,7 @@ public class OrganizationResource extends AbstractAuditableEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "category_id")
-	private OrganizationResourceCategory organizationResourceCategory;
+	private ResourceCategory ResourceCategory;
 
 	@Column(name = "organization_id")
 	private Long organizationId;
@@ -44,10 +44,13 @@ public class OrganizationResource extends AbstractAuditableEntity {
 	@Column(name = "count")
 	private Long count;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 
 }

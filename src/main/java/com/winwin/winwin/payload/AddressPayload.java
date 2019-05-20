@@ -26,4 +26,5 @@ public class AddressPayload {
 	private Long zip;
 	private String street;
 	private String placeId;
+	private String adminUrl;
 }
