@@ -83,6 +83,8 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
 						orgRegionServed.setCreatedBy(user.getEmail());
 						orgRegionServed.setUpdatedBy(user.getEmail());
+						orgRegionServed.setAdminUrl(payload.getAdminUrl());
+
 						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
 						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {
@@ -170,6 +172,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 			if (!StringUtils.isEmpty(payload.getRegionName())) {
 				region.setRegionName(payload.getRegionName());
 			}
+			region.setAdminUrl(payload.getAdminUrl());
 			region.setCreatedAt(sdf.parse(formattedDte));
 			region.setUpdatedAt(sdf.parse(formattedDte));
 			region.setCreatedBy(user.getEmail());

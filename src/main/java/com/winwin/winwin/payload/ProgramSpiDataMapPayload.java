@@ -24,4 +24,5 @@ public class ProgramSpiDataMapPayload {
 	String indicatorName;
 	Boolean isChecked;
 	Long organizationId;
+	private String adminUrl;
 }

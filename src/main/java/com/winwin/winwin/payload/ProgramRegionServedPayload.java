@@ -19,4 +19,5 @@ public class ProgramRegionServedPayload {
 	Long programId;
 	Long organizationId;
 	Boolean isActive;
+	private String adminUrl;
 }

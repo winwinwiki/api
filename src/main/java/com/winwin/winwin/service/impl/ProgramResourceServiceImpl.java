@@ -70,6 +70,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				programResource.setCreatedAt(sdf.parse(formattedDte));
 				programResource.setCreatedBy(user.getEmail());
+				programResource.setAdminUrl(programResourcePayLoad.getAdminUrl());
 			}
 
 			if (programResource == null) {
@@ -136,6 +137,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				category.setUpdatedAt(sdf.parse(formattedDte));
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
+				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 			}

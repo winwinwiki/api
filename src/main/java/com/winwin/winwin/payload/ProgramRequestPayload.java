@@ -66,4 +66,5 @@ public class ProgramRequestPayload {
 	String missionStatement;
 
 	String contactInfo;
+	private String adminUrl;
 }

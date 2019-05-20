@@ -27,5 +27,4 @@ public class OrganizationHistoryPayload {
 	String actionPerformed;
 	String modifiedBy;
 	Date modifiedAt;
-
 }

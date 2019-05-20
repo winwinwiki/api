@@ -25,4 +25,5 @@ public class OrganizationSdgDataMapPayload {
 	String subGoalCode;
 	String subGoalName;
 	Boolean isChecked;
+	private String adminUrl;
 }

@@ -33,7 +33,7 @@ import com.winwin.winwin.exception.ResourceCategoryException;
 import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.exception.SdgDataException;
 import com.winwin.winwin.exception.SpiDataException;
-import com.winwin.winwin.payload.DataSetCategoryPayLoad;
+import com.winwin.winwin.payload.DataSetCategoryPayload;
 import com.winwin.winwin.payload.OrganizationRegionServedPayload;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.ProgramRegionServedPayload;
@@ -142,7 +142,7 @@ public class ProgramController extends BaseController {
 		ProgramDataSet programDataSet = null;
 		ProgramDataSetPayLoad payload = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
+		DataSetCategoryPayload payloadCategory = null;
 
 		if (null != programDataSetPayLoad) {
 			try {
@@ -152,15 +152,17 @@ public class ProgramController extends BaseController {
 					payload.setId(programDataSet.getId());
 					category = programDataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new DataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setProgramId(programDataSet.getProgramId());
 					payload.setDescription(programDataSet.getDescription());
 					payload.setType(programDataSet.getType());
 					payload.setUrl(programDataSet.getUrl());
+					payload.setAdminUrl(programDataSet.getAdminUrl());
 					payload.setIsActive(programDataSet.getIsActive());
 				}
 
@@ -185,7 +187,7 @@ public class ProgramController extends BaseController {
 			throws DataSetException {
 		ProgramDataSet dataSet = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
+		DataSetCategoryPayload payloadCategory = null;
 		ProgramDataSetPayLoad payload = null;
 		if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
 			Long id = programDataSetPayLoad.getId();
@@ -198,14 +200,15 @@ public class ProgramController extends BaseController {
 				payload.setId(dataSet.getId());
 				category = dataSet.getDataSetCategory();
 				if (null != category) {
-					payloadCategory = new DataSetCategoryPayLoad();
+					payloadCategory = new DataSetCategoryPayload();
 					payloadCategory.setId(category.getId());
 					payloadCategory.setCategoryName(category.getCategoryName());
+					payloadCategory.setAdminUrl(category.getAdminUrl());
 				}
 				payload.setDataSetCategory(payloadCategory);
 				payload.setOrganizationId(programDataSetPayLoad.getOrganizationId());
 				payload.setProgramId(programDataSetPayLoad.getProgramId());
-
+				payload.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 				payload.setDescription(dataSet.getDescription());
 				payload.setType(dataSet.getType());
 				payload.setUrl(dataSet.getUrl());
@@ -252,7 +255,7 @@ public class ProgramController extends BaseController {
 		List<ProgramDataSet> programDataSetList = null;
 		ProgramDataSetPayLoad payload = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
+		DataSetCategoryPayload payloadCategory = null;
 		List<ProgramDataSetPayLoad> payloadList = null;
 		try {
 			programDataSetList = programDataSetService.getProgramDataSetList(id);
@@ -265,15 +268,17 @@ public class ProgramController extends BaseController {
 					payload.setId(dataSet.getId());
 					category = dataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new DataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setProgramId(dataSet.getProgramId());
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());
 					payload.setUrl(dataSet.getUrl());
+					payload.setAdminUrl(dataSet.getAdminUrl());
 					payload.setIsActive(dataSet.getIsActive());
 					payloadList.add(payload);
 				}
@@ -293,8 +298,8 @@ public class ProgramController extends BaseController {
 	public ResponseEntity<?> getDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws DataSetCategoryException {
 		List<DataSetCategory> dataSetCategoryList = null;
-		List<DataSetCategoryPayLoad> payloadList = null;
-		DataSetCategoryPayLoad payload = null;
+		List<DataSetCategoryPayload> payloadList = null;
+		DataSetCategoryPayload payload = null;
 		try {
 			dataSetCategoryList = programDataSetService.getDataSetCategoryList();
 			if (dataSetCategoryList == null) {
@@ -303,9 +308,10 @@ public class ProgramController extends BaseController {
 			} else {
 				payloadList = new ArrayList<>();
 				for (DataSetCategory category : dataSetCategoryList) {
-					payload = new DataSetCategoryPayLoad();
+					payload = new DataSetCategoryPayload();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
+					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
 				}
 
@@ -342,11 +348,13 @@ public class ProgramController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
 					payload.setProgramId(programResource.getProgramId());
 					payload.setCount(programResource.getCount());
 					payload.setDescription(programResource.getDescription());
+					payload.setAdminUrl(programResource.getAdminUrl());
 					payload.setIsActive(programResource.getIsActive());
 				}
 			} catch (Exception e) {
@@ -386,10 +394,12 @@ public class ProgramController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
 					payload.setProgramId(programResource.getProgramId());
 					payload.setCount(programResource.getCount());
+					payload.setAdminUrl(programResource.getAdminUrl());
 					payload.setDescription(programResource.getDescription());
 					payload.setIsActive(programResource.getIsActive());
 				}
@@ -455,12 +465,14 @@ public class ProgramController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
 					payload.setProgramId(resource.getProgramId());
 					payload.setCount(resource.getCount());
 					payload.setDescription(resource.getDescription());
 					payload.setIsActive(resource.getIsActive());
+					payload.setAdminUrl(resource.getAdminUrl());
 					payloadList.add(payload);
 				}
 
@@ -493,6 +505,7 @@ public class ProgramController extends BaseController {
 					payload = new ResourceCategoryPayLoad();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
+					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
 				}
 
@@ -529,10 +542,12 @@ public class ProgramController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
+					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 
 				}
@@ -564,8 +579,10 @@ public class ProgramController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
+					payload.setAdminUrl(region.getAdminUrl());
 					payload.setProgramId(region.getProgramId());
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
@@ -597,6 +614,7 @@ public class ProgramController extends BaseController {
 					payload = new RegionMasterPayload();
 					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
+					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 				}
 

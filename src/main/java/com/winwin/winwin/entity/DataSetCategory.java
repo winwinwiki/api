@@ -29,4 +29,7 @@ public class DataSetCategory extends AbstractAuditableEntity {
 
 	@Column(name = "category")
 	private String categoryName;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

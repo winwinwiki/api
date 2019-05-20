@@ -20,12 +20,13 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class DataSetPayLoad {
+public class DataSetPayload {
 	Long id;
-	DataSetCategoryPayLoad dataSetCategory;
+	DataSetCategoryPayload dataSetCategory;
 	Long organizationId;
 	String description;
 	String type;
 	String url;
 	Boolean isActive;
+	private String adminUrl;
 }

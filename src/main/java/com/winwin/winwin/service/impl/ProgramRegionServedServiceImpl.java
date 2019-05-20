@@ -78,6 +78,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						programRegionServed.setUpdatedAt(sdf.parse(formattedDte));
 						programRegionServed.setCreatedBy(user.getEmail());
 						programRegionServed.setUpdatedBy(user.getEmail());
+						programRegionServed.setAdminUrl(payload.getAdminUrl());
 						programRegionServed = programRegionServedRepository.saveAndFlush(programRegionServed);
 
 						if (null != programRegionServed && null != payload.getOrganizationId()) {

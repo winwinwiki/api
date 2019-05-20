@@ -16,5 +16,5 @@ import lombok.ToString;
 public class ResourceCategoryPayLoad {
 	Long id;
 	private String categoryName;
-
+	private String adminUrl;
 }

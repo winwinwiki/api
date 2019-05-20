@@ -99,6 +99,7 @@ public class ProgramServiceImpl implements ProgramService {
 		responsePayload.setCreatedBy(payload.getCreatedBy());
 		responsePayload.setUpdatedAt(payload.getUpdatedAt());
 		responsePayload.setUpdatedBy(payload.getUpdatedBy());
+		responsePayload.setAdminUrl(payload.getAdminUrl());
 		return responsePayload;
 	}
 
@@ -142,7 +143,7 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setWebsiteUrl(payload.getWebsiteUrl());
 
 			program.setCreatedAt(sdf.parse(formattedDte));
-
+			program.setAdminUrl(payload.getAdminUrl());
 			program.setUpdatedAt(sdf.parse(formattedDte));
 			program.setCreatedBy(user.getEmail());
 			program.setUpdatedBy(user.getEmail());

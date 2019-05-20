@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,4 +38,6 @@ public class OrganizationClassification extends AbstractAuditableEntity {
 	@JoinColumn(name = "classification_id")
 	private Classification classificationId;
 
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

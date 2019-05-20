@@ -74,4 +74,5 @@ public class ProgramResponsePayload {
 	String updatedBy;
 	Date createdAt;
 	Date updatedAt;
+	private String adminUrl;
 }

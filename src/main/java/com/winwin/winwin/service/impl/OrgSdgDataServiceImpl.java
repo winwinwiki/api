@@ -85,6 +85,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 						sdgDataMapObj.setCreatedBy(user.getEmail());
 						sdgDataMapObj.setUpdatedBy(user.getEmail());
+						sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
 						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
@@ -136,6 +137,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
@@ -180,8 +183,9 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 					payload.setGoalName(sdgMapData.getSdgData().getGoalName());
 					payload.setSubGoalCode(sdgMapData.getSdgData().getShortNameCode());
 					payload.setSubGoalName(sdgMapData.getSdgData().getShortName());
-				}
 
+				}
+				payload.setAdminUrl(sdgMapData.getAdminUrl());
 				payloadList.add(payload);
 
 			}

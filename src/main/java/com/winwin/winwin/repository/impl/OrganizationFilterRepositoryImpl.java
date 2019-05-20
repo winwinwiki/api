@@ -1,5 +1,6 @@
 package com.winwin.winwin.repository.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -130,9 +131,14 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getGoalCode() != 0 && sdg)
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
 
-		List<Organization> organizationList = filterQuery.getResultList();
+		try {
+			List<Organization> organizationList = filterQuery.getResultList();
+			return organizationList;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
 
-		return organizationList;
 	}
 
 }

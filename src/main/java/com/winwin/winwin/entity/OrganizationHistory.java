@@ -61,4 +61,6 @@ public class OrganizationHistory {
 	@Column(name = "entity_name")
 	private String entityName;
 
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

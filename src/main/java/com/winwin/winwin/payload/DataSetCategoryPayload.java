@@ -13,8 +13,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class DataSetCategoryPayLoad {
+public class DataSetCategoryPayload {
 	Long id;
 	private String categoryName;
-
+	private String adminUrl;
 }

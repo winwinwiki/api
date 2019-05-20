@@ -50,4 +50,6 @@ public class SpiData {
 	@Column(name = "indicator_name")
 	private String indicatorName;
 
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

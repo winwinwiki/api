@@ -26,6 +26,6 @@ public class OrganizationSpiDataMapPayload {
 	String componentName;
 	String indicatorId;
 	String indicatorName;
-	Boolean isChecked; 
-
+	Boolean isChecked;
+	private String adminUrl;
 }

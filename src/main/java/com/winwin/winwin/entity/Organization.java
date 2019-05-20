@@ -59,7 +59,7 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "sector_level_name")
 	private String sectorLevelName;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@ManyToOne
@@ -97,25 +97,28 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "twitter_url")
 	private String twitterUrl;
 
-	@Column(name = "values")
+	@Column(name = "values", columnDefinition = "TEXT")
 	String values;
 
-	@Column(name = "purpose")
+	@Column(name = "purpose", columnDefinition = "TEXT")
 	String purpose;
 
-	@Column(name = "self_interest")
+	@Column(name = "self_interest", columnDefinition = "TEXT")
 	private String selfInterest;
 
-	@Column(name = "business_model")
+	@Column(name = "business_model", columnDefinition = "TEXT")
 	String businessModel;
 
 	@Column(name = "population_served")
 	Long populationServed;
 
-	@Column(name = "mission_statement")
+	@Column(name = "mission_statement", columnDefinition = "TEXT")
 	String missionStatement;
 
-	@Column(name = "contact_info")
+	@Column(name = "contact_info", columnDefinition = "TEXT")
 	String contactInfo;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 
 }

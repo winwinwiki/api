@@ -7,14 +7,14 @@ import java.util.List;
 
 import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.OrganizationDataSet;
-import com.winwin.winwin.payload.DataSetPayLoad;
+import com.winwin.winwin.payload.DataSetPayload;
 
 /**
  * @author ArvindKhatik
  *
  */
 public interface OrganizationDataSetService {
-	OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayLoad orgDataSetPayLoad);
+	OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad);
 
 	void removeOrganizationDataSet(Long dataSetId);
 

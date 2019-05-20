@@ -38,6 +38,9 @@ public class NteeData {
 	@Column(name = "code")
 	private String code;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

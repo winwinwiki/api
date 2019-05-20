@@ -40,8 +40,11 @@ public class OrganizationSdgData extends AbstractAuditableEntity {
 	@ManyToOne
 	@JoinColumn(name = "sdg_id")
 	private SdgData sdgData;
-	
+
 	@Column(name = "is_checked")
 	private Boolean isChecked = false;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 
 }

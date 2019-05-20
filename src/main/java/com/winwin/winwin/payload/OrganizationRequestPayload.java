@@ -45,4 +45,5 @@ public class OrganizationRequestPayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
+	private String adminUrl;
 }

@@ -15,8 +15,8 @@ import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
-import com.winwin.winwin.payload.DataSetCategoryPayLoad;
-import com.winwin.winwin.payload.DataSetPayLoad;
+import com.winwin.winwin.payload.DataSetCategoryPayload;
+import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
@@ -56,7 +56,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
-	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayLoad orgDataSetPayLoad) {
+	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationDataSet organizationDataSet = null;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -126,7 +126,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 * @param organizationDataSetPayLoad
 	 * @return
 	 */
-	private OrganizationDataSet constructOrganizationDataSet(DataSetPayLoad orgDataSetPayLoad, UserPayload user) {
+	private OrganizationDataSet constructOrganizationDataSet(DataSetPayload orgDataSetPayLoad, UserPayload user) {
 		OrganizationDataSet organizationDataSet = null;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = null;
@@ -138,6 +138,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organizationDataSet.setCreatedAt(sdf.parse(formattedDte));
 				organizationDataSet.setCreatedBy(user.getEmail());
+
 			}
 
 			if (organizationDataSet == null) {
@@ -152,7 +153,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				organizationDataSet.setUrl(orgDataSetPayLoad.getUrl());
 				organizationDataSet.setUpdatedAt(sdf.parse(formattedDte));
 				organizationDataSet.setUpdatedBy(user.getEmail());
-
+				organizationDataSet.setAdminUrl(orgDataSetPayLoad.getAdminUrl());
 			}
 
 		} catch (Exception e) {
@@ -171,7 +172,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 * @param organizationDataSetPayLoad
 	 * @param organizationDataSet
 	 */
-	private void setOrganizationDataSetCategory(DataSetPayLoad orgDataSetPayLoad, OrganizationDataSet orgDataSet,
+	private void setOrganizationDataSetCategory(DataSetPayload orgDataSetPayLoad, OrganizationDataSet orgDataSet,
 			UserPayload user) {
 		DataSetCategory organizationDataSetCategory = null;
 		try {
@@ -202,7 +203,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 		}
 	}
 
-	public DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayLoad categoryFromPayLoad,
+	public DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
@@ -211,6 +212,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
+			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			category.setCreatedAt(sdf.parse(formattedDte));
 			category.setUpdatedAt(sdf.parse(formattedDte));
 			category.setCreatedBy(user.getEmail());

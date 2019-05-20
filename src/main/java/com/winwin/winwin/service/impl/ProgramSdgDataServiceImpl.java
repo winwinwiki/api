@@ -83,6 +83,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 						sdgDataMapObj.setCreatedBy(user.getEmail());
 						sdgDataMapObj.setUpdatedBy(user.getEmail());
+						sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+
 						sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 						if (null != sdgDataMapObj && null != payload.getOrganizationId()) {
@@ -134,6 +136,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 							if (null != sdgDataMapObj && null != payload.getOrganizationId()) {
@@ -178,7 +182,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 					payload.setSubGoalCode(sdgMapData.getSdgData().getShortNameCode());
 					payload.setSubGoalName(sdgMapData.getSdgData().getShortName());
 				}
-
+				payload.setAdminUrl(sdgMapData.getAdminUrl());
 				payloadList.add(payload);
 
 			}

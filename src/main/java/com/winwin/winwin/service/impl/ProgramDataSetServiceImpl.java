@@ -15,7 +15,7 @@ import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.ProgramDataSet;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
-import com.winwin.winwin.payload.DataSetCategoryPayLoad;
+import com.winwin.winwin.payload.DataSetCategoryPayload;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
@@ -63,6 +63,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				programDataSet.setCreatedAt(sdf.parse(formattedDte));
 				programDataSet.setCreatedBy(user.getEmail());
+				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 			}
 
 			if (programDataSet == null) {
@@ -76,6 +77,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet.setType(programDataSetPayLoad.getType());
 				programDataSet.setUrl(programDataSetPayLoad.getUrl());
 				programDataSet.setUpdatedAt(sdf.parse(formattedDte));
+				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 				programDataSet.setUpdatedBy(user.getEmail());
 
 			}
@@ -117,7 +119,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 		}
 	}
 
-	public DataSetCategory saveDataSetCategory(DataSetCategoryPayLoad categoryFromPayLoad, UserPayload user) {
+	public DataSetCategory saveDataSetCategory(DataSetCategoryPayload categoryFromPayLoad, UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -129,6 +131,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			category.setUpdatedAt(sdf.parse(formattedDte));
 			category.setCreatedBy(user.getEmail());
 			category.setUpdatedBy(user.getEmail());
+			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}
@@ -235,6 +238,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				programDataSet.setCreatedAt(sdf.parse(formattedDte));
 				programDataSet.setCreatedBy(user.getEmail());
+				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
+
 			}
 
 			if (programDataSet == null) {

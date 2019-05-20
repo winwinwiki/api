@@ -33,9 +33,12 @@ public class OrganizationNote extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@Column(name = "name")
+	@Column(name = "name", columnDefinition = "text")
 	private String name;
 
 	@JoinColumn(name = "organization_id")
 	private Long organizationId;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

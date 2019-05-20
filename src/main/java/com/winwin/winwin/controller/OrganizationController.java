@@ -41,8 +41,8 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.exception.SdgDataException;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.DataSetCategoryPayLoad;
-import com.winwin.winwin.payload.DataSetPayLoad;
+import com.winwin.winwin.payload.DataSetCategoryPayload;
+import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationDivisionPayload;
@@ -358,6 +358,7 @@ public class OrganizationController extends BaseController {
 				addressPayload.setZip(organization.getAddress().getZip());
 				addressPayload.setStreet(organization.getAddress().getStreet());
 				addressPayload.setPlaceId(organization.getAddress().getPlaceId());
+				addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
 				payload.setAddress(addressPayload);
 			}
 			payload.setName(organization.getName());
@@ -385,6 +386,7 @@ public class OrganizationController extends BaseController {
 			payload.setMissionStatement(organization.getMissionStatement());
 			payload.setContactInfo(organization.getContactInfo());
 			payload.setPopulationServed(organization.getPopulationServed());
+			payload.setAdminUrl(organization.getAdminUrl());
 			payload.setTagStatus(organization.getTagStatus());
 
 		}
@@ -397,30 +399,32 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createOrganizationDataSet(@RequestBody DataSetPayLoad orgDataSetPayLoad)
+	public ResponseEntity<?> createOrganizationDataSet(@RequestBody DataSetPayload orgDataSetPayLoad)
 			throws DataSetException {
 		OrganizationDataSet organizationDataSet = null;
-		DataSetPayLoad payload = null;
+		DataSetPayload payload = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
+		DataSetCategoryPayload payloadCategory = null;
 
 		try {
 			if (null != orgDataSetPayLoad) {
 				organizationDataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(orgDataSetPayLoad);
 				if (null != organizationDataSet) {
-					payload = new DataSetPayLoad();
+					payload = new DataSetPayload();
 					payload.setId(organizationDataSet.getId());
 					category = organizationDataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new DataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setOrganizationId(organizationDataSet.getOrganizationId());
 					payload.setDescription(organizationDataSet.getDescription());
 					payload.setType(organizationDataSet.getType());
 					payload.setUrl(organizationDataSet.getUrl());
+					payload.setAdminUrl(organizationDataSet.getAdminUrl());
 					payload.setIsActive(organizationDataSet.getIsActive());
 				}
 
@@ -441,12 +445,12 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateOrganizationDataSet(@RequestBody DataSetPayLoad organizationDataSetPayLoad)
+	public ResponseEntity<?> updateOrganizationDataSet(@RequestBody DataSetPayload organizationDataSetPayLoad)
 			throws DataSetException {
 		OrganizationDataSet dataSet = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
-		DataSetPayLoad payload = null;
+		DataSetCategoryPayload payloadCategory = null;
+		DataSetPayload payload = null;
 
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
@@ -454,21 +458,23 @@ public class OrganizationController extends BaseController {
 			if (dataSet == null) {
 				throw new DataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			} else {
-				payload = new DataSetPayLoad();
+				payload = new DataSetPayload();
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 				payload.setId(dataSet.getId());
 				category = dataSet.getDataSetCategory();
 
 				if (null != category) {
-					payloadCategory = new DataSetCategoryPayLoad();
+					payloadCategory = new DataSetCategoryPayload();
 					payloadCategory.setId(category.getId());
 					payloadCategory.setCategoryName(category.getCategoryName());
+					payloadCategory.setAdminUrl(category.getAdminUrl());
 				}
 				payload.setDataSetCategory(payloadCategory);
 				payload.setOrganizationId(dataSet.getOrganizationId());
 				payload.setDescription(dataSet.getDescription());
 				payload.setType(dataSet.getType());
 				payload.setUrl(dataSet.getUrl());
+				payload.setAdminUrl(dataSet.getAdminUrl());
 				payload.setIsActive(dataSet.getIsActive());
 			}
 		} else {
@@ -483,7 +489,7 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> deleteOrganizationDataSet(@RequestBody DataSetPayLoad orgDataSetPayLoad)
+	public ResponseEntity<?> deleteOrganizationDataSet(@RequestBody DataSetPayload orgDataSetPayLoad)
 			throws DataSetException {
 		try {
 			if (null != orgDataSetPayLoad && null != orgDataSetPayLoad.getId()) {
@@ -511,30 +517,32 @@ public class OrganizationController extends BaseController {
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrganizationDataSetList(@PathVariable("id") Long id) throws DataSetException {
 		List<OrganizationDataSet> orgDataSetList = null;
-		DataSetPayLoad payload = null;
+		DataSetPayload payload = null;
 		DataSetCategory category = null;
-		DataSetCategoryPayLoad payloadCategory = null;
-		List<DataSetPayLoad> payloadList = null;
+		DataSetCategoryPayload payloadCategory = null;
+		List<DataSetPayload> payloadList = null;
 		try {
 			orgDataSetList = organizationDataSetService.getOrganizationDataSetList(id);
 			if (orgDataSetList == null) {
 				throw new DataSetException(customMessageSource.getMessage("org.dataset.error.not_found"));
 			} else {
-				payloadList = new ArrayList<DataSetPayLoad>();
+				payloadList = new ArrayList<DataSetPayload>();
 				for (OrganizationDataSet dataSet : orgDataSetList) {
-					payload = new DataSetPayLoad();
+					payload = new DataSetPayload();
 					payload.setId(dataSet.getId());
 					category = dataSet.getDataSetCategory();
 					if (null != category) {
-						payloadCategory = new DataSetCategoryPayLoad();
+						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setOrganizationId(dataSet.getOrganizationId());
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());
 					payload.setUrl(dataSet.getUrl());
+					payload.setAdminUrl(dataSet.getAdminUrl());
 					payload.setIsActive(dataSet.getIsActive());
 					payloadList.add(payload);
 				}
@@ -554,8 +562,8 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getOrganizationDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws DataSetCategoryException {
 		List<DataSetCategory> orgDataSetCategoryList = null;
-		List<DataSetCategoryPayLoad> payloadList = null;
-		DataSetCategoryPayLoad payload = null;
+		List<DataSetCategoryPayload> payloadList = null;
+		DataSetCategoryPayload payload = null;
 		try {
 			orgDataSetCategoryList = organizationDataSetService.getDataSetCategoryList();
 			if (orgDataSetCategoryList == null) {
@@ -564,9 +572,10 @@ public class OrganizationController extends BaseController {
 			} else {
 				payloadList = new ArrayList<>();
 				for (DataSetCategory category : orgDataSetCategoryList) {
-					payload = new DataSetCategoryPayLoad();
+					payload = new DataSetCategoryPayload();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
+					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
 				}
 
@@ -604,7 +613,9 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
+					payload.setAdminUrl(organizationResource.getAdminUrl());
 					payload.setResourceCategory(payloadCategory);
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
@@ -649,8 +660,10 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
+					payload.setAdminUrl(organizationResource.getAdminUrl());
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
@@ -718,10 +731,12 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
+						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
 					payload.setOrganizationId(resource.getOrganizationId());
 					payload.setCount(resource.getCount());
+					payload.setAdminUrl(resource.getAdminUrl());
 					payload.setDescription(resource.getDescription());
 					payload.setIsActive(resource.getIsActive());
 					payloadList.add(payload);
@@ -756,7 +771,9 @@ public class OrganizationController extends BaseController {
 					payload = new ResourceCategoryPayLoad();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
+					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
+
 				}
 
 			}
@@ -792,10 +809,12 @@ public class OrganizationController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
+					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 
 				}
@@ -827,10 +846,14 @@ public class OrganizationController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
+						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
+
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
+					payload.setAdminUrl(region.getAdminUrl());
+
 					payloadList.add(payload);
 
 				}
@@ -860,6 +883,8 @@ public class OrganizationController extends BaseController {
 					payload = new RegionMasterPayload();
 					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
+					payload.setAdminUrl(region.getAdminUrl());
+
 					payloadList.add(payload);
 
 				}
@@ -1159,6 +1184,8 @@ public class OrganizationController extends BaseController {
 					addressPayload.setZip(organization.getAddress().getZip());
 					addressPayload.setStreet(organization.getAddress().getStreet());
 					addressPayload.setPlaceId(organization.getAddress().getPlaceId());
+
+					addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
 					payload.setLocation(addressPayload);
 				}
 
@@ -1313,7 +1340,7 @@ public class OrganizationController extends BaseController {
 			payload.setOrganizationId(organizationNote.getOrganizationId());
 			payload.setCreatedBy(organizationNote.getCreatedBy());
 			payload.setCreatedAt(organizationNote.getCreatedAt());
-
+			payload.setAdminUrl(organizationNote.getAdminUrl());
 		}
 		return payload;
 	}

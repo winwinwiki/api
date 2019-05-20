@@ -41,16 +41,18 @@ public class OrganizationDataSet extends AbstractAuditableEntity {
 	@Column(name = "organization_id")
 	private Long organizationId;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "type")
 	private String type;
 
-	@Column(name = "url")
+	@Column(name = "url", columnDefinition = "TEXT")
 	private String url;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
 
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

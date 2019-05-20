@@ -118,6 +118,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setUpdatedAt(sdf.parse(formattedDte));
 				organization.setCreatedBy(user.getEmail());
 				organization.setUpdatedBy(user.getEmail());
+				organization.setAdminUrl(organizationPayload.getAdminUrl());
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
@@ -202,7 +203,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setRevenue(organizationPayload.getRevenue());
 				organization.setAssets(organizationPayload.getAssets());
 				organization.setSectorLevelName(organizationPayload.getSectorLevelName());
-
+				organization.setAdminUrl(organizationPayload.getAdminUrl());
 				if (organizationPayload.getNaicsCode() != null) {
 					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 					organization.setNaicsCode(naicsCode);
@@ -268,6 +269,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			address.setUpdatedAt(sdf.parse(formattedDte));
 			address.setCreatedBy(user.getEmail());
 			address.setUpdatedBy(user.getEmail());
+			address.setAdminUrl(addressPayload.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
@@ -298,7 +300,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.getAddress().setPlaceId(addressPayload.getPlaceId());
 				organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
 				organization.getAddress().setUpdatedBy(user.getEmail());
-
+				organization.getAddress().setAdminUrl(addressPayload.getAdminUrl());
 				return true;
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
@@ -374,6 +376,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setSector(organizationPayload.getSector());
 				organization.setSectorLevel(organizationPayload.getSectorLevel());
 				organization.setDescription(organizationPayload.getDescription());
+
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress(), user);
 				}
@@ -423,7 +426,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			payload.setName(organization.getName());
 			orgAddress = getLocationPayload(organization, orgAddress);
 			payload.setLocation(orgAddress);
-
+			payload.setAdminUrl(organization.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.chart.error.list"), e);
 		}
@@ -446,6 +449,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			addressPayload.setZip(organization.getAddress().getZip());
 			addressPayload.setStreet(organization.getAddress().getStreet());
 			addressPayload.setPlaceId(organization.getAddress().getPlaceId());
+			addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
 		}
 		return addressPayload;
 	}
@@ -505,6 +509,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setUpdatedAt(sdf.parse(formattedDte));
 				organization.setCreatedBy(user.getEmail());
 				organization.setUpdatedBy(user.getEmail());
+				organization.setAdminUrl(payload.getAdminUrl());
+
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {

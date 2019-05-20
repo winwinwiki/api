@@ -37,4 +37,7 @@ public class NaicsData {
 
 	@Column(name = "code")
 	private String code;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 }

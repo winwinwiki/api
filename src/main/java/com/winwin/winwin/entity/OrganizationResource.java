@@ -44,10 +44,13 @@ public class OrganizationResource extends AbstractAuditableEntity {
 	@Column(name = "count")
 	private Long count;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
+
+	@Column(name = "admin_url", columnDefinition = "TEXT")
+	private String adminUrl;
 
 }

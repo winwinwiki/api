@@ -16,10 +16,11 @@ import lombok.ToString;
 public class ProgramDataSetPayLoad {
 	Long id;
 	Long organizationId;
-	DataSetCategoryPayLoad dataSetCategory;
+	DataSetCategoryPayload dataSetCategory;
 	Long programId;
 	String description;
 	String type;
 	String url;
 	Boolean isActive;
+	private String adminUrl;
 }

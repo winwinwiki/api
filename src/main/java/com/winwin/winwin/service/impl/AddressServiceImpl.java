@@ -38,6 +38,7 @@ public class AddressServiceImpl implements AddressService {
 			address.setUpdatedAt(sdf.parse(formattedDte));
 			address.setCreatedBy(user.getEmail());
 			address.setUpdatedBy(user.getEmail());
+			address.setAdminUrl(addressPayload.getAdminUrl());
 		} catch (Exception e) {
 
 		}
@@ -70,6 +71,8 @@ public class AddressServiceImpl implements AddressService {
 				address.setPlaceId(addressPayload.getPlaceId());
 				address.setUpdatedAt(sdf.parse(formattedDte));
 				address.setUpdatedBy(user.getEmail());
+				address.setAdminUrl(addressPayload.getAdminUrl());
+
 				addressRepository.saveAndFlush(address);
 				return true;
 			} catch (Exception e) {
@@ -92,6 +95,8 @@ public class AddressServiceImpl implements AddressService {
 		addressPayload.setZip(address.getZip());
 		addressPayload.setStreet(address.getStreet());
 		addressPayload.setPlaceId(address.getPlaceId());
+		addressPayload.setAdminUrl(address.getAdminUrl());
+
 		return addressPayload;
 	}
 }

@@ -59,6 +59,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				note.setOrganizationId(organizationNotePayload.getOrganizationId());
 				note.setCreatedAt(sdf.parse(formattedDte));
 				note.setUpdatedAt(sdf.parse(formattedDte));
+				note.setAdminUrl(organizationNotePayload.getAdminUrl());
 				note.setCreatedBy(user.getEmail());
 				note.setUpdatedBy(user.getEmail());
 				note = organizationNoteRepository.saveAndFlush(note);

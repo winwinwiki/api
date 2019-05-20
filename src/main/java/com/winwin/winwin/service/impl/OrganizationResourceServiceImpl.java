@@ -128,6 +128,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				organizationResource.setCreatedAt(sdf.parse(formattedDte));
 				organizationResource.setCreatedBy(user.getEmail());
+				organizationResource.setAdminUrl(orgResourcePayLoad.getAdminUrl());
 			}
 
 			if (organizationResource == null) {
@@ -205,6 +206,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				category.setUpdatedAt(sdf.parse(formattedDte));
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
+				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 			}

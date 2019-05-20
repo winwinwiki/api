@@ -80,6 +80,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 						spiDataMapObj.setCreatedBy(user.getEmail());
 						spiDataMapObj.setUpdatedBy(user.getEmail());
+						spiDataMapObj.setAdminUrl(payload.getAdminUrl());
 						spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 						if (null != spiDataMapObj && null != payload.getOrganizationId()) {
@@ -139,6 +140,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							spiDataMapObj.setIsChecked(payload.getIsChecked());
 							spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							spiDataMapObj.setUpdatedBy(user.getEmail());
+							spiDataMapObj.setAdminUrl(payload.getAdminUrl());
 							spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
@@ -186,7 +188,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 					payload.setIndicatorId(spiMapData.getSpiData().getIndicatorId());
 					payload.setIndicatorName(spiMapData.getSpiData().getIndicatorName());
 				}
-
+				payload.setAdminUrl(spiMapData.getAdminUrl());
 				payloadList.add(payload);
 
 			}
