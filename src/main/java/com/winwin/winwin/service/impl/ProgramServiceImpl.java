@@ -17,6 +17,7 @@ import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.AddressService;
 import com.winwin.winwin.service.ProgramService;
@@ -36,11 +37,15 @@ public class ProgramServiceImpl implements ProgramService {
 	AddressService addressService;
 
 	@Autowired
+	OrganizationRepository organizationRepository;
+
+	@Autowired
 	UserService userService;
 
 	@Override
 	public Program createProgram(ProgramRequestPayload programPayload) {
 		// TODO Auto-generated method stub
+
 		Program program = getProgramFromProgramRequestPayload(programPayload);
 
 		return programRepository.saveAndFlush(program);
@@ -71,7 +76,9 @@ public class ProgramServiceImpl implements ProgramService {
 	public ProgramResponsePayload getProgramResponseFromProgram(Program payload) {
 		ProgramResponsePayload responsePayload = new ProgramResponsePayload();
 		responsePayload.setId(payload.getId());
+
 		responsePayload.setAddress(addressService.getAddressPayloadFromAddress(payload.getAddress()));
+
 		responsePayload.setAssets(payload.getAssets());
 		responsePayload.setBusinessModel(payload.getBusinessModel());
 		responsePayload.setContactInfo(payload.getContactInfo());
@@ -80,10 +87,8 @@ public class ProgramServiceImpl implements ProgramService {
 		responsePayload.setIsActive(payload.getIsActive());
 		responsePayload.setLinkedinUrl(payload.getLinkedinUrl());
 		responsePayload.setMissionStatement(payload.getMissionStatement());
-		responsePayload.setNaicsCode(payload.getNaicsCode());
-		responsePayload.setName(payload.getName());
-		responsePayload.setNteeCode(payload.getNteeCode());
-		responsePayload.setOrgId(payload.getOrgId().getId());
+		if (payload.getOrganization() != null)
+			responsePayload.setOrgId(payload.getOrganization().getId());
 		responsePayload.setPopulationServed(payload.getPopulationServed());
 		responsePayload.setPriority(payload.getPriority());
 		responsePayload.setPurpose(payload.getPurpose());
@@ -101,6 +106,12 @@ public class ProgramServiceImpl implements ProgramService {
 		responsePayload.setUpdatedAt(payload.getUpdatedAt());
 		responsePayload.setUpdatedBy(payload.getUpdatedBy());
 		responsePayload.setAdminUrl(payload.getAdminUrl());
+		responsePayload.setName(payload.getName());
+
+		responsePayload.setNaicsCode(payload.getNaicsCode());
+
+		responsePayload.setNteeCode(payload.getNteeCode());
+
 		return responsePayload;
 	}
 
@@ -126,10 +137,14 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setIsActive(payload.getIsActive());
 			program.setLinkedinUrl(payload.getLinkedinUrl());
 			program.setMissionStatement(payload.getMissionStatement());
-			program.setNaicsCode(naicsRepository.findById(payload.getNaicsCode()).orElse(null));
+
+			if (payload.getNaicsCode() != null)
+				program.setNaicsCode(naicsRepository.findById(payload.getNaicsCode()).orElse(null));
 			program.setName(payload.getName());
-			program.setNteeCode(nteeRepository.findById(payload.getNteeCode()).orElse(null));
-			program.setOrgId(program.getOrgId());
+			if (payload.getNteeCode() != null)
+				program.setNteeCode(nteeRepository.findById(payload.getNteeCode()).orElse(null));
+			if (payload.getOrgId() != null)
+				program.setOrganization(organizationRepository.findOrgById(payload.getOrgId()));
 			program.setPopulationServed(payload.getPopulationServed());
 			program.setPriority(payload.getPriority());
 			program.setPurpose(payload.getPurpose());

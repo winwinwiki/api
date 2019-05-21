@@ -5,9 +5,13 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.entity.ProgramResource;
 
+@Transactional
+@Repository
 public interface ProgramResourceRepository extends JpaRepository<ProgramResource, Long> {
 	@Query(value = "select * from program_resource where program_id = :program_id and is_Active = true", nativeQuery = true)
 	List<ProgramResource> findAllProgramResourceById(@Param("program_id") Long programId);

@@ -14,13 +14,11 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ResourceCategory;
-import com.winwin.winwin.exception.ResourceCategoryException;
 import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
-import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -31,9 +29,6 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 @Service
 public class ProgramResourceServiceImpl implements ProgramResourceService {
-
-	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
 
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
@@ -99,23 +94,15 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 		try {
 			if (null != programResourcePayLoad.getResourceCategory()) {
 				Long categoryId = programResourcePayLoad.getResourceCategory().getId();
-				if (null != categoryId) {
-					if (categoryId.equals(CATEGORY_ID)) {
-						resourceCategory = saveResourceCategory(programResourcePayLoad.getResourceCategory());
-						LOGGER.info(customMessageSource.getMessage("org.resource.category.success.created"));
-						programResource.setResourceCategory(resourceCategory);
 
-					} else {
-						resourceCategory = resourceCategoryRepository.getOne(categoryId);
-						if (resourceCategory == null) {
-							throw new ResourceCategoryException(
-									"Org resource category record not found for Id: " + categoryId + " in DB ");
-						}
-						programResource.setResourceCategory(resourceCategory);
+				if (categoryId != null)
+					resourceCategory = resourceCategoryRepository.findById(categoryId).orElse(null);
 
-					}
-
+				if (resourceCategory == null) {
+					resourceCategory = saveResourceCategory(programResourcePayLoad.getResourceCategory());
+					LOGGER.info(customMessageSource.getMessage("org.resource.category.success.created"));
 				}
+				programResource.setResourceCategory(resourceCategory);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.created"), e);
@@ -187,7 +174,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			}
 
 		}
-		return null;
+		return programResource;
 	}
 
 	@Override

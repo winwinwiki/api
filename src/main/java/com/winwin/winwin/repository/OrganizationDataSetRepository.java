@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.entity.OrganizationDataSet;
 
@@ -12,6 +14,9 @@ import com.winwin.winwin.entity.OrganizationDataSet;
  * @author ArvindKhatik
  *
  */
+
+@Transactional
+@Repository
 public interface OrganizationDataSetRepository extends JpaRepository<OrganizationDataSet, Long> {
 	@Query(value = "select * from org_dataset where organization_id = :organization_id and is_Active = true", nativeQuery = true)
 	List<OrganizationDataSet> findAllOrgDataSetList(@Param("organization_id") Long organization_id);

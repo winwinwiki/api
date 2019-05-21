@@ -69,7 +69,7 @@ public class Program extends AbstractAuditableEntity {
 
 	@OneToOne
 	@JoinColumn(name = "org_id")
-	private Organization orgId;
+	private Organization organization;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
