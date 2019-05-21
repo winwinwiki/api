@@ -212,6 +212,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
+
 			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			category.setCreatedAt(sdf.parse(formattedDte));
 			category.setUpdatedAt(sdf.parse(formattedDte));

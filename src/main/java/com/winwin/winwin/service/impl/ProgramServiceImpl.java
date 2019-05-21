@@ -70,6 +70,7 @@ public class ProgramServiceImpl implements ProgramService {
 	@Override
 	public ProgramResponsePayload getProgramResponseFromProgram(Program payload) {
 		ProgramResponsePayload responsePayload = new ProgramResponsePayload();
+		responsePayload.setId(payload.getId());
 		responsePayload.setAddress(addressService.getAddressPayloadFromAddress(payload.getAddress()));
 		responsePayload.setAssets(payload.getAssets());
 		responsePayload.setBusinessModel(payload.getBusinessModel());
