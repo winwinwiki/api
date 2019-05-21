@@ -25,6 +25,8 @@ public class AddressServiceImpl implements AddressService {
 	public Address saveAddress(AddressPayload addressPayload) {
 		UserPayload user = userService.getCurrentUserDetails();
 		Address address = new Address();
+		if (addressPayload.getId() != null)
+			address = addressRepository.findAddressById(addressPayload.getId());
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));

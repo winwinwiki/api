@@ -5,9 +5,13 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.entity.ProgramDataSet;
 
+@Transactional
+@Repository
 public interface ProgramDataSetRepository extends JpaRepository<ProgramDataSet, Long> {
 	@Query(value = "select * from program_dataset where program_id = :program_id and is_Active = true", nativeQuery = true)
 	List<ProgramDataSet> findAllProgramDataSetList(@Param("program_id") Long program_id);

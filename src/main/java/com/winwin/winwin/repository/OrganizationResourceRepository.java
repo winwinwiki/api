@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.entity.OrganizationResource;
 
@@ -12,6 +14,9 @@ import com.winwin.winwin.entity.OrganizationResource;
  * @author ArvindKhatik
  *
  */
+
+@Transactional
+@Repository
 public interface OrganizationResourceRepository extends JpaRepository<OrganizationResource, Long> {
 	@Query(value = "select * from org_resource where organization_id = :organization_id and is_Active = true", nativeQuery = true)
 	List<OrganizationResource> findAllOrgResourceById(@Param("organization_id") Long organization_id);
