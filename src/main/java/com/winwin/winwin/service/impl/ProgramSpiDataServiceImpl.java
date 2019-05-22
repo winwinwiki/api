@@ -106,7 +106,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
 						}
 
-						if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
+						if (payload.getProgramId() == null) {
 							isValidSpiData = false;
 						}
 
