@@ -137,6 +137,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 							sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
 							sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+							sdgDataMapObj.setProgramId(payload.getProgramId());
 
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 

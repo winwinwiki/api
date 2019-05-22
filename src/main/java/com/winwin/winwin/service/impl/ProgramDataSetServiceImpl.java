@@ -64,6 +64,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet.setCreatedAt(sdf.parse(formattedDte));
 				programDataSet.setCreatedBy(user.getEmail());
 				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
+				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
 			}
 
 			if (programDataSet == null) {

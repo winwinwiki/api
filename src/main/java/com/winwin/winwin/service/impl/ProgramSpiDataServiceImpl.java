@@ -74,7 +74,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							SpiData orgSpiDataObj = spiDataRepository.findSpiObjByIds(dId, cId, indId);
 							spiDataMapObj.setSpiData(orgSpiDataObj);
 						}
-
+						spiDataMapObj.setProgramId(payload.getProgramId());
 						spiDataMapObj.setIsChecked(payload.getIsChecked());
 						spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
@@ -141,6 +141,8 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 							spiDataMapObj.setUpdatedBy(user.getEmail());
 							spiDataMapObj.setAdminUrl(payload.getAdminUrl());
+							spiDataMapObj.setProgramId(payload.getProgramId());
+
 							spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
