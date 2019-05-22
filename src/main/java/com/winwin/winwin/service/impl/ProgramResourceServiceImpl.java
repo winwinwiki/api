@@ -62,6 +62,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResource = programResourceRepository.getOne(programResourcePayLoad.getId());
 			} else {
 				programResource = new ProgramResource();
+				programResource.setProgramId(programResourcePayLoad.getProgramId());
 				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 				programResource.setCreatedAt(sdf.parse(formattedDte));
 				programResource.setCreatedBy(user.getEmail());

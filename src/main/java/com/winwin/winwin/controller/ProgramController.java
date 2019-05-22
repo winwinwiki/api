@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.DataSetCategory;
-import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramDataSet;
 import com.winwin.winwin.entity.ProgramRegionServed;
@@ -34,7 +33,6 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.exception.SdgDataException;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.DataSetCategoryPayload;
-import com.winwin.winwin.payload.OrganizationRegionServedPayload;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.ProgramRegionServedPayload;
 import com.winwin.winwin.payload.ProgramResourcePayLoad;
@@ -50,7 +48,6 @@ import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
-import com.winwin.winwin.service.OrganizationRegionServedService;
 import com.winwin.winwin.service.ProgramDataSetService;
 import com.winwin.winwin.service.ProgramRegionServedService;
 import com.winwin.winwin.service.ProgramResourceService;
@@ -68,9 +65,6 @@ import com.winwin.winwin.service.SpiDataService;
 @RequestMapping(value = "/program")
 
 public class ProgramController extends BaseController {
-
-	@Autowired
-	private OrganizationRegionServedService orgRegionServedService;
 
 	@Autowired
 	private ProgramRegionServedService programRegionServedService;
@@ -526,17 +520,17 @@ public class ProgramController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> createOrgRegions(
-			@RequestBody List<OrganizationRegionServedPayload> orgRegionServedPayloadList)
-			throws RegionServedException {
-		List<OrganizationRegionServed> orgRegionServedList = null;
-		List<OrganizationRegionServedPayload> payloadList = null;
-		OrganizationRegionServedPayload payload = null;
+			@RequestBody List<ProgramRegionServedPayload> programRegionServedPayloadList) throws RegionServedException {
+		List<ProgramRegionServed> progranRegionServedList = null;
+		List<ProgramRegionServedPayload> payloadList = null;
+		ProgramRegionServedPayload payload = null;
 		try {
-			orgRegionServedList = orgRegionServedService.createOrgRegionServed(orgRegionServedPayloadList);
-			if (null != orgRegionServedList) {
-				payloadList = new ArrayList<OrganizationRegionServedPayload>();
-				for (OrganizationRegionServed region : orgRegionServedList) {
-					payload = new OrganizationRegionServedPayload();
+			progranRegionServedList = programRegionServedService
+					.createProgramRegionServed(programRegionServedPayloadList);
+			if (null != progranRegionServedList) {
+				payloadList = new ArrayList<>();
+				for (ProgramRegionServed region : progranRegionServedList) {
+					payload = new ProgramRegionServedPayload();
 					payload.setId(region.getId());
 					if (null != region.getRegionMaster()) {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
@@ -545,7 +539,7 @@ public class ProgramController extends BaseController {
 						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setOrganizationId(region.getOrgId());
+					payload.setProgramId(region.getProgramId());
 					payload.setIsActive(region.getIsActive());
 					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
@@ -601,16 +595,16 @@ public class ProgramController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> getProgramRegionsMasterList() throws RegionServedException {
-		List<RegionMaster> orgRegionMasterList = null;
+		List<RegionMaster> regionMasterList = null;
 		RegionMasterPayload payload = null;
 		List<RegionMasterPayload> payloadList = null;
 		try {
-			orgRegionMasterList = orgRegionServedService.getOrgRegionMasterList();
-			if (orgRegionMasterList == null) {
+			regionMasterList = programRegionServedService.getRegionMasterList();
+			if (regionMasterList == null) {
 				throw new RegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
 			} else {
 				payloadList = new ArrayList<RegionMasterPayload>();
-				for (RegionMaster region : orgRegionMasterList) {
+				for (RegionMaster region : regionMasterList) {
 					payload = new RegionMasterPayload();
 					payload.setRegionId(region.getId());
 					payload.setRegionName(region.getRegionName());
