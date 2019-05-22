@@ -43,7 +43,7 @@ public class ProgramResponsePayload {
 
 	private String priority = "Normal";
 
-	private Long orgId;
+	private Long organizationId;
 
 	private Boolean isActive = true;
 

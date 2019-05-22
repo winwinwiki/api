@@ -88,7 +88,7 @@ public class ProgramServiceImpl implements ProgramService {
 		responsePayload.setLinkedinUrl(payload.getLinkedinUrl());
 		responsePayload.setMissionStatement(payload.getMissionStatement());
 		if (payload.getOrganization() != null)
-			responsePayload.setOrgId(payload.getOrganization().getId());
+			responsePayload.setOrganizationId(payload.getOrganization().getId());
 		responsePayload.setPopulationServed(payload.getPopulationServed());
 		responsePayload.setPriority(payload.getPriority());
 		responsePayload.setPurpose(payload.getPurpose());
@@ -143,8 +143,8 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setName(payload.getName());
 			if (payload.getNteeCode() != null)
 				program.setNteeCode(nteeRepository.findById(payload.getNteeCode()).orElse(null));
-			if (payload.getOrgId() != null)
-				program.setOrganization(organizationRepository.findOrgById(payload.getOrgId()));
+			if (payload.getOrganizationId() != null)
+				program.setOrganization(organizationRepository.findOrgById(payload.getOrganizationId()));
 			program.setPopulationServed(payload.getPopulationServed());
 			program.setPriority(payload.getPriority());
 			program.setPurpose(payload.getPurpose());
