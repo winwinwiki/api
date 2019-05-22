@@ -106,7 +106,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 							throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 						}
 
-						if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
+						if (payload.getProgramId() == null) {
 							isValidSdgData = false;
 						}
 
