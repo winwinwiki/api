@@ -12,4 +12,5 @@ import com.winwin.winwin.entity.NaicsData;
 @Repository
 public interface NaicsDataRepository extends JpaRepository<NaicsData, Long> {
 	List<NaicsData> findByNameContainingIgnoreCase(String name);
+	NaicsData findByCode(String code);
 }

@@ -14,6 +14,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrganizationCsvPayload {
+	private Long id;
+	private Long addressId;
 	private String name;
 	private Long revenue;
 	private Long assets;
@@ -21,8 +23,8 @@ public class OrganizationCsvPayload {
 	private String sectorLevel;
 	private String sectorLevelName;
 	private String description;
-	private Long naicsCode;
-	private Long nteeCode;
+	private String naicsCode;
+	private String nteeCode;
 	private String status;
 	private String priority;
 	private Long parentId;
@@ -48,5 +50,4 @@ public class OrganizationCsvPayload {
 	private String county;
 	private Long zip;
 	private String street;
-	private String placeId;
 }

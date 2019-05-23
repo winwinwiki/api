@@ -54,8 +54,7 @@ public class ProgramServiceImpl implements ProgramService {
 
 	@Override
 	public void deleteProgram(Long id) {
-		// TODO Auto-generated method stub
-
+		programRepository.deleteById(id);
 	}
 
 	@Override

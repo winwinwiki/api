@@ -9,5 +9,6 @@ import com.winwin.winwin.entity.NteeData;
 @Transactional
 @Repository
 public interface NteeDataRepository extends JpaRepository<NteeData, Long> {
+	NteeData findByCode(String code);
 
 }

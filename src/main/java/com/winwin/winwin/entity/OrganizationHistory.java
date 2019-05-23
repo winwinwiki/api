@@ -58,7 +58,7 @@ public class OrganizationHistory {
 	@Column(name = "entity_id")
 	private Long entityId;
 
-	@Column(name = "entity_name")
+	@Column(name = "entity_name", columnDefinition = "TEXT")
 	private String entityName;
 
 	@Column(name = "admin_url", columnDefinition = "TEXT")
