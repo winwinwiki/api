@@ -7,12 +7,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindK
+ *
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode
 @ToString
+
 public class ProgramSpiDataMapPayload {
 	Long id;
 	Long programId;

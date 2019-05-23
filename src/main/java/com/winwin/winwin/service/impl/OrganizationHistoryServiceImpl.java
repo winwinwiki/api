@@ -11,6 +11,10 @@ import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Service
 public class OrganizationHistoryServiceImpl implements OrganizationHistoryService {
 

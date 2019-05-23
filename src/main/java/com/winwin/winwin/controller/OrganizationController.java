@@ -63,6 +63,8 @@ import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.SdgGoalPayload;
 import com.winwin.winwin.payload.SpiDataDimensionsPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
+import com.winwin.winwin.repository.NaicsDataRepository;
+import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
@@ -141,6 +143,12 @@ public class OrganizationController extends BaseController {
 	SpiDataService spiDataService;
 	@Autowired
 	SdgDataService sdgDataService;
+
+	@Autowired
+	NteeDataRepository nteeDataRepository;
+
+	@Autowired
+	NaicsDataRepository naicsDataRepository;
 
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -1351,7 +1359,6 @@ public class OrganizationController extends BaseController {
 		address.setCity(csv.getCity());
 		address.setCountry(csv.getCountry());
 		address.setCounty(csv.getCounty());
-		address.setPlaceId(csv.getPlaceId());
 		address.setState(csv.getState());
 		address.setStreet(csv.getStreet());
 		address.setZip(csv.getZip());
@@ -1366,9 +1373,14 @@ public class OrganizationController extends BaseController {
 		payload.setIsTaggingReady(csv.getIsTaggingReady());
 		payload.setLinkedinUrl(payload.getLinkedinUrl());
 		payload.setMissionStatement(csv.getMissionStatement());
-		payload.setNaicsCode(csv.getNaicsCode());
+		// Get Id from naics_code master data table and assign the id of it
+		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
+		payload.setNaicsCode(naicsData.getId());
+
+		// Get Id from ntee_code master data table and assign the id of it
+		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
+		payload.setNteeCode(nteeData.getId());
 		payload.setName(csv.getName());
-		payload.setNteeCode(csv.getNteeCode());
 		payload.setParentId(csv.getParentId());
 		payload.setPopulationServed(csv.getPopulationServed());
 		payload.setPriority(csv.getPriority());

@@ -83,45 +83,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
 		Organization organization = null;
 		UserPayload user = userService.getCurrentUserDetails();
 		try {
 			if (null != organizationPayload && null != user) {
-				Address address = new Address();
-				if (organizationPayload.getId() != null)
-					organization = organizationRepository.findOrgById(organizationPayload.getId());
+				organization = setOrganizationData(organizationPayload, sdf, formattedDte, user);
 
-				if (organization == null)
-					organization = new Organization();
-
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organization.setName(organizationPayload.getName());
-				organization.setSector(organizationPayload.getSector());
-				organization.setSectorLevel(organizationPayload.getSectorLevel());
-				organization.setDescription(organizationPayload.getDescription());
-				if (organizationPayload.getAddress() != null) {
-					address = saveAddress(organizationPayload.getAddress(), user);
-				}
-				if (organizationPayload.getNaicsCode() != null) {
-					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
-					organization.setNaicsCode(naicsCode);
-				}
-				if (organizationPayload.getNteeCode() != null) {
-					NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
-					organization.setNteeCode(naicsCode);
-				}
-				organization.setType(OrganizationConstants.ORGANIZATION);
-				organization.setParentId(organizationPayload.getParentId());
-				organization.setAddress(address);
-				organization.setCreatedAt(sdf.parse(formattedDte));
-				organization.setUpdatedAt(sdf.parse(formattedDte));
-				organization.setCreatedBy(user.getEmail());
-				organization.setUpdatedBy(user.getEmail());
-				organization.setAdminUrl(organizationPayload.getAdminUrl());
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
+					organization.setAdminUrl(OrganizationConstants.BASE_URL + OrganizationConstants.ORGANIZATIONS + "/"
+							+ organization.getId());
+					organization = organizationRepository.saveAndFlush(organization);
+
 					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
 							organization.getName());
@@ -137,17 +114,91 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList) {
 
-		List<Organization> organizationList = new ArrayList<>();
-		Iterator<OrganizationRequestPayload> itr = organizationPayloadList.iterator();
-		while (itr.hasNext()) {
+		List<Organization> organizationList = createOrganizationsForBulkUpload(organizationPayloadList);
 
-			Organization org = createOrganization(itr.next());
-			if (org != null)
-				organizationList.add(org);
-			else
-				itr.remove();
-		}
 		return organizationList;
+	}
+
+	public List<Organization> createOrganizationsForBulkUpload(
+			List<OrganizationRequestPayload> organizationPayloadList) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+		List<Organization> organizationList = new ArrayList<Organization>();
+
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+
+			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+				if (null != organizationPayload && null != user) {
+					organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+				}
+			}
+
+			organizationList = organizationRepository.saveAll(organizationList);
+
+			for (Organization organization : organizationList) {
+				if (null != organization.getId()) {
+					organization.setAdminUrl(OrganizationConstants.BASE_URL + OrganizationConstants.ORGANIZATIONS + "/"
+							+ organization.getId());
+					organization = organizationRepository.saveAndFlush(organization);
+
+					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
+							organization.getName());
+				}
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+		}
+
+		return organizationList;
+	}
+
+	/**
+	 * @param organizationPayload
+	 * @param sdf
+	 * @param formattedDte
+	 * @param organization
+	 * @param user
+	 * @return
+	 * @throws ParseException
+	 */
+	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, SimpleDateFormat sdf,
+			String formattedDte, UserPayload user) throws ParseException {
+		Organization organization = null;
+		Address address = new Address();
+		if (organizationPayload.getId() != null)
+			organization = organizationRepository.findOrgById(organizationPayload.getId());
+
+		if (organization == null)
+			organization = new Organization();
+
+		organization.setName(organizationPayload.getName());
+		organization.setSector(organizationPayload.getSector());
+		organization.setSectorLevel(organizationPayload.getSectorLevel());
+		organization.setDescription(organizationPayload.getDescription());
+		if (organizationPayload.getAddress() != null) {
+			address = saveAddress(organizationPayload.getAddress(), user);
+		}
+		if (organizationPayload.getNaicsCode() != null) {
+			NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
+			organization.setNaicsCode(naicsCode);
+		}
+		if (organizationPayload.getNteeCode() != null) {
+			NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+			organization.setNteeCode(naicsCode);
+		}
+		organization.setType(OrganizationConstants.ORGANIZATION);
+		organization.setParentId(organizationPayload.getParentId());
+		organization.setAddress(address);
+		organization.setCreatedAt(sdf.parse(formattedDte));
+		organization.setUpdatedAt(sdf.parse(formattedDte));
+		organization.setCreatedBy(user.getEmail());
+		organization.setUpdatedBy(user.getEmail());
+		organization.setAdminUrl(organizationPayload.getAdminUrl());
+
+		return organization;
 	}
 
 	@Override
@@ -237,7 +288,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				orgClassificationMapping = addClassification(organizationPayload, organization);
 
 				/*
-				 * if (orgClassificationMapping == null) { throw new OrganizationException(
+				 * if (orgClassificationMapping == null) { throw new
+				 * OrganizationException(
 				 * "Request to update classification is invalid"); }
 				 */
 
