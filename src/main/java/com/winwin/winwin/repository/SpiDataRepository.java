@@ -21,5 +21,8 @@ import com.winwin.winwin.entity.SpiData;
 public interface SpiDataRepository extends JpaRepository<SpiData, Long> {
 	@Query(value = "select * from spi_data where dimension_id = :dId AND component_id = :cId AND indicator_id = :indId", nativeQuery = true)
 	SpiData findSpiObjByIds(@Param("dId") Long dId, @Param("cId") String cId, @Param("indId") String indId);
+	
+	@Query(value = "select * from spi_data where id = :id", nativeQuery = true)
+	SpiData findSpiObjById(@Param("id") Long id);
 
 }

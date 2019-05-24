@@ -1,12 +1,14 @@
 package com.winwin.winwin.service.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.util.IOUtils;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
@@ -23,8 +27,14 @@ import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationClassification;
 import com.winwin.winwin.entity.OrganizationHistory;
+import com.winwin.winwin.entity.OrganizationSdgData;
+import com.winwin.winwin.entity.OrganizationSpiData;
+import com.winwin.winwin.entity.SdgData;
+import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
+import com.winwin.winwin.payload.NaicsDataMappingPayload;
+import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationDepartmentPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
@@ -37,11 +47,16 @@ import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
+import com.winwin.winwin.repository.OrgSdgDataMapRepository;
+import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
+import com.winwin.winwin.repository.SdgDataRepository;
+import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CsvUtils;
 
 /**
  * @author ArvindKhatik
@@ -79,6 +94,21 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 
+	@Autowired
+	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+
+	@Autowired
+	SpiDataRepository spiDataRepository;
+
+	@Autowired
+	OrgSpiDataMapRepository orgSpiDataMapRepository;
+
+	@Autowired
+	SdgDataRepository sdgDataRepository;
+
+	@Autowired
+	OrgSdgDataMapRepository orgSdgDataMapRepository;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
 	@Override
@@ -95,9 +125,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
-					organization.setAdminUrl(OrganizationConstants.BASE_URL + OrganizationConstants.ORGANIZATIONS + "/"
-							+ organization.getId());
-					organization = organizationRepository.saveAndFlush(organization);
+					/*
+					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
+					 * OrganizationConstants.ORGANIZATIONS + "/" +
+					 * organization.getId()); organization =
+					 * organizationRepository.saveAndFlush(organization);
+					 */
 
 					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
@@ -138,9 +171,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			for (Organization organization : organizationList) {
 				if (null != organization.getId()) {
-					organization.setAdminUrl(OrganizationConstants.BASE_URL + OrganizationConstants.ORGANIZATIONS + "/"
-							+ organization.getId());
-					organization = organizationRepository.saveAndFlush(organization);
+					/*
+					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
+					 * OrganizationConstants.ORGANIZATIONS + "/" +
+					 * organization.getId()); organization =
+					 * organizationRepository.saveAndFlush(organization);
+					 */
+
+					// To set spi and sdg tags by naics code
+					setSpiSdgMapByNaicsCode(organization, user);
 
 					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
@@ -199,6 +238,168 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setAdminUrl(organizationPayload.getAdminUrl());
 
 		return organization;
+	}
+
+	/**
+	 * 
+	 */
+	private void setSpiSdgMapByNaicsCode(Organization organization, UserPayload user) {
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
+		// get Naics SpiSdgMap
+		Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap();
+
+		NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
+
+		try {
+			if (naicsMapPayload != null) {
+				List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
+				List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
+
+				spiDataMapObj = saveOrgSpiMap(organization, user, spiDataMapObj, sdf, formattedDte, spiIdsList);
+
+				sdgDataMapObj = saveOrgSdgMap(organization, user, sdgDataMapObj, sdf, formattedDte, sdgIdsList);
+			}
+		} catch (ParseException e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+		}
+
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param sdgDataMapObj
+	 * @param sdf
+	 * @param formattedDte
+	 * @param sdgIdsList
+	 * @return
+	 * @throws ParseException
+	 */
+	private OrganizationSdgData saveOrgSdgMap(Organization organization, UserPayload user,
+			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> sdgIdsList)
+			throws ParseException {
+		try {
+			if (null != sdgIdsList) {
+				for (Long sdgId : sdgIdsList) {
+					SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
+
+					if (null != orgSdgDataObj) {
+						sdgDataMapObj = new OrganizationSdgData();
+						sdgDataMapObj.setOrganizationId(organization.getId());
+						sdgDataMapObj.setSdgData(orgSdgDataObj);
+						sdgDataMapObj.setIsChecked(true);
+						sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+						sdgDataMapObj.setCreatedBy(user.getEmail());
+						sdgDataMapObj.setUpdatedBy(user.getEmail());
+						sdgDataMapObj.setAdminUrl("");
+						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+
+						orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(), sdf,
+								formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SDG,
+								sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName());
+
+					}
+
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+		}
+		return sdgDataMapObj;
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param spiDataMapObj
+	 * @param sdf
+	 * @param formattedDte
+	 * @param spiIdsList
+	 * @return
+	 * @throws ParseException
+	 */
+	private OrganizationSpiData saveOrgSpiMap(Organization organization, UserPayload user,
+			OrganizationSpiData spiDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList)
+			throws ParseException {
+		try {
+			if (null != spiIdsList) {
+				for (Long spiId : spiIdsList) {
+					SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
+
+					if (null != orgSpiDataObj) {
+						spiDataMapObj = new OrganizationSpiData();
+						spiDataMapObj.setOrganizationId(organization.getId());
+						spiDataMapObj.setSpiData(orgSpiDataObj);
+						spiDataMapObj.setIsChecked(true);
+						spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+						spiDataMapObj.setCreatedBy(user.getEmail());
+						spiDataMapObj.setUpdatedBy(user.getEmail());
+						spiDataMapObj.setAdminUrl("");
+						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+
+						orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(), sdf,
+								formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SPI,
+								spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName());
+
+					}
+
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+		}
+		return spiDataMapObj;
+	}
+
+	/**
+	 * 
+	 */
+	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap() {
+		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object();
+		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
+
+		if (null != s3Object) {
+			try {
+				InputStream input = s3Object.getObjectContent();
+				String csv = IOUtils.toString(input);
+				List<NaicsMappingCsvPayload> mappingData = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
+
+				for (int i = 0; i < mappingData.size(); i++) {
+					NaicsMappingCsvPayload data = mappingData.get(i);
+					String[] spiIds = data.getSpiTagIds().split(",");
+
+					List<Long> spiIdsList = new ArrayList<>();
+					for (int j = 0; j < spiIds.length; j++) {
+						spiIdsList.add(Long.parseLong(spiIds[j]));
+					}
+
+					String[] sdgIds = data.getSdgTagIds().split(",");
+					List<Long> sdgIdsList = new ArrayList<>();
+					for (int j = 0; j < sdgIds.length; j++) {
+						sdgIdsList.add(Long.parseLong(sdgIds[j]));
+					}
+					NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
+					payload.setNaicsCode(data.getNaicsCode());
+					payload.setSdgTagIds(sdgIdsList);
+					payload.setSpiTagIds(spiIdsList);
+					naicsMap.put(data.getNaicsCode(), payload);
+
+				}
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return naicsMap;
 	}
 
 	@Override
