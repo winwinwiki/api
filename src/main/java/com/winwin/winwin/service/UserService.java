@@ -39,4 +39,6 @@ public interface UserService {
 
 	UserPayload getCurrentUserDetails();
 
+	void resendUserInvitation(UserPayload payload, ExceptionResponse response) throws UserException;
+
 }

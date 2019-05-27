@@ -107,6 +107,39 @@ public class UserServiceImpl implements UserService {
 						new AttributeType().withName("email_verified").withValue("true"))
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
+		try {
+			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+		} catch (InternalErrorException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | UsernameExistsException
+				| InvalidPasswordException | NotAuthorizedException | TooManyRequestsException
+				| UnsupportedUserStateException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		}
+		cognitoClient.shutdown();
+
+	}
+
+	@SuppressWarnings("unused")
+	@Override
+	public void resendUserInvitation(UserPayload payload, ExceptionResponse response) throws UserException {
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		AdminCreateUserRequest cognitoRequest = new AdminCreateUserRequest()
+				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail())
+				.withUserAttributes(new AttributeType().withName("custom:role").withValue(payload.getRole()),
+						new AttributeType().withName("custom:team").withValue(payload.getTeam()),
+						new AttributeType().withName("custom:isActive").withValue(payload.getIsActive()),
+						new AttributeType().withName("picture").withValue(payload.getImageUrl()),
+						new AttributeType().withName("name").withValue(payload.getUserDisplayName()),
+						new AttributeType().withName("email").withValue(payload.getEmail()),
+						new AttributeType().withName("email_verified").withValue("true"))
+				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
+
 		/*
 		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e.
 		 * user status as force_change_password and hit the create user again

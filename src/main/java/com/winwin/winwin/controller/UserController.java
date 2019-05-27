@@ -59,6 +59,23 @@ public class UserController extends BaseController {
 
 	}
 
+	@RequestMapping(value = "/resendInvitation", method = RequestMethod.POST)
+	@Transactional
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	public ResponseEntity<?> resendUserInvitation(@Valid @RequestBody UserPayload payload) throws UserException {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != payload) {
+			userService.resendUserInvitation(payload, exceptionResponse);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+		}
+
+		return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+
+	}
+
 	@RequestMapping(value = "login", method = RequestMethod.POST)
 	@Transactional
 	public ResponseEntity<?> userSignInRequest(@Valid @RequestBody UserSignInPayload payload) throws UserException {
@@ -135,7 +152,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse(payload, HttpStatus.OK);
 
 	}
-	
+
 	@RequestMapping(value = "update", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -144,18 +161,17 @@ public class UserController extends BaseController {
 		UserPayload payload = null;
 
 		if (null != userPayload) {
-				if (!StringUtils.isEmpty(userPayload.getEmail())) {
-					userService.updateUserInfo(userPayload, exceptionResponse);
-					payload = userService.getUserInfo(userPayload.getEmail(), exceptionResponse);
+			if (!StringUtils.isEmpty(userPayload.getEmail())) {
+				userService.updateUserInfo(userPayload, exceptionResponse);
+				payload = userService.getUserInfo(userPayload.getEmail(), exceptionResponse);
 
-					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-							&& exceptionResponse.getStatusCode() != null)
-						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-				} else {
-					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
-				}
-
+			} else {
+				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+			}
 
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
@@ -178,7 +194,7 @@ public class UserController extends BaseController {
 					userService.updateUserInfo(userPayload, exceptionResponse);
 					payload = userService.getUserInfo(userPayload.getEmail(), exceptionResponse);
 					payloadList.add(payload);
-					
+
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
 						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
