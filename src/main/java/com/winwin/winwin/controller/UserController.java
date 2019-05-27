@@ -48,31 +48,25 @@ public class UserController extends BaseController {
 	public ResponseEntity<?> createUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != payload) {
-			userService.createUser(payload, exceptionResponse);
+			// Check user with status as FORCE_CHANGE_PASSWORD
+			if (isNewUser(payload.getEmail(), exceptionResponse)) {
+				userService.resendUserInvitation(payload, exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+
+			} else {
+				userService.createUser(payload, exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			}
+
 		}
 
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
-
-	}
-
-	@RequestMapping(value = "/resendInvitation", method = RequestMethod.POST)
-	@Transactional
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
-	public ResponseEntity<?> resendUserInvitation(@Valid @RequestBody UserPayload payload) throws UserException {
-		ExceptionResponse exceptionResponse = new ExceptionResponse();
-		if (null != payload) {
-			userService.resendUserInvitation(payload, exceptionResponse);
-
-			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-		}
-
-		return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
 
 	}
 
