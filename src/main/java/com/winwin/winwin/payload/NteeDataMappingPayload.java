@@ -11,20 +11,20 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class NaicsDataMappingPayload {
+public class NteeDataMappingPayload {
 
-	private String naicsCode;
+	private String nteeCode;
 	private List<Long> spiTagIds;
 	private List<Long> sdgTagIds;
 
 	@Override
 	public int hashCode() {
-		return naicsCode.hashCode();
+		return nteeCode.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		NaicsDataMappingPayload obj = (NaicsDataMappingPayload) o;
-		return naicsCode.equals(obj.naicsCode);
+		NteeDataMappingPayload obj = (NteeDataMappingPayload) o;
+		return nteeCode.equals(obj.nteeCode);
 	}
 }

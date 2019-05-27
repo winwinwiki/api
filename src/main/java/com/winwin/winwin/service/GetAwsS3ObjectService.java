@@ -10,6 +10,6 @@ import com.amazonaws.services.s3.model.S3Object;
  *
  */
 public interface GetAwsS3ObjectService {
-	public S3Object getS3Object();
+	public S3Object getS3Object(String key) throws Exception;
 
 }

@@ -107,6 +107,15 @@ public class UserServiceImpl implements UserService {
 						new AttributeType().withName("email_verified").withValue("true"))
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
+		/*
+		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e.
+		 * user status as force_change_password and hit the create user again
+		 * then setting cognito request with messageAction as RESEND will
+		 * resends the welcome message again with extending account user
+		 * expiration limit
+		 */
+		cognitoRequest.setMessageAction("RESEND");
+
 		try {
 			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
 		} catch (InternalErrorException e) {

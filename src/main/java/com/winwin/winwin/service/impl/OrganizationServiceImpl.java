@@ -1,6 +1,5 @@
 package com.winwin.winwin.service.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,6 +12,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -31,12 +32,14 @@ import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
+import com.winwin.winwin.payload.NteeDataMappingPayload;
+import com.winwin.winwin.payload.NteeMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
-import com.winwin.winwin.payload.OrganizationDepartmentPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
@@ -109,10 +112,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
 
+	@Value("${aws.s3.bucket.naics.key.name}")
+	String naicsAwsKey;
+
+	@Value("${aws.s3.bucket.ntee.key.name}")
+	String nteeAwsKey;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
 	@Override
-	public Organization createOrganization(OrganizationRequestPayload organizationPayload) {
+	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
@@ -140,20 +149,80 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		return organization;
 	}
 
-	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList) {
+	@Override
+	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response) {
 
-		List<Organization> organizationList = createOrganizationsForBulkUpload(organizationPayloadList);
+		List<Organization> organizationList = createOrganizationsForBulkUpload(organizationPayloadList, response);
 
 		return organizationList;
 	}
 
-	public List<Organization> createOrganizationsForBulkUpload(
-			List<OrganizationRequestPayload> organizationPayloadList) {
+	@Override
+	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response) {
+
+		List<Organization> organizationList = updateOrganizationsForBulkUpload(organizationPayloadList, response);
+
+		return organizationList;
+	}
+
+	public List<Organization> createOrganizationsForBulkUpload(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+		List<Organization> organizationList = new ArrayList<Organization>();
+
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+
+			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+				if (null != organizationPayload && null != user) {
+					organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+				}
+			}
+			organizationList = organizationRepository.saveAll(organizationList);
+			// get NaicsCode AutoTag SpiSdgMapping
+			Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap();
+			// get NteeCode AutoTag SpiSdgMapping
+			Map<String, NteeDataMappingPayload> nteeMap = getNteeSpiSdgMap();
+
+			for (Organization organization : organizationList) {
+				/*
+				 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
+				 * OrganizationConstants.ORGANIZATIONS + "/" +
+				 * organization.getId()); organization =
+				 * organizationRepository.saveAndFlush(organization);
+				 */
+				if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
+					// To set spi and sdg tags by naics code
+					setSpiSdgMapByNaicsCode(organization, user, naicsMap);
+					// To set spi and sdg tags by ntee code
+					setSpiSdgMapByNteeCode(organization, user, nteeMap);
+				}
+				orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+						OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
+						organization.getName());
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		return organizationList;
+	}
+
+	public List<Organization> updateOrganizationsForBulkUpload(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		List<Organization> organizationList = new ArrayList<Organization>();
@@ -169,26 +238,27 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			organizationList = organizationRepository.saveAll(organizationList);
 
+			// get NaicsCode AutoTag SpiSdgMapping
+			Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap();
+			// get NteeCode AutoTag SpiSdgMapping
+			Map<String, NteeDataMappingPayload> nteeMap = getNteeSpiSdgMap();
+
 			for (Organization organization : organizationList) {
-				if (null != organization.getId()) {
-					/*
-					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" +
-					 * organization.getId()); organization =
-					 * organizationRepository.saveAndFlush(organization);
-					 */
-
+				if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
 					// To set spi and sdg tags by naics code
-					setSpiSdgMapByNaicsCode(organization, user);
-
-					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
-							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
-							organization.getName());
+					setSpiSdgMapByNaicsCode(organization, user, naicsMap);
+					// To set spi and sdg tags by ntee code
+					setSpiSdgMapByNteeCode(organization, user, nteeMap);
 				}
+				orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+						OrganizationConstants.UPDATE, OrganizationConstants.ORGANIZATION, organization.getId(),
+						organization.getName());
 			}
 
 		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+			LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 		return organizationList;
@@ -204,8 +274,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws ParseException
 	 */
 	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, SimpleDateFormat sdf,
-			String formattedDte, UserPayload user) throws ParseException {
+			String formattedDte, UserPayload user) throws Exception {
 		Organization organization = null;
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
 		Address address = new Address();
 		if (organizationPayload.getId() != null)
 			organization = organizationRepository.findOrgById(organizationPayload.getId());
@@ -231,42 +303,167 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setParentId(organizationPayload.getParentId());
 		organization.setAddress(address);
-		organization.setCreatedAt(sdf.parse(formattedDte));
+
+		if (organization.getId() == null) {
+			organization.setCreatedAt(sdf.parse(formattedDte));
+			organization.setCreatedBy(user.getEmail());
+		}
 		organization.setUpdatedAt(sdf.parse(formattedDte));
-		organization.setCreatedBy(user.getEmail());
 		organization.setUpdatedBy(user.getEmail());
 		organization.setAdminUrl(organizationPayload.getAdminUrl());
+
+		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte,
+					organizationPayload.getSpiTagIds(), organizationPayload.getSdgTagIds());
+
+		}
 
 		return organization;
 	}
 
 	/**
+	 * @throws Exception
 	 * 
 	 */
-	private void setSpiSdgMapByNaicsCode(Organization organization, UserPayload user) {
+	private void setSpiSdgMapByNaicsCode(Organization organization, UserPayload user,
+			Map<String, NaicsDataMappingPayload> naicsMap) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
-		// get Naics SpiSdgMap
-		Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap();
-
 		NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
 
-		try {
-			if (naicsMapPayload != null) {
-				List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
-				List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
+		if (naicsMapPayload != null) {
+			List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
+			List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
 
-				spiDataMapObj = saveOrgSpiMap(organization, user, spiDataMapObj, sdf, formattedDte, spiIdsList);
-
-				sdgDataMapObj = saveOrgSdgMap(organization, user, sdgDataMapObj, sdf, formattedDte, sdgIdsList);
-			}
-		} catch (ParseException e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte, spiIdsList,
+					sdgIdsList);
 		}
 
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private void setSpiSdgMapByNteeCode(Organization organization, UserPayload user,
+			Map<String, NteeDataMappingPayload> nteeMap) throws Exception {
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
+		NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
+
+		if (nteeMapPayload != null) {
+			List<Long> spiIdsList = nteeMapPayload.getSpiTagIds();
+			List<Long> sdgIdsList = nteeMapPayload.getSdgTagIds();
+
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte, spiIdsList,
+					sdgIdsList);
+		}
+
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param spiDataMapObj
+	 * @param sdgDataMapObj
+	 * @param sdf
+	 * @param formattedDte
+	 * @param spiIdsList
+	 * @param sdgIdsList
+	 * @throws Exception
+	 */
+	private void saveOrgSpiSdgMapping(Organization organization, UserPayload user, OrganizationSpiData spiDataMapObj,
+			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList,
+			List<Long> sdgIdsList) throws Exception {
+		@SuppressWarnings("unused")
+		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMap(organization, user, spiDataMapObj, sdf, formattedDte,
+				spiIdsList);
+
+		@SuppressWarnings("unused")
+		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMap(organization, user, sdgDataMapObj, sdf, formattedDte,
+				sdgIdsList);
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap() throws Exception {
+		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(naicsAwsKey);
+		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
+
+		if (null != s3Object) {
+			InputStream input = s3Object.getObjectContent();
+			String csv = IOUtils.toString(input);
+			List<NaicsMappingCsvPayload> mappingData = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
+
+			for (int i = 0; i < mappingData.size(); i++) {
+				NaicsMappingCsvPayload data = mappingData.get(i);
+				String[] spiIds = data.getSpiTagIds().split(",");
+
+				List<Long> spiIdsList = new ArrayList<>();
+				for (int j = 0; j < spiIds.length; j++) {
+					spiIdsList.add(Long.parseLong(spiIds[j]));
+				}
+
+				String[] sdgIds = data.getSdgTagIds().split(",");
+				List<Long> sdgIdsList = new ArrayList<>();
+				for (int j = 0; j < sdgIds.length; j++) {
+					sdgIdsList.add(Long.parseLong(sdgIds[j]));
+				}
+				NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
+				payload.setNaicsCode(data.getNaicsCode());
+				payload.setSdgTagIds(sdgIdsList);
+				payload.setSpiTagIds(spiIdsList);
+				naicsMap.put(data.getNaicsCode(), payload);
+
+			}
+		}
+		return naicsMap;
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap() throws Exception {
+		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(nteeAwsKey);
+		Map<String, NteeDataMappingPayload> nteeMap = new HashMap<>();
+
+		if (null != s3Object) {
+			InputStream input = s3Object.getObjectContent();
+			String csv = IOUtils.toString(input);
+			List<NteeMappingCsvPayload> mappingData = CsvUtils.read(NteeMappingCsvPayload.class, csv);
+
+			for (int i = 0; i < mappingData.size(); i++) {
+				NteeMappingCsvPayload data = mappingData.get(i);
+				String[] spiIds = data.getSpiTagIds().split(",");
+
+				List<Long> spiIdsList = new ArrayList<>();
+				for (int j = 0; j < spiIds.length; j++) {
+					spiIdsList.add(Long.parseLong(spiIds[j]));
+				}
+
+				String[] sdgIds = data.getSdgTagIds().split(",");
+				List<Long> sdgIdsList = new ArrayList<>();
+				for (int j = 0; j < sdgIds.length; j++) {
+					sdgIdsList.add(Long.parseLong(sdgIds[j]));
+				}
+				NteeDataMappingPayload payload = new NteeDataMappingPayload();
+				payload.setNteeCode(data.getNteeCode());
+				payload.setSdgTagIds(sdgIdsList);
+				payload.setSpiTagIds(spiIdsList);
+				nteeMap.put(data.getNteeCode(), payload);
+
+			}
+		}
+		return nteeMap;
 	}
 
 	/**
@@ -277,40 +474,38 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @param formattedDte
 	 * @param sdgIdsList
 	 * @return
-	 * @throws ParseException
+	 * @throws Exception
 	 */
-	private OrganizationSdgData saveOrgSdgMap(Organization organization, UserPayload user,
+	private List<OrganizationSdgData> saveOrgSdgMap(Organization organization, UserPayload user,
 			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> sdgIdsList)
-			throws ParseException {
-		try {
-			if (null != sdgIdsList) {
-				for (Long sdgId : sdgIdsList) {
-					SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
+			throws Exception {
+		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
+		if (null != sdgIdsList) {
+			for (Long sdgId : sdgIdsList) {
+				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
 
-					if (null != orgSdgDataObj) {
-						sdgDataMapObj = new OrganizationSdgData();
-						sdgDataMapObj.setOrganizationId(organization.getId());
-						sdgDataMapObj.setSdgData(orgSdgDataObj);
-						sdgDataMapObj.setIsChecked(true);
-						sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-						sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-						sdgDataMapObj.setCreatedBy(user.getEmail());
-						sdgDataMapObj.setUpdatedBy(user.getEmail());
-						sdgDataMapObj.setAdminUrl("");
-						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+				if (null != orgSdgDataObj) {
+					sdgDataMapObj = new OrganizationSdgData();
+					sdgDataMapObj.setOrganizationId(organization.getId());
+					sdgDataMapObj.setSdgData(orgSdgDataObj);
+					sdgDataMapObj.setIsChecked(true);
+					sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+					sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					sdgDataMapObj.setCreatedBy(user.getEmail());
+					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapObj.setAdminUrl("");
+					sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+					sdgDataMapList.add(sdgDataMapObj);
 
-						orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(), sdf,
-								formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SDG,
-								sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName());
-
-					}
+					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(), sdf,
+							formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SDG,
+							sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName());
 
 				}
+
 			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
 		}
-		return sdgDataMapObj;
+		return sdgDataMapList;
 	}
 
 	/**
@@ -321,85 +516,38 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @param formattedDte
 	 * @param spiIdsList
 	 * @return
-	 * @throws ParseException
+	 * @throws Exception
 	 */
-	private OrganizationSpiData saveOrgSpiMap(Organization organization, UserPayload user,
+	private List<OrganizationSpiData> saveOrgSpiMap(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList)
-			throws ParseException {
-		try {
-			if (null != spiIdsList) {
-				for (Long spiId : spiIdsList) {
-					SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
+			throws Exception {
+		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
+		if (null != spiIdsList) {
+			for (Long spiId : spiIdsList) {
+				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
 
-					if (null != orgSpiDataObj) {
-						spiDataMapObj = new OrganizationSpiData();
-						spiDataMapObj.setOrganizationId(organization.getId());
-						spiDataMapObj.setSpiData(orgSpiDataObj);
-						spiDataMapObj.setIsChecked(true);
-						spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-						spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
-						spiDataMapObj.setCreatedBy(user.getEmail());
-						spiDataMapObj.setUpdatedBy(user.getEmail());
-						spiDataMapObj.setAdminUrl("");
-						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+				if (null != orgSpiDataObj) {
+					spiDataMapObj = new OrganizationSpiData();
+					spiDataMapObj.setOrganizationId(organization.getId());
+					spiDataMapObj.setSpiData(orgSpiDataObj);
+					spiDataMapObj.setIsChecked(true);
+					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
+					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					spiDataMapObj.setCreatedBy(user.getEmail());
+					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapObj.setAdminUrl("");
+					spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+					spiDataMapList.add(spiDataMapObj);
 
-						orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(), sdf,
-								formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SPI,
-								spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName());
-
-					}
-
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
-		}
-		return spiDataMapObj;
-	}
-
-	/**
-	 * 
-	 */
-	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap() {
-		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object();
-		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
-
-		if (null != s3Object) {
-			try {
-				InputStream input = s3Object.getObjectContent();
-				String csv = IOUtils.toString(input);
-				List<NaicsMappingCsvPayload> mappingData = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
-
-				for (int i = 0; i < mappingData.size(); i++) {
-					NaicsMappingCsvPayload data = mappingData.get(i);
-					String[] spiIds = data.getSpiTagIds().split(",");
-
-					List<Long> spiIdsList = new ArrayList<>();
-					for (int j = 0; j < spiIds.length; j++) {
-						spiIdsList.add(Long.parseLong(spiIds[j]));
-					}
-
-					String[] sdgIds = data.getSdgTagIds().split(",");
-					List<Long> sdgIdsList = new ArrayList<>();
-					for (int j = 0; j < sdgIds.length; j++) {
-						sdgIdsList.add(Long.parseLong(sdgIds[j]));
-					}
-					NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
-					payload.setNaicsCode(data.getNaicsCode());
-					payload.setSdgTagIds(sdgIdsList);
-					payload.setSpiTagIds(spiIdsList);
-					naicsMap.put(data.getNaicsCode(), payload);
+					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(), sdf,
+							formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SPI,
+							spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName());
 
 				}
-			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+
 			}
 		}
-		return naicsMap;
+		return spiDataMapList;
 	}
 
 	@Override
@@ -706,29 +854,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 		return addressPayload;
 	}
-
-	/**
-	 * @param spiList
-	 * @param orgDepartmentsMap
-	 */
-	private void setOrgDepartmentsMap(List<Organization> departments,
-			HashMap<Long, List<OrganizationDepartmentPayload>> orgDepartmentsMap) {
-		for (Organization organization : departments) {
-			OrganizationDepartmentPayload payload = new OrganizationDepartmentPayload();
-			AddressPayload deptAddress = null;
-			payload.setId(organization.getId());
-			payload.setName(organization.getName());
-			deptAddress = getLocationPayload(organization, deptAddress);
-			payload.setLocation(deptAddress);
-			if (!orgDepartmentsMap.containsKey(organization.getParentId())) {
-				List<OrganizationDepartmentPayload> orgList = new ArrayList<OrganizationDepartmentPayload>();
-				orgList.add(payload);
-				orgDepartmentsMap.put(organization.getParentId(), orgList);
-			} else {
-				orgDepartmentsMap.get(organization.getParentId()).add(payload);
-			}
-		}
-	}// end of method setSpiDimensionsMap
 
 	@Override
 	public Organization createSubOrganization(SubOrganizationPayload payload) {

@@ -77,6 +77,40 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	}
 
 	@Override
+	public OrganizationNote updateOrganizationNote(OrganizationNotePayload organizationNotePayload) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+		OrganizationNote note = null;
+		try {
+			if (null != organizationNotePayload.getNoteId()) {
+				note = organizationNoteRepository.findOrgNoteById(organizationNotePayload.getNoteId());
+				if (null != note) {
+					UserPayload user = userService.getCurrentUserDetails();
+
+					note.setName(organizationNotePayload.getNote());
+					note.setOrganizationId(organizationNotePayload.getOrganizationId());
+					note.setUpdatedAt(sdf.parse(formattedDte));
+					note.setAdminUrl(organizationNotePayload.getAdminUrl());
+					note.setUpdatedBy(user.getEmail());
+					note = organizationNoteRepository.saveAndFlush(note);
+
+					if (null != note && null != note.getOrganizationId()) {
+						orgHistoryService.createOrganizationHistory(user, note.getOrganizationId(), sdf, formattedDte,
+								OrganizationConstants.UPDATE, OrganizationConstants.NOTE, note.getId(), note.getName());
+					}
+
+				}
+
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.note.exception.updated"), e);
+		}
+
+		return note;
+	}
+
+	@Override
 	public void removeOrganizationNote(Long noteId, Long orgId) {
 		UserPayload user = userService.getCurrentUserDetails();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

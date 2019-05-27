@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,5 +51,8 @@ public class OrganizationRequestPayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-	private String adminUrl;
+	String adminUrl;
+	List<Long> spiTagIds;
+	List<Long> sdgTagIds;
+
 }
