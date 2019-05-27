@@ -3,6 +3,7 @@ package com.winwin.winwin.service;
 import java.util.List;
 
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
@@ -14,7 +15,7 @@ import com.winwin.winwin.payload.SubOrganizationPayload;
  *
  */
 public interface OrganizationService {
-	Organization createOrganization(OrganizationRequestPayload organizationRequestPayload);
+	Organization createOrganization(OrganizationRequestPayload organizationRequestPayload, ExceptionResponse response);
 
 	Organization createProgram(OrganizationRequestPayload organizationRequestPayload);
 
@@ -35,5 +36,9 @@ public interface OrganizationService {
 
 	List<Organization> getOrganizationList(OrganizationFilterPayload payload);
 
-	List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayload);
+	List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response);
+
+	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+			ExceptionResponse response);
 }

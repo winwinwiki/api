@@ -34,6 +34,7 @@ import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.exception.RegionServedException;
 import com.winwin.winwin.exception.ResourceCategoryException;
@@ -84,6 +85,8 @@ import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CsvUtils;
+
+import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
@@ -158,15 +161,16 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> createOrganization(@RequestBody OrganizationRequestPayload organizationPayload) {
 		Organization organization = null;
 		OrganizationResponsePayload payload = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != organizationPayload) {
-			try {
-				organization = organizationService.createOrganization(organizationPayload);
-				payload = setOrganizationPayload(organization);
-			} catch (Exception e) {
-				throw new OrganizationException(
-						customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
-			}
+			organization = organizationService.createOrganization(organizationPayload, exceptionResponse);
+			payload = setOrganizationPayload(organization);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 		}
 
 		return sendSuccessResponse(payload);
@@ -177,25 +181,26 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
-		List<OrganizationRequestPayload> organizationPayload = new ArrayList<>();
-
+		List<OrganizationRequestPayload> organizationPayloadList = new ArrayList<>();
 		List<Organization> organizationList = null;
-		List<OrganizationResponsePayload> payload = null;
+		List<OrganizationResponsePayload> payloadList = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
 			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
-			organizationPayload = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
-			try {
-				organizationList = organizationService.createOrganizations(organizationPayload);
-				payload = setOrganizationPayload(organizationList);
-			} catch (Exception e) {
-				throw new OrganizationException(
-						customMessageSource.getMessage("org.error.created") + ": " + e.getMessage());
-			}
+			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
+			payloadList = setOrganizationPayload(organizationList);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+		} else {
+			return sendErrorResponse("org.file.null");
 		}
 
-		return sendSuccessResponse(payload);
+		return sendSuccessResponse(payloadList);
 	}
 
 	@RequestMapping(value = "/updateAll", method = RequestMethod.POST)
@@ -203,26 +208,24 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateOrganizations(@RequestParam("file") MultipartFile file) {
-		List<OrganizationRequestPayload> organizationPayload = new ArrayList<>();
-
+		List<OrganizationRequestPayload> organizationPayloadList = new ArrayList<>();
+		List<Organization> organizationList = null;
 		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
 			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
-			organizationPayload = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
-			for (OrganizationRequestPayload payload : organizationPayload) {
-				Organization organization = organizationRepository.findOrgById(payload.getId());
-				if (organization == null) {
-					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
-				} else {
-					organization = organizationService.updateOrgDetails(payload, organization,
-							OrganizationConstants.ORGANIZATION);
-					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
-					payloadList.add(responsePayload);
-				}
+			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
+			payloadList = setOrganizationPayload(organizationList);
 
-			}
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
+		} else {
+			return sendErrorResponse("org.file.null");
 		}
 
 		return sendSuccessResponse(payloadList);
@@ -1256,6 +1259,33 @@ public class OrganizationController extends BaseController {
 
 	}
 
+	/**
+	 * @param httpServletResponse
+	 * @param organizationPayload
+	 * @return
+	 */
+	@RequestMapping(value = "/{id}/notes", method = RequestMethod.PUT)
+	@Transactional
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> updateOrgNote(@RequestBody OrganizationNotePayload organizationNotePayload,
+			@PathVariable("id") Long orgId) {
+		OrganizationNote note = null;
+		OrganizationNotePayload payload = null;
+		if (orgId == null || organizationNotePayload == null)
+			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
+		try {
+			note = organizationNoteService.updateOrganizationNote(organizationNotePayload);
+			payload = setOrganizationNotePayload(note, payload);
+
+		} catch (Exception e) {
+			throw new OrganizationException(
+					customMessageSource.getMessage("org.note.error.updated") + ": " + e.getMessage());
+		}
+		return sendSuccessResponse(payload);
+
+	}
+
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
@@ -1396,6 +1426,8 @@ public class OrganizationController extends BaseController {
 		payload.setTwitterUrl(csv.getTwitterUrl());
 		payload.setValues(csv.getValues());
 		payload.setWebsiteUrl(csv.getWebsiteUrl());
+		payload.setSpiTagIds(csv.getSpiTagIds());
+		payload.setSdgTagIds(csv.getSdgTagIds());
 
 		return payload;
 	}

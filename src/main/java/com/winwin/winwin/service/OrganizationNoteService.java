@@ -12,6 +12,8 @@ import com.winwin.winwin.payload.OrganizationNotePayload;
 public interface OrganizationNoteService {
 	OrganizationNote createOrganizationNote(OrganizationNotePayload organizationNotePayload);
 
+	OrganizationNote updateOrganizationNote(OrganizationNotePayload organizationNotePayload);
+
 	void removeOrganizationNote(Long noteId, Long orgId);
 
 	List<OrganizationNote> getOrganizationNoteList(Long id);

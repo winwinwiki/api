@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,6 +9,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -50,4 +56,6 @@ public class OrganizationCsvPayload {
 	private String county;
 	private Long zip;
 	private String street;
+	private List<Long> spiTagIds;
+	private List<Long> sdgTagIds;
 }
