@@ -26,7 +26,7 @@ import lombok.Setter;
 public class GetAwsS3ObjectServiceImpl implements GetAwsS3ObjectService {
 	private static final Logger logger = LoggerFactory.getLogger(CsvUtils.class);
 
-	String clientRegion = System.getenv("AWS_REGION2");
+	String clientRegion = System.getenv("AWS_REGION");
 
 	@Value("${aws.s3.bucket.name}")
 	String bucketName;
