@@ -13,11 +13,16 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.winwin.winwin.service.GetAwsS3ObjectService;
 import com.winwin.winwin.util.CsvUtils;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * @author ArvindKhatik
  *
  */
 @Component
+@Getter
+@Setter
 public class GetAwsS3ObjectServiceImpl implements GetAwsS3ObjectService {
 	private static final Logger logger = LoggerFactory.getLogger(CsvUtils.class);
 
@@ -25,6 +30,12 @@ public class GetAwsS3ObjectServiceImpl implements GetAwsS3ObjectService {
 
 	@Value("${aws.s3.bucket.name}")
 	String bucketName;
+
+	@Value("${aws.s3.bucket.naics.key.name}")
+	String naicsAwsKey;
+
+	@Value("${aws.s3.bucket.ntee.key.name}")
+	String nteeAwsKey;
 
 	EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 

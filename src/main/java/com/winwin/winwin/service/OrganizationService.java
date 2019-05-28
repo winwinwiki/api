@@ -19,10 +19,10 @@ public interface OrganizationService {
 
 	Organization createProgram(OrganizationRequestPayload organizationRequestPayload);
 
-	void deleteOrganization(Long id, String type);
+	void deleteOrganization(Long id, String type, ExceptionResponse response);
 
 	Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
-			String type);
+			String type, ExceptionResponse response);
 
 	List<Organization> getOrganizationList();
 
@@ -34,11 +34,12 @@ public interface OrganizationService {
 
 	List<OrganizationHistoryPayload> getOrgHistoryDetails(Long orgId);
 
-	List<Organization> getOrganizationList(OrganizationFilterPayload payload);
+	List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response);
 
 	List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response);
 
 	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response);
+
 }
