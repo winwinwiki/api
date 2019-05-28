@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
-import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
@@ -184,11 +183,11 @@ public class ProgramServiceImpl implements ProgramService {
 	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
 		try {
 			if (payload.getNameSearch() != null)
-				return programRepository.findProgramByNameIgnoreCaseContaining(payload.getNameSearch(), orgId);
-			/*
-			 * else return organizationRepository.filterOrganization(payload,
-			 * OrganizationConstants.PROGRAM, orgId);
-			 */
+				return programRepository.findProgramByNameIgnoreCaseContaining(orgId, payload.getNameSearch());
+
+			else
+				return programRepository.filterProgram(payload, OrganizationConstants.PROGRAM, orgId);
+
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
