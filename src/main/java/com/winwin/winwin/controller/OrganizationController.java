@@ -8,7 +8,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -153,6 +156,8 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	NaicsDataRepository naicsDataRepository;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
+
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
 	@Transactional
@@ -217,7 +222,7 @@ public class OrganizationController extends BaseController {
 			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
-			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
+			organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
 			payloadList = setOrganizationPayload(organizationList);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -235,24 +240,32 @@ public class OrganizationController extends BaseController {
 	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationRequestPayload organizationPayLoad) {
-		try {
-			if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
+			try {
 				Long id = organizationPayLoad.getId();
 				Organization organization = organizationRepository.findOrgById(id);
 				if (organization == null) {
-					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+					return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
+							HttpStatus.INTERNAL_SERVER_ERROR);
 				}
-				organizationService.deleteOrganization(id, OrganizationConstants.ORGANIZATION);
+				organizationService.deleteOrganization(id, OrganizationConstants.ORGANIZATION, exceptionResponse);
 
-			} else {
-				return sendErrorResponse("org.bad.request");
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
+			} catch (Exception e) {
+				exceptionResponse.setErrorMessage(e.getMessage());
+				exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+				LOGGER.error(customMessageSource.getMessage("org.error.deleted"), e);
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			}
 
-		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("org.error.deleted") + ": " + e.getMessage());
+		} else {
+			return sendErrorResponse("org.bad.request");
 		}
+
 		return sendSuccessResponse("org.success.deleted");
 	}
 
@@ -267,17 +280,22 @@ public class OrganizationController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationRequestPayload> orgPayloadList) {
 		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		Organization organization = null;
-
 		try {
-
 			for (OrganizationRequestPayload payload : orgPayloadList) {
 				organization = organizationRepository.findOrgById(payload.getId());
 				if (organization == null) {
-					throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+					return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
+							HttpStatus.INTERNAL_SERVER_ERROR);
 				} else {
 					organization = organizationService.updateOrgDetails(payload, organization,
-							OrganizationConstants.ORGANIZATION);
+							OrganizationConstants.ORGANIZATION, exceptionResponse);
+
+					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+							&& exceptionResponse.getStatusCode() != null)
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
 					payloadList.add(responsePayload);
 				}
@@ -285,8 +303,10 @@ public class OrganizationController extends BaseController {
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("org.error.updated") + ": " + e.getMessage());
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.error.updated"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -299,10 +319,12 @@ public class OrganizationController extends BaseController {
 		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
 		OrganizationResponsePayload payload = null;
 		List<Organization> orgList = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
-			orgList = organizationService.getOrganizationList(filterPayload);
+			orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
 			if (orgList == null) {
-				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+				return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
 				for (Organization organization : orgList) {
 					payload = setOrganizationPayload(organization);
@@ -311,7 +333,10 @@ public class OrganizationController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationException(customMessageSource.getMessage("org.error.list"));
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(new OrganizationFilterResponse(filterPayload, payloadList));
 
@@ -324,18 +349,22 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getOrgDetails(@PathVariable("id") Long id) {
 		Organization organization = null;
 		OrganizationResponsePayload payload = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			organization = organizationRepository.findOrgById(id);
 
 			if (organization == null) {
-				throw new OrganizationException(customMessageSource.getMessage("org.error.not_found"));
+				return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
 				payload = setOrganizationPayload(organization);
-
 			}
 
 		} catch (Exception e) {
-			throw new OrganizationException(customMessageSource.getMessage("org.error.fetch") + ": " + e.getMessage());
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.error.fetch"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payload);
 
@@ -1064,13 +1093,14 @@ public class OrganizationController extends BaseController {
 			throws OrganizationException {
 		List<Program> prgList = null;
 		List<ProgramResponsePayload> payloadList = new ArrayList<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		try {
-
-			prgList = programService.getProgramList(filterPayload, orgId);
+			prgList = programService.getProgramList(filterPayload, orgId, exceptionResponse);
 			if (prgList == null) {
-				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
+				return sendMsgResponse(customMessageSource.getMessage("prg.error.not_found"),
+						HttpStatus.INTERNAL_SERVER_ERROR);
 			} else {
 				for (Program program : prgList) {
 					ProgramResponsePayload responsePayload = programService.getProgramResponseFromProgram(program);
@@ -1079,7 +1109,10 @@ public class OrganizationController extends BaseController {
 
 			}
 		} catch (Exception e) {
-			throw new OrganizationException(customMessageSource.getMessage("prg.error.list"));
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("prg.error.list"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payloadList);
 

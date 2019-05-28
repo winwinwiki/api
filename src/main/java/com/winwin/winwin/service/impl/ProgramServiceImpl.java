@@ -5,12 +5,18 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.Program;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
@@ -41,6 +47,11 @@ public class ProgramServiceImpl implements ProgramService {
 
 	@Autowired
 	UserService userService;
+
+	@Autowired
+	protected CustomMessageSource customMessageSource;
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 
 	@Override
 	public Program createProgram(ProgramRequestPayload programPayload) {
@@ -170,10 +181,19 @@ public class ProgramServiceImpl implements ProgramService {
 	}
 
 	@Override
-	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId) {
-		if (payload.getNameSearch() != null)
-			return programRepository.findByNameIgnoreCaseContaining(payload.getNameSearch());
-		else
-			return programRepository.filterProgram(payload, OrganizationConstants.PROGRAM, orgId);
+	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
+		try {
+			if (payload.getNameSearch() != null)
+				return programRepository.findProgramByNameIgnoreCaseContaining(payload.getNameSearch(), orgId);
+			/*
+			 * else return organizationRepository.filterOrganization(payload,
+			 * OrganizationConstants.PROGRAM, orgId);
+			 */
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("prg.error.list"), e);
+		}
+		return null;
 	}
 }
