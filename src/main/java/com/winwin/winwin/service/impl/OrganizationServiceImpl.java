@@ -286,7 +286,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organizationRepository.findAllOrganizationList();
 	}// end of method getOrganizationList
 
-	
 	@Override
 	public List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
 		try {
@@ -301,7 +300,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 		return null;
 	}
-
 
 	@Override
 	public List<Organization> getProgramList(Long orgId) {
@@ -730,6 +728,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> sdgIdsList)
 			throws Exception {
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
+		List<OrganizationSdgData> organizationSdgDataList = null;
 		if (null != sdgIdsList) {
 			for (Long sdgId : sdgIdsList) {
 				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
@@ -744,6 +743,25 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setCreatedBy(user.getEmail());
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
 					sdgDataMapObj.setAdminUrl("");
+
+					organizationSdgDataList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(organization.getId());
+					if (null != organizationSdgDataList) {
+						for (OrganizationSdgData organizationSdgData : organizationSdgDataList) {
+							if (null != organizationSdgData.getSdgData()) {
+								if (orgSdgDataObj.getId().equals(organizationSdgData.getSdgData().getId())) {
+									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
+								} else {
+									sdgDataMapObj.setSdgData(orgSdgDataObj);
+								}
+
+							}
+
+						}
+
+					} else {
+						sdgDataMapObj.setSdgData(orgSdgDataObj);
+					}
+
 					sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 					sdgDataMapList.add(sdgDataMapObj);
 
@@ -772,6 +790,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			OrganizationSpiData spiDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList)
 			throws Exception {
 		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
+		List<OrganizationSpiData> organizationSpiDataList = null;
 		if (null != spiIdsList) {
 			for (Long spiId : spiIdsList) {
 				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
@@ -779,13 +798,31 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != orgSpiDataObj) {
 					spiDataMapObj = new OrganizationSpiData();
 					spiDataMapObj.setOrganizationId(organization.getId());
-					spiDataMapObj.setSpiData(orgSpiDataObj);
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
 					spiDataMapObj.setCreatedBy(user.getEmail());
 					spiDataMapObj.setUpdatedBy(user.getEmail());
 					spiDataMapObj.setAdminUrl("");
+
+					organizationSpiDataList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(organization.getId());
+					if (null != organizationSpiDataList) {
+						for (OrganizationSpiData organizationSpiData : organizationSpiDataList) {
+							if (null != organizationSpiData.getSpiData()) {
+								if (orgSpiDataObj.getId().equals(organizationSpiData.getSpiData().getId())) {
+									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
+								} else {
+									spiDataMapObj.setSpiData(orgSpiDataObj);
+								}
+
+							}
+
+						}
+
+					} else {
+						spiDataMapObj.setSpiData(orgSpiDataObj);
+					}
+
 					spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 					spiDataMapList.add(spiDataMapObj);
 
