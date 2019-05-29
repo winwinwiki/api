@@ -49,7 +49,17 @@ public class SpiData {
 
 	@Column(name = "indicator_name")
 	private String indicatorName;
+	
+	@Column(name = "indicator_definition", columnDefinition = "TEXT")
+	private String indicatorDefinition;
+	
+	@Column(name = "indicator_description", columnDefinition = "TEXT")
+	private String indicatorDescription;
+	
+	@Column(name = "spi_source")
+	private String spiSource;
+	
+	@Column(name = "is_active")
+	private Boolean isActive; 
 
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }
