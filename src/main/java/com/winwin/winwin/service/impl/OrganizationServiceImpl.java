@@ -815,8 +815,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
 							if (null != organizationSdgData.getSdgData()) {
-								if (orgSdgDataObj.getId().equals(organizationSdgData.getSdgData().getId())) {
-									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
+								if (orgSdgDataObj.getId()
+										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
+									sdgDataMapObj.setId(organizationSdgData.getSdgData().getId());
 								} else {
 									sdgDataMapObj.setSdgData(orgSdgDataObj);
 								}
@@ -888,7 +889,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 							if (null != organizationSpiData.getSpiData()) {
 								if (orgSpiDataObj.getId()
 										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
-									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
+									spiDataMapObj.setId(organizationSpiData.getSpiData().getId());
 								} else {
 									spiDataMapObj.setSpiData(orgSpiDataObj);
 								}
