@@ -2,6 +2,7 @@ package com.winwin.winwin.service.impl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -187,6 +188,7 @@ public class ProgramServiceImpl implements ProgramService {
 
 	@Override
 	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
+		List<Program> programList = new ArrayList<Program>();
 		try {
 			if (payload.getNameSearch() != null)
 				return programRepository.findProgramByNameIgnoreCaseContaining(orgId, payload.getNameSearch());
@@ -199,6 +201,6 @@ public class ProgramServiceImpl implements ProgramService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("prg.error.list"), e);
 		}
-		return null;
+		return programList;
 	}
 }

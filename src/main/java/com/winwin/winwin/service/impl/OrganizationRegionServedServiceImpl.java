@@ -197,8 +197,9 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 
 	@Override
 	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
+		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();
 		try {
-			if (!StringUtils.isEmpty(payload.getNameSearch())) {
+			if (null != payload.getNameSearch()) {
 				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(payload.getNameSearch());
 			}
 		} catch (Exception e) {
@@ -206,7 +207,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.region.error.list"), e);
 		}
-		return null;
+		return regionsList;
 	}
 
 }
