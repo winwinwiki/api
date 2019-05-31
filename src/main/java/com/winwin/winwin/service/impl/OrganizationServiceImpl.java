@@ -794,7 +794,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != orgSdgDataObj) {
 					sdgDataMapObj = new OrganizationSdgData();
 					sdgDataMapObj.setOrganizationId(organization.getId());
-					sdgDataMapObj.setSdgData(orgSdgDataObj);
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
 					sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
@@ -813,17 +812,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 							}
 
 						}
+						Boolean isSdgMapFound = false;
 						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
 							if (null != organizationSdgData.getSdgData()) {
 								if (orgSdgDataObj.getId()
 										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
-									sdgDataMapObj.setId(organizationSdgData.getSdgData().getId());
+									sdgDataMapObj.setId(organizationSdgData.getId());
+									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
+									isSdgMapFound = true;
+									break;
 								} else {
 									sdgDataMapObj.setSdgData(orgSdgDataObj);
 								}
-
 							}
-
+						}
+						if (!isSdgMapFound) {
+							sdgDataMapObj.setSdgData(orgSdgDataObj);
 						}
 
 					} else {
@@ -885,19 +889,21 @@ public class OrganizationServiceImpl implements OrganizationService {
 							}
 						}
 
+						Boolean isSpiMapFound = false;
 						for (OrganizationSpiData organizationSpiData : organizationSpiDataMappingList) {
 							if (null != organizationSpiData.getSpiData()) {
 								if (orgSpiDataObj.getId()
 										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
-									spiDataMapObj.setId(organizationSpiData.getSpiData().getId());
-								} else {
-									spiDataMapObj.setSpiData(orgSpiDataObj);
+									spiDataMapObj.setId(organizationSpiData.getId());
+									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
+									isSpiMapFound = true;
+									break;
 								}
-
 							}
-
 						}
-
+						if (!isSpiMapFound) {
+							spiDataMapObj.setSpiData(orgSpiDataObj);
+						}
 					} else {
 						spiDataMapObj.setSpiData(orgSpiDataObj);
 					}
