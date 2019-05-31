@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import javax.persistence.Column;
+
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -39,6 +41,7 @@ public class OrganizationResponsePayload {
 	String facebookUrl;
 	String linkedinUrl;
 	String twitterUrl;
+	String instagramUrl;
 	Long classificationId;
 	String values;
 	String purpose;
@@ -47,5 +50,5 @@ public class OrganizationResponsePayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-	private String adminUrl;
+	String adminUrl;
 }

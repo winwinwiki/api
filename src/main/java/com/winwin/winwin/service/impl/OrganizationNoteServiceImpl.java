@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -47,6 +48,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationNoteServiceImpl.class);
 
 	@Override
+	@Transactional
 	public OrganizationNote createOrganizationNote(OrganizationNotePayload organizationNotePayload) {
 		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationNote note = null;
@@ -77,6 +79,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	}
 
 	@Override
+	@Transactional
 	public OrganizationNote updateOrganizationNote(OrganizationNotePayload organizationNotePayload) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
@@ -111,6 +114,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	}
 
 	@Override
+	@Transactional
 	public void removeOrganizationNote(Long noteId, Long orgId) {
 		UserPayload user = userService.getCurrentUserDetails();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

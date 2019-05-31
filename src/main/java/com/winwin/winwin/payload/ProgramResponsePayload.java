@@ -2,6 +2,8 @@ package com.winwin.winwin.payload;
 
 import java.util.Date;
 
+import javax.persistence.Column;
+
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -56,6 +58,8 @@ public class ProgramResponsePayload {
 	private String linkedinUrl;
 
 	private String twitterUrl;
+
+	private String instagramUrl;
 
 	String values;
 

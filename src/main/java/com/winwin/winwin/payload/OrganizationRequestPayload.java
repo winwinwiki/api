@@ -2,6 +2,8 @@ package com.winwin.winwin.payload;
 
 import java.util.List;
 
+import javax.persistence.Column;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,6 +45,7 @@ public class OrganizationRequestPayload {
 	String facebookUrl;
 	String linkedinUrl;
 	String twitterUrl;
+	String instagramUrl;
 	Long classificationId;
 	String values;
 	String purpose;

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -110,6 +111,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 		}
 	}
 
+	@Transactional
 	public ResourceCategory saveResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		ResourceCategory category = new ResourceCategory();
@@ -149,6 +151,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	}// end of method getOrganizationResourceCategoryList
 
 	@Override
+	@Transactional
 	public ProgramResource createOrUpdateProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
 		// TODO Auto-generated method stub
 		UserPayload user = userService.getCurrentUserDetails();
@@ -179,6 +182,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	}
 
 	@Override
+	@Transactional
 	public void removeProgramResource(Long resourceId, Long organizationId) {
 		// TODO Auto-generated method stub
 		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);

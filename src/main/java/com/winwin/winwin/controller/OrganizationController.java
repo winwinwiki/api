@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -160,7 +159,6 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganization(@RequestBody OrganizationRequestPayload organizationPayload) {
@@ -182,7 +180,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/addAll", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
@@ -209,7 +206,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/updateAll", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateOrganizations(@RequestParam("file") MultipartFile file) {
@@ -237,7 +233,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationRequestPayload organizationPayLoad) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -275,7 +270,6 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "", method = RequestMethod.PUT)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateOrgDetails(@RequestBody List<OrganizationRequestPayload> orgPayloadList) {
@@ -343,7 +337,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgDetails(@PathVariable("id") Long id) {
@@ -419,6 +412,7 @@ public class OrganizationController extends BaseController {
 			payload.setFacebookUrl(organization.getFacebookUrl());
 			payload.setLinkedinUrl(organization.getLinkedinUrl());
 			payload.setTwitterUrl(organization.getTwitterUrl());
+			payload.setInstagramUrl(organization.getInstagramUrl());
 			payload.setValues(organization.getValues());
 			payload.setPurpose(organization.getPurpose());
 			payload.setSelfInterest(organization.getSelfInterest());
@@ -435,7 +429,6 @@ public class OrganizationController extends BaseController {
 	// Code for organization end
 
 	// Code for organization data set start
-	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -481,7 +474,6 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -525,7 +517,6 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -631,7 +622,6 @@ public class OrganizationController extends BaseController {
 	// Code for organization data set end
 
 	// Code for organization resource start
-	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
@@ -674,7 +664,6 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
@@ -722,7 +711,6 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
@@ -828,8 +816,7 @@ public class OrganizationController extends BaseController {
 	// Code for organization resource end
 
 	// Code for organization region served start
-	@RequestMapping(value = "/{id}/region", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/region", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgRegions(
@@ -958,8 +945,7 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrganizationSpiDataMapPayload> payloadList,
@@ -1021,8 +1007,7 @@ public class OrganizationController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrganizationSdgDataMapPayload> payloadList,
@@ -1065,7 +1050,6 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization Program Details start
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgram(@RequestBody ProgramRequestPayload programPayload,
@@ -1119,7 +1103,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.DELETE)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> deleteProgram(@RequestBody ProgramRequestPayload programPayLoad) {
@@ -1150,7 +1133,6 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.PUT)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateProgramDetails(@RequestBody List<ProgramRequestPayload> prgPayloadList) {
@@ -1203,7 +1185,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/suborganization", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createSuborganization(@RequestBody SubOrganizationPayload subOrganizationPayload) {
@@ -1245,7 +1226,6 @@ public class OrganizationController extends BaseController {
 
 	// Code for organization notes start
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> createOrgNote(@RequestBody OrganizationNotePayload organizationNotePayload,
@@ -1298,7 +1278,6 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.PUT)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateOrgNote(@RequestBody OrganizationNotePayload organizationNotePayload,
@@ -1320,7 +1299,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> deleteOrgNote(@RequestBody OrganizationNotePayload organizationNotePayLoad) {
@@ -1346,7 +1324,6 @@ public class OrganizationController extends BaseController {
 	}
 
 	@RequestMapping(value = "/{id}/history", method = RequestMethod.GET)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgHistoy(@PathVariable("id") Long orgId) {
@@ -1418,6 +1395,7 @@ public class OrganizationController extends BaseController {
 
 	private OrganizationRequestPayload setOrganizationPayload(OrganizationCsvPayload csv) {
 		OrganizationRequestPayload payload = new OrganizationRequestPayload();
+
 		AddressPayload address = new AddressPayload();
 		address.setCity(csv.getCity());
 		address.setCountry(csv.getCountry());
@@ -1425,7 +1403,11 @@ public class OrganizationController extends BaseController {
 		address.setState(csv.getState());
 		address.setStreet(csv.getStreet());
 		address.setZip(csv.getZip());
+		if (null != csv.getAddressId()) {
+			address.setId(csv.getAddressId());
+		}
 		payload.setAddress(address);
+		payload.setId(csv.getId());
 		payload.setAssets(csv.getAssets());
 		payload.setBusinessModel(csv.getBusinessModel());
 		payload.setClassificationId(csv.getClassificationId());
@@ -1457,6 +1439,7 @@ public class OrganizationController extends BaseController {
 		payload.setTagStatus(csv.getTagStatus());
 		payload.setTotalAssets(csv.getTotalAssets());
 		payload.setTwitterUrl(csv.getTwitterUrl());
+		payload.setInstagramUrl(csv.getInstagramUrl());
 		payload.setValues(csv.getValues());
 		payload.setWebsiteUrl(csv.getWebsiteUrl());
 		payload.setSpiTagIds(csv.getSpiTagIds());

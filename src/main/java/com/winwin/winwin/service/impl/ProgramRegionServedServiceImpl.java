@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
@@ -56,6 +57,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	private final Long REGION_ID = -1L;
 
 	@Override
+	@Transactional
 	public List<ProgramRegionServed> createProgramRegionServed(
 			List<ProgramRegionServedPayload> programRegionPayloadList) {
 		// TODO Auto-generated method stub
@@ -165,6 +167,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		}
 	}
 
+	@Transactional
 	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {

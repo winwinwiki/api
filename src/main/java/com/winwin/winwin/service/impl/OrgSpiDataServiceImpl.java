@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
@@ -55,6 +56,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgSpiDataServiceImpl.class);
 
 	@Override
+	@Transactional
 	public void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Long orgId)
 			throws SpiDataException {
 		UserPayload user = userService.getCurrentUserDetails();

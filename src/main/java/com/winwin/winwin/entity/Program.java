@@ -89,6 +89,9 @@ public class Program extends AbstractAuditableEntity {
 	@Column(name = "twitter_url")
 	private String twitterUrl;
 
+	@Column(name = "instagram_url")
+	private String instagramUrl;
+
 	@Column(name = "values", columnDefinition = "TEXT")
 	String values;
 

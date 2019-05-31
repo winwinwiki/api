@@ -43,7 +43,6 @@ public class UserController extends BaseController {
 	protected CustomMessageSource customMessageSource;
 
 	@RequestMapping(value = "", method = RequestMethod.POST)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -71,7 +70,6 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "login", method = RequestMethod.POST)
-	@Transactional
 	public ResponseEntity<?> userSignInRequest(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		AuthenticationResultType authenticationResult = null;
@@ -120,10 +118,10 @@ public class UserController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "info", method = RequestMethod.POST)
+	@RequestMapping(value = "info", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getUserInfo(@Valid @RequestBody UserPayload userPayload) throws UserException {
+	public ResponseEntity<?> getUserInfo(UserPayload userPayload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		UserPayload payload = null;
 
@@ -147,7 +145,7 @@ public class UserController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "update", method = RequestMethod.POST)
+	@RequestMapping(value = "update", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody UserPayload userPayload) {
@@ -175,7 +173,7 @@ public class UserController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "updateAll", method = RequestMethod.POST)
+	@RequestMapping(value = "updateAll", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> updateUsersInfo(@Valid @RequestBody List<UserPayload> userPayloadList) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -235,7 +233,6 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
-	@Transactional
 	public ResponseEntity<?> resetPassword(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -259,7 +256,6 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
-	@Transactional
 	public ResponseEntity<?> confirmResetPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -285,7 +281,6 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
-	@Transactional
 	public ResponseEntity<?> resendConfirmationCode(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -308,8 +303,7 @@ public class UserController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "changePassword", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "changePassword", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> changeUserPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
@@ -336,7 +330,6 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> deleteUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();

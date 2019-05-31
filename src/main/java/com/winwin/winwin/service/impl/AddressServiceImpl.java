@@ -5,6 +5,7 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.entity.Address;
@@ -26,6 +27,7 @@ public class AddressServiceImpl implements AddressService {
 	@Autowired
 	AddressRepository addressRepository;
 
+	@Transactional
 	public Address saveAddress(AddressPayload addressPayload) {
 		UserPayload user = userService.getCurrentUserDetails();
 		Address address = new Address();
@@ -51,6 +53,7 @@ public class AddressServiceImpl implements AddressService {
 		return addressRepository.saveAndFlush(address);
 	}
 
+	@Transactional
 	public Boolean updateAddress(Address address, AddressPayload addressPayload) {
 		UserPayload user = userService.getCurrentUserDetails();
 
