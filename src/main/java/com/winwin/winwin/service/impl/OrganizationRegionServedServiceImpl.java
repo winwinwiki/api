@@ -11,6 +11,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -19,8 +20,10 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.RegionMaster;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.RegionServedException;
 import com.winwin.winwin.payload.OrganizationRegionServedPayload;
+import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
@@ -193,8 +196,17 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	}
 
 	@Override
-	public List<RegionMaster> getOrgRegionMasterList() {
-		return orgRegionMasterRepository.findAll();
+	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
+		try {
+			if (!StringUtils.isEmpty(payload.getNameSearch())) {
+				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(payload.getNameSearch());
+			}
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.region.error.list"), e);
+		}
+		return null;
 	}
 
 }

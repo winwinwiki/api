@@ -61,6 +61,7 @@ import com.winwin.winwin.payload.OrganizationSdgDataMapPayload;
 import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
+import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.SdgGoalPayload;
@@ -205,7 +206,7 @@ public class OrganizationController extends BaseController {
 		return sendSuccessResponse(payloadList);
 	}
 
-	@RequestMapping(value = "/updateAll", method = RequestMethod.POST)
+	@RequestMapping(value = "/updateAll", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateOrganizations(@RequestParam("file") MultipartFile file) {
@@ -316,6 +317,11 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			if (orgList == null) {
 				return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
 						HttpStatus.INTERNAL_SERVER_ERROR);
@@ -896,29 +902,41 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgRegionsMasterList() throws RegionServedException {
+	public ResponseEntity<?> getOrgRegionsMasterList(RegionMasterFilterPayload filterPayload)
+			throws RegionServedException {
 		List<RegionMaster> orgRegionMasterList = null;
 		RegionMasterPayload payload = null;
 		List<RegionMasterPayload> payloadList = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
-			orgRegionMasterList = orgRegionServedService.getOrgRegionMasterList();
-			if (orgRegionMasterList == null) {
-				throw new RegionServedException(customMessageSource.getMessage("org.region.error.not_found"));
-			} else {
-				payloadList = new ArrayList<RegionMasterPayload>();
-				for (RegionMaster region : orgRegionMasterList) {
-					payload = new RegionMasterPayload();
-					payload.setRegionId(region.getId());
-					payload.setRegionName(region.getRegionName());
-					payload.setAdminUrl(region.getAdminUrl());
+			if (null != filterPayload) {
+				orgRegionMasterList = orgRegionServedService.getOrgRegionMasterList(filterPayload, exceptionResponse);
 
-					payloadList.add(payload);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
+				if (orgRegionMasterList == null) {
+					return sendMsgResponse(customMessageSource.getMessage("org.region.error.not_found"),
+							HttpStatus.INTERNAL_SERVER_ERROR);
+				} else {
+					payloadList = new ArrayList<RegionMasterPayload>();
+					for (RegionMaster region : orgRegionMasterList) {
+						payload = new RegionMasterPayload();
+						payload.setRegionId(region.getId());
+						payload.setRegionName(region.getRegionName());
+						payload.setAdminUrl(region.getAdminUrl());
+						payloadList.add(payload);
+					}
 				}
 
 			}
+
 		} catch (Exception e) {
-			throw new RegionServedException(customMessageSource.getMessage("org.region.error.list"));
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.region.error.list"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payloadList);
 
