@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -56,6 +57,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
+	@Transactional
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationDataSet organizationDataSet = null;
@@ -95,6 +97,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	}// end of method createOrUpdateOrganizationDataSet
 
 	@Override
+	@Transactional
 	public void removeOrganizationDataSet(Long dataSetId) {
 		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -203,6 +206,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 		}
 	}
 
+	@Transactional
 	public DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();

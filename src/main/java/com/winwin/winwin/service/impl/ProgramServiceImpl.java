@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -53,6 +54,7 @@ public class ProgramServiceImpl implements ProgramService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 
 	@Override
+	@Transactional
 	public Program createProgram(ProgramRequestPayload programPayload) {
 		// TODO Auto-generated method stub
 
@@ -63,11 +65,13 @@ public class ProgramServiceImpl implements ProgramService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteProgram(Long id) {
 		programRepository.deleteById(id);
 	}
 
 	@Override
+	@Transactional
 	public Program updateProgram(ProgramRequestPayload programPayload) {
 		// TODO Auto-generated method stub
 		Program program = getProgramFromProgramRequestPayload(programPayload);
@@ -108,6 +112,7 @@ public class ProgramServiceImpl implements ProgramService {
 		responsePayload.setSelfInterest(payload.getSelfInterest());
 		responsePayload.setTagStatus(payload.getTagStatus());
 		responsePayload.setTwitterUrl(payload.getTwitterUrl());
+		responsePayload.setInstagramUrl(payload.getInstagramUrl());
 		responsePayload.setValues(payload.getValues());
 		responsePayload.setWebsiteUrl(payload.getWebsiteUrl());
 		responsePayload.setCreatedAt(payload.getCreatedAt());
@@ -164,6 +169,7 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setSelfInterest(payload.getSelfInterest());
 			program.setTagStatus(program.getTagStatus());
 			program.setTwitterUrl(program.getTwitterUrl());
+			program.setInstagramUrl(program.getInstagramUrl());
 			program.setValues(payload.getValues());
 			program.setWebsiteUrl(payload.getWebsiteUrl());
 

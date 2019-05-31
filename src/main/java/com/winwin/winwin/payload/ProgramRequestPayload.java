@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import javax.persistence.Column;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,6 +58,8 @@ public class ProgramRequestPayload {
 	private String linkedinUrl;
 
 	private String twitterUrl;
+
+	private String instagramUrl;
 
 	String values;
 

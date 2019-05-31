@@ -105,7 +105,6 @@ public class ProgramController extends BaseController {
 
 	// Code for program data set start
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
-	@Transactional
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDetails(@PathVariable("id") Long id) {
@@ -127,7 +126,7 @@ public class ProgramController extends BaseController {
 
 	}
 
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -173,7 +172,7 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -216,7 +215,7 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -321,7 +320,7 @@ public class ProgramController extends BaseController {
 	// Code for program data set end
 
 	// Code for program resource start
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -363,7 +362,7 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -410,7 +409,7 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@Transactional
+	
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -515,8 +514,7 @@ public class ProgramController extends BaseController {
 	// Code for program resource end
 
 	// Code for program region served start
-	@RequestMapping(value = "/{id}/region", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/region", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> createOrgRegions(
@@ -640,8 +638,7 @@ public class ProgramController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<ProgramSpiDataMapPayload> payloadList,
@@ -703,8 +700,7 @@ public class ProgramController extends BaseController {
 
 	}
 
-	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.POST)
-	@Transactional
+	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgramSdgDataMapping(@RequestBody List<ProgramSdgDataMapPayload> payloadList,

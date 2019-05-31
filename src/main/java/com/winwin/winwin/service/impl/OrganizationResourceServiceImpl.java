@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -57,6 +58,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	private final Long CATEGORY_ID = -1L;
 
 	@Override
+	@Transactional
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationResource orgResource = null;
@@ -87,6 +89,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	}// end of method createOrUpdateOrganizationResource
 
 	@Override
+	@Transactional
 	public void removeOrganizationResource(Long resourceId) {
 		OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -191,6 +194,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 	}
 
+	@Transactional
 	public ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		ResourceCategory category = new ResourceCategory();

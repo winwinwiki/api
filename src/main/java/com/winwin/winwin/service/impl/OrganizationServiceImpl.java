@@ -1,7 +1,6 @@
 package com.winwin.winwin.service.impl;
 
 import java.io.InputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
@@ -114,6 +114,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
 	@Override
+	@Transactional
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
@@ -150,6 +151,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Transactional
 	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
 
@@ -160,6 +162,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Transactional
 	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
 
@@ -170,6 +173,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
@@ -198,6 +202,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Transactional
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		@SuppressWarnings("unused")
@@ -238,6 +243,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setFacebookUrl(organizationPayload.getFacebookUrl());
 					organization.setLinkedinUrl(organizationPayload.getLinkedinUrl());
 					organization.setTwitterUrl(organizationPayload.getTwitterUrl());
+					organization.setInstagramUrl(organizationPayload.getInstagramUrl());
 					organization.setValues(organizationPayload.getValues());
 					organization.setPurpose(organizationPayload.getPurpose());
 					organization.setSelfInterest(organizationPayload.getSelfInterest());
@@ -307,6 +313,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}// end of method getOrganizationList
 
 	@Override
+	@Transactional
 	public Organization createProgram(OrganizationRequestPayload organizationPayload) {
 		UserPayload user = userService.getCurrentUserDetails();
 
@@ -379,6 +386,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Transactional
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		UserPayload user = userService.getCurrentUserDetails();
 		Organization organization = null;
@@ -464,23 +472,44 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	public List<Organization> saveOrganizationsForBulkUpload(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage) {
+		ExceptionResponse errorResForNaics = new ExceptionResponse();
+		ExceptionResponse errorResForNtee = new ExceptionResponse();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		List<Organization> organizationList = new ArrayList<Organization>();
 
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
+			// get NaicsCode AutoTag SpiSdgMapping
+			Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap(errorResForNaics);
+
+			if (!StringUtils.isEmpty(errorResForNaics.getErrorMessage())) {
+				throw new Exception(errorResForNaics.getErrorMessage());
+			}
+			// get NteeCode AutoTag SpiSdgMapping
+			Map<String, NteeDataMappingPayload> nteeMap = getNteeSpiSdgMap(errorResForNtee);
+
+			if (!StringUtils.isEmpty(errorResForNtee.getErrorMessage())) {
+				throw new Exception(errorResForNtee.getErrorMessage());
+			}
 
 			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
 				if (null != organizationPayload && null != user) {
-					organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
+						if (null != organizationPayload.getId()) {
+							organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+						} else {
+							throw new Exception(
+									"Organization id is found as null in the file to perform bulk update operation for organizations");
+						}
+
+					}
+
 				}
 			}
 			organizationList = organizationRepository.saveAll(organizationList);
-			// get NaicsCode AutoTag SpiSdgMapping
-			Map<String, NaicsDataMappingPayload> naicsMap = getNaicsSpiSdgMap();
-			// get NteeCode AutoTag SpiSdgMapping
-			Map<String, NteeDataMappingPayload> nteeMap = getNteeSpiSdgMap();
 
 			for (Organization organization : organizationList) {
 				/*
@@ -642,36 +671,51 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws Exception
 	 * 
 	 */
-	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap() throws Exception {
+	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap(ExceptionResponse errorResForNaics)
+			throws Exception {
 		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNaicsAwsKey());
 		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
+		InputStream input = s3Object.getObjectContent();
+		String csv = IOUtils.toString(input);
+		List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
+		Integer rowNumber = null;
+		try {
+			if (null != s3Object) {
+				if (null != naicsMappingCsvPayloadList) {
+					for (int i = 0; i < naicsMappingCsvPayloadList.size(); i++) {
+						rowNumber = i + 2;
+						;
+						NaicsMappingCsvPayload payloadData = naicsMappingCsvPayloadList.get(i);
+						NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
 
-		if (null != s3Object) {
-			InputStream input = s3Object.getObjectContent();
-			String csv = IOUtils.toString(input);
-			List<NaicsMappingCsvPayload> mappingData = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
+						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							List<Long> spiIdsList = new ArrayList<>();
+							for (int j = 0; j < spiIds.length; j++) {
+								spiIdsList.add(Long.parseLong(spiIds[j]));
+							}
+							payload.setSpiTagIds(spiIdsList);
+						}
 
-			for (int i = 0; i < mappingData.size(); i++) {
-				NaicsMappingCsvPayload data = mappingData.get(i);
-				String[] spiIds = data.getSpiTagIds().split(",");
+						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							List<Long> sdgIdsList = new ArrayList<>();
+							for (int j = 0; j < sdgIds.length; j++) {
+								sdgIdsList.add(Long.parseLong(sdgIds[j]));
+							}
+							payload.setSdgTagIds(sdgIdsList);
+						}
 
-				List<Long> spiIdsList = new ArrayList<>();
-				for (int j = 0; j < spiIds.length; j++) {
-					spiIdsList.add(Long.parseLong(spiIds[j]));
+						payload.setNaicsCode(payloadData.getNaicsCode());
+						naicsMap.put(payloadData.getNaicsCode(), payload);
+					}
 				}
-
-				String[] sdgIds = data.getSdgTagIds().split(",");
-				List<Long> sdgIdsList = new ArrayList<>();
-				for (int j = 0; j < sdgIds.length; j++) {
-					sdgIdsList.add(Long.parseLong(sdgIds[j]));
-				}
-				NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
-				payload.setNaicsCode(data.getNaicsCode());
-				payload.setSdgTagIds(sdgIdsList);
-				payload.setSpiTagIds(spiIdsList);
-				naicsMap.put(data.getNaicsCode(), payload);
-
 			}
+		} catch (Exception e) {
+			LOGGER.error("", e.toString());
+			errorResForNaics.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+					+ " from the file " + awsS3ObjectServiceImpl.getNaicsAwsKey() + ", error: " + e.toString());
+			errorResForNaics.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return naicsMap;
 	}
@@ -680,36 +724,50 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws Exception
 	 * 
 	 */
-	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap() throws Exception {
-		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNteeAwsKey());
-		Map<String, NteeDataMappingPayload> nteeMap = new HashMap<>();
+	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap(ExceptionResponse errorResForNtee) throws Exception {
+		Map<String, NteeDataMappingPayload> nteeMap = null;
+		Integer rowNumber = null;
+		try {
+			nteeMap = new HashMap<>();
+			S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNteeAwsKey());
+			if (null != s3Object) {
+				InputStream input = s3Object.getObjectContent();
+				String csv = IOUtils.toString(input);
+				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = CsvUtils.read(NteeMappingCsvPayload.class, csv);
 
-		if (null != s3Object) {
-			InputStream input = s3Object.getObjectContent();
-			String csv = IOUtils.toString(input);
-			List<NteeMappingCsvPayload> mappingData = CsvUtils.read(NteeMappingCsvPayload.class, csv);
+				if (null != nteeMappingCsvPayloadList) {
+					for (int i = 0; i < nteeMappingCsvPayloadList.size(); i++) {
+						NteeMappingCsvPayload payloadData = nteeMappingCsvPayloadList.get(i);
+						NteeDataMappingPayload payload = new NteeDataMappingPayload();
 
-			for (int i = 0; i < mappingData.size(); i++) {
-				NteeMappingCsvPayload data = mappingData.get(i);
-				String[] spiIds = data.getSpiTagIds().split(",");
+						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							List<Long> spiIdsList = new ArrayList<>();
+							for (int j = 0; j < spiIds.length; j++) {
+								spiIdsList.add(Long.parseLong(spiIds[j]));
+							}
+							payload.setSpiTagIds(spiIdsList);
+						}
 
-				List<Long> spiIdsList = new ArrayList<>();
-				for (int j = 0; j < spiIds.length; j++) {
-					spiIdsList.add(Long.parseLong(spiIds[j]));
+						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							List<Long> sdgIdsList = new ArrayList<>();
+							for (int j = 0; j < sdgIds.length; j++) {
+								sdgIdsList.add(Long.parseLong(sdgIds[j]));
+							}
+							payload.setSdgTagIds(sdgIdsList);
+						}
+
+						payload.setNteeCode(payloadData.getNteeCode());
+						nteeMap.put(payloadData.getNteeCode(), payload);
+					}
 				}
-
-				String[] sdgIds = data.getSdgTagIds().split(",");
-				List<Long> sdgIdsList = new ArrayList<>();
-				for (int j = 0; j < sdgIds.length; j++) {
-					sdgIdsList.add(Long.parseLong(sdgIds[j]));
-				}
-				NteeDataMappingPayload payload = new NteeDataMappingPayload();
-				payload.setNteeCode(data.getNteeCode());
-				payload.setSdgTagIds(sdgIdsList);
-				payload.setSpiTagIds(spiIdsList);
-				nteeMap.put(data.getNteeCode(), payload);
-
 			}
+		} catch (Exception e) {
+			LOGGER.error("", e);
+			errorResForNtee.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+					+ " from the file " + awsS3ObjectServiceImpl.getNteeAwsKey() + ", error: " + e.toString());
+			errorResForNtee.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return nteeMap;
 	}
@@ -728,7 +786,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> sdgIdsList)
 			throws Exception {
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
-		List<OrganizationSdgData> organizationSdgDataList = null;
+		List<OrganizationSdgData> organizationSdgDataMappingList = null;
 		if (null != sdgIdsList) {
 			for (Long sdgId : sdgIdsList) {
 				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
@@ -744,9 +802,18 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
 					sdgDataMapObj.setAdminUrl("");
 
-					organizationSdgDataList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(organization.getId());
-					if (null != organizationSdgDataList) {
-						for (OrganizationSdgData organizationSdgData : organizationSdgDataList) {
+					organizationSdgDataMappingList = orgSdgDataMapRepository
+							.getOrgSdgMapDataByOrgId(organization.getId());
+					if (!organizationSdgDataMappingList.isEmpty()) {
+						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
+						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
+							if (null != organizationSdgData.getSdgData()) {
+								sdgIdsMap.put(organizationSdgData.getSdgData().getId(),
+										organizationSdgData.getSdgData().getId());
+							}
+
+						}
+						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
 							if (null != organizationSdgData.getSdgData()) {
 								if (orgSdgDataObj.getId().equals(organizationSdgData.getSdgData().getId())) {
 									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
@@ -790,7 +857,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			OrganizationSpiData spiDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList)
 			throws Exception {
 		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
-		List<OrganizationSpiData> organizationSpiDataList = null;
+		List<OrganizationSpiData> organizationSpiDataMappingList = null;
 		if (null != spiIdsList) {
 			for (Long spiId : spiIdsList) {
 				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
@@ -805,11 +872,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj.setUpdatedBy(user.getEmail());
 					spiDataMapObj.setAdminUrl("");
 
-					organizationSpiDataList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(organization.getId());
-					if (null != organizationSpiDataList) {
-						for (OrganizationSpiData organizationSpiData : organizationSpiDataList) {
+					organizationSpiDataMappingList = orgSpiDataMapRepository
+							.getOrgSpiMapDataByOrgId(organization.getId());
+
+					if (!organizationSpiDataMappingList.isEmpty()) {
+						Map<Long, Long> spiIdsMap = new HashMap<Long, Long>();
+						for (OrganizationSpiData organizationSpiData : organizationSpiDataMappingList) {
 							if (null != organizationSpiData.getSpiData()) {
-								if (orgSpiDataObj.getId().equals(organizationSpiData.getSpiData().getId())) {
+								spiIdsMap.put(organizationSpiData.getSpiData().getId(),
+										organizationSpiData.getSpiData().getId());
+							}
+						}
+
+						for (OrganizationSpiData organizationSpiData : organizationSpiDataMappingList) {
+							if (null != organizationSpiData.getSpiData()) {
+								if (orgSpiDataObj.getId()
+										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
 									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
 								} else {
 									spiDataMapObj.setSpiData(orgSpiDataObj);
@@ -837,22 +915,40 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return spiDataMapList;
 	}
 
+	@Transactional
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			address.setCountry(addressPayload.getCountry());
-			address.setState(addressPayload.getState());
-			address.setCity(addressPayload.getCity());
-			address.setCounty(addressPayload.getCounty());
-			address.setZip(addressPayload.getZip());
-			address.setPlaceId(addressPayload.getPlaceId());
-			address.setCreatedAt(sdf.parse(formattedDte));
-			address.setUpdatedAt(sdf.parse(formattedDte));
-			address.setCreatedBy(user.getEmail());
-			address.setUpdatedBy(user.getEmail());
-			address.setAdminUrl(addressPayload.getAdminUrl());
+			if (null != addressPayload) {
+				if (null != addressPayload.getId()) {
+					address.setId(addressPayload.getId());
+					address.setCountry(addressPayload.getCountry());
+					address.setState(addressPayload.getState());
+					address.setCity(addressPayload.getCity());
+					address.setCounty(addressPayload.getCounty());
+					address.setZip(addressPayload.getZip());
+					address.setPlaceId(addressPayload.getPlaceId());
+					address.setUpdatedAt(sdf.parse(formattedDte));
+					address.setUpdatedBy(user.getEmail());
+					address.setAdminUrl(addressPayload.getAdminUrl());
+				} else {
+					address.setCountry(addressPayload.getCountry());
+					address.setState(addressPayload.getState());
+					address.setCity(addressPayload.getCity());
+					address.setCounty(addressPayload.getCounty());
+					address.setZip(addressPayload.getZip());
+					address.setPlaceId(addressPayload.getPlaceId());
+					address.setCreatedAt(sdf.parse(formattedDte));
+					address.setUpdatedAt(sdf.parse(formattedDte));
+					address.setCreatedBy(user.getEmail());
+					address.setUpdatedBy(user.getEmail());
+					address.setAdminUrl(addressPayload.getAdminUrl());
+				}
+			}
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
