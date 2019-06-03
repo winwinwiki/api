@@ -20,8 +20,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrganizationNotePayload {
-	Long noteId;
-	String note;
+	Long id;
+	String name;
 	Long organizationId;
 	String createdBy;
 	Date createdAt;
