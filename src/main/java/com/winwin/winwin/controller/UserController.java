@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -55,18 +54,14 @@ public class UserController extends BaseController {
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
-
 			} else {
 				userService.createUser(payload, exceptionResponse);
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			}
-
 		}
-
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
-
 	}
 
 	@RequestMapping(value = "login", method = RequestMethod.POST)
@@ -99,23 +94,18 @@ public class UserController extends BaseController {
 						userSignInResPayload.setAuthResult(authenticationResult);
 						userSignInResPayload.setUserDetails(userPayload);
 					}
-
 				}
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
-
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse(userSignInResPayload, HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "info", method = RequestMethod.GET)
@@ -132,17 +122,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
-
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse(payload, HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "update", method = RequestMethod.PUT)
@@ -160,17 +146,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
-
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse(payload, HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "updateAll", method = RequestMethod.PUT)
@@ -190,19 +172,14 @@ public class UserController extends BaseController {
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
 						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 				} else {
 					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 				}
-
 			}
-
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
-
 	}
 
 	public Boolean isNewUser(String userName, ExceptionResponse exceptionResponse) throws UserException {
@@ -212,9 +189,7 @@ public class UserController extends BaseController {
 				return true;
 			}
 		}
-
 		return false;
-
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
@@ -229,7 +204,6 @@ public class UserController extends BaseController {
 			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
@@ -243,16 +217,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
@@ -275,9 +246,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
@@ -291,16 +260,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse("org.user.code.success", HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "changePassword", method = RequestMethod.PUT)
@@ -317,16 +283,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse("org.user.password.success.changed", HttpStatus.OK);
-
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
@@ -341,16 +304,13 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-
 		return sendSuccessResponse("org.user.delete.success", HttpStatus.OK);
-
 	}
 
 }
