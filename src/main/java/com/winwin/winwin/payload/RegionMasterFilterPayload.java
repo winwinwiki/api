@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RegionMasterFilterPayload {
 	private String nameSearch;
-	
-	
+	private Integer pageNo;
+	private Integer pageSize;
+
 }

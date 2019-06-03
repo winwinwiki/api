@@ -11,5 +11,6 @@ import com.winwin.winwin.payload.OrganizationFilterPayload;
 @Transactional
 @Repository
 public interface OrganizationFilterRepository {
-	List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId);
+	List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId, Integer pageNo,
+			Integer pageSize);
 }

@@ -27,4 +27,6 @@ public class OrganizationFilterPayload {
 	private String nameSearch;
 	private String shortNameCode;
 	private long goalCode;
+	private Integer pageNo;
+	private Integer pageSize;
 }

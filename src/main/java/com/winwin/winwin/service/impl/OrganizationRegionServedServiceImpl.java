@@ -11,6 +11,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -199,9 +202,18 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
 		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();
 		try {
-			if (null != payload.getNameSearch()) {
-				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(payload.getNameSearch());
+			if (null != payload.getPageNo() && null != payload.getPageSize()) {
+				if (null != payload.getNameSearch()) {
+					Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize(), Sort.by("name"));
+					return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(payload.getNameSearch(),
+							pageable);
+				}
+			} else if (payload.getPageNo() == null) {
+				throw new Exception("Page No found as null");
+			} else if (payload.getPageSize() == null) {
+				throw new Exception("Page Size found as null");
 			}
+
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
