@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -116,17 +116,13 @@ public class ProgramController extends BaseController {
 				throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 			} else {
 				payload = programService.getProgramResponseFromProgram(program);
-
 			}
-
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("prg.error.fetch") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payload);
-
 	}
 
-	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -158,21 +154,16 @@ public class ProgramController extends BaseController {
 					payload.setAdminUrl(programDataSet.getAdminUrl());
 					payload.setIsActive(programDataSet.getIsActive());
 				}
-
 			} catch (Exception e) {
 				throw new DataSetException(
 						customMessageSource.getMessage("prog.dataset.error.created") + ": " + e.getMessage());
 			}
-
 		} else {
 			return sendErrorResponse("org.bad.request");
-
 		}
-
 		return sendSuccessResponse(payload);
 	}
 
-	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -190,32 +181,20 @@ public class ProgramController extends BaseController {
 			} else {
 				payload = new ProgramDataSetPayLoad();
 				dataSet = programDataSetService.createOrUpdateProgramDataSet(programDataSetPayLoad);
-				payload.setId(dataSet.getId());
+				BeanUtils.copyProperties(dataSet, payload);
 				category = dataSet.getDataSetCategory();
 				if (null != category) {
 					payloadCategory = new DataSetCategoryPayload();
-					payloadCategory.setId(category.getId());
-					payloadCategory.setCategoryName(category.getCategoryName());
-					payloadCategory.setAdminUrl(category.getAdminUrl());
+					BeanUtils.copyProperties(category, payloadCategory);
 				}
 				payload.setDataSetCategory(payloadCategory);
-				payload.setOrganizationId(programDataSetPayLoad.getOrganizationId());
-				payload.setProgramId(programDataSetPayLoad.getProgramId());
-				payload.setAdminUrl(programDataSetPayLoad.getAdminUrl());
-				payload.setDescription(dataSet.getDescription());
-				payload.setType(dataSet.getType());
-				payload.setUrl(dataSet.getUrl());
-				payload.setIsActive(dataSet.getIsActive());
 			}
 		} else {
 			return sendErrorResponse("org.bad.request");
-
 		}
-
 		return sendSuccessResponse(payload);
 	}
 
-	
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -231,9 +210,7 @@ public class ProgramController extends BaseController {
 				programDataSetService.removeProgramDataSet(id, programDataSetPayLoad.getOrganizationId());
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new DataSetException(
 					customMessageSource.getMessage("prog.dataset.error.deleted") + ": " + e.getMessage());
@@ -258,24 +235,15 @@ public class ProgramController extends BaseController {
 				payloadList = new ArrayList<>();
 				for (ProgramDataSet dataSet : programDataSetList) {
 					payload = new ProgramDataSetPayLoad();
-					payload.setId(dataSet.getId());
+					BeanUtils.copyProperties(dataSet, payload);
 					category = dataSet.getDataSetCategory();
 					if (null != category) {
 						payloadCategory = new DataSetCategoryPayload();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setDataSetCategory(payloadCategory);
-					payload.setProgramId(dataSet.getProgramId());
-					payload.setDescription(dataSet.getDescription());
-					payload.setType(dataSet.getType());
-					payload.setUrl(dataSet.getUrl());
-					payload.setAdminUrl(dataSet.getAdminUrl());
-					payload.setIsActive(dataSet.getIsActive());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new DataSetException(
@@ -302,25 +270,21 @@ public class ProgramController extends BaseController {
 				payloadList = new ArrayList<>();
 				for (DataSetCategory category : dataSetCategoryList) {
 					payload = new DataSetCategoryPayload();
-					payload.setId(category.getId());
-					payload.setCategoryName(category.getCategoryName());
-					payload.setAdminUrl(category.getAdminUrl());
+					BeanUtils.copyProperties(category, payload);
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new DataSetCategoryException(
 					customMessageSource.getMessage("prog.dataset.category.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	// Code for program data set end
 
 	// Code for program resource start
-	
+
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -335,34 +299,25 @@ public class ProgramController extends BaseController {
 				programResource = programResourceService.createOrUpdateProgramResource(programResourcePayLoad);
 				if (null != programResource) {
 					payload = new ProgramResourcePayLoad();
-					payload.setId(programResource.getId());
+					BeanUtils.copyProperties(programResource, payload);
+
 					category = programResource.getResourceCategory();
 					if (null != category) {
 						payloadCategory = new ResourceCategoryPayLoad();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setProgramId(programResource.getProgramId());
-					payload.setCount(programResource.getCount());
-					payload.setDescription(programResource.getDescription());
-					payload.setAdminUrl(programResource.getAdminUrl());
-					payload.setIsActive(programResource.getIsActive());
 				}
 			} catch (Exception e) {
 				throw new ResourceException(
 						customMessageSource.getMessage("prog.resource.error.created") + ": " + e.getMessage());
 			}
-
 		} else {
 			return sendErrorResponse("org.bad.request");
-
 		}
 		return sendSuccessResponse(payload);
 	}
 
-	
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -381,27 +336,18 @@ public class ProgramController extends BaseController {
 				} else {
 					programResource = programResourceService.createOrUpdateProgramResource(programResourcePayLoad);
 					payload = new ProgramResourcePayLoad();
-					payload.setId(programResource.getId());
+					BeanUtils.copyProperties(programResource, payload);
+
 					category = programResource.getResourceCategory();
 					if (null != category) {
 						payloadCategory = new ResourceCategoryPayLoad();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setProgramId(programResource.getProgramId());
-					payload.setCount(programResource.getCount());
-					payload.setAdminUrl(programResource.getAdminUrl());
-					payload.setDescription(programResource.getDescription());
-					payload.setIsActive(programResource.getIsActive());
 				}
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.updated") + ": " + e.getMessage());
@@ -409,7 +355,6 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -425,9 +370,7 @@ public class ProgramController extends BaseController {
 				programResourceService.removeProgramResource(id, programResourcePayLoad.getOrganizationId());
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.deleted") + ": " + e.getMessage());
@@ -452,30 +395,22 @@ public class ProgramController extends BaseController {
 				payloadList = new ArrayList<>();
 				for (ProgramResource resource : programResourceList) {
 					payload = new ProgramResourcePayLoad();
-					payload.setId(resource.getId());
+					BeanUtils.copyProperties(resource, payload);
+
 					category = resource.getResourceCategory();
 					if (null != category) {
 						payloadCategory = new ResourceCategoryPayLoad();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setProgramId(resource.getProgramId());
-					payload.setCount(resource.getCount());
-					payload.setDescription(resource.getDescription());
-					payload.setIsActive(resource.getIsActive());
-					payload.setAdminUrl(resource.getAdminUrl());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("prog.resource.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
@@ -496,12 +431,9 @@ public class ProgramController extends BaseController {
 				payloadList = new ArrayList<>();
 				for (ResourceCategory category : resourceCategoryList) {
 					payload = new ResourceCategoryPayLoad();
-					payload.setId(category.getId());
-					payload.setCategoryName(category.getCategoryName());
-					payload.setAdminUrl(category.getAdminUrl());
+					BeanUtils.copyProperties(category, payload);
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new ResourceCategoryException(
@@ -541,7 +473,6 @@ public class ProgramController extends BaseController {
 					payload.setIsActive(region.getIsActive());
 					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
-
 				}
 			}
 		} catch (Exception e) {
@@ -609,7 +540,6 @@ public class ProgramController extends BaseController {
 					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new RegionServedException(customMessageSource.getMessage("prog.region.error.list"));
@@ -630,12 +560,10 @@ public class ProgramController extends BaseController {
 			if (payloadList == null) {
 				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
 			}
-
 		} catch (Exception e) {
 			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
@@ -652,7 +580,6 @@ public class ProgramController extends BaseController {
 				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.created"));
 			}
 			return sendSuccessResponse("prog.spidata.success.created");
-
 		} else {
 			return sendErrorResponse("org.bad.request");
 		}
@@ -678,7 +605,6 @@ public class ProgramController extends BaseController {
 			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}// Code for program SPI data end
 
 	// Code for program SDG data start
@@ -692,7 +618,6 @@ public class ProgramController extends BaseController {
 			if (payloadList == null) {
 				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
 			}
-
 		} catch (Exception e) {
 			throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.list"));
 		}
@@ -714,7 +639,6 @@ public class ProgramController extends BaseController {
 				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.created"));
 			}
 			return sendSuccessResponse("prog.sdgdata.success.created");
-
 		} else {
 			return sendErrorResponse("org.bad.request");
 		}
@@ -738,7 +662,6 @@ public class ProgramController extends BaseController {
 			throw new SdgDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}// Code for program SDG data end
 
 }
