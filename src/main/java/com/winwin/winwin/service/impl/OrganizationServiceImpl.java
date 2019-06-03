@@ -324,6 +324,32 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	public Integer getMaxPagesForOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
+		Integer maxPages = 0;
+		Integer noOfRecords = 0;
+		try {
+			if (payload.getNameSearch() != null) {
+				noOfRecords = organizationRepository
+						.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
+			} else {
+				noOfRecords = organizationRepository.getFilterOrganizationCount(payload,
+						OrganizationConstants.ORGANIZATION, null);
+			}
+
+			if (null != payload.getPageSize()) {
+				if (noOfRecords != 0)
+					maxPages = noOfRecords / payload.getPageSize();
+
+			}
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
+		}
+		return maxPages;
+	}
+
+	@Override
 	public List<Organization> getProgramList(Long orgId) {
 		return organizationRepository.findAllProgramList(orgId);
 	}// end of method getOrganizationList
@@ -946,32 +972,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		try {
 			if (null != addressPayload) {
-				if (null != addressPayload.getId()) {
-					address.setId(addressPayload.getId());
-					address.setCountry(addressPayload.getCountry());
-					address.setState(addressPayload.getState());
-					address.setCity(addressPayload.getCity());
-					address.setCounty(addressPayload.getCounty());
-					address.setZip(addressPayload.getZip());
-					address.setPlaceId(addressPayload.getPlaceId());
-					address.setUpdatedAt(sdf.parse(formattedDte));
-					address.setUpdatedBy(user.getEmail());
-					address.setAdminUrl(addressPayload.getAdminUrl());
-				} else {
-					address.setCountry(addressPayload.getCountry());
-					address.setState(addressPayload.getState());
-					address.setCity(addressPayload.getCity());
-					address.setCounty(addressPayload.getCounty());
-					address.setZip(addressPayload.getZip());
-					address.setPlaceId(addressPayload.getPlaceId());
+				BeanUtils.copyProperties(addressPayload, address);
+				if (addressPayload.getId() == null) {
 					address.setCreatedAt(sdf.parse(formattedDte));
-					address.setUpdatedAt(sdf.parse(formattedDte));
 					address.setCreatedBy(user.getEmail());
-					address.setUpdatedBy(user.getEmail());
-					address.setAdminUrl(addressPayload.getAdminUrl());
 				}
+				address.setUpdatedAt(sdf.parse(formattedDte));
+				address.setUpdatedBy(user.getEmail());
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
