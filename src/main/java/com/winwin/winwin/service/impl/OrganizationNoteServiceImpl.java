@@ -57,7 +57,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				note = new OrganizationNote();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				note.setName(organizationNotePayload.getNote());
+				note.setName(organizationNotePayload.getName());
 				note.setOrganizationId(organizationNotePayload.getOrganizationId());
 				note.setCreatedAt(sdf.parse(formattedDte));
 				note.setUpdatedAt(sdf.parse(formattedDte));
@@ -85,12 +85,12 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		OrganizationNote note = null;
 		try {
-			if (null != organizationNotePayload.getNoteId()) {
-				note = organizationNoteRepository.findOrgNoteById(organizationNotePayload.getNoteId());
+			if (null != organizationNotePayload.getId()) {
+				note = organizationNoteRepository.findOrgNoteById(organizationNotePayload.getId());
 				if (null != note) {
 					UserPayload user = userService.getCurrentUserDetails();
 
-					note.setName(organizationNotePayload.getNote());
+					note.setName(organizationNotePayload.getName());
 					note.setOrganizationId(organizationNotePayload.getOrganizationId());
 					note.setUpdatedAt(sdf.parse(formattedDte));
 					note.setAdminUrl(organizationNotePayload.getAdminUrl());
