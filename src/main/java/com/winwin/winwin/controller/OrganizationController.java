@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -174,9 +175,7 @@ public class OrganizationController extends BaseController {
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-
 		}
-
 		return sendSuccessResponse(payload);
 	}
 
@@ -202,7 +201,6 @@ public class OrganizationController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-
 		return sendSuccessResponse(payloadList);
 	}
 
@@ -294,9 +292,7 @@ public class OrganizationController extends BaseController {
 					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
 					payloadList.add(responsePayload);
 				}
-
 			}
-
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -330,7 +326,6 @@ public class OrganizationController extends BaseController {
 					payload = setOrganizationPayload(organization);
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
@@ -358,7 +353,6 @@ public class OrganizationController extends BaseController {
 			} else {
 				payload = setOrganizationPayload(organization);
 			}
-
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -386,49 +380,12 @@ public class OrganizationController extends BaseController {
 		OrganizationResponsePayload payload = null;
 		if (null != organization) {
 			payload = new OrganizationResponsePayload();
-			payload.setId(organization.getId());
+			BeanUtils.copyProperties(organization, payload);
 			if (null != organization.getAddress()) {
 				addressPayload = new AddressPayload();
-				addressPayload.setId(organization.getAddress().getId());
-				addressPayload.setCountry(organization.getAddress().getCountry());
-				addressPayload.setState(organization.getAddress().getState());
-				addressPayload.setCity(organization.getAddress().getCity());
-				addressPayload.setCounty(organization.getAddress().getCounty());
-				addressPayload.setZip(organization.getAddress().getZip());
-				addressPayload.setStreet(organization.getAddress().getStreet());
-				addressPayload.setPlaceId(organization.getAddress().getPlaceId());
-				addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
+				BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 				payload.setAddress(addressPayload);
 			}
-			payload.setName(organization.getName());
-			payload.setRevenue(organization.getRevenue());
-			payload.setAssets(organization.getAssets());
-			payload.setSector(organization.getSector());
-			payload.setSectorLevel(organization.getSectorLevel());
-			payload.setSectorLevelName(organization.getSectorLevelName());
-			payload.setDescription(organization.getDescription());
-			payload.setNaicsCode(organization.getNaicsCode());
-			payload.setNteeCode(organization.getNteeCode());
-			payload.setPriority(organization.getPriority());
-			payload.setParentId(organization.getParentId());
-			payload.setIsActive(organization.getIsActive());
-			payload.setTagStatus(organization.getTagStatus());
-			payload.setTotalAssets(organization.getAssets());
-			payload.setWebsiteUrl(organization.getWebsiteUrl());
-			payload.setFacebookUrl(organization.getFacebookUrl());
-			payload.setLinkedinUrl(organization.getLinkedinUrl());
-			payload.setTwitterUrl(organization.getTwitterUrl());
-			payload.setInstagramUrl(organization.getInstagramUrl());
-			payload.setValues(organization.getValues());
-			payload.setPurpose(organization.getPurpose());
-			payload.setSelfInterest(organization.getSelfInterest());
-			payload.setBusinessModel(organization.getBusinessModel());
-			payload.setMissionStatement(organization.getMissionStatement());
-			payload.setContactInfo(organization.getContactInfo());
-			payload.setPopulationServed(organization.getPopulationServed());
-			payload.setAdminUrl(organization.getAdminUrl());
-			payload.setTagStatus(organization.getTagStatus());
-
 		}
 		return payload;
 	}
@@ -444,39 +401,27 @@ public class OrganizationController extends BaseController {
 		DataSetPayload payload = null;
 		DataSetCategory category = null;
 		DataSetCategoryPayload payloadCategory = null;
-
 		try {
 			if (null != orgDataSetPayLoad) {
 				organizationDataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(orgDataSetPayLoad);
 				if (null != organizationDataSet) {
 					payload = new DataSetPayload();
-					payload.setId(organizationDataSet.getId());
+					BeanUtils.copyProperties(organizationDataSet, payload);
+
 					category = organizationDataSet.getDataSetCategory();
 					if (null != category) {
 						payloadCategory = new DataSetCategoryPayload();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setDataSetCategory(payloadCategory);
-					payload.setOrganizationId(organizationDataSet.getOrganizationId());
-					payload.setDescription(organizationDataSet.getDescription());
-					payload.setType(organizationDataSet.getType());
-					payload.setUrl(organizationDataSet.getUrl());
-					payload.setAdminUrl(organizationDataSet.getAdminUrl());
-					payload.setIsActive(organizationDataSet.getIsActive());
 				}
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new DataSetException(
 					customMessageSource.getMessage("org.dataset.error.created") + ": " + e.getMessage());
 		}
-
 		return sendSuccessResponse(payload);
 	}
 
@@ -489,7 +434,6 @@ public class OrganizationController extends BaseController {
 		DataSetCategory category = null;
 		DataSetCategoryPayload payloadCategory = null;
 		DataSetPayload payload = null;
-
 		if (null != organizationDataSetPayLoad && null != organizationDataSetPayLoad.getId()) {
 			Long id = organizationDataSetPayLoad.getId();
 			dataSet = organizationDataSetRepository.findOrgDataSetById(id);
@@ -498,28 +442,18 @@ public class OrganizationController extends BaseController {
 			} else {
 				payload = new DataSetPayload();
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
-				payload.setId(dataSet.getId());
-				category = dataSet.getDataSetCategory();
+				BeanUtils.copyProperties(dataSet, payload);
 
+				category = dataSet.getDataSetCategory();
 				if (null != category) {
 					payloadCategory = new DataSetCategoryPayload();
-					payloadCategory.setId(category.getId());
-					payloadCategory.setCategoryName(category.getCategoryName());
-					payloadCategory.setAdminUrl(category.getAdminUrl());
+					BeanUtils.copyProperties(category, payloadCategory);
 				}
 				payload.setDataSetCategory(payloadCategory);
-				payload.setOrganizationId(dataSet.getOrganizationId());
-				payload.setDescription(dataSet.getDescription());
-				payload.setType(dataSet.getType());
-				payload.setUrl(dataSet.getUrl());
-				payload.setAdminUrl(dataSet.getAdminUrl());
-				payload.setIsActive(dataSet.getIsActive());
 			}
 		} else {
 			return sendErrorResponse("org.bad.request");
-
 		}
-
 		return sendSuccessResponse(payload);
 	}
 
@@ -539,9 +473,7 @@ public class OrganizationController extends BaseController {
 				organizationDataSetService.removeOrganizationDataSet(id);
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new DataSetException(
 					customMessageSource.getMessage("org.dataset.error.deleted") + ": " + e.getMessage());
@@ -583,14 +515,12 @@ public class OrganizationController extends BaseController {
 					payload.setIsActive(dataSet.getIsActive());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new DataSetException(
 					customMessageSource.getMessage("org.dataset.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
@@ -615,14 +545,12 @@ public class OrganizationController extends BaseController {
 					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new DataSetCategoryException(
 					customMessageSource.getMessage("org.dataset.category.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	// Code for organization data set end
@@ -662,10 +590,8 @@ public class OrganizationController extends BaseController {
 				throw new ResourceException(
 						customMessageSource.getMessage("org.resource.error.created") + ": " + e.getMessage());
 			}
-
 		} else {
 			return sendErrorResponse("org.bad.request");
-
 		}
 		return sendSuccessResponse(payload);
 	}
@@ -704,12 +630,9 @@ public class OrganizationController extends BaseController {
 					payload.setDescription(organizationResource.getDescription());
 					payload.setIsActive(organizationResource.getIsActive());
 				}
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("org.resource.error.updated") + ": " + e.getMessage());
@@ -732,9 +655,7 @@ public class OrganizationController extends BaseController {
 				organizationResourceService.removeOrganizationResource(id);
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("org.resource.error.deleted") + ": " + e.getMessage());
@@ -759,30 +680,21 @@ public class OrganizationController extends BaseController {
 				payloadList = new ArrayList<OrganizationResourcePayload>();
 				for (OrganizationResource resource : orgResourceList) {
 					payload = new OrganizationResourcePayload();
-					payload.setId(resource.getId());
+					BeanUtils.copyProperties(resource, payload);
 					category = resource.getResourceCategory();
 					if (null != category) {
 						payloadCategory = new ResourceCategoryPayLoad();
-						payloadCategory.setId(category.getId());
-						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
+						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setOrganizationId(resource.getOrganizationId());
-					payload.setCount(resource.getCount());
-					payload.setAdminUrl(resource.getAdminUrl());
-					payload.setDescription(resource.getDescription());
-					payload.setIsActive(resource.getIsActive());
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new ResourceException(
 					customMessageSource.getMessage("org.resource.error.list") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
@@ -793,7 +705,6 @@ public class OrganizationController extends BaseController {
 		List<ResourceCategory> orgResourceCategoryList = null;
 		ResourceCategoryPayLoad payload = null;
 		List<ResourceCategoryPayLoad> payloadList = null;
-
 		try {
 			orgResourceCategoryList = organizationResourceService.getResourceCategoryList();
 			if (orgResourceCategoryList == null) {
@@ -803,13 +714,9 @@ public class OrganizationController extends BaseController {
 				payloadList = new ArrayList<>();
 				for (ResourceCategory category : orgResourceCategoryList) {
 					payload = new ResourceCategoryPayLoad();
-					payload.setId(category.getId());
-					payload.setCategoryName(category.getCategoryName());
-					payload.setAdminUrl(category.getAdminUrl());
+					BeanUtils.copyProperties(category, payload);
 					payloadList.add(payload);
-
 				}
-
 			}
 		} catch (Exception e) {
 			throw new ResourceCategoryException(
@@ -888,15 +795,12 @@ public class OrganizationController extends BaseController {
 					payload.setAdminUrl(region.getAdminUrl());
 
 					payloadList.add(payload);
-
 				}
-
 			}
 		} catch (Exception e) {
 			throw new RegionServedException(customMessageSource.getMessage("org.region.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
@@ -929,9 +833,7 @@ public class OrganizationController extends BaseController {
 						payloadList.add(payload);
 					}
 				}
-
 			}
-
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -939,7 +841,6 @@ public class OrganizationController extends BaseController {
 			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	// Code for organization region served end
@@ -955,12 +856,10 @@ public class OrganizationController extends BaseController {
 			if (payloadList == null) {
 				throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
 			}
-
 		} catch (Exception e) {
 			throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
@@ -977,11 +876,9 @@ public class OrganizationController extends BaseController {
 				throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
 			}
 			return sendSuccessResponse("org.spidata.success.created");
-
 		} else {
 			return sendErrorResponse("org.bad.request");
 		}
-
 	}
 
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
@@ -991,14 +888,12 @@ public class OrganizationController extends BaseController {
 		List<OrganizationSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
-
 		try {
 			payloadList = orgSpiDataService.getSelectedSpiData(orgId);
 
 			if (payloadList == null) {
 				throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.not_found"));
 			}
-
 		} catch (Exception e) {
 			throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.selectedlist"));
 		}
@@ -1017,7 +912,6 @@ public class OrganizationController extends BaseController {
 			if (payloadList == null) {
 				throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 			}
-
 		} catch (Exception e) {
 			throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.list"));
 		}
@@ -1043,7 +937,6 @@ public class OrganizationController extends BaseController {
 		} else {
 			return sendErrorResponse("org.bad.request");
 		}
-
 	}
 
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
@@ -1074,7 +967,6 @@ public class OrganizationController extends BaseController {
 			@PathVariable("id") Long orgId) {
 		Program program = null;
 		ProgramResponsePayload payload = null;
-
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.program.null"));
 		try {
@@ -1108,7 +1000,6 @@ public class OrganizationController extends BaseController {
 					ProgramResponsePayload responsePayload = programService.getProgramResponseFromProgram(program);
 					payloadList.add(responsePayload);
 				}
-
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
@@ -1132,12 +1023,9 @@ public class OrganizationController extends BaseController {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				}
 				programService.deleteProgram(id);
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
-
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("prg.error.deleted") + ": " + e.getMessage());
@@ -1156,7 +1044,6 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> updateProgramDetails(@RequestBody List<ProgramRequestPayload> prgPayloadList) {
 		Program program = null;
 		List<ProgramResponsePayload> payloadList = new ArrayList<>();
-
 		try {
 			for (ProgramRequestPayload payload : prgPayloadList) {
 				program = programRepository.findProgramById(payload.getId());
@@ -1167,9 +1054,7 @@ public class OrganizationController extends BaseController {
 					ProgramResponsePayload responsePayload = programService.getProgramResponseFromProgram(program);
 					payloadList.add(responsePayload);
 				}
-
 			}
-
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("prg.error.updated") + ": " + e.getMessage());
@@ -1208,7 +1093,6 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> createSuborganization(@RequestBody SubOrganizationPayload subOrganizationPayload) {
 		OrganizationDivisionPayload payload = null;
 		Organization organization = null;
-
 		try {
 			organization = organizationService.createSubOrganization(subOrganizationPayload);
 			if (null != organization) {
@@ -1219,19 +1103,9 @@ public class OrganizationController extends BaseController {
 
 				if (null != organization.getAddress()) {
 					AddressPayload addressPayload = new AddressPayload();
-					addressPayload.setId(organization.getAddress().getId());
-					addressPayload.setCountry(organization.getAddress().getCountry());
-					addressPayload.setState(organization.getAddress().getState());
-					addressPayload.setCity(organization.getAddress().getCity());
-					addressPayload.setCounty(organization.getAddress().getCounty());
-					addressPayload.setZip(organization.getAddress().getZip());
-					addressPayload.setStreet(organization.getAddress().getStreet());
-					addressPayload.setPlaceId(organization.getAddress().getPlaceId());
-
-					addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
+					BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 					payload.setLocation(addressPayload);
 				}
-
 			}
 
 		} catch (Exception e) {
@@ -1255,7 +1129,6 @@ public class OrganizationController extends BaseController {
 		try {
 			note = organizationNoteService.createOrganizationNote(organizationNotePayload);
 			payload = setOrganizationNotePayload(note, payload);
-
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.note.error.created") + ": " + e.getMessage());
@@ -1287,7 +1160,6 @@ public class OrganizationController extends BaseController {
 			throw new OrganizationException(customMessageSource.getMessage("org.note.error.list"));
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 
 	/**
@@ -1307,7 +1179,6 @@ public class OrganizationController extends BaseController {
 		try {
 			note = organizationNoteService.updateOrganizationNote(organizationNotePayload);
 			payload = setOrganizationNotePayload(note, payload);
-
 		} catch (Exception e) {
 			throw new OrganizationException(
 					customMessageSource.getMessage("org.note.error.updated") + ": " + e.getMessage());
@@ -1321,17 +1192,15 @@ public class OrganizationController extends BaseController {
 			+ "') ")
 	public ResponseEntity<?> deleteOrgNote(@RequestBody OrganizationNotePayload organizationNotePayLoad) {
 		try {
-			if (null != organizationNotePayLoad && null != organizationNotePayLoad.getNoteId()) {
-				Long noteId = organizationNotePayLoad.getNoteId();
+			if (null != organizationNotePayLoad && null != organizationNotePayLoad.getId()) {
+				Long noteId = organizationNotePayLoad.getId();
 				OrganizationNote note = organizationNoteRepository.findOrgNoteById(noteId);
 				if (note == null) {
 					throw new OrganizationException(customMessageSource.getMessage("org.note.error.not_found"));
 				}
 				organizationNoteService.removeOrganizationNote(noteId, organizationNotePayLoad.getOrganizationId());
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
 
 		} catch (Exception e) {
@@ -1349,10 +1218,8 @@ public class OrganizationController extends BaseController {
 		try {
 			if (null != orgId) {
 				payloadList = organizationService.getOrgHistoryDetails(orgId);
-
 			} else {
 				return sendErrorResponse("org.bad.request");
-
 			}
 
 		} catch (Exception e) {
@@ -1367,9 +1234,7 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getOrgNaicsData(@RequestParam(name = "search", required = false) String search) {
 		List<NaicsData> payloadList = null;
 		try {
-
 			payloadList = naicsDataService.getAllOrgNaicsData();
-
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "org.history.error.list");
 		}
@@ -1382,9 +1247,7 @@ public class OrganizationController extends BaseController {
 	public ResponseEntity<?> getOrgNteeData(@RequestParam(name = "search", required = false) String search) {
 		List<NteeData> payloadList = null;
 		try {
-
 			payloadList = nteeDataService.getAllOrgNteeData();
-
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "org.history.error.list");
 		}
@@ -1398,44 +1261,20 @@ public class OrganizationController extends BaseController {
 	 */
 	private OrganizationNotePayload setOrganizationNotePayload(OrganizationNote organizationNote,
 			OrganizationNotePayload payload) {
-
 		if (null != organizationNote) {
 			payload = new OrganizationNotePayload();
-			payload.setNoteId(organizationNote.getId());
-			payload.setNote(organizationNote.getName());
-			payload.setOrganizationId(organizationNote.getOrganizationId());
-			payload.setCreatedBy(organizationNote.getCreatedBy());
-			payload.setCreatedAt(organizationNote.getCreatedAt());
-			payload.setAdminUrl(organizationNote.getAdminUrl());
+			BeanUtils.copyProperties(organizationNote, payload);
 		}
 		return payload;
 	}
 
 	private OrganizationRequestPayload setOrganizationPayload(OrganizationCsvPayload csv) {
 		OrganizationRequestPayload payload = new OrganizationRequestPayload();
-
 		AddressPayload address = new AddressPayload();
-		address.setCity(csv.getCity());
-		address.setCountry(csv.getCountry());
-		address.setCounty(csv.getCounty());
-		address.setState(csv.getState());
-		address.setStreet(csv.getStreet());
-		address.setZip(csv.getZip());
-		if (null != csv.getAddressId()) {
-			address.setId(csv.getAddressId());
-		}
+		BeanUtils.copyProperties(csv, address);
 		payload.setAddress(address);
-		payload.setId(csv.getId());
-		payload.setAssets(csv.getAssets());
-		payload.setBusinessModel(csv.getBusinessModel());
-		payload.setClassificationId(csv.getClassificationId());
-		payload.setContactInfo(csv.getContactInfo());
-		payload.setDescription(csv.getDescription());
-		payload.setFacebookUrl(csv.getFacebookUrl());
-		payload.setIsActive(csv.getIsActive());
-		payload.setIsTaggingReady(csv.getIsTaggingReady());
-		payload.setLinkedinUrl(payload.getLinkedinUrl());
-		payload.setMissionStatement(csv.getMissionStatement());
+		BeanUtils.copyProperties(csv, payload);
+
 		// Get Id from naics_code master data table and assign the id of it
 		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
 		payload.setNaicsCode(naicsData.getId());
@@ -1443,25 +1282,6 @@ public class OrganizationController extends BaseController {
 		// Get Id from ntee_code master data table and assign the id of it
 		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
 		payload.setNteeCode(nteeData.getId());
-		payload.setName(csv.getName());
-		payload.setParentId(csv.getParentId());
-		payload.setPopulationServed(csv.getPopulationServed());
-		payload.setPriority(csv.getPriority());
-		payload.setPurpose(csv.getPurpose());
-		payload.setRevenue(csv.getRevenue());
-		payload.setSector(csv.getSector());
-		payload.setSectorLevel(csv.getSectorLevel());
-		payload.setSelfInterest(csv.getSelfInterest());
-		payload.setSectorLevelName(csv.getSectorLevelName());
-		payload.setStatus(csv.getStatus());
-		payload.setTagStatus(csv.getTagStatus());
-		payload.setTotalAssets(csv.getTotalAssets());
-		payload.setTwitterUrl(csv.getTwitterUrl());
-		payload.setInstagramUrl(csv.getInstagramUrl());
-		payload.setValues(csv.getValues());
-		payload.setWebsiteUrl(csv.getWebsiteUrl());
-		payload.setSpiTagIds(csv.getSpiTagIds());
-		payload.setSdgTagIds(csv.getSdgTagIds());
 
 		return payload;
 	}

@@ -41,7 +41,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	Organization findLastOrg();
 
 	@Query(value = "select * from organization where type = 'organization' AND is_Active = true "
-			+ "  AND name ILIKE %:name%", nativeQuery = true)
+			+ "  AND name ILIKE %:name% ORDER BY name", nativeQuery = true)
 	List<Organization> findByNameIgnoreCaseContaining(@Param("name") String name, Pageable pageable);
 
 	@Query(value = "select * from organization where type = 'program' AND is_Active = true "

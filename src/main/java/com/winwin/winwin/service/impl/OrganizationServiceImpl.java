@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -301,7 +302,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		try {
 			if (null != payload.getPageNo() && null != payload.getPageSize()) {
 				if (payload.getNameSearch() != null) {
-					Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize(), Sort.by("name"));
+					Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize());
 					return organizationRepository.findByNameIgnoreCaseContaining(payload.getNameSearch(), pageable);
 				} else {
 					return organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null,
@@ -979,29 +980,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload, UserPayload user) {
 		if (null != addressPayload && null != addressPayload.getId()) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 			try {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-					organization.getAddress().setCountry(addressPayload.getCountry());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getState())) {
-					organization.getAddress().setState(addressPayload.getState());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCity())) {
-					organization.getAddress().setCity(addressPayload.getCity());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-					organization.getAddress().setCounty(addressPayload.getCounty());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getZip())) {
-					organization.getAddress().setZip(addressPayload.getZip());
-				}
-				organization.getAddress().setStreet(addressPayload.getStreet());
-				organization.getAddress().setPlaceId(addressPayload.getPlaceId());
+				BeanUtils.copyProperties(addressPayload, organization.getAddress());
 				organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
 				organization.getAddress().setUpdatedBy(user.getEmail());
-				organization.getAddress().setAdminUrl(addressPayload.getAdminUrl());
 				return true;
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
@@ -1046,15 +1030,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	private AddressPayload getLocationPayload(Organization organization, AddressPayload addressPayload) {
 		if (null != organization.getAddress()) {
 			addressPayload = new AddressPayload();
-			addressPayload.setId(organization.getAddress().getId());
-			addressPayload.setCountry(organization.getAddress().getCountry());
-			addressPayload.setState(organization.getAddress().getState());
-			addressPayload.setCity(organization.getAddress().getCity());
-			addressPayload.setCounty(organization.getAddress().getCounty());
-			addressPayload.setZip(organization.getAddress().getZip());
-			addressPayload.setStreet(organization.getAddress().getStreet());
-			addressPayload.setPlaceId(organization.getAddress().getPlaceId());
-			addressPayload.setAdminUrl(organization.getAddress().getAdminUrl());
+			BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 		}
 		return addressPayload;
 	}
