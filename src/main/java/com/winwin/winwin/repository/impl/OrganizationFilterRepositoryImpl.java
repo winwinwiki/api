@@ -23,7 +23,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	EntityManager entityManager;
 
 	@Override
-	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId) {
+	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId,
+			Integer pageNo, Integer pageSize) {
 		// TODO Auto-generated method stub
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
 		boolean spi = false;
@@ -35,12 +36,13 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
-//			String inQuery = "( ";
-//			int i = 0;
-//			for (; i < payload.getSectorLevel().size() - 1; i++)
-//				inQuery = inQuery + ":sectorLevel" + i + " , ";
-//			inQuery = inQuery + " :sectorLevel" + i + " ) ";
-//			sb.append(" and ( o.sector_level IN ").append(inQuery).append(" ) ");
+			// String inQuery = "( ";
+			// int i = 0;
+			// for (; i < payload.getSectorLevel().size() - 1; i++)
+			// inQuery = inQuery + ":sectorLevel" + i + " , ";
+			// inQuery = inQuery + " :sectorLevel" + i + " ) ";
+			// sb.append(" and ( o.sector_level IN ").append(inQuery).append(" )
+			// ");
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 
@@ -132,7 +134,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
 
 		try {
-			List<Organization> organizationList = filterQuery.getResultList();
+			List<Organization> organizationList = filterQuery.setMaxResults(pageSize).setFirstResult(pageNo * pageSize)
+					.getResultList();
 			return organizationList;
 		} catch (Exception e) {
 			e.printStackTrace();
