@@ -25,6 +25,40 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	@Override
 	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId,
 			Integer pageNo, Integer pageSize) {
+		Query filterQuery = setFilterQuery(payload, type);
+
+		try {
+			List<Organization> organizationList = filterQuery.setMaxResults(pageSize).setFirstResult(pageNo * pageSize)
+					.getResultList();
+			return organizationList;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+
+	}
+	
+	@Override
+	public Integer getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId) {
+		Query filterQuery = setFilterQuery(payload, type);
+		
+		try {
+			List<Organization> organizationList = filterQuery.getResultList();
+			if(null != organizationList)
+			return organizationList.size();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return 0;
+	}
+
+	/**
+	 * @param payload
+	 * @param type
+	 * @return
+	 */
+	private Query setFilterQuery(OrganizationFilterPayload payload, String type) {
 		// TODO Auto-generated method stub
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
 		boolean spi = false;
@@ -132,16 +166,6 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getGoalCode() != 0 && sdg)
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
-
-		try {
-			List<Organization> organizationList = filterQuery.setMaxResults(pageSize).setFirstResult(pageNo * pageSize)
-					.getResultList();
-			return organizationList;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return new ArrayList<>();
-		}
-
+		return filterQuery;
 	}
-
 }

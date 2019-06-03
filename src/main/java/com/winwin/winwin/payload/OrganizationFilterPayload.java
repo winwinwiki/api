@@ -29,4 +29,5 @@ public class OrganizationFilterPayload {
 	private long goalCode;
 	private Integer pageNo;
 	private Integer pageSize;
+	private Integer maxPage;
 }

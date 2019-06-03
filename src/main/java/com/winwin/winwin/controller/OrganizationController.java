@@ -312,7 +312,11 @@ public class OrganizationController extends BaseController {
 		List<Organization> orgList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
-			orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
+			if (null != filterPayload) {
+				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
+				filterPayload.setMaxPage(
+						organizationService.getMaxPagesForOrganizationList(filterPayload, exceptionResponse));
+			}
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -333,6 +337,7 @@ public class OrganizationController extends BaseController {
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
+
 		return sendSuccessResponse(new OrganizationFilterResponse(filterPayload, payloadList));
 
 	}
@@ -1154,7 +1159,6 @@ public class OrganizationController extends BaseController {
 					payload = setOrganizationNotePayload(orgNote, payload);
 					payloadList.add(payload);
 				}
-
 			}
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.note.error.list"));
@@ -1184,7 +1188,6 @@ public class OrganizationController extends BaseController {
 					customMessageSource.getMessage("org.note.error.updated") + ": " + e.getMessage());
 		}
 		return sendSuccessResponse(payload);
-
 	}
 
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.DELETE)
