@@ -33,4 +33,5 @@ public class OrganizationFilterPayload {
 	private Integer orgCount;
 	private String sortBy;
 	private String sortOrder;
+	private String address;
 }
