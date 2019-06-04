@@ -128,6 +128,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sdg = true;
 		}
 
+		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
+			sb.append(" order by " + payload.getSortBy() + " "
+					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
+
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
 

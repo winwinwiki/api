@@ -31,4 +31,6 @@ public class OrganizationFilterPayload {
 	private Integer pageNo;
 	private Integer pageSize;
 	private Integer orgCount;
+	private String sortBy;
+	private String sortOrder;
 }
