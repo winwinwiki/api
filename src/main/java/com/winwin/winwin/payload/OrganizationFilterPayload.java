@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrganizationFilterPayload {
+	private List<String> sectors;
 	private List<String> sectorLevel;
 	private List<String> tagStatus;
 	private String priority;
@@ -29,5 +30,5 @@ public class OrganizationFilterPayload {
 	private long goalCode;
 	private Integer pageNo;
 	private Integer pageSize;
-	private Integer maxPage;
+	private Integer orgCount;
 }

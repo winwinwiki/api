@@ -37,15 +37,15 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		}
 
 	}
-	
+
 	@Override
 	public Integer getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId) {
 		Query filterQuery = setFilterQuery(payload, type);
-		
+
 		try {
 			List<Organization> organizationList = filterQuery.getResultList();
-			if(null != organizationList)
-			return organizationList.size();
+			if (null != organizationList)
+				return organizationList.size();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -78,6 +78,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			// sb.append(" and ( o.sector_level IN ").append(inQuery).append(" )
 			// ");
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
+		}
+
+		if (payload.getSectors() != null && payload.getSectors().size() != 0) {
+			sb.append(" and (o.sector IN :sectors) ");
 		}
 
 		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
@@ -136,6 +140,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
+
+		if (payload.getSectors() != null && payload.getSectors().size() != 0)
+			filterQuery.setParameter("sectors", payload.getSectors());
 
 		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
 			filterQuery.setParameter("tagStatus", payload.getTagStatus());

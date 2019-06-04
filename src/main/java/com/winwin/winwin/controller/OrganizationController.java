@@ -314,8 +314,7 @@ public class OrganizationController extends BaseController {
 		try {
 			if (null != filterPayload) {
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
-				filterPayload.setMaxPage(
-						organizationService.getMaxPagesForOrganizationList(filterPayload, exceptionResponse));
+				filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
 			}
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
