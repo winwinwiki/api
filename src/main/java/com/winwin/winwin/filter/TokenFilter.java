@@ -1,6 +1,9 @@
 package com.winwin.winwin.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -46,10 +49,14 @@ public class TokenFilter extends HttpFilter {
 	@Override
 	public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterchain)
 			throws IOException, ServletException {
-		if (request.getRequestURI().equals("/user/login")) {
+		final Set<String> requestEndpoint = new HashSet<String>(
+				Arrays.asList("/user/login", "/user/resetPassword", "/user/confirmResetPassword", "/user/resendCode"));
+
+		if (requestEndpoint.contains(request.getRequestURI())) {
 			filterchain.doFilter(request, response);
 			return;
 		}
+
 		ExceptionResponse exceptionRes = new ExceptionResponse();
 		String accessToken = request.getHeader(OrganizationConstants.USER_AUTH_ID);
 		UserPayload user = null;
@@ -69,7 +76,7 @@ public class TokenFilter extends HttpFilter {
 				filterchain.doFilter(request, response);
 			}
 
-		}else{
+		} else {
 			response.sendError(400, "Token Found as null");
 		}
 	}
