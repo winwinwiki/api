@@ -13,5 +13,6 @@ import com.winwin.winwin.payload.OrganizationFilterPayload;
 public interface OrganizationFilterRepository {
 	List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId, Integer pageNo,
 			Integer pageSize);
+
 	Integer getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId);
 }

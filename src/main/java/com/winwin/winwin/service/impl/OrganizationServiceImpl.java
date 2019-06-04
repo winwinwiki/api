@@ -324,29 +324,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
-	public Integer getMaxPagesForOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
-		Integer maxPages = 0;
+	public Integer getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
 		Integer noOfRecords = 0;
 		try {
-			if (payload.getNameSearch() != null) {
+			if (payload.getNameSearch() != null)
 				noOfRecords = organizationRepository
 						.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
-			} else {
+			else
 				noOfRecords = organizationRepository.getFilterOrganizationCount(payload,
 						OrganizationConstants.ORGANIZATION, null);
-			}
 
-			if (null != payload.getPageSize()) {
-				if (noOfRecords != 0)
-					maxPages = noOfRecords / payload.getPageSize();
-
-			}
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 		}
-		return maxPages;
+		return noOfRecords;
 	}
 
 	@Override
