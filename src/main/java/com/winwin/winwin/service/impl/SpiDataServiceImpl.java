@@ -15,6 +15,10 @@ import com.winwin.winwin.payload.SpiDataIndicatorsPayload;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.SpiDataService;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Service
 public class SpiDataServiceImpl implements SpiDataService {
 
@@ -51,15 +55,11 @@ public class SpiDataServiceImpl implements SpiDataService {
 								.setIndicators(spiIndicatorsMap.get(splittedComponentsList.get(0).getComponentId()));
 						componentPayloadList.add(componentPayloadObj);
 					}
-
 					dimensionPayloadObj.setComponents(componentPayloadList);
 					dimensionPayloadList.add(dimensionPayloadObj);
 				} // end of loop
-
 			} // end of if ((!spiDimensionsMap.isEmpty()))
-
 		} // end of if (null != spiList) {
-
 		return dimensionPayloadList;
 	}
 
@@ -68,7 +68,6 @@ public class SpiDataServiceImpl implements SpiDataService {
 			if (!spiComponentsMap.containsKey(spiDataObj.getComponentId())) {
 				List<SpiData> components = new ArrayList<SpiData>();
 				components.add(spiDataObj);
-
 				spiComponentsMap.put(spiDataObj.getComponentId(), components);
 			} else {
 				spiComponentsMap.get(spiDataObj.getComponentId()).add(spiDataObj);
@@ -105,7 +104,6 @@ public class SpiDataServiceImpl implements SpiDataService {
 			if (!spiDimensionsMap.containsKey(spiDataObj.getDimensionId())) {
 				List<SpiData> components = new ArrayList<SpiData>();
 				components.add(spiDataObj);
-
 				spiDimensionsMap.put(spiDataObj.getDimensionId(), components);
 			} else {
 				spiDimensionsMap.get(spiDataObj.getDimensionId()).add(spiDataObj);

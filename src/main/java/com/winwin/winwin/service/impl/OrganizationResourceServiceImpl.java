@@ -1,12 +1,11 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +25,7 @@ import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -60,20 +60,17 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	@Override
 	@Transactional
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationResource orgResource = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != orgResourcePayLoad && null != user) {
 				orgResource = constructOrganizationResource(orgResourcePayLoad);
 				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
 
 				if (null != orgResource && null != orgResource.getOrganizationId()) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
-					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(), sdf,
-							formattedDte, OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE,
-							orgResource.getId(), orgResource.getDescription());
+					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
+							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+							orgResource.getDescription());
 				}
 			}
 		} catch (Exception e) {
@@ -82,33 +79,30 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			} else {
 				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
 			}
-
 		}
 		return orgResource;
-
 	}// end of method createOrUpdateOrganizationResource
 
 	@Override
 	@Transactional
 	public void removeOrganizationResource(Long resourceId) {
-		OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-		UserPayload user = userService.getCurrentUserDetails();
 		try {
+			OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 			if (null != resource && null != user) {
-				resource.setUpdatedAt(sdf.parse(formattedDte));
+				resource.setUpdatedAt(date);
 				resource.setUpdatedBy(user.getEmail());
 				resource.setIsActive(false);
 
 				organizationResourceRepository.saveAndFlush(resource);
 
 				if (null != resource) {
-					orgHistoryService.createOrganizationHistory(user, resource.getOrganizationId(), sdf, formattedDte,
+					orgHistoryService.createOrganizationHistory(user, resource.getOrganizationId(),
 							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription());
 				}
 			}
-		} catch (ParseException e) {
+		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
 		}
 
@@ -119,17 +113,15 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	 * @return
 	 */
 	private OrganizationResource constructOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationResource organizationResource = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = null;
 		try {
+			Date date = CommonUtils.getFormattedDate();
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != orgResourcePayLoad.getId() && null != user) {
 				organizationResource = organizationResourceRepository.getOne(orgResourcePayLoad.getId());
 			} else {
 				organizationResource = new OrganizationResource();
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organizationResource.setCreatedAt(sdf.parse(formattedDte));
+				organizationResource.setCreatedAt(date);
 				organizationResource.setCreatedBy(user.getEmail());
 				organizationResource.setAdminUrl(orgResourcePayLoad.getAdminUrl());
 			}
@@ -139,19 +131,13 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 						"Org resource record not found for Id: " + orgResourcePayLoad.getId() + " to update in DB ");
 			} else {
 				setOrganizationResourceCategory(orgResourcePayLoad, organizationResource);
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organizationResource.setOrganizationId(orgResourcePayLoad.getOrganizationId());
-				organizationResource.setCount(orgResourcePayLoad.getCount());
-				organizationResource.setDescription(orgResourcePayLoad.getDescription());
-				organizationResource.setUpdatedAt(sdf.parse(formattedDte));
+				BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
+				organizationResource.setUpdatedAt(date);
 				organizationResource.setUpdatedBy(user.getEmail());
-
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);
 		}
-
 		return organizationResource;
 	}
 
@@ -184,9 +170,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 									"Org resource category record not found for Id: " + categoryId + " in DB ");
 						}
 						organizationResource.setResourceCategory(organizationResourceCategory);
-
 					}
-
 				}
 			}
 		} catch (Exception e) {
@@ -196,24 +180,25 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 
 	@Transactional
 	public ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
-		ResourceCategory category = new ResourceCategory();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+		ResourceCategory category = null;
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 
-		if (null != user) {
-			try {
+			if (null != user) {
+				category = new ResourceCategory();
+
 				if (null != categoryFromPayLoad && !StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 					category.setCategoryName(categoryFromPayLoad.getCategoryName());
 				}
-				category.setCreatedAt(sdf.parse(formattedDte));
-				category.setUpdatedAt(sdf.parse(formattedDte));
+				category.setCreatedAt(date);
+				category.setUpdatedAt(date);
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
 				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
-			} catch (Exception e) {
-				LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
 		return resourceCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationResourceCategory

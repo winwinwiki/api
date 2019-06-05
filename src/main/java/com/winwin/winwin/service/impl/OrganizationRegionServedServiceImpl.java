@@ -3,13 +3,13 @@
  */
 package com.winwin.winwin.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -36,6 +35,7 @@ import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationRegionServedService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
@@ -76,19 +76,16 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 		List<OrganizationRegionServed> orgRegionList = null;
 		try {
 			if (null != orgRegionPayloadlist && null != user) {
+				Date date = CommonUtils.getFormattedDate();
 				orgRegionList = new ArrayList<OrganizationRegionServed>();
 				for (OrganizationRegionServedPayload payload : orgRegionPayloadlist) {
 					if (payload.getId() == null) {
 						OrganizationRegionServed orgRegionServed = null;
 						orgRegionServed = new OrganizationRegionServed();
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 						setOrgRegionMasterData(payload, orgRegionServed, user);
-
 						orgRegionServed.setOrgId(payload.getOrganizationId());
-						orgRegionServed.setCreatedAt(sdf.parse(formattedDte));
-						orgRegionServed.setUpdatedAt(sdf.parse(formattedDte));
+						orgRegionServed.setCreatedAt(date);
+						orgRegionServed.setUpdatedAt(date);
 						orgRegionServed.setCreatedBy(user.getEmail());
 						orgRegionServed.setUpdatedBy(user.getEmail());
 						orgRegionServed.setAdminUrl(payload.getAdminUrl());
@@ -96,48 +93,40 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
 						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {
-							orgHistoryService.createOrganizationHistory(user, orgRegionServed.getOrgId(), sdf,
-									formattedDte, OrganizationConstants.CREATE, OrganizationConstants.REGION,
-									orgRegionServed.getId(), orgRegionServed.getRegionMaster().getRegionName());
+							orgHistoryService.createOrganizationHistory(user, orgRegionServed.getOrgId(),
+									OrganizationConstants.CREATE, OrganizationConstants.REGION, orgRegionServed.getId(),
+									orgRegionServed.getRegionMaster().getRegionName());
 						}
-
 						orgRegionList.add(orgRegionServed);
-
 					}
 					// for delete organization region served
 					else if (null != payload.getId() && !(payload.getIsActive())) {
 						OrganizationRegionServed region = null;
-						SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-						String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 						region = orgRegionServedRepository.findOrgRegionById(payload.getId());
+
 						if (region == null) {
 							LOGGER.info(customMessageSource.getMessage("org.region.error.not_found"));
 							throw new RegionServedException(
 									customMessageSource.getMessage("org.region.error.not_found"));
 						} else {
 							region.setIsActive(payload.getIsActive());
-							region.setUpdatedAt(sdf.parse(formattedDte));
+							region.setUpdatedAt(date);
 							region.setUpdatedBy(user.getEmail());
 							region = orgRegionServedRepository.saveAndFlush(region);
 
 							if (null != region && null != region.getOrgId()) {
-								orgHistoryService.createOrganizationHistory(user, region.getOrgId(), sdf, formattedDte,
+								orgHistoryService.createOrganizationHistory(user, region.getOrgId(),
 										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId(),
 										region.getRegionMaster().getRegionName());
 							}
-
 							orgRegionList.add(region);
 						}
 					} // end of else if
-
 				} // end of loop
-
 			} // end of if
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.exception.created"), e);
 		}
-
 		return orgRegionList;
 	}// end of method createOrgRegionServed
 
@@ -162,9 +151,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 									"Org region master record not found for Id: " + regionMasterId + " in DB ");
 						}
 					}
-
 					region.setRegionMaster(regionMaster);
-
 				}
 			}
 		} catch (Exception e) {
@@ -176,20 +163,15 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			if (!StringUtils.isEmpty(payload.getRegionName())) {
-				region.setRegionName(payload.getRegionName());
-			}
-			region.setAdminUrl(payload.getAdminUrl());
-			region.setCreatedAt(sdf.parse(formattedDte));
-			region.setUpdatedAt(sdf.parse(formattedDte));
+			Date date = CommonUtils.getFormattedDate();
+			BeanUtils.copyProperties(payload, region);
+			region.setCreatedAt(date);
+			region.setUpdatedAt(date);
 			region.setCreatedBy(user.getEmail());
 			region.setUpdatedBy(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
 		}
-
 		return orgRegionMasterRepository.saveAndFlush(region);
 	}// end of method saveOrganizationRegionMaster
 

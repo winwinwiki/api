@@ -1,7 +1,6 @@
 package com.winwin.winwin.service.impl;
 
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +60,7 @@ import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
 
 /**
@@ -120,26 +119,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Transactional
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 		Organization organization = null;
 		UserPayload user = userService.getCurrentUserDetails();
 		try {
 			if (null != organizationPayload && null != user) {
-				organization = setOrganizationData(organizationPayload, sdf, formattedDte, user);
+				organization = setOrganizationData(organizationPayload, user);
 
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
 					/*
 					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" +
-					 * organization.getId()); organization =
-					 * organizationRepository.saveAndFlush(organization);
+					 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
+					 * organization = organizationRepository.saveAndFlush(organization);
 					 */
 
-					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
 							organization.getName());
 				}
@@ -150,7 +145,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 		return organization;
 	}
 
@@ -169,7 +163,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Transactional
 	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
-
 		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.UPDATE, "org.exception.updated");
 
@@ -179,20 +172,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Transactional
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != user) {
 				Organization organization = organizationRepository.findOrgById(id);
 				if (organization != null) {
+					Date date = CommonUtils.getFormattedDate();
 					organization.setIsActive(false);
+					organization.setUpdatedAt(date);
+					organization.setUpdatedBy(user.getEmail());
 					organization.getAddress().setIsActive(false);
+					organization.getAddress().setUpdatedAt(date);
+					organization.getAddress().setUpdatedBy(user.getEmail());
 					addressRepository.saveAndFlush(organization.getAddress());
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
-						orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+						orgHistoryService.createOrganizationHistory(user, organization.getId(),
 								OrganizationConstants.DELETE, type, organization.getId(), organization.getName());
 					}
 				}
@@ -211,29 +207,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 			String type, ExceptionResponse response) {
 		@SuppressWarnings("unused")
 		OrganizationClassification orgClassificationMapping = new OrganizationClassification();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 		if (null != organizationPayload) {
+			Date date = CommonUtils.getFormattedDate();
 			try {
 				UserPayload user = userService.getCurrentUserDetails();
 				if (null != user) {
-					if (!StringUtils.isEmpty(organizationPayload.getName())) {
-						organization.setName(organizationPayload.getName());
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getSector())) {
-						organization.setSector(organizationPayload.getSector());
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getSectorLevel())) {
-						organization.setSectorLevel(organizationPayload.getSectorLevel());
-					}
-
-					organization.setDescription(organizationPayload.getDescription());
-					organization.setPriority(organizationPayload.getPriority());
-					organization.setRevenue(organizationPayload.getRevenue());
-					organization.setAssets(organizationPayload.getAssets());
-					organization.setSectorLevelName(organizationPayload.getSectorLevelName());
-					organization.setAdminUrl(organizationPayload.getAdminUrl());
+					BeanUtils.copyProperties(organizationPayload, organization);
 					if (organizationPayload.getNaicsCode() != null) {
 						NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 						organization.setNaicsCode(naicsCode);
@@ -243,40 +223,25 @@ public class OrganizationServiceImpl implements OrganizationService {
 						organization.setNteeCode(naicsCode);
 					}
 
-					organization.setWebsiteUrl(organizationPayload.getWebsiteUrl());
-					organization.setFacebookUrl(organizationPayload.getFacebookUrl());
-					organization.setLinkedinUrl(organizationPayload.getLinkedinUrl());
-					organization.setTwitterUrl(organizationPayload.getTwitterUrl());
-					organization.setInstagramUrl(organizationPayload.getInstagramUrl());
-					organization.setValues(organizationPayload.getValues());
-					organization.setPurpose(organizationPayload.getPurpose());
-					organization.setSelfInterest(organizationPayload.getSelfInterest());
-					organization.setBusinessModel(organizationPayload.getBusinessModel());
-					organization.setMissionStatement(organizationPayload.getMissionStatement());
-					organization.setContactInfo(organizationPayload.getContactInfo());
-					organization.setPopulationServed(organizationPayload.getPopulationServed());
-					organization.setTagStatus(organizationPayload.getTagStatus());
-
 					Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress(), user);
 					if (!isUpdated) {
 						throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
 					}
 
-					organization.setUpdatedAt(sdf.parse(formattedDte));
+					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getEmail());
 
 					orgClassificationMapping = addClassification(organizationPayload, organization);
 
 					/*
-					 * if (orgClassificationMapping == null) { throw new
-					 * OrganizationException(
+					 * if (orgClassificationMapping == null) { throw new OrganizationException(
 					 * "Request to update classification is invalid"); }
 					 */
 
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
-						orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+						orgHistoryService.createOrganizationHistory(user, organization.getId(),
 								OrganizationConstants.UPDATE, type, organization.getId(), organization.getName());
 					}
 
@@ -355,17 +320,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 		Organization organization = null;
 		try {
 			if (null != organizationPayload && null != user) {
+				Date date = CommonUtils.getFormattedDate();
 				Address address = new Address();
 				organization = new Organization();
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organization.setName(organizationPayload.getName());
-				organization.setSector(organizationPayload.getSector());
-				organization.setSectorLevel(organizationPayload.getSectorLevel());
-				organization.setDescription(organizationPayload.getDescription());
+				BeanUtils.copyProperties(organizationPayload, organization);
 
 				if (organizationPayload.getAddress() != null) {
 					address = saveAddress(organizationPayload.getAddress(), user);
+					organization.setAddress(address);
 				}
 				if (organizationPayload.getNaicsCode() != null) {
 					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
@@ -377,16 +339,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 
 				organization.setType(OrganizationConstants.PROGRAM);
-				organization.setParentId(organizationPayload.getParentId());
-				organization.setAddress(address);
-				organization.setCreatedAt(sdf.parse(formattedDte));
-				organization.setUpdatedAt(sdf.parse(formattedDte));
+				organization.setCreatedAt(date);
+				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
 				organization.setUpdatedBy(user.getEmail());
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
-					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.PROGRAM, organization.getId(),
 							organization.getName());
 				}
@@ -427,12 +387,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 		Organization organization = null;
 		try {
 			if (null != payload && null != user) {
+				Date date = CommonUtils.getFormattedDate();
 				Address address = new Address();
 				AddressPayload addressPayload = new AddressPayload();
 				addressPayload.setCountry("");
 				organization = new Organization();
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 				if (!(StringUtils.isEmpty(payload.getChildOrgName()))) {
 					organization.setName(payload.getChildOrgName());
@@ -449,8 +408,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 				organization.setAddress(address);
 
-				organization.setCreatedAt(sdf.parse(formattedDte));
-				organization.setUpdatedAt(sdf.parse(formattedDte));
+				organization.setCreatedAt(date);
+				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
 				organization.setUpdatedBy(user.getEmail());
 				organization.setAdminUrl(payload.getAdminUrl());
@@ -458,7 +417,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
-					orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
+					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
 							organization.getName());
 				}
@@ -509,8 +468,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			ExceptionResponse response, String operationPerformed, String customMessage) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		List<Organization> organizationList = new ArrayList<Organization>();
 
 		try {
@@ -531,17 +488,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
 				if (null != organizationPayload && null != user) {
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-						organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+						organizationList.add(setOrganizationData(organizationPayload, user));
 					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
 						if (null != organizationPayload.getId()) {
-							organizationList.add(setOrganizationData(organizationPayload, sdf, formattedDte, user));
+							if (null != organizationPayload.getId()) {
+								Organization organization = organizationRepository
+										.findOrgById(organizationPayload.getId());
+								if (organization == null)
+									throw new OrganizationException(
+											"organization with Id:" + organizationPayload.getId()
+													+ "is not found in DB to perform update operation");
+							}
+							organizationList.add(setOrganizationData(organizationPayload, user));
 						} else {
 							throw new Exception(
 									"Organization id is found as null in the file to perform bulk update operation for organizations");
 						}
-
 					}
-
 				}
 			}
 			organizationList = organizationRepository.saveAll(organizationList);
@@ -549,9 +512,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			for (Organization organization : organizationList) {
 				/*
 				 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-				 * OrganizationConstants.ORGANIZATIONS + "/" +
-				 * organization.getId()); organization =
-				 * organizationRepository.saveAndFlush(organization);
+				 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
+				 * organization = organizationRepository.saveAndFlush(organization);
 				 */
 				if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
 					// To set spi and sdg tags by naics code
@@ -559,9 +521,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					// To set spi and sdg tags by ntee code
 					setSpiSdgMapByNteeCode(organization, user, nteeMap);
 				}
-				orgHistoryService.createOrganizationHistory(user, organization.getId(), sdf, formattedDte,
-						operationPerformed, OrganizationConstants.ORGANIZATION, organization.getId(),
-						organization.getName());
+				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
+						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 			}
 
 		} catch (Exception e) {
@@ -575,34 +536,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	/**
 	 * @param organizationPayload
-	 * @param sdf
-	 * @param formattedDte
 	 * @param organization
 	 * @param user
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, SimpleDateFormat sdf,
-			String formattedDte, UserPayload user) throws Exception {
-		Organization organization = null;
+	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, UserPayload user)
+			throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
+		Organization organization = new Organization();
 		Address address = new Address();
-		if (null != organizationPayload.getId()) {
-			organization = organizationRepository.findOrgById(organizationPayload.getId());
-			if (organization == null)
-				throw new OrganizationException("organization with Id:" + organizationPayload.getId()
-						+ "is not found in DB to perform update operation");
-		} else {
-			organization = new Organization();
-		}
 
-		organization.setName(organizationPayload.getName());
-		organization.setSector(organizationPayload.getSector());
-		organization.setSectorLevel(organizationPayload.getSectorLevel());
-		organization.setDescription(organizationPayload.getDescription());
+		BeanUtils.copyProperties(organizationPayload, organization);
+
 		if (organizationPayload.getAddress() != null) {
 			address = saveAddress(organizationPayload.getAddress(), user);
+			organization.setAddress(address);
 		}
 		if (organizationPayload.getNaicsCode() != null) {
 			NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
@@ -613,23 +563,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setNteeCode(naicsCode);
 		}
 		organization.setType(OrganizationConstants.ORGANIZATION);
-		organization.setParentId(organizationPayload.getParentId());
-		organization.setAddress(address);
 
+		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
-			organization.setCreatedAt(sdf.parse(formattedDte));
+			organization.setCreatedAt(date);
 			organization.setCreatedBy(user.getEmail());
 		}
-		organization.setUpdatedAt(sdf.parse(formattedDte));
+		organization.setUpdatedAt(date);
 		organization.setUpdatedBy(user.getEmail());
-		organization.setAdminUrl(organizationPayload.getAdminUrl());
 
 		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte,
-					organizationPayload.getSpiTagIds(), organizationPayload.getSdgTagIds());
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, organizationPayload.getSpiTagIds(),
+					organizationPayload.getSdgTagIds());
 
 		}
-
 		return organization;
 	}
 
@@ -641,8 +588,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			Map<String, NaicsDataMappingPayload> naicsMap) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 		NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
 
@@ -650,8 +595,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
 			List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
 
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte, spiIdsList,
-					sdgIdsList);
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
 		}
 
 	}
@@ -664,8 +608,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			Map<String, NteeDataMappingPayload> nteeMap) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 
 		NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
 
@@ -673,8 +615,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			List<Long> spiIdsList = nteeMapPayload.getSpiTagIds();
 			List<Long> sdgIdsList = nteeMapPayload.getSdgTagIds();
 
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, sdf, formattedDte, spiIdsList,
-					sdgIdsList);
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
 		}
 
 	}
@@ -684,22 +625,17 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @param user
 	 * @param spiDataMapObj
 	 * @param sdgDataMapObj
-	 * @param sdf
-	 * @param formattedDte
 	 * @param spiIdsList
 	 * @param sdgIdsList
 	 * @throws Exception
 	 */
 	private void saveOrgSpiSdgMapping(Organization organization, UserPayload user, OrganizationSpiData spiDataMapObj,
-			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList,
-			List<Long> sdgIdsList) throws Exception {
+			OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
 		@SuppressWarnings("unused")
-		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMap(organization, user, spiDataMapObj, sdf, formattedDte,
-				spiIdsList);
+		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMapping(organization, user, spiDataMapObj, spiIdsList);
 
 		@SuppressWarnings("unused")
-		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMap(organization, user, sdgDataMapObj, sdf, formattedDte,
-				sdgIdsList);
+		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMapping(organization, user, sdgDataMapObj, sdgIdsList);
 	}
 
 	/**
@@ -811,17 +747,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @param organization
 	 * @param user
 	 * @param sdgDataMapObj
-	 * @param sdf
-	 * @param formattedDte
 	 * @param sdgIdsList
 	 * @return
 	 * @throws Exception
 	 */
-	private List<OrganizationSdgData> saveOrgSdgMap(Organization organization, UserPayload user,
-			OrganizationSdgData sdgDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> sdgIdsList)
-			throws Exception {
+	private List<OrganizationSdgData> saveOrgSdgMapping(Organization organization, UserPayload user,
+			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
 		List<OrganizationSdgData> organizationSdgDataMappingList = null;
+		Date date = CommonUtils.getFormattedDate();
+
 		if (null != sdgIdsList) {
 			for (Long sdgId : sdgIdsList) {
 				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
@@ -830,8 +765,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj = new OrganizationSdgData();
 					sdgDataMapObj.setOrganizationId(organization.getId());
 					sdgDataMapObj.setIsChecked(true);
-					sdgDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-					sdgDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					sdgDataMapObj.setCreatedAt(date);
+					sdgDataMapObj.setUpdatedAt(date);
 					sdgDataMapObj.setCreatedBy(user.getEmail());
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
 					sdgDataMapObj.setAdminUrl("");
@@ -872,12 +807,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 					sdgDataMapList.add(sdgDataMapObj);
 
-					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(), sdf,
-							formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SDG,
-							sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName());
-
+					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
+							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+							sdgDataMapObj.getSdgData().getShortName());
 				}
-
 			}
 		}
 		return sdgDataMapList;
@@ -887,17 +820,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @param organization
 	 * @param user
 	 * @param spiDataMapObj
-	 * @param sdf
-	 * @param formattedDte
 	 * @param spiIdsList
 	 * @return
 	 * @throws Exception
 	 */
-	private List<OrganizationSpiData> saveOrgSpiMap(Organization organization, UserPayload user,
-			OrganizationSpiData spiDataMapObj, SimpleDateFormat sdf, String formattedDte, List<Long> spiIdsList)
-			throws Exception {
+	private List<OrganizationSpiData> saveOrgSpiMapping(Organization organization, UserPayload user,
+			OrganizationSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
 		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
 		List<OrganizationSpiData> organizationSpiDataMappingList = null;
+		Date date = CommonUtils.getFormattedDate();
+
 		if (null != spiIdsList) {
 			for (Long spiId : spiIdsList) {
 				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
@@ -906,8 +838,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj = new OrganizationSpiData();
 					spiDataMapObj.setOrganizationId(organization.getId());
 					spiDataMapObj.setIsChecked(true);
-					spiDataMapObj.setCreatedAt(sdf.parse(formattedDte));
-					spiDataMapObj.setUpdatedAt(sdf.parse(formattedDte));
+					spiDataMapObj.setCreatedAt(date);
+					spiDataMapObj.setUpdatedAt(date);
 					spiDataMapObj.setCreatedBy(user.getEmail());
 					spiDataMapObj.setUpdatedBy(user.getEmail());
 					spiDataMapObj.setAdminUrl("");
@@ -946,12 +878,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 					spiDataMapList.add(spiDataMapObj);
 
-					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(), sdf,
-							formattedDte, OrganizationConstants.CREATE, OrganizationConstants.SPI,
-							spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName());
-
+					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
+							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+							spiDataMapObj.getSpiData().getIndicatorName());
 				}
-
 			}
 		}
 		return spiDataMapList;
@@ -960,17 +890,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Transactional
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 		try {
 			if (null != addressPayload) {
+				Date date = CommonUtils.getFormattedDate();
 				BeanUtils.copyProperties(addressPayload, address);
 				if (addressPayload.getId() == null) {
-					address.setCreatedAt(sdf.parse(formattedDte));
+					address.setCreatedAt(date);
 					address.setCreatedBy(user.getEmail());
 				}
-				address.setUpdatedAt(sdf.parse(formattedDte));
+				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getEmail());
 			}
 		} catch (Exception e) {
@@ -981,17 +909,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	public Boolean updateAddress(Organization organization, AddressPayload addressPayload, UserPayload user) {
 		if (null != addressPayload && null != addressPayload.getId()) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+			Date date = CommonUtils.getFormattedDate();
 			try {
 				BeanUtils.copyProperties(addressPayload, organization.getAddress());
-				organization.getAddress().setUpdatedAt(sdf.parse(formattedDte));
+				organization.getAddress().setUpdatedAt(date);
 				organization.getAddress().setUpdatedBy(user.getEmail());
 				return true;
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
 			}
-
 		}
 		return false;
 	}
@@ -1018,7 +944,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			} else {
 				orgClassificationMappingObj.setClassificationId(classification);
 			}
-
 			return orgClassificationMapRepository.saveAndFlush(orgClassificationMappingObj);
 		}
 	}

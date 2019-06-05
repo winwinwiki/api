@@ -1,13 +1,12 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,17 +28,23 @@ import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.AddressService;
 import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Service
 public class ProgramServiceImpl implements ProgramService {
-
 	@Autowired
 	ProgramRepository programRepository;
+
 	@Autowired
 	NaicsDataRepository naicsRepository;
 
 	@Autowired
 	NteeDataRepository nteeRepository;
+
 	@Autowired
 	AddressService addressService;
 
@@ -57,12 +62,8 @@ public class ProgramServiceImpl implements ProgramService {
 	@Override
 	@Transactional
 	public Program createProgram(ProgramRequestPayload programPayload) {
-		// TODO Auto-generated method stub
-
 		Program program = getProgramFromProgramRequestPayload(programPayload);
-
 		return programRepository.saveAndFlush(program);
-
 	}
 
 	@Override
@@ -74,114 +75,55 @@ public class ProgramServiceImpl implements ProgramService {
 	@Override
 	@Transactional
 	public Program updateProgram(ProgramRequestPayload programPayload) {
-		// TODO Auto-generated method stub
 		Program program = getProgramFromProgramRequestPayload(programPayload);
-
 		return programRepository.saveAndFlush(program);
 	}
 
 	@Override
 	public List<Program> getProgramList(Long orgId) {
-		// TODO Auto-generated method stub
 		return programRepository.findAllProgramList(orgId);
 	}
 
 	@Override
 	public ProgramResponsePayload getProgramResponseFromProgram(Program payload) {
 		ProgramResponsePayload responsePayload = new ProgramResponsePayload();
-		responsePayload.setId(payload.getId());
-
+		BeanUtils.copyProperties(payload, responsePayload);
 		responsePayload.setAddress(addressService.getAddressPayloadFromAddress(payload.getAddress()));
-
-		responsePayload.setAssets(payload.getAssets());
-		responsePayload.setBusinessModel(payload.getBusinessModel());
-		responsePayload.setContactInfo(payload.getContactInfo());
-		responsePayload.setDescription(payload.getDescription());
-		responsePayload.setFacebookUrl(payload.getFacebookUrl());
-		responsePayload.setIsActive(payload.getIsActive());
-		responsePayload.setLinkedinUrl(payload.getLinkedinUrl());
-		responsePayload.setMissionStatement(payload.getMissionStatement());
 		if (payload.getOrganization() != null)
 			responsePayload.setOrganizationId(payload.getOrganization().getId());
-		responsePayload.setPopulationServed(payload.getPopulationServed());
-		responsePayload.setPriority(payload.getPriority());
-		responsePayload.setPurpose(payload.getPurpose());
-		responsePayload.setRevenue(payload.getRevenue());
-		responsePayload.setSector(payload.getSector());
-		responsePayload.setSectorLevel(payload.getSectorLevel());
-		responsePayload.setSectorLevelName(payload.getSectorLevelName());
-		responsePayload.setSelfInterest(payload.getSelfInterest());
-		responsePayload.setTagStatus(payload.getTagStatus());
-		responsePayload.setTwitterUrl(payload.getTwitterUrl());
-		responsePayload.setInstagramUrl(payload.getInstagramUrl());
-		responsePayload.setValues(payload.getValues());
-		responsePayload.setWebsiteUrl(payload.getWebsiteUrl());
-		responsePayload.setCreatedAt(payload.getCreatedAt());
-		responsePayload.setCreatedBy(payload.getCreatedBy());
-		responsePayload.setUpdatedAt(payload.getUpdatedAt());
-		responsePayload.setUpdatedBy(payload.getUpdatedBy());
-		responsePayload.setAdminUrl(payload.getAdminUrl());
-		responsePayload.setName(payload.getName());
-
-		responsePayload.setNaicsCode(payload.getNaicsCode());
-
-		responsePayload.setNteeCode(payload.getNteeCode());
-
 		return responsePayload;
 	}
 
 	@Override
 	public Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload) {
+		Program program = null;
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 			UserPayload user = userService.getCurrentUserDetails();
-			Program program = null;
+			Date date = CommonUtils.getFormattedDate();
 			if (payload.getId() != null)
 				program = programRepository.findProgramById(payload.getId());
 			if (program == null)
 				program = new Program();
 			Address address = addressService.saveAddress(payload.getAddress());
 			program.setAddress(address);
-			program.setAssets(payload.getAssets());
-			program.setBusinessModel(payload.getBusinessModel());
-			program.setContactInfo(payload.getContactInfo());
-			program.setDescription(payload.getDescription());
-			program.setFacebookUrl(payload.getFacebookUrl());
-			program.setIsActive(payload.getIsActive());
-			program.setLinkedinUrl(payload.getLinkedinUrl());
-			program.setMissionStatement(payload.getMissionStatement());
+
+			BeanUtils.copyProperties(payload, program);
 
 			if (payload.getNaicsCode() != null)
 				program.setNaicsCode(naicsRepository.findById(payload.getNaicsCode()).orElse(null));
-			program.setName(payload.getName());
+
 			if (payload.getNteeCode() != null)
 				program.setNteeCode(nteeRepository.findById(payload.getNteeCode()).orElse(null));
+
 			if (payload.getOrganizationId() != null)
 				program.setOrganization(organizationRepository.findOrgById(payload.getOrganizationId()));
-			program.setPopulationServed(payload.getPopulationServed());
-			program.setPriority(payload.getPriority());
-			program.setPurpose(payload.getPurpose());
-			program.setRevenue(payload.getRevenue());
-			program.setSector(payload.getSector());
-			program.setSectorLevel(payload.getSectorLevel());
-			program.setSectorLevelName(payload.getSectorLevelName());
-			program.setSelfInterest(payload.getSelfInterest());
-			program.setTagStatus(program.getTagStatus());
-			program.setTwitterUrl(program.getTwitterUrl());
-			program.setInstagramUrl(program.getInstagramUrl());
-			program.setValues(payload.getValues());
-			program.setWebsiteUrl(payload.getWebsiteUrl());
 
-			program.setCreatedAt(sdf.parse(formattedDte));
-			program.setAdminUrl(payload.getAdminUrl());
-			program.setUpdatedAt(sdf.parse(formattedDte));
+			program.setCreatedAt(date);
+			program.setUpdatedAt(date);
 			program.setCreatedBy(user.getEmail());
 			program.setUpdatedBy(user.getEmail());
 			return program;
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			return null;
 		}
 	}
