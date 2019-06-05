@@ -2,8 +2,6 @@ package com.winwin.winwin.payload;
 
 import java.util.List;
 
-import javax.persistence.Column;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,6 +33,7 @@ public class OrganizationCsvPayload {
 	private String nteeCode;
 	private String status;
 	private String priority;
+	private String ein;
 	private Long parentId;
 	private Boolean isActive;
 	private Boolean isTaggingReady;
@@ -61,4 +60,6 @@ public class OrganizationCsvPayload {
 	private String street;
 	private List<Long> spiTagIds;
 	private List<Long> sdgTagIds;
+	private List<Long> resourceIds;
+	private List<Long> datasetIds;
 }
