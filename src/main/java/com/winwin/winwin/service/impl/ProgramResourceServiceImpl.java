@@ -1,12 +1,11 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +24,14 @@ import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramResourceService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Service
 public class ProgramResourceServiceImpl implements ProgramResourceService {
 
@@ -48,26 +52,21 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
 
-	private final Long CATEGORY_ID = -1L;
-
 	@Autowired
 	private ResourceCategoryRepository resourceCategoryRepository;
 
 	private ProgramResource constructProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		ProgramResource programResource = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 			if (null != programResourcePayLoad.getId() && null != user) {
 				programResource = programResourceRepository.getOne(programResourcePayLoad.getId());
 			} else {
 				programResource = new ProgramResource();
-				programResource.setProgramId(programResourcePayLoad.getProgramId());
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programResource.setCreatedAt(sdf.parse(formattedDte));
+				BeanUtils.copyProperties(programResourcePayLoad, programResource);
+				programResource.setCreatedAt(date);
 				programResource.setCreatedBy(user.getEmail());
-				programResource.setAdminUrl(programResourcePayLoad.getAdminUrl());
 			}
 
 			if (programResource == null) {
@@ -75,19 +74,13 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 						+ " to update in DB ");
 			} else {
 				setResourceCategory(programResourcePayLoad, programResource);
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programResource.setProgramId(programResourcePayLoad.getProgramId());
-				programResource.setCount(programResourcePayLoad.getCount());
-				programResource.setDescription(programResourcePayLoad.getDescription());
-				programResource.setUpdatedAt(sdf.parse(formattedDte));
+				BeanUtils.copyProperties(programResourcePayLoad, programResource);
+				programResource.setUpdatedAt(date);
 				programResource.setUpdatedBy(user.getEmail());
-
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);
 		}
-
 		return programResource;
 	}
 
@@ -113,24 +106,22 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 	@Transactional
 	public ResourceCategory saveResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		ResourceCategory category = new ResourceCategory();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
-		if (null != user) {
-			try {
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
+			if (null != user) {
 				if (null != categoryFromPayLoad && !StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 					category.setCategoryName(categoryFromPayLoad.getCategoryName());
 				}
-				category.setCreatedAt(sdf.parse(formattedDte));
-				category.setUpdatedAt(sdf.parse(formattedDte));
+				category.setCreatedAt(date);
+				category.setUpdatedAt(date);
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
 				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
-			} catch (Exception e) {
-				LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
 		return resourceCategoryRepository.saveAndFlush(category);
 	}
@@ -153,20 +144,16 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	@Override
 	@Transactional
 	public ProgramResource createOrUpdateProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
-		// TODO Auto-generated method stub
-		UserPayload user = userService.getCurrentUserDetails();
 		ProgramResource programResource = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != programResourcePayLoad && null != user) {
 				programResource = constructProgramResource(programResourcePayLoad);
 				programResource = programResourceRepository.saveAndFlush(programResource);
 
 				if (null != programResource && null != programResource.getProgramId()) {
-					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 					organizationHistoryService.createOrganizationHistory(user,
-							programResourcePayLoad.getOrganizationId(), sdf, formattedDte, OrganizationConstants.UPDATE,
+							programResourcePayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
 							OrganizationConstants.RESOURCE, programResource.getId(), programResource.getDescription());
 				}
 			}
@@ -176,7 +163,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			} else {
 				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
 			}
-
 		}
 		return programResource;
 	}
@@ -186,23 +172,21 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	public void removeProgramResource(Long resourceId, Long organizationId) {
 		// TODO Auto-generated method stub
 		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-		UserPayload user = userService.getCurrentUserDetails();
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 			if (null != resource && null != user) {
-				resource.setUpdatedAt(sdf.parse(formattedDte));
-				resource.setUpdatedBy(user.getEmail());
 				resource.setIsActive(false);
-
+				resource.setUpdatedAt(date);
+				resource.setUpdatedBy(user.getEmail());
 				programResourceRepository.saveAndFlush(resource);
 
 				if (null != resource) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId, sdf, formattedDte,
+					organizationHistoryService.createOrganizationHistory(user, organizationId,
 							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription());
 				}
 			}
-		} catch (ParseException e) {
+		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
 		}
 	}

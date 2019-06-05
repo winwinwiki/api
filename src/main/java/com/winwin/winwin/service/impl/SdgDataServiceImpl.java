@@ -13,6 +13,10 @@ import com.winwin.winwin.payload.SdgSubGoalPayload;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.service.SdgDataService;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Service
 public class SdgDataServiceImpl implements SdgDataService {
 
@@ -40,14 +44,11 @@ public class SdgDataServiceImpl implements SdgDataService {
 						subGoalPayload.setSubGoalName(sdgdata.getShortName());
 						subGoalsList.add(subGoalPayload);
 					}
-
 					sdgGoalPayload.setSubGoals(subGoalsList);
 					payloadList.add(sdgGoalPayload);
 				}
 			}
-
 		}
-
 		return payloadList;
 	}// end of method getSdgDataForResponse
 
@@ -60,7 +61,6 @@ public class SdgDataServiceImpl implements SdgDataService {
 			if (!sdgDataMap.containsKey(sdgDataObj.getGoalCode())) {
 				List<SdgData> subGoals = new ArrayList<SdgData>();
 				subGoals.add(sdgDataObj);
-
 				sdgDataMap.put(sdgDataObj.getGoalCode(), subGoals);
 			} else {
 				sdgDataMap.get(sdgDataObj.getGoalCode()).add(sdgDataObj);

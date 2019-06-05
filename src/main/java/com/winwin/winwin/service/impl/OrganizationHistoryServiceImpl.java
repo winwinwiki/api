@@ -1,10 +1,11 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
+import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
@@ -23,25 +25,27 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationHistoryServiceImpl.class);
+
 	@Override
 	@Transactional
-	public void createOrganizationHistory(UserPayload user, Long orgId, SimpleDateFormat sdf, String formattedDte,
-			String actionPerformed, String entityType, Long entityId, String entityName) {
-		// TODO Auto-generated method stub
+	public void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
+			Long entityId, String entityName) {
 		try {
 			OrganizationHistory orgHistory = new OrganizationHistory();
+			Date date = CommonUtils.getFormattedDate();
 			orgHistory.setOrganizationId(orgId);
 			orgHistory.setEntityId(entityId);
 			orgHistory.setEntityName(entityName);
 			orgHistory.setEntityType(entityType);
 
-			orgHistory.setUpdatedAt(sdf.parse(formattedDte));
+			orgHistory.setUpdatedAt(date);
 
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
 			orgHistory.setActionPerformed(actionPerformed);
 			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
-		} catch (ParseException e) {
-
+		} catch (Exception e) {
+			LOGGER.error("exception occured while creating history", e);
 		}
 
 	}

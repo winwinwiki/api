@@ -141,11 +141,10 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		/*
-		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e.
-		 * user status as force_change_password and hit the create user again
-		 * then setting cognito request with messageAction as RESEND will
-		 * resends the welcome message again with extending account user
-		 * expiration limit
+		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e. user
+		 * status as force_change_password and hit the create user again then setting
+		 * cognito request with messageAction as RESEND will resends the welcome message
+		 * again with extending account user expiration limit
 		 */
 		cognitoRequest.setMessageAction("RESEND");
 
@@ -210,7 +209,6 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void updateUserInfo(UserPayload payload, ExceptionResponse response) {
-
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
 		AdminUpdateUserAttributesRequest cognitoUpdateUserRequest = new AdminUpdateUserAttributesRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
@@ -273,7 +271,6 @@ public class UserServiceImpl implements UserService {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
 		ListUsersRequest cognitoGetListUserRequest = new ListUsersRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID"));
-
 		try {
 			ListUsersResult userResult = cognitoClient.listUsers(cognitoGetListUserRequest);
 			if (null != userResult) {
@@ -298,13 +295,10 @@ public class UserServiceImpl implements UserService {
 							} else if (attribute.getName().equals("email")) {
 								payload.setEmail(attribute.getValue());
 							}
-
 						}
 						payloadList.add(payload);
 					}
-
 				}
-
 			}
 
 		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
@@ -402,7 +396,6 @@ public class UserServiceImpl implements UserService {
 		cognitoClient.shutdown();
 
 		return authenticationResult;
-
 	}
 
 	@Override
@@ -427,7 +420,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
-
 	}
 
 	@Override
@@ -455,7 +447,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
-
 	}
 
 	@Override
@@ -480,7 +471,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
-
 	}
 
 	@Override
@@ -556,10 +546,8 @@ public class UserServiceImpl implements UserService {
 							payload.setEmail(attribute.getValue());
 						}
 					}
-
 				}
 			}
-
 			cognitoClient.shutdown();
 
 		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
@@ -580,7 +568,6 @@ public class UserServiceImpl implements UserService {
 	public AWSCognitoIdentityProvider getAmazonCognitoIdentityClient() {
 		return AWSCognitoIdentityProviderClientBuilder.standard().withRegion(System.getenv("AWS_REGION"))
 				.withCredentials(envCredentialsProvider).build();
-
 	}
 
 	@Override
@@ -594,5 +581,4 @@ public class UserServiceImpl implements UserService {
 		}
 		return user;
 	}
-
 }

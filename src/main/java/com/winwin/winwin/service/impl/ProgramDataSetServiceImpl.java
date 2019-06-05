@@ -1,11 +1,11 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +25,7 @@ import com.winwin.winwin.repository.ProgramDataSetRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramDataSetService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -58,15 +59,13 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 
 	private ProgramDataSet constructProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad, UserPayload user) {
 		ProgramDataSet programDataSet = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = null;
 		try {
+			Date date = CommonUtils.getFormattedDate();
 			if (null != programDataSetPayLoad.getId()) {
 				programDataSet = programDataSetRepository.getOne(programDataSetPayLoad.getId());
 			} else {
 				programDataSet = new ProgramDataSet();
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programDataSet.setCreatedAt(sdf.parse(formattedDte));
+				programDataSet.setCreatedAt(date);
 				programDataSet.setCreatedBy(user.getEmail());
 				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
@@ -77,21 +76,13 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 						"Org dataset record not found for Id: " + programDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				setDataSetCategory(programDataSetPayLoad, programDataSet, user);
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
-				programDataSet.setDescription(programDataSetPayLoad.getDescription());
-				programDataSet.setType(programDataSetPayLoad.getType());
-				programDataSet.setUrl(programDataSetPayLoad.getUrl());
-				programDataSet.setUpdatedAt(sdf.parse(formattedDte));
-				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
+				BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
+				programDataSet.setUpdatedAt(date);
 				programDataSet.setUpdatedBy(user.getEmail());
-
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
-
 		return programDataSet;
 	}
 
@@ -114,10 +105,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 									"Org dataset category record not found for Id: " + categoryId + " in DB ");
 						} else {
 							programDataSet.setDataSetCategory(dataSetCategory);
-
 						}
 					}
-
 				}
 			}
 		} catch (Exception e) {
@@ -129,53 +118,42 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	public DataSetCategory saveDataSetCategory(DataSetCategoryPayload categoryFromPayLoad, UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
+			Date date = CommonUtils.getFormattedDate();
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
-			category.setCreatedAt(sdf.parse(formattedDte));
-			category.setUpdatedAt(sdf.parse(formattedDte));
+			category.setCreatedAt(date);
+			category.setUpdatedAt(date);
 			category.setCreatedBy(user.getEmail());
 			category.setUpdatedBy(user.getEmail());
 			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}
-
 		return dataSetCategoryRepository.saveAndFlush(category);
 	}
 
 	@Override
 	@Transactional
 	public ProgramDataSet createOrUpdateProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad) {
-		// TODO Auto-generated method stub
-		UserPayload user = userService.getCurrentUserDetails();
 		ProgramDataSet programDataSet = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != programDataSetPayLoad && null != user) {
 				programDataSet = constructProgramDataSet(programDataSetPayLoad, user);
 				programDataSet = programDataSetRepository.saveAndFlush(programDataSet);
 
 				if (null != programDataSet.getId()) {
-
 					if (null != programDataSetPayLoad.getId()) {
 						organizationHistoryService.createOrganizationHistory(user,
-								programDataSetPayLoad.getOrganizationId(), sdf, formattedDte,
-								OrganizationConstants.UPDATE, OrganizationConstants.DATASET, programDataSet.getId(),
-								programDataSet.getDescription());
+								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
+								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription());
 					} else {
 						organizationHistoryService.createOrganizationHistory(user,
-								programDataSetPayLoad.getOrganizationId(), sdf, formattedDte,
-								OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
-								programDataSet.getDescription());
+								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.CREATE,
+								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription());
 					}
-
 				}
-
 			}
 		} catch (Exception e) {
 			if (null != programDataSetPayLoad.getId()) {
@@ -183,7 +161,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			} else {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.exception.created"), e);
 			}
-
 		}
 		return programDataSet;
 	}
@@ -191,29 +168,24 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	@Override
 	@Transactional
 	public void removeProgramDataSet(Long dataSetId, Long organizationId) {
-		// TODO Auto-generated method stub
-		ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(dataSetId);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-		UserPayload user = userService.getCurrentUserDetails();
-
-		if (null != dataSet && null != user) {
-			try {
-				dataSet.setUpdatedAt(sdf.parse(formattedDte));
+		try {
+			ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(dataSetId);
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
+			if (null != dataSet && null != user) {
+				dataSet.setUpdatedAt(date);
 				dataSet.setUpdatedBy(user.getEmail());
 				dataSet.setIsActive(false);
-
 				dataSet = programDataSetRepository.saveAndFlush(dataSet);
 
 				if (null != dataSet) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId, sdf, formattedDte,
+					organizationHistoryService.createOrganizationHistory(user, organizationId,
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
 							dataSet.getDescription());
 				}
-			} catch (Exception e) {
-				LOGGER.error(customMessageSource.getMessage("org.dataset.error.deleted"), e);
 			}
-
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.dataset.error.deleted"), e);
 		}
 	}
 
@@ -235,20 +207,17 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 
 	@Override
 	public ProgramDataSet getProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		ProgramDataSet programDataSet = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 			if (null != programDataSetPayLoad.getId()) {
 				programDataSet = programDataSetRepository.getOne(programDataSetPayLoad.getId());
 			} else {
 				programDataSet = new ProgramDataSet();
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programDataSet.setCreatedAt(sdf.parse(formattedDte));
+				programDataSet.setCreatedAt(date);
 				programDataSet.setCreatedBy(user.getEmail());
 				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
-
 			}
 
 			if (programDataSet == null) {
@@ -256,20 +225,13 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 						"Org dataset record not found for Id: " + programDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				setDataSetCategory(programDataSetPayLoad, programDataSet, user);
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
-				programDataSet.setDescription(programDataSetPayLoad.getDescription());
-				programDataSet.setType(programDataSetPayLoad.getType());
-				programDataSet.setUrl(programDataSetPayLoad.getUrl());
-				programDataSet.setUpdatedAt(sdf.parse(formattedDte));
+				BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
+				programDataSet.setUpdatedAt(date);
 				programDataSet.setUpdatedBy(user.getEmail());
-
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
-
 		return programDataSet;
 	}
 }

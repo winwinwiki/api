@@ -1,12 +1,13 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.payload.AddressPayload;
@@ -14,6 +15,7 @@ import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.service.AddressService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
@@ -27,6 +29,8 @@ public class AddressServiceImpl implements AddressService {
 	@Autowired
 	AddressRepository addressRepository;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
+
 	@Transactional
 	public Address saveAddress(AddressPayload addressPayload) {
 		UserPayload user = userService.getCurrentUserDetails();
@@ -34,21 +38,14 @@ public class AddressServiceImpl implements AddressService {
 		if (addressPayload.getId() != null)
 			address = addressRepository.findAddressById(addressPayload.getId());
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-			address.setCountry(addressPayload.getCountry());
-			address.setState(addressPayload.getState());
-			address.setCity(addressPayload.getCity());
-			address.setCounty(addressPayload.getCounty());
-			address.setZip(addressPayload.getZip());
-			address.setPlaceId(addressPayload.getPlaceId());
-			address.setCreatedAt(sdf.parse(formattedDte));
-			address.setUpdatedAt(sdf.parse(formattedDte));
+			Date date = CommonUtils.getFormattedDate();
+			BeanUtils.copyProperties(addressPayload, address);
+			address.setCreatedAt(date);
+			address.setUpdatedAt(date);
 			address.setCreatedBy(user.getEmail());
 			address.setUpdatedBy(user.getEmail());
-			address.setAdminUrl(addressPayload.getAdminUrl());
 		} catch (Exception e) {
-
+			LOGGER.error("exception occured while creating address", e);
 		}
 		return addressRepository.saveAndFlush(address);
 	}
@@ -59,35 +56,15 @@ public class AddressServiceImpl implements AddressService {
 
 		if (null != addressPayload && null != addressPayload.getId()) {
 			try {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				if (!StringUtils.isEmpty(addressPayload.getCountry())) {
-					address.setCountry(addressPayload.getCountry());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getState())) {
-					address.setState(addressPayload.getState());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCity())) {
-					address.setCity(addressPayload.getCity());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getCounty())) {
-					address.setCounty(addressPayload.getCounty());
-				}
-				if (!StringUtils.isEmpty(addressPayload.getZip())) {
-					address.setZip(addressPayload.getZip());
-				}
-				address.setStreet(addressPayload.getStreet());
-				address.setPlaceId(addressPayload.getPlaceId());
-				address.setUpdatedAt(sdf.parse(formattedDte));
+				Date date = CommonUtils.getFormattedDate();
+				BeanUtils.copyProperties(addressPayload, address);
+				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getEmail());
-				address.setAdminUrl(addressPayload.getAdminUrl());
-
 				addressRepository.saveAndFlush(address);
 				return true;
 			} catch (Exception e) {
-
+				LOGGER.error("exception occured while updating address", e);
 			}
-
 		}
 		return false;
 	}

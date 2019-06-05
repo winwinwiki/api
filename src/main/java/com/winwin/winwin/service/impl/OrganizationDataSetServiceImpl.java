@@ -1,11 +1,11 @@
 package com.winwin.winwin.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +25,7 @@ import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -61,26 +62,21 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationDataSet organizationDataSet = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-
 		try {
 			if (null != orgDataSetPayLoad && null != user) {
 				organizationDataSet = constructOrganizationDataSet(orgDataSetPayLoad, user);
 				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
 
 				if (null != organizationDataSet.getId()) {
-
 					if (null != orgDataSetPayLoad.getId()) {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(), sdf,
-								formattedDte, OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDescription());
 					} else {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(), sdf,
-								formattedDte, OrganizationConstants.CREATE, OrganizationConstants.DATASET,
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+								OrganizationConstants.CREATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDescription());
 					}
-
 				}
 
 			}
@@ -100,29 +96,25 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	@Transactional
 	public void removeOrganizationDataSet(Long dataSetId) {
 		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		UserPayload user = userService.getCurrentUserDetails();
 
 		if (null != dataSet && null != user) {
 			try {
-				dataSet.setUpdatedAt(sdf.parse(formattedDte));
+				Date date = CommonUtils.getFormattedDate();
+				dataSet.setUpdatedAt(date);
 				dataSet.setUpdatedBy(user.getEmail());
 				dataSet.setIsActive(false);
-
 				dataSet = organizationDataSetRepository.saveAndFlush(dataSet);
 
 				if (null != dataSet) {
-					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganizationId(), sdf, formattedDte,
+					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganizationId(),
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
 							dataSet.getDescription());
 				}
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.error.deleted"), e);
 			}
-
 		}
-
 	}// end of method removeOrganizationDataSet
 
 	/**
@@ -131,17 +123,14 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 */
 	private OrganizationDataSet constructOrganizationDataSet(DataSetPayload orgDataSetPayLoad, UserPayload user) {
 		OrganizationDataSet organizationDataSet = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String formattedDte = null;
 		try {
+			Date date = CommonUtils.getFormattedDate();
 			if (null != orgDataSetPayLoad.getId()) {
 				organizationDataSet = organizationDataSetRepository.getOne(orgDataSetPayLoad.getId());
 			} else {
 				organizationDataSet = new OrganizationDataSet();
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organizationDataSet.setCreatedAt(sdf.parse(formattedDte));
+				organizationDataSet.setCreatedAt(date);
 				organizationDataSet.setCreatedBy(user.getEmail());
-
 			}
 
 			if (organizationDataSet == null) {
@@ -149,20 +138,13 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 						"Org dataset record not found for Id: " + orgDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
-				formattedDte = sdf.format(new Date(System.currentTimeMillis()));
-				organizationDataSet.setOrganizationId(orgDataSetPayLoad.getOrganizationId());
-				organizationDataSet.setDescription(orgDataSetPayLoad.getDescription());
-				organizationDataSet.setType(orgDataSetPayLoad.getType());
-				organizationDataSet.setUrl(orgDataSetPayLoad.getUrl());
-				organizationDataSet.setUpdatedAt(sdf.parse(formattedDte));
+				BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
+				organizationDataSet.setUpdatedAt(date);
 				organizationDataSet.setUpdatedBy(user.getEmail());
-				organizationDataSet.setAdminUrl(orgDataSetPayLoad.getAdminUrl());
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
-
 		return organizationDataSet;
 	}
 
@@ -187,7 +169,6 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 								orgDataSetPayLoad.getDataSetCategory(), user);
 						LOGGER.info(customMessageSource.getMessage("org.dataset.category.success.created"));
 						orgDataSet.setDataSetCategory(organizationDataSetCategory);
-
 					} else {
 						organizationDataSetCategory = dataSetCategoryRepository.getOne(categoryId);
 						if (organizationDataSetCategory == null) {
@@ -195,10 +176,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 									"Org dataset category record not found for Id: " + categoryId + " in DB ");
 						} else {
 							orgDataSet.setDataSetCategory(organizationDataSetCategory);
-
 						}
 					}
-
 				}
 			}
 		} catch (Exception e) {
@@ -211,15 +190,13 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 			if (!StringUtils.isEmpty(categoryFromPayLoad.getCategoryName())) {
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
-
+			Date date = CommonUtils.getFormattedDate();
 			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
-			category.setCreatedAt(sdf.parse(formattedDte));
-			category.setUpdatedAt(sdf.parse(formattedDte));
+			category.setCreatedAt(date);
+			category.setUpdatedAt(date);
 			category.setCreatedBy(user.getEmail());
 			category.setUpdatedBy(user.getEmail());
 		} catch (Exception e) {

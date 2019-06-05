@@ -41,15 +41,10 @@ public class GetAwsS3ObjectServiceImpl implements GetAwsS3ObjectService {
 
 	@Override
 	public S3Object getS3Object(String key) throws Exception {
-
 		S3Object s3Object = null;
-
 		AmazonS3 s3Client = getS3Client();
-
 		logger.info("Downloading an object");
-
 		s3Object = s3Client.getObject(new GetObjectRequest(bucketName, key));
-
 		return s3Object;
 	}
 
