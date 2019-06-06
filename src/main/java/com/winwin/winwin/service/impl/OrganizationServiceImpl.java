@@ -29,6 +29,7 @@ import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationClassification;
 import com.winwin.winwin.entity.OrganizationHistory;
+import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.SdgData;
@@ -43,6 +44,7 @@ import com.winwin.winwin.payload.NteeMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
+import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -58,6 +60,7 @@ import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
+import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CommonUtils;
@@ -71,46 +74,34 @@ import com.winwin.winwin.util.CsvUtils;
 public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
 	AddressRepository addressRepository;
-
 	@Autowired
 	OrganizationRepository organizationRepository;
-
 	@Autowired
 	OrgClassificationMapRepository orgClassificationMapRepository;
-
 	@Autowired
 	ClassificationRepository classificationRepository;
-
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
-
 	@Autowired
 	NaicsDataRepository naicsRepository;
-
 	@Autowired
 	NteeDataRepository nteeRepository;
-
 	@Autowired
 	UserService userService;
-
 	@Autowired
 	OrganizationHistoryService orgHistoryService;
-
+	@Autowired
+	OrganizationNoteService organizationNoteService;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
 	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
-
 	@Autowired
 	SpiDataRepository spiDataRepository;
-
 	@Autowired
 	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
 	@Autowired
 	SdgDataRepository sdgDataRepository;
-
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
 
@@ -120,8 +111,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Transactional
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
-		UserPayload user = userService.getCurrentUserDetails();
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != organizationPayload && null != user) {
 				organization = setOrganizationData(organizationPayload, user);
 
@@ -130,8 +121,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != organization.getId()) {
 					/*
 					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
-					 * organization = organizationRepository.saveAndFlush(organization);
+					 * OrganizationConstants.ORGANIZATIONS + "/" +
+					 * organization.getId()); organization =
+					 * organizationRepository.saveAndFlush(organization);
 					 */
 
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
@@ -152,7 +144,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Transactional
 	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
-
 		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.CREATE, "org.exception.created");
 
@@ -227,17 +218,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 					if (!isUpdated) {
 						throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
 					}
-
+					organization.setIsActive(true);
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getEmail());
-
 					orgClassificationMapping = addClassification(organizationPayload, organization);
-
 					/*
-					 * if (orgClassificationMapping == null) { throw new OrganizationException(
+					 * if (orgClassificationMapping == null) { throw new
+					 * OrganizationException(
 					 * "Request to update classification is invalid"); }
 					 */
-
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
@@ -294,7 +283,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		try {
 			if (payload.getNameSearch() != null)
 				noOfRecords = organizationRepository
-						.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
+				.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
 			else
 				noOfRecords = organizationRepository.getFilterOrganizationCount(payload,
 						OrganizationConstants.ORGANIZATION, null);
@@ -339,6 +328,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 
 				organization.setType(OrganizationConstants.PROGRAM);
+				organization.setIsActive(true);;
 				organization.setCreatedAt(date);
 				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
@@ -485,9 +475,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 				throw new Exception(errorResForNtee.getErrorMessage());
 			}
 
+			Map<String, String> notesMap = new HashMap<String, String>();
 			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
 				if (null != organizationPayload && null != user) {
+					if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
+						if (null != organizationPayload.getName())
+							notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+					}
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
 						organizationList.add(setOrganizationData(organizationPayload, user));
 					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
 						if (null != organizationPayload.getId()) {
@@ -497,7 +493,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 								if (organization == null)
 									throw new OrganizationException(
 											"organization with Id:" + organizationPayload.getId()
-													+ "is not found in DB to perform update operation");
+											+ "is not found in DB to perform update operation");
 							}
 							organizationList.add(setOrganizationData(organizationPayload, user));
 						} else {
@@ -512,9 +508,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 			for (Organization organization : organizationList) {
 				/*
 				 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-				 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
-				 * organization = organizationRepository.saveAndFlush(organization);
+				 * OrganizationConstants.ORGANIZATIONS + "/" +
+				 * organization.getId()); organization =
+				 * organizationRepository.saveAndFlush(organization);
 				 */
+				if (null != organization.getName()) {
+					String notes = notesMap.get(organization.getName());
+					OrganizationNotePayload organizationNotePayload = new OrganizationNotePayload();
+					Date date = CommonUtils.getFormattedDate();
+					organizationNotePayload.setName(notes);
+					organizationNotePayload.setOrganizationId(organization.getId());
+					organizationNotePayload.setCreatedAt(date);
+					organizationNotePayload.setCreatedBy(user.getEmail());
+					OrganizationNote note = organizationNoteService.createOrganizationNote(organizationNotePayload);
+				}
 				if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
 					// To set spi and sdg tags by naics code
 					setSpiSdgMapByNaicsCode(organization, user, naicsMap);
@@ -563,6 +570,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setNteeCode(naicsCode);
 		}
 		organization.setType(OrganizationConstants.ORGANIZATION);
+		organization.setIsActive(true);;
 
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
@@ -571,6 +579,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 		organization.setUpdatedAt(date);
 		organization.setUpdatedBy(user.getEmail());
+		organization.setIsActive(true);
 
 		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
 			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, organizationPayload.getSpiTagIds(),

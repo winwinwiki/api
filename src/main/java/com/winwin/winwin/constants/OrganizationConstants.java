@@ -31,5 +31,6 @@ public class OrganizationConstants {
 	public static final String AWS_USER_STATUS_FORCE_CHANGE_PASSWORD = "FORCE_CHANGE_PASSWORD";
 	public static final String BASE_URL = "http://d3vudu8znrvs1z.cloudfront.net/";
 	public static final String ORGANIZATIONS = "organizations";
+	public static final String AUTOTAGGED = "Auto Tag";
 
 }

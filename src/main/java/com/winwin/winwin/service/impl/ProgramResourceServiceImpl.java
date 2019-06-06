@@ -65,6 +65,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			} else {
 				programResource = new ProgramResource();
 				BeanUtils.copyProperties(programResourcePayLoad, programResource);
+				programResource.setIsActive(true);
 				programResource.setCreatedAt(date);
 				programResource.setCreatedBy(user.getEmail());
 			}
@@ -75,6 +76,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			} else {
 				setResourceCategory(programResourcePayLoad, programResource);
 				BeanUtils.copyProperties(programResourcePayLoad, programResource);
+				programResource.setIsActive(true);
 				programResource.setUpdatedAt(date);
 				programResource.setUpdatedBy(user.getEmail());
 			}

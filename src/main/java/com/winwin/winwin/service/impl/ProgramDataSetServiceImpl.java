@@ -77,6 +77,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			} else {
 				setDataSetCategory(programDataSetPayLoad, programDataSet, user);
 				BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
+				programDataSet.setIsActive(true);
 				programDataSet.setUpdatedAt(date);
 				programDataSet.setUpdatedBy(user.getEmail());
 			}
@@ -226,6 +227,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			} else {
 				setDataSetCategory(programDataSetPayLoad, programDataSet, user);
 				BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
+				programDataSet.setIsActive(true);
 				programDataSet.setUpdatedAt(date);
 				programDataSet.setUpdatedBy(user.getEmail());
 			}

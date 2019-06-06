@@ -2,8 +2,6 @@ package com.winwin.winwin.payload;
 
 import java.util.List;
 
-import javax.persistence.Column;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,6 +24,7 @@ public class OrganizationRequestPayload {
 	AddressPayload address;
 	String name;
 	String ein;
+	String notes;
 	Long revenue;
 	Long assets;
 	String sector;

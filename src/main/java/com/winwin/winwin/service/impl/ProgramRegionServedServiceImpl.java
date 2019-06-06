@@ -77,6 +77,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						programRegionServed = new ProgramRegionServed();
 						setProgramRegionMasterData(payload, programRegionServed, user);
 						BeanUtils.copyProperties(payload, programRegionServed);
+						programRegionServed.setIsActive(true);;
 						programRegionServed.setCreatedAt(date);
 						programRegionServed.setUpdatedAt(date);
 						programRegionServed.setCreatedBy(user.getEmail());
