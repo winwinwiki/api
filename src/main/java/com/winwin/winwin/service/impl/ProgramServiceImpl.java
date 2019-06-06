@@ -118,6 +118,7 @@ public class ProgramServiceImpl implements ProgramService {
 			if (payload.getOrganizationId() != null)
 				program.setOrganization(organizationRepository.findOrgById(payload.getOrganizationId()));
 
+			program.setIsActive(true);
 			program.setCreatedAt(date);
 			program.setUpdatedAt(date);
 			program.setCreatedBy(user.getEmail());

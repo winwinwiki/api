@@ -117,23 +117,26 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		try {
 			Date date = CommonUtils.getFormattedDate();
 			UserPayload user = userService.getCurrentUserDetails();
-			if (null != orgResourcePayLoad.getId() && null != user) {
-				organizationResource = organizationResourceRepository.getOne(orgResourcePayLoad.getId());
-			} else {
-				organizationResource = new OrganizationResource();
-				organizationResource.setCreatedAt(date);
-				organizationResource.setCreatedBy(user.getEmail());
-				organizationResource.setAdminUrl(orgResourcePayLoad.getAdminUrl());
-			}
-
-			if (organizationResource == null) {
-				throw new ResourceException(
-						"Org resource record not found for Id: " + orgResourcePayLoad.getId() + " to update in DB ");
-			} else {
-				setOrganizationResourceCategory(orgResourcePayLoad, organizationResource);
-				BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
-				organizationResource.setUpdatedAt(date);
-				organizationResource.setUpdatedBy(user.getEmail());
+			if (null != user) {
+				if (null != orgResourcePayLoad.getId()) {
+					organizationResource = organizationResourceRepository.getOne(orgResourcePayLoad.getId());
+				} else {
+					organizationResource = new OrganizationResource();
+					organizationResource.setIsActive(true);
+					organizationResource.setCreatedAt(date);
+					organizationResource.setCreatedBy(user.getEmail());
+					organizationResource.setAdminUrl(orgResourcePayLoad.getAdminUrl());
+				}
+				if (organizationResource == null) {
+					throw new ResourceException("Org resource record not found for Id: " + orgResourcePayLoad.getId()
+					+ " to update in DB ");
+				} else {
+					setOrganizationResourceCategory(orgResourcePayLoad, organizationResource);
+					BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
+					organizationResource.setIsActive(true);
+					organizationResource.setUpdatedAt(date);
+					organizationResource.setUpdatedBy(user.getEmail());
+				}
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);

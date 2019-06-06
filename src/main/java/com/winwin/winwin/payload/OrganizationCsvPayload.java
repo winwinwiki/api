@@ -34,6 +34,7 @@ public class OrganizationCsvPayload {
 	private String status;
 	private String priority;
 	private String ein;
+	private String notes;
 	private Long parentId;
 	private Boolean isActive;
 	private Boolean isTaggingReady;
@@ -58,6 +59,7 @@ public class OrganizationCsvPayload {
 	private String county;
 	private Long zip;
 	private String street;
+	private String datasetType;
 	private List<Long> spiTagIds;
 	private List<Long> sdgTagIds;
 	private List<Long> resourceIds;

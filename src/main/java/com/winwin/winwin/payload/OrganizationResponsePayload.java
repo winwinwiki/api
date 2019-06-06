@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import javax.persistence.Column;
-
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -32,6 +30,8 @@ public class OrganizationResponsePayload {
 	NteeData nteeCode;
 	String status;
 	String priority;
+	String ein;
+	String notes;
 	Long parentId;
 	Boolean isActive;
 	Boolean isTaggingReady;

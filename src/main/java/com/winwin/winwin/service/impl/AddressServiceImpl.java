@@ -33,12 +33,12 @@ public class AddressServiceImpl implements AddressService {
 
 	@Transactional
 	public Address saveAddress(AddressPayload addressPayload) {
-		UserPayload user = userService.getCurrentUserDetails();
 		Address address = new Address();
-		if (addressPayload.getId() != null)
-			address = addressRepository.findAddressById(addressPayload.getId());
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
+			if (addressPayload.getId() != null)
+				address = addressRepository.findAddressById(addressPayload.getId());
 			BeanUtils.copyProperties(addressPayload, address);
 			address.setCreatedAt(date);
 			address.setUpdatedAt(date);
@@ -52,19 +52,18 @@ public class AddressServiceImpl implements AddressService {
 
 	@Transactional
 	public Boolean updateAddress(Address address, AddressPayload addressPayload) {
-		UserPayload user = userService.getCurrentUserDetails();
-
-		if (null != addressPayload && null != addressPayload.getId()) {
-			try {
+		try {
+			if (null != addressPayload && null != addressPayload.getId()) {
+				UserPayload user = userService.getCurrentUserDetails();
 				Date date = CommonUtils.getFormattedDate();
 				BeanUtils.copyProperties(addressPayload, address);
 				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getEmail());
 				addressRepository.saveAndFlush(address);
 				return true;
-			} catch (Exception e) {
-				LOGGER.error("exception occured while updating address", e);
 			}
+		} catch (Exception e) {
+			LOGGER.error("exception occured while updating address", e);
 		}
 		return false;
 	}
