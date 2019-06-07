@@ -54,7 +54,10 @@ public class OrganizationRequestPayload {
 	String missionStatement;
 	String contactInfo;
 	String adminUrl;
-	List<Long> spiTagIds;
-	List<Long> sdgTagIds;
+	private String datasetType;
+	private List<Long> spiTagIds;
+	private List<Long> sdgTagIds;
+	private List<Long> resourceIds;
+	private List<Long> datasetIds;
 
 }
