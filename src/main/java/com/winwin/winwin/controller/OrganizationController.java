@@ -175,6 +175,8 @@ public class OrganizationController extends BaseController {
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+		} else {
+			return sendErrorResponse("org.bad.request");
 		}
 		return sendSuccessResponse(payload);
 	}
@@ -313,6 +315,7 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != filterPayload) {
+				LOGGER.info("getting organization list");
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
 				filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
 			}
