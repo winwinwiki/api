@@ -283,7 +283,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		try {
 			if (payload.getNameSearch() != null)
 				noOfRecords = organizationRepository
-				.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
+						.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
 			else
 				noOfRecords = organizationRepository.getFilterOrganizationCount(payload,
 						OrganizationConstants.ORGANIZATION, null);
@@ -328,7 +328,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 
 				organization.setType(OrganizationConstants.PROGRAM);
-				organization.setIsActive(true);;
+				organization.setIsActive(true);
+				;
 				organization.setCreatedAt(date);
 				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
@@ -493,7 +494,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 								if (organization == null)
 									throw new OrganizationException(
 											"organization with Id:" + organizationPayload.getId()
-											+ "is not found in DB to perform update operation");
+													+ "is not found in DB to perform update operation");
 							}
 							organizationList.add(setOrganizationData(organizationPayload, user));
 						} else {
@@ -570,7 +571,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setNteeCode(naicsCode);
 		}
 		organization.setType(OrganizationConstants.ORGANIZATION);
-		organization.setIsActive(true);;
+		organization.setIsActive(true);
+		;
 
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
@@ -582,8 +584,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setIsActive(true);
 
 		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, organizationPayload.getSpiTagIds(),
-					organizationPayload.getSdgTagIds());
+			List<Long> spiTagIds = new ArrayList<>();
+			List<Long> sdgTagIds = new ArrayList<>();
+
+			if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
+				String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
+				for (int j = 0; j < spiIdsList.length; j++) {
+					spiTagIds.add(Long.parseLong(spiIdsList[j]));
+				}
+			}
+
+			if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
+				String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
+				for (int j = 0; j < sdgIdsList.length; j++) {
+					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
+				}
+			}
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
 
 		}
 		return organization;
@@ -655,12 +672,18 @@ public class OrganizationServiceImpl implements OrganizationService {
 			throws Exception {
 		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNaicsAwsKey());
 		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		InputStream input = s3Object.getObjectContent();
 		String csv = IOUtils.toString(input);
-		List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = CsvUtils.read(NaicsMappingCsvPayload.class, csv);
 		Integer rowNumber = null;
 		try {
 			if (null != s3Object) {
+				List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = CsvUtils.read(NaicsMappingCsvPayload.class,
+						csv, exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					throw new Exception(exceptionResponse.getErrorMessage());
+
 				if (null != naicsMappingCsvPayloadList) {
 					for (int i = 0; i < naicsMappingCsvPayloadList.size(); i++) {
 						rowNumber = i + 2;
@@ -693,9 +716,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 		} catch (Exception e) {
 			LOGGER.error("", e.toString());
-			errorResForNaics.setErrorMessage("error occurred while fetching details of row: " + rowNumber
-					+ " from the file " + awsS3ObjectServiceImpl.getNaicsAwsKey() + ", error: " + e.toString());
-			errorResForNaics.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null) {
+				BeanUtils.copyProperties(exceptionResponse, errorResForNaics);
+			} else {
+				errorResForNaics.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+						+ " from the file " + awsS3ObjectServiceImpl.getNaicsAwsKey() + ", error: " + e.toString());
+				errorResForNaics.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 		}
 		return naicsMap;
 	}
@@ -706,6 +734,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap(ExceptionResponse errorResForNtee) throws Exception {
 		Map<String, NteeDataMappingPayload> nteeMap = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		Integer rowNumber = null;
 		try {
 			nteeMap = new HashMap<>();
@@ -713,7 +742,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != s3Object) {
 				InputStream input = s3Object.getObjectContent();
 				String csv = IOUtils.toString(input);
-				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = CsvUtils.read(NteeMappingCsvPayload.class, csv);
+				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = CsvUtils.read(NteeMappingCsvPayload.class, csv,
+						exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					throw new Exception(exceptionResponse.getErrorMessage());
 
 				if (null != nteeMappingCsvPayloadList) {
 					for (int i = 0; i < nteeMappingCsvPayloadList.size(); i++) {
@@ -744,10 +777,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 			}
 		} catch (Exception e) {
-			LOGGER.error("", e);
-			errorResForNtee.setErrorMessage("error occurred while fetching details of row: " + rowNumber
-					+ " from the file " + awsS3ObjectServiceImpl.getNteeAwsKey() + ", error: " + e.toString());
-			errorResForNtee.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error("", e.toString());
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null) {
+				BeanUtils.copyProperties(exceptionResponse, errorResForNtee);
+			} else {
+				errorResForNtee.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+						+ " from the file " + awsS3ObjectServiceImpl.getNteeAwsKey() + ", error: " + e.toString());
+				errorResForNtee.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 		}
 		return nteeMap;
 	}
