@@ -10,7 +10,7 @@ import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 public interface WinWinService {

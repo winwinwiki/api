@@ -1,6 +1,8 @@
-package com.winwin.winwin.payload;
+/**
+ * 
+ */
 
-import java.util.List;
+package com.winwin.winwin.payload;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -19,9 +21,8 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrganizationCsvPayload {
+public class OrganizationDataMigrationCsvPayload {
 	private Long id;
-	private Long addressId;
 	private String name;
 	private Long revenue;
 	private Long assets;
@@ -31,37 +32,31 @@ public class OrganizationCsvPayload {
 	private String description;
 	private String naicsCode;
 	private String nteeCode;
-	private String status;
-	private String priority;
-	private String ein;
-	private String notes;
-	private Long parentId;
-	private Boolean isActive;
-	private Boolean isTaggingReady;
-	private String tagStatus;
-	private Long totalAssets;
 	private String websiteUrl;
 	private String facebookUrl;
 	private String linkedinUrl;
 	private String twitterUrl;
 	private String instagramUrl;
-	private Long classificationId;
 	private String values;
 	private String purpose;
 	private String selfInterest;
 	private String businessModel;
 	private Long populationServed;
 	private String missionStatement;
-	private String contactInfo;
 	private String country;
 	private String state;
 	private String city;
 	private String county;
 	private Long zip;
 	private String street;
+	private String resourceIds;
+	private String datasetIds;
 	private String datasetType;
 	private String spiTagIds;
 	private String sdgTagIds;
-	private String resourceIds;
-	private String datasetIds;
+	private String notes;
+	private String ein;
+	private String tagStatus;
+	private Long parentId;
+	private Long addressId;
 }

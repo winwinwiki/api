@@ -51,4 +51,9 @@ public class OrganizationResponsePayload {
 	String missionStatement;
 	String contactInfo;
 	String adminUrl;
+	String resourceIds;
+	String datasetIds;
+	String datasetType;
+	String spiTagIds;
+	String sdgTagIds;
 }

@@ -191,7 +191,12 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
+			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+					exceptionResponse);
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
 			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
@@ -216,7 +221,11 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
+			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+					exceptionResponse);
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
 			organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
@@ -1277,16 +1286,19 @@ public class OrganizationController extends BaseController {
 		OrganizationRequestPayload payload = new OrganizationRequestPayload();
 		AddressPayload address = new AddressPayload();
 		BeanUtils.copyProperties(csv, address);
+		address.setId(csv.getAddressId());
 		payload.setAddress(address);
 		BeanUtils.copyProperties(csv, payload);
 
 		// Get Id from naics_code master data table and assign the id of it
 		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
-		payload.setNaicsCode(naicsData.getId());
+		if (null != naicsData)
+			payload.setNaicsCode(naicsData.getId());
 
 		// Get Id from ntee_code master data table and assign the id of it
 		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
-		payload.setNteeCode(nteeData.getId());
+		if (null != nteeData)
+			payload.setNteeCode(nteeData.getId());
 
 		return payload;
 	}

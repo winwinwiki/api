@@ -7,22 +7,29 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.winwin.winwin.Logger.CustomMessageSource;
+import com.winwin.winwin.exception.ExceptionResponse;
 
 /**
  * @author ArvindKhatik
  *
  */
 public class CsvUtils {
+	@Autowired
+	protected static CustomMessageSource customMessageSource;
+
 	private static final Logger log = LoggerFactory.getLogger(CsvUtils.class);
 
 	private static final CsvMapper mapper = new CsvMapper();
 
-	public static <T> List<T> read(Class<T> clazz, MultipartFile file) {
+	public static <T> List<T> read(Class<T> clazz, MultipartFile file, ExceptionResponse response) {
 
 		List<T> list = new ArrayList<>();
 		try {
@@ -30,12 +37,14 @@ public class CsvUtils {
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
 			list = reader.<T> readValues(file.getInputStream()).readAll();
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			log.error(customMessageSource.getMessage("csv.error"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;
 	}
 
-	public static <T> List<T> read(Class<T> clazz, InputStream stream) {
+	public static <T> List<T> read(Class<T> clazz, InputStream stream, ExceptionResponse response) {
 
 		List<T> list = null;
 		try {
@@ -43,12 +52,14 @@ public class CsvUtils {
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
 			list = reader.<T> readValues(stream).readAll();
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			log.error(customMessageSource.getMessage("csv.error"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;
 	}
 
-	public static <T> List<T> read(Class<T> clazz, String csv) {
+	public static <T> List<T> read(Class<T> clazz, String csv, ExceptionResponse response) {
 
 		List<T> list = null;
 		try {
@@ -56,7 +67,9 @@ public class CsvUtils {
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
 			list = reader.<T> readValues(csv).readAll();
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			log.error(customMessageSource.getMessage("csv.error"), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;
 	}

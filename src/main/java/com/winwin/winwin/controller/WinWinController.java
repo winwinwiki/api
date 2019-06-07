@@ -26,6 +26,7 @@ import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrganizationCsvPayload;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.OrganizationResponsePayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
@@ -48,6 +49,7 @@ import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CsvUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
@@ -57,12 +59,14 @@ import io.micrometer.core.instrument.util.StringUtils;
  *
  */
 
-
 @RestController
-@RequestMapping( value = "/winwin-offline" )
+@RequestMapping(value = "/winwin-offline")
 public class WinWinController extends BaseController {
 	@Autowired
 	private OrganizationService organizationService;
+
+	@Autowired
+	private WinWinService winWinService;
 
 	@Autowired
 	private OrganizationRepository organizationRepository;
@@ -123,7 +127,7 @@ public class WinWinController extends BaseController {
 	/**
 	 * 
 	 */
-	//for offline bulk organization creation
+	// for offline bulk organization creation
 	@RequestMapping(value = "/addAll", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -134,10 +138,14 @@ public class WinWinController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file);
-			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+			List<OrganizationDataMigrationCsvPayload> organizationDataMigrationCsvPayload = CsvUtils
+					.read(OrganizationDataMigrationCsvPayload.class, file, exceptionResponse);
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			organizationPayloadList = organizationDataMigrationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
-			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
+			organizationList = winWinService.createOrganizationsOffline(organizationPayloadList, exceptionResponse);
 			payloadList = setOrganizationPayload(organizationList);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -148,7 +156,7 @@ public class WinWinController extends BaseController {
 		}
 		return sendSuccessResponse(payloadList);
 	}
-	
+
 	/**
 	 * @param organization
 	 * @param payload
@@ -175,21 +183,24 @@ public class WinWinController extends BaseController {
 		}
 		return payload;
 	}
-	
-	private OrganizationRequestPayload setOrganizationPayload(OrganizationCsvPayload csv) {
+
+	private OrganizationRequestPayload setOrganizationPayload(OrganizationDataMigrationCsvPayload csv) {
 		OrganizationRequestPayload payload = new OrganizationRequestPayload();
 		AddressPayload address = new AddressPayload();
 		BeanUtils.copyProperties(csv, address);
+		address.setId(csv.getAddressId());
 		payload.setAddress(address);
 		BeanUtils.copyProperties(csv, payload);
 
 		// Get Id from naics_code master data table and assign the id of it
 		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
-		payload.setNaicsCode(naicsData.getId());
+		if (null != naicsData)
+			payload.setNaicsCode(naicsData.getId());
 
 		// Get Id from ntee_code master data table and assign the id of it
 		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
-		payload.setNteeCode(nteeData.getId());
+		if (null != nteeData)
+			payload.setNteeCode(nteeData.getId());
 
 		return payload;
 	}
