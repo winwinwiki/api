@@ -16,9 +16,9 @@
 
 	<appender name="RFA"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${logFilePath}/logs/winwin-application.log</file>
+		<file>${logFilePath}/winwin-application.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<FileNamePattern>${logFilePath}/logs/winwin-application.%d{yyyy-MM-dd}.gz
+			<FileNamePattern>${logFilePath}/winwin-application.%d{yyyy-MM-dd}.gz
 			</FileNamePattern>
 			<maxHistory>30</maxHistory>
 		</rollingPolicy>
