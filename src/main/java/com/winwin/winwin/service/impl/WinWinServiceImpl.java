@@ -21,12 +21,16 @@ import org.springframework.util.StringUtils;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
+import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationNote;
+import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
+import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -36,13 +40,17 @@ import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.ClassificationRepository;
+import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrgClassificationMapRepository;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
+import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
+import com.winwin.winwin.repository.OrganizationResourceRepository;
+import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -59,40 +67,68 @@ import com.winwin.winwin.util.CommonUtils;
 public class WinWinServiceImpl implements WinWinService {
 	@Autowired
 	AddressRepository addressRepository;
+
 	@Autowired
 	OrganizationRepository organizationRepository;
+
 	@Autowired
 	OrgClassificationMapRepository orgClassificationMapRepository;
+
 	@Autowired
 	ClassificationRepository classificationRepository;
+
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
+
 	@Autowired
 	NaicsDataRepository naicsRepository;
+
 	@Autowired
 	NteeDataRepository nteeRepository;
+
 	@Autowired
 	UserService userService;
+
 	@Autowired
 	OrganizationHistoryService orgHistoryService;
+
 	@Autowired
 	OrganizationNoteService organizationNoteService;
+
 	@Autowired
 	protected CustomMessageSource customMessageSource;
+
 	@Autowired
 	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+
 	@Autowired
 	SpiDataRepository spiDataRepository;
+
 	@Autowired
 	OrgSpiDataMapRepository orgSpiDataMapRepository;
+
 	@Autowired
 	SdgDataRepository sdgDataRepository;
+
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
+
+	@Autowired
+	OrganizationResourceRepository organizationResourceRepository;
+
+	@Autowired
+	ResourceCategoryRepository resourceCategoryRepository;
+
+	@Autowired
+	OrganizationDataSetRepository organizationDataSetRepository;
+
+	@Autowired
+	DataSetCategoryRepository dataSetCategoryRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
 
 	@Override
+	@Transactional
 	public List<Organization> createOrganizationsOffline(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
@@ -104,25 +140,51 @@ public class WinWinServiceImpl implements WinWinService {
 	public List<Organization> saveOrganizationsOfflineForBulkUpload(
 			List<OrganizationRequestPayload> organizationPayloadList, ExceptionResponse response,
 			String operationPerformed, String customMessage) {
-		ExceptionResponse errorResForNaics = new ExceptionResponse();
-		ExceptionResponse errorResForNtee = new ExceptionResponse();
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
 		List<Organization> organizationList = new ArrayList<Organization>();
+		List<Long> spiTagIds = new ArrayList<Long>();
+		List<Long> sdgTagIds = new ArrayList<Long>();
+		List<Long> resourceIds = new ArrayList<Long>();
+		List<Long> datasetIds = new ArrayList<Long>();
+		Map<String, String> notesMap = new HashMap<String, String>();
+		Map<String, String> datasetsTypeMap = new HashMap<String, String>();
 
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
-			if (!StringUtils.isEmpty(errorResForNaics.getErrorMessage())) {
-				throw new Exception(errorResForNaics.getErrorMessage());
-			}
-			if (!StringUtils.isEmpty(errorResForNtee.getErrorMessage())) {
-				throw new Exception(errorResForNtee.getErrorMessage());
-			}
-
-			Map<String, String> notesMap = new HashMap<String, String>();
 			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
 				if (null != organizationPayload && null != user) {
 					if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
 						if (null != organizationPayload.getName())
 							notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+					}
+					if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
+						String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
+						for (int j = 0; j < spiIdsList.length; j++) {
+							spiTagIds.add(Long.parseLong(spiIdsList[j]));
+						}
+					}
+					if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
+						String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
+						for (int j = 0; j < sdgIdsList.length; j++) {
+							sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
+						}
+					}
+					if (!StringUtils.isEmpty(organizationPayload.getResourceIds())) {
+						String[] resourceIdsList = organizationPayload.getResourceIds().split(",");
+						for (int j = 0; j < resourceIdsList.length; j++) {
+							resourceIds.add(Long.parseLong(resourceIdsList[j]));
+						}
+					}
+					if (!StringUtils.isEmpty(organizationPayload.getDatasetIds())) {
+						String[] datasetIdsList = organizationPayload.getDatasetIds().split(",");
+						for (int j = 0; j < datasetIdsList.length; j++) {
+							datasetIds.add(Long.parseLong(datasetIdsList[j]));
+						}
+					}
+					if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
+						if (null != organizationPayload.getName())
+							datasetsTypeMap.put(organizationPayload.getName(), organizationPayload.getDatasetType());
 					}
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 						organizationList.add(setOrganizationData(organizationPayload, user));
@@ -141,7 +203,14 @@ public class WinWinServiceImpl implements WinWinService {
 					organizationNotePayload.setCreatedAt(date);
 					organizationNotePayload.setCreatedBy(user.getEmail());
 					OrganizationNote note = organizationNoteService.createOrganizationNote(organizationNotePayload);
+
+					// To save list of resourceIds and datasetIds from fetched from .csv file
+					String datasetType = datasetsTypeMap.get(organization.getName());
+					saveOrgDatasetAndResources(organization, user, resourceIds, datasetIds, datasetType);
 				}
+				// To save list of spiTagIds and sdgTagIds from fetched from .csv file
+				saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
+
 				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
 						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
 			}
@@ -162,8 +231,6 @@ public class WinWinServiceImpl implements WinWinService {
 	 */
 	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, UserPayload user)
 			throws Exception {
-		OrganizationSpiData spiDataMapObj = null;
-		OrganizationSdgData sdgDataMapObj = null;
 		Organization organization = new Organization();
 		Address address = new Address();
 
@@ -184,32 +251,11 @@ public class WinWinServiceImpl implements WinWinService {
 		organization.setType(OrganizationConstants.ORGANIZATION);
 
 		Date date = CommonUtils.getFormattedDate();
-		if (organization.getId() == null) {
-			organization.setCreatedAt(date);
-			organization.setCreatedBy(user.getEmail());
-		}
+		organization.setCreatedAt(date);
+		organization.setCreatedBy(user.getEmail());
 		organization.setIsActive(true);
-		;
 		organization.setUpdatedAt(date);
 		organization.setUpdatedBy(user.getEmail());
-
-		// To save list of spiTagIds and sdgTagIds from fetched from .csv file
-		List<Long> spiTagIds = new ArrayList<>();
-		List<Long> sdgTagIds = new ArrayList<>();
-		if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
-			String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
-			for (int j = 0; j < spiIdsList.length; j++) {
-				spiTagIds.add(Long.parseLong(spiIdsList[j]));
-			}
-		}
-
-		if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
-			String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
-			for (int j = 0; j < sdgIdsList.length; j++) {
-				sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
-			}
-		}
-		saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
 
 		return organization;
 	}
@@ -241,10 +287,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param sdgDataMapObj
 	 * @param spiIdsList
 	 * @param sdgIdsList
-	 * @throws Exception
-	 *             Method saveOrgSpiSdgMappingOffline fetches list of spiTagIds
-	 *             and sdgTagIds from csv file and create entries for particular
-	 *             organization
+	 * @throws Exception Method saveOrgSpiSdgMappingOffline fetches list of
+	 *                   spiTagIds and sdgTagIds from .csv file and create entries
+	 *                   for particular organization
 	 */
 	private void saveOrgSpiSdgMappingOffline(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
@@ -293,7 +338,6 @@ public class WinWinServiceImpl implements WinWinService {
 								sdgIdsMap.put(organizationSdgData.getSdgData().getId(),
 										organizationSdgData.getSdgData().getId());
 							}
-
 						}
 						Boolean isSdgMapFound = false;
 						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
@@ -399,5 +443,106 @@ public class WinWinServiceImpl implements WinWinService {
 		}
 		return spiDataMapList;
 	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param resourceIdsList
+	 * @param datasetIdsList
+	 * @throws Exception method saveOrgDatasetAndResources fetches list of
+	 *                   resourceIdsList and datasetIdsList from .csv file and
+	 *                   create entries for particular organization
+	 */
+	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
+			List<Long> datasetIdsList, String datasetType) throws Exception {
+		@SuppressWarnings("unused")
+		List<OrganizationResource> resourceList = createOrgResourcesByResourceCategory(organization, user,
+				resourceIdsList);
+
+		@SuppressWarnings("unused")
+		List<OrganizationDataSet> datasetList = createOrgDataSetByDataSetCategory(organization, user, datasetIdsList,
+				datasetType);
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param resourceCategoryList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<OrganizationResource> createOrgResourcesByResourceCategory(Organization organization, UserPayload user,
+			List<Long> resourceCategoryList) throws Exception {
+		List<OrganizationResource> resourceList = new ArrayList<OrganizationResource>();
+		Date date = CommonUtils.getFormattedDate();
+		if (null != resourceCategoryList) {
+			for (Long categoryId : resourceCategoryList) {
+				ResourceCategory resourceCategory = resourceCategoryRepository.findResourceCategoryById(categoryId);
+				if (null != resourceCategory) {
+					OrganizationResource resource = new OrganizationResource();
+					resource.setResourceCategory(resourceCategory);
+					resource.setOrganizationId(organization.getId());
+					resource.setCreatedAt(date);
+					resource.setUpdatedAt(date);
+					resource.setCreatedBy(user.getEmail());
+					resource.setUpdatedBy(user.getEmail());
+					resourceList.add(resource);
+				}
+			}
+
+			if (!resourceList.isEmpty()) {
+				resourceList = organizationResourceRepository.saveAll(resourceList);
+
+				for (OrganizationResource orgResource : resourceList) {
+					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
+							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+							orgResource.getDescription());
+				}
+			}
+
+		}
+		return resourceList;
+	}// end of method
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param datasetCategoryList
+	 * @param datasetType
+	 * @return
+	 * @throws Exception
+	 */
+	private List<OrganizationDataSet> createOrgDataSetByDataSetCategory(Organization organization, UserPayload user,
+			List<Long> datasetCategoryList, String datasetType) throws Exception {
+		List<OrganizationDataSet> datasetList = new ArrayList<OrganizationDataSet>();
+		Date date = CommonUtils.getFormattedDate();
+		if (null != datasetCategoryList) {
+			for (Long categoryId : datasetCategoryList) {
+				DataSetCategory datasetCategory = dataSetCategoryRepository.findDataSetCategoryById(categoryId);
+				if (null != datasetCategory) {
+					OrganizationDataSet dataset = new OrganizationDataSet();
+					dataset.setDataSetCategory(datasetCategory);
+					dataset.setOrganizationId(organization.getId());
+					if (!StringUtils.isEmpty(datasetType)) {
+						dataset.setType(datasetType);
+					}
+					dataset.setCreatedAt(date);
+					dataset.setUpdatedAt(date);
+					dataset.setCreatedBy(user.getEmail());
+					dataset.setUpdatedBy(user.getEmail());
+					datasetList.add(dataset);
+				}
+			}
+			if (!datasetList.isEmpty()) {
+				datasetList = organizationDataSetRepository.saveAll(datasetList);
+				for (OrganizationDataSet organizationDataSet : datasetList) {
+					orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+							OrganizationConstants.CREATE, OrganizationConstants.DATASET, organizationDataSet.getId(),
+							organizationDataSet.getDescription());
+				}
+			}
+		}
+		return datasetList;
+	}// end of method
 
 }
