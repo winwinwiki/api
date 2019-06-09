@@ -25,7 +25,6 @@ import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.OrganizationResponsePayload;
@@ -33,18 +32,12 @@ import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
-import com.winwin.winwin.repository.OrganizationRepository;
-import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.OrgNaicsDataService;
 import com.winwin.winwin.service.OrgNteeDataService;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrgSpiDataService;
-import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationNoteService;
-import com.winwin.winwin.service.OrganizationRegionServedService;
-import com.winwin.winwin.service.OrganizationResourceService;
-import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
@@ -63,28 +56,10 @@ import io.micrometer.core.instrument.util.StringUtils;
 @RequestMapping(value = "/winwin-offline")
 public class WinWinController extends BaseController {
 	@Autowired
-	private OrganizationService organizationService;
-
-	@Autowired
 	private WinWinService winWinService;
 
 	@Autowired
-	private OrganizationRepository organizationRepository;
-
-	@Autowired
-	private OrganizationDataSetService organizationDataSetService;
-
-	@Autowired
 	OrganizationDataSetRepository organizationDataSetRepository;
-
-	@Autowired
-	private OrganizationResourceService organizationResourceService;
-
-	@Autowired
-	private OrganizationResourceRepository organizationResourceRepository;
-
-	@Autowired
-	private OrganizationRegionServedService orgRegionServedService;
 
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
