@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import javax.persistence.Column;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,59 +18,39 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ProgramRequestPayload {
-
-	private Long id;
-
+	Long id;
 	AddressPayload address;
-
-	private String name;
-
-	private Long revenue;
-
-	private Long assets;
-
-	private String sector;
-
-	private String sectorLevel;
-
-	private String sectorLevelName;
-
-	private String description;
-
-	private Long naicsCode;
-
-	private Long nteeCode;
-
-	private String priority = "Normal";
-
-	private Long organizationId;
-
-	private Boolean isActive = true;
-
-	private String tagStatus;
-
-	private String websiteUrl;
-
-	private String facebookUrl;
-
-	private String linkedinUrl;
-
-	private String twitterUrl;
-
-	private String instagramUrl;
-
+	String name;
+	Long revenue;
+	Long assets;
+	String sector;
+	String sectorLevel;
+	String sectorLevelName;
+	String description;
+	Long naicsCode;
+	Long nteeCode;
+	String priority = "Normal";
+	Long organizationId;
+	Boolean isActive = true;
+	String tagStatus;
+	String websiteUrl;
+	String facebookUrl;
+	String linkedinUrl;
+	String twitterUrl;
+	String instagramUrl;
 	String values;
-
 	String purpose;
-
-	private String selfInterest;
-
+	String selfInterest;
 	String businessModel;
-
 	Long populationServed;
-
 	String missionStatement;
-
 	String contactInfo;
-	private String adminUrl;
+	String adminUrl;
+	String notes;
+	Long parentId;
+	String datasetType;
+	String spiTagIds;
+	String sdgTagIds;
+	String resourceIds;
+	String datasetIds;
 }

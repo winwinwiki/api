@@ -9,4 +9,7 @@ import com.winwin.winwin.payload.UserPayload;
 public interface OrganizationHistoryService {
 	void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
 			Long entityId, String entityName);
+
+	void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
+			String entityType, Long entityId, String entityName);
 }

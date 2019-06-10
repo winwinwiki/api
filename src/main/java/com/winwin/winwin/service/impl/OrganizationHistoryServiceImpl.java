@@ -50,4 +50,28 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
 	}
 
+	@Override
+	@Transactional
+	public void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
+			String entityType, Long entityId, String entityName) {
+		try {
+			OrganizationHistory orgHistory = new OrganizationHistory();
+			Date date = CommonUtils.getFormattedDate();
+			orgHistory.setOrganizationId(orgId);
+			orgHistory.setProgramId(programId);
+			orgHistory.setEntityId(entityId);
+			orgHistory.setEntityName(entityName);
+			orgHistory.setEntityType(entityType);
+
+			orgHistory.setUpdatedAt(date);
+
+			orgHistory.setUpdatedBy(user.getUserDisplayName());
+			orgHistory.setActionPerformed(actionPerformed);
+			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+		} catch (Exception e) {
+			LOGGER.error("exception occured while creating history", e);
+		}
+
+	}
+
 }

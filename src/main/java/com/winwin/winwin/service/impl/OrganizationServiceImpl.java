@@ -304,10 +304,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Transactional
 	public Organization createProgram(OrganizationRequestPayload organizationPayload) {
-		UserPayload user = userService.getCurrentUserDetails();
-
 		Organization organization = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != organizationPayload && null != user) {
 				Date date = CommonUtils.getFormattedDate();
 				Address address = new Address();

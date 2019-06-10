@@ -40,6 +40,9 @@ public class OrganizationHistory {
 
 	@JoinColumn(name = "organization_id")
 	private Long organizationId;
+	
+	@JoinColumn(name = "program_id")
+	private Long programId;
 
 	@LastModifiedDate
 	@Column(name = "updated_at")
