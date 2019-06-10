@@ -21,7 +21,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class OrganizationDataMigrationCsvPayload {
+public class DataMigrationCsvPayload {
 	private Long id;
 	private String name;
 	private Long revenue;

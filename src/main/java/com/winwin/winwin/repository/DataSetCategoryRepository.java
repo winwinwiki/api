@@ -15,7 +15,7 @@ import com.winwin.winwin.entity.DataSetCategory;
 @Transactional
 @Repository
 public interface DataSetCategoryRepository extends JpaRepository<DataSetCategory, Long> {
-	@Query(value = "select * from dataset_category where id = :id", nativeQuery = true)
+	@Query(value = "select * from public.dataset_category where id = :id", nativeQuery = true)
 	DataSetCategory findDataSetCategoryById(@Param("id") Long id);
 
 }

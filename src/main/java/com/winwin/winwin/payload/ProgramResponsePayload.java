@@ -2,8 +2,6 @@ package com.winwin.winwin.payload;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -21,62 +19,43 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class ProgramResponsePayload {
-	private Long id;
-
+	Long id;
 	AddressPayload address;
-
-	private String name;
-
-	private Long revenue;
-
-	private Long assets;
-
-	private String sector;
-
-	private String sectorLevel;
-
-	private String sectorLevelName;
-
-	private String description;
-
-	private NaicsData naicsCode;
-
-	private NteeData nteeCode;
-
-	private String priority = "Normal";
-
-	private Long organizationId;
-
-	private Boolean isActive = true;
-
-	private String tagStatus;
-
-	private String websiteUrl;
-
-	private String facebookUrl;
-
-	private String linkedinUrl;
-
-	private String twitterUrl;
-
-	private String instagramUrl;
-
+	String name;
+	Long revenue;
+	Long assets;
+	String sector;
+	String sectorLevel;
+	String sectorLevelName;
+	String description;
+	NaicsData naicsCode;
+	NteeData nteeCode;
+	String priority = "Normal";
+	Long organizationId;
+	Boolean isActive = true;
+	String tagStatus;
+	String websiteUrl;
+	String facebookUrl;
+	String linkedinUrl;
+	String twitterUrl;
+	String instagramUrl;
 	String values;
-
 	String purpose;
-
-	private String selfInterest;
-
+	String selfInterest;
 	String businessModel;
-
 	Long populationServed;
-
 	String missionStatement;
-
 	String contactInfo;
 	String createdBy;
 	String updatedBy;
 	Date createdAt;
 	Date updatedAt;
-	private String adminUrl;
+	String adminUrl;
+	String notes;
+	Long parentId;
+	String resourceIds;
+	String datasetIds;
+	String datasetType;
+	String spiTagIds;
+	String sdgTagIds;
 }

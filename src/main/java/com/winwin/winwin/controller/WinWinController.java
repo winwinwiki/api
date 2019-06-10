@@ -23,11 +23,14 @@ import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.DataMigrationCsvPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.OrganizationResponsePayload;
+import com.winwin.winwin.payload.ProgramRequestPayload;
+import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
@@ -103,7 +106,7 @@ public class WinWinController extends BaseController {
 	 * 
 	 */
 	// for offline bulk organization creation
-	@RequestMapping(value = "/addAll", method = RequestMethod.POST)
+	@RequestMapping(value = "/organization/addAll", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
@@ -113,12 +116,12 @@ public class WinWinController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationDataMigrationCsvPayload> organizationDataMigrationCsvPayload = CsvUtils
-					.read(OrganizationDataMigrationCsvPayload.class, file, exceptionResponse);
+			List<DataMigrationCsvPayload> dataMigrationCsvPayload = CsvUtils.read(DataMigrationCsvPayload.class, file,
+					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-			organizationPayloadList = organizationDataMigrationCsvPayload.stream().map(this::setOrganizationPayload)
+			organizationPayloadList = dataMigrationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
 			organizationList = winWinService.createOrganizationsOffline(organizationPayloadList, exceptionResponse);
 			payloadList = setOrganizationPayload(organizationList);
@@ -133,8 +136,40 @@ public class WinWinController extends BaseController {
 	}
 
 	/**
-	 * @param organization
-	 * @param payload
+	 * 
+	 */
+	// for offline bulk program creation
+	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
+	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
+		List<ProgramRequestPayload> programPayloadList = new ArrayList<>();
+		List<Program> programList = null;
+		List<ProgramResponsePayload> payloadList = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+
+		if (null != file) {
+			List<DataMigrationCsvPayload> dataMigrationCsvPayload = CsvUtils.read(DataMigrationCsvPayload.class, file,
+					exceptionResponse);
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			programPayloadList = dataMigrationCsvPayload.stream().map(this::setProgramPayload)
+					.collect(Collectors.toList());
+			programList = winWinService.createProgramsOffline(programPayloadList, exceptionResponse);
+			payloadList = setProgramPayload(programList);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+		} else {
+			return sendErrorResponse("org.file.null");
+		}
+		return sendSuccessResponse(payloadList);
+	}
+
+	/**
+	 * @param organizationList
 	 * @return
 	 */
 	private List<OrganizationResponsePayload> setOrganizationPayload(List<Organization> organizationList) {
@@ -159,8 +194,59 @@ public class WinWinController extends BaseController {
 		return payload;
 	}
 
-	private OrganizationRequestPayload setOrganizationPayload(OrganizationDataMigrationCsvPayload csv) {
+	private OrganizationRequestPayload setOrganizationPayload(DataMigrationCsvPayload csv) {
 		OrganizationRequestPayload payload = new OrganizationRequestPayload();
+		AddressPayload address = new AddressPayload();
+		BeanUtils.copyProperties(csv, address);
+		address.setId(csv.getAddressId());
+		payload.setAddress(address);
+		BeanUtils.copyProperties(csv, payload);
+
+		// Get Id from naics_code master data table and assign the id of it
+		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
+		if (null != naicsData)
+			payload.setNaicsCode(naicsData.getId());
+
+		// Get Id from ntee_code master data table and assign the id of it
+		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
+		if (null != nteeData)
+			payload.setNteeCode(nteeData.getId());
+
+		return payload;
+	}
+
+	/**
+	 * @param programList
+	 * @return
+	 */
+	private List<ProgramResponsePayload> setProgramPayload(List<Program> programList) {
+		List<ProgramResponsePayload> payload = new ArrayList<>();
+		for (int i = 0; i < programList.size(); i++)
+			payload.add(setProgramPayload(programList.get(i)));
+		return payload;
+	}
+
+	private ProgramResponsePayload setProgramPayload(Program program) {
+		AddressPayload addressPayload;
+		ProgramResponsePayload payload = null;
+		if (null != program) {
+			payload = new ProgramResponsePayload();
+			BeanUtils.copyProperties(program, payload);
+			if (null != program.getAddress()) {
+				addressPayload = new AddressPayload();
+				BeanUtils.copyProperties(program.getAddress(), addressPayload);
+				payload.setAddress(addressPayload);
+			}
+			if (null != program.getOrganization()) {
+				payload.setOrganizationId(program.getOrganization().getId());
+				payload.setParentId(program.getOrganization().getId());
+			}
+		}
+		return payload;
+	}
+
+	private ProgramRequestPayload setProgramPayload(DataMigrationCsvPayload csv) {
+		ProgramRequestPayload payload = new ProgramRequestPayload();
 		AddressPayload address = new AddressPayload();
 		BeanUtils.copyProperties(csv, address);
 		address.setId(csv.getAddressId());

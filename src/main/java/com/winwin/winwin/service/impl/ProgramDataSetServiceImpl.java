@@ -202,8 +202,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 
 	@Override
 	public List<ProgramDataSet> getProgramDataSetList(Long id) {
-		// TODO Auto-generated method stub
-		return programDataSetRepository.findAllProgramDataSetList(id);
+		return programDataSetRepository.findAllProgramDataSetListByProgramId(id);
 	}
 
 	@Override

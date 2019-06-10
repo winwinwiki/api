@@ -195,8 +195,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 	@Override
 	public List<ProgramResource> getProgramResourceList(Long programId) {
-		// TODO Auto-generated method stub
-		return programResourceRepository.findAllProgramResourceById(programId);
+		return programResourceRepository.findAllProgramResourceByProgramId(programId);
 	}
 
 }
