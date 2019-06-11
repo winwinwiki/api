@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrganizationFilterPayload {
-	private List<String> sectors;
+	private List<String> sector;
 	private List<String> sectorLevel;
 	private List<String> tagStatus;
 	private String priority;
