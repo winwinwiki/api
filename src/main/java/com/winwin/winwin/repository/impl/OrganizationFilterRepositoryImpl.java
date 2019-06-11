@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.util.StringUtils;
 import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.repository.OrganizationFilterRepository;
 
@@ -80,7 +81,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 
-		if (payload.getSectors() != null && payload.getSectors().size() != 0) {
+		if (payload.getSector() != null && payload.getSector().size() != 0) {
 			sb.append(" and (o.sector IN :sectors) ");
 		}
 
@@ -128,6 +129,15 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sdg = true;
 		}
 
+		if (!StringUtils.isNullOrEmpty(payload.getNameSearch())) {
+			sb.append("  AND o.name ILIKE :name");
+		}
+
+		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
+			sb.append(
+					"  AND o.address_id IN ((select address_id from address where country ILIKE :country or state ILIKE :state or city ILIKE :city or county ILIKE :county))");
+		}
+
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
 			sb.append(" order by " + payload.getSortBy() + " "
 					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
@@ -145,8 +155,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
 
-		if (payload.getSectors() != null && payload.getSectors().size() != 0)
-			filterQuery.setParameter("sectors", payload.getSectors());
+		if (payload.getSector() != null && payload.getSector().size() != 0)
+			filterQuery.setParameter("sectors", payload.getSector());
 
 		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
 			filterQuery.setParameter("tagStatus", payload.getTagStatus());
@@ -177,6 +187,27 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getGoalCode() != 0 && sdg)
 			filterQuery.setParameter("goalCode", payload.getGoalCode());
+
+		if (!StringUtils.isNullOrEmpty(payload.getNameSearch()))
+			filterQuery.setParameter("name", "%" + payload.getNameSearch() + "%");
+
+		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
+			/*
+			 * AddressPayload payloadAdd = new AddressPayload();
+			 * payloadAdd.setCity(payload.getAddress());
+			 * payloadAdd.setCountry(payload.getAddress());
+			 * payloadAdd.setState(payload.getAddress());
+			 * payloadAdd.setCounty(payload.getAddress());
+			 * filterQuery.setParameter("address", "%" + payloadAdd + "%");
+			 */
+
+			filterQuery.setParameter("country", "%" + payload.getAddress() + "%");
+			filterQuery.setParameter("state", "%" + payload.getAddress() + "%");
+			filterQuery.setParameter("city", "%" + payload.getAddress() + "%");
+			filterQuery.setParameter("county", "%" + payload.getAddress() + "%");
+
+		}
+
 		return filterQuery;
 	}
 }

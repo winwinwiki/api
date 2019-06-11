@@ -255,13 +255,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {
 			if (null != payload.getPageNo() && null != payload.getPageSize()) {
-				if (payload.getNameSearch() != null) {
-					Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize());
-					return organizationRepository.findByNameIgnoreCaseContaining(payload.getNameSearch(), pageable);
-				} else {
-					return organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null,
-							payload.getPageNo(), payload.getPageSize());
-				}
+				/*
+				 * if (payload.getNameSearch() != null) { Pageable pageable =
+				 * PageRequest.of(payload.getPageNo(), payload.getPageSize());
+				 * return
+				 * organizationRepository.findByNameIgnoreCaseContaining(payload
+				 * .getNameSearch(), pageable); } else {
+				 */
+				return organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null,
+						payload.getPageNo(), payload.getPageSize());
+				// }
 
 			} else if (payload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
@@ -281,12 +284,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	public Integer getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
 		Integer noOfRecords = 0;
 		try {
-			if (payload.getNameSearch() != null)
-				noOfRecords = organizationRepository
-						.findNumOfRecordsByNameIgnoreCaseContaining(payload.getNameSearch());
-			else
-				noOfRecords = organizationRepository.getFilterOrganizationCount(payload,
-						OrganizationConstants.ORGANIZATION, null);
+			noOfRecords = organizationRepository.getFilterOrganizationCount(payload, OrganizationConstants.ORGANIZATION,
+					null);
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
