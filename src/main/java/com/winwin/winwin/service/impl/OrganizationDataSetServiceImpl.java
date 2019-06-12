@@ -60,9 +60,9 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	@Override
 	@Transactional
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
-		UserPayload user = userService.getCurrentUserDetails();
 		OrganizationDataSet organizationDataSet = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != orgDataSetPayLoad && null != user) {
 				organizationDataSet = constructOrganizationDataSet(orgDataSetPayLoad, user);
 				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
@@ -127,21 +127,19 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			Date date = CommonUtils.getFormattedDate();
 			if (null != orgDataSetPayLoad.getId()) {
 				organizationDataSet = organizationDataSetRepository.getOne(orgDataSetPayLoad.getId());
+				if (organizationDataSet == null)
+					throw new DataSetException(
+							"Org dataset record not found for Id: " + orgDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				organizationDataSet = new OrganizationDataSet();
 				organizationDataSet.setCreatedAt(date);
 				organizationDataSet.setCreatedBy(user.getEmail());
 			}
-
-			if (organizationDataSet == null) {
-				throw new DataSetException(
-						"Org dataset record not found for Id: " + orgDataSetPayLoad.getId() + " to update in DB ");
-			} else {
-				setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
-				BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
-				organizationDataSet.setUpdatedAt(date);
-				organizationDataSet.setUpdatedBy(user.getEmail());
-			}
+			setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
+			BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
+			organizationDataSet.setIsActive(true);
+			organizationDataSet.setUpdatedAt(date);
+			organizationDataSet.setUpdatedBy(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}

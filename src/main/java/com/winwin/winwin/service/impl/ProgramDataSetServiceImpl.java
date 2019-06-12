@@ -63,6 +63,10 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			Date date = CommonUtils.getFormattedDate();
 			if (null != programDataSetPayLoad.getId()) {
 				programDataSet = programDataSetRepository.getOne(programDataSetPayLoad.getId());
+				if (programDataSet == null) {
+					throw new DataSetException("Org dataset record not found for Id: " + programDataSetPayLoad.getId()
+							+ " to update in DB ");
+				}
 			} else {
 				programDataSet = new ProgramDataSet();
 				programDataSet.setCreatedAt(date);
@@ -70,17 +74,11 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
 			}
-
-			if (programDataSet == null) {
-				throw new DataSetException(
-						"Org dataset record not found for Id: " + programDataSetPayLoad.getId() + " to update in DB ");
-			} else {
-				setDataSetCategory(programDataSetPayLoad, programDataSet, user);
-				BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
-				programDataSet.setIsActive(true);
-				programDataSet.setUpdatedAt(date);
-				programDataSet.setUpdatedBy(user.getEmail());
-			}
+			setDataSetCategory(programDataSetPayLoad, programDataSet, user);
+			BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
+			programDataSet.setIsActive(true);
+			programDataSet.setUpdatedAt(date);
+			programDataSet.setUpdatedBy(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
