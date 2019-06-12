@@ -12,10 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.amazonaws.util.StringUtils;
 import com.winwin.winwin.entity.Organization;
-import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.repository.OrganizationFilterRepository;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Repository
 @Transactional(readOnly = true)
 public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepository {
@@ -60,24 +63,21 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	 * @return
 	 */
 	private Query setFilterQuery(OrganizationFilterPayload payload, String type) {
-		// TODO Auto-generated method stub
 		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
 		boolean spi = false;
 		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where  o.is_Active = true and type = :type ");
+
+		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
+			sb.append("inner join address a on a.id = o.address_id");
+		}
+
+		sb.append(" where  o.is_Active = true and o.type = :type ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
-			// String inQuery = "( ";
-			// int i = 0;
-			// for (; i < payload.getSectorLevel().size() - 1; i++)
-			// inQuery = inQuery + ":sectorLevel" + i + " , ";
-			// inQuery = inQuery + " :sectorLevel" + i + " ) ";
-			// sb.append(" and ( o.sector_level IN ").append(inQuery).append(" )
-			// ");
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 
@@ -135,7 +135,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append(
-					"  AND o.address_id IN ((select address_id from address where country ILIKE :country or state ILIKE :state or city ILIKE :city or county ILIKE :county))");
+					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
 		}
 
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
@@ -192,15 +192,6 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			filterQuery.setParameter("name", "%" + payload.getNameSearch() + "%");
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
-			/*
-			 * AddressPayload payloadAdd = new AddressPayload();
-			 * payloadAdd.setCity(payload.getAddress());
-			 * payloadAdd.setCountry(payload.getAddress());
-			 * payloadAdd.setState(payload.getAddress());
-			 * payloadAdd.setCounty(payload.getAddress());
-			 * filterQuery.setParameter("address", "%" + payloadAdd + "%");
-			 */
-
 			filterQuery.setParameter("country", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("state", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("city", "%" + payload.getAddress() + "%");

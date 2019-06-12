@@ -8,6 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @Transactional
 @Repository
 public interface OrganizationFilterRepository {

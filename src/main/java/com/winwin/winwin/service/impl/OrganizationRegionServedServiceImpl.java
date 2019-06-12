@@ -37,6 +37,8 @@ import com.winwin.winwin.service.OrganizationRegionServedService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CommonUtils;
 
+import io.micrometer.core.instrument.util.StringUtils;
+
 /**
  * @author ArvindKhatik
  *
@@ -185,13 +187,12 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();
 		try {
 			if (null != payload.getPageNo() && null != payload.getPageSize()) {
-				if (null != payload.getNameSearch()) {
-					Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize(), Sort.by("name"));
-					return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(payload.getNameSearch(),
-							pageable);
-				}else{
-					throw new Exception("nameSearch found as null");
-				}
+				String regionName = "";
+				if (!StringUtils.isEmpty(payload.getNameSearch()))
+					regionName = payload.getNameSearch();
+
+				Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize(), Sort.by("name"));
+				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, pageable);
 			} else if (payload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (payload.getPageSize() == null) {
