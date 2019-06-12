@@ -62,7 +62,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 		Date date = CommonUtils.getFormattedDate();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<SdgData> sdgList = sdgDataRepository.findAll();
+			List<SdgData> sdgList = sdgDataRepository.findAllSdgData();
 			if (null != sdgList) {
 				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
@@ -124,7 +124,6 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 								}
 							}
 						}
-
 						if (!isValidSdgData) {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.updated"));
 							throw new SpiDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));

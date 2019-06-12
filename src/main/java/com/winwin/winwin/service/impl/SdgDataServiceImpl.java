@@ -26,7 +26,7 @@ public class SdgDataServiceImpl implements SdgDataService {
 	@Override
 	public List<SdgGoalPayload> getSdgDataForResponse() {
 		List<SdgGoalPayload> payloadList = null;
-		List<SdgData> sdgList = orgSdgDataRepository.findAll();
+		List<SdgData> sdgList = orgSdgDataRepository.findAllSdgData();
 		if (null != sdgList) {
 			HashMap<Long, List<SdgData>> sdgDataMap = new HashMap<Long, List<SdgData>>();
 			payloadList = new ArrayList<SdgGoalPayload>();
