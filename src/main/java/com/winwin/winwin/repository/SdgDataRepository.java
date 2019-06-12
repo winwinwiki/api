@@ -21,6 +21,6 @@ public interface SdgDataRepository extends JpaRepository<SdgData, Long> {
 	@Query(value = "select * from sdg_data where id = :id", nativeQuery = true)
 	SdgData findSdgObjById(@Param("id") Long id);
 
-	@Query(value = "select * from sdg_data where is_active = true", nativeQuery = true)
+	@Query(value = "select * from sdg_data where is_active = true", nativeQuery = true )
 	List<SdgData> findAllSdgData();
 }
