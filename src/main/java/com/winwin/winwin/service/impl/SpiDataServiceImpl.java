@@ -28,7 +28,7 @@ public class SpiDataServiceImpl implements SpiDataService {
 	@Override
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {
 		List<SpiDataDimensionsPayload> dimensionPayloadList = null;
-		List<SpiData> spiList = spiDataRepository.findAll();
+		List<SpiData> spiList = spiDataRepository.findAllSpiData();
 		if (null != spiList) {
 			HashMap<Long, List<SpiData>> spiDimensionsMap = new HashMap<Long, List<SpiData>>();
 			setSpiDimensionsMap(spiList, spiDimensionsMap);

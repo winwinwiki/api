@@ -41,7 +41,7 @@ public class SdgData {
 	@Column(name = "short_name")
 	private String shortName;
 
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
+	@Column(name = "is_active")
+	private Boolean isActive;
 
 }
