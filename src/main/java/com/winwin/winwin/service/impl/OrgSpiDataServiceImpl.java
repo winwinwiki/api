@@ -190,6 +190,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 				if (null != spiMapData.getSpiData()) {
 					BeanUtils.copyProperties(spiMapData.getSpiData(), payload);
 				}
+				payload.setId(spiMapData.getId());
 				payloadList.add(payload);
 			}
 		}
