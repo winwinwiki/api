@@ -806,7 +806,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setAdminUrl("");
 
 					organizationSdgDataMappingList = orgSdgDataMapRepository
-							.getOrgSdgMapDataByOrgId(organization.getId());
+							.getAllOrgSdgMapDataByOrgId(organization.getId());
+
 					if (!organizationSdgDataMappingList.isEmpty()) {
 						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
 						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
@@ -821,25 +822,28 @@ public class OrganizationServiceImpl implements OrganizationService {
 							if (null != organizationSdgData.getSdgData()) {
 								if (orgSdgDataObj.getId()
 										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
-									sdgDataMapObj.setId(organizationSdgData.getId());
-									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
+									organizationSdgData.setIsChecked(true);
+									organizationSdgData.setUpdatedAt(date);
+									organizationSdgData.setUpdatedBy(user.getEmail());
+									organizationSdgData.setAdminUrl("");
+									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
+									sdgDataMapList.add(organizationSdgData);
 									isSdgMapFound = true;
 									break;
-								} else {
-									sdgDataMapObj.setSdgData(orgSdgDataObj);
 								}
 							}
 						}
 						if (!isSdgMapFound) {
 							sdgDataMapObj.setSdgData(orgSdgDataObj);
+							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+							sdgDataMapList.add(sdgDataMapObj);
 						}
 
 					} else {
 						sdgDataMapObj.setSdgData(orgSdgDataObj);
+						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+						sdgDataMapList.add(sdgDataMapObj);
 					}
-
-					sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-					sdgDataMapList.add(sdgDataMapObj);
 
 					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
@@ -895,8 +899,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 							if (null != organizationSpiData.getSpiData()) {
 								if (orgSpiDataObj.getId()
 										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
-									spiDataMapObj.setId(organizationSpiData.getId());
-									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
+									organizationSpiData.setIsChecked(true);
+									organizationSpiData.setUpdatedAt(date);
+									organizationSpiData.setUpdatedBy(user.getEmail());
+									organizationSpiData.setAdminUrl("");
+									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+									spiDataMapList.add(organizationSpiData);
 									isSpiMapFound = true;
 									break;
 								}
@@ -904,13 +912,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 						if (!isSpiMapFound) {
 							spiDataMapObj.setSpiData(orgSpiDataObj);
+							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+							spiDataMapList.add(spiDataMapObj);
 						}
 					} else {
 						spiDataMapObj.setSpiData(orgSpiDataObj);
+						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+						spiDataMapList.add(spiDataMapObj);
 					}
-
-					spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-					spiDataMapList.add(spiDataMapObj);
 
 					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
