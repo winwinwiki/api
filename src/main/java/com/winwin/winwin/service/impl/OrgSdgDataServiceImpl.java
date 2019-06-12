@@ -71,30 +71,38 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 					OrganizationSdgData sdgDataMapObj = null;
 					Date date = CommonUtils.getFormattedDate();
 					if (payload.getId() == null) {
-						sdgDataMapObj = new OrganizationSdgData();
-						sdgDataMapObj.setOrganizationId(orgId);
-
 						if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
-							SdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
-							sdgDataMapObj.setSdgData(orgSdgData);
+							SdgData sdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+
+							if (null != sdgData) {
+								sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsByOrgIdAndBySdgId(orgId,
+										sdgData.getId());
+
+								if (sdgDataMapObj == null) {
+									sdgDataMapObj = new OrganizationSdgData();
+									sdgDataMapObj.setOrganizationId(orgId);
+									sdgDataMapObj.setSdgData(sdgData);
+									sdgDataMapObj.setIsChecked(payload.getIsChecked());
+									sdgDataMapObj.setCreatedAt(date);
+									sdgDataMapObj.setUpdatedAt(date);
+									sdgDataMapObj.setCreatedBy(user.getEmail());
+									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+								}
+							}
+							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 						} else {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
 							throw new SdgDataException(
 									customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
 						}
-						sdgDataMapObj.setIsChecked(payload.getIsChecked());
-						sdgDataMapObj.setCreatedAt(date);
-						sdgDataMapObj.setUpdatedAt(date);
-						sdgDataMapObj.setCreatedBy(user.getEmail());
-						sdgDataMapObj.setUpdatedBy(user.getEmail());
-						sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
-						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 							orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
 									sdgDataMapObj.getSdgData().getShortName());
 						}
+
 					} else {
 						Boolean isValidSdgData = true;
 						Long goalCode = payload.getGoalCode();

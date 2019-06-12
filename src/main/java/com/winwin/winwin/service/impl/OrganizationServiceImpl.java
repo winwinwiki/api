@@ -879,7 +879,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj.setAdminUrl("");
 
 					organizationSpiDataMappingList = orgSpiDataMapRepository
-							.getOrgSpiMapDataByOrgId(organization.getId());
+							.getAllOrgSpiMapDataByOrgId(organization.getId());
 
 					if (!organizationSpiDataMappingList.isEmpty()) {
 						Map<Long, Long> spiIdsMap = new HashMap<Long, Long>();

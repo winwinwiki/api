@@ -17,6 +17,13 @@ public interface ProgramSdgDataMapRepository extends JpaRepository<ProgramSdgDat
 	@Query(value = "select * from program_sdg_mapping where program_id = :programId AND is_checked = true", nativeQuery = true)
 	List<ProgramSdgData> getProgramSdgMapDataByOrgId(@Param("programId") Long programId);
 
+	@Query(value = "select * from program_sdg_mapping where program_id = :programId", nativeQuery = true)
+	List<ProgramSdgData> getAllProgramSdgMapDataByOrgId(@Param("programId") Long programId);
+
 	@Query(value = "select * from program_sdg_mapping where id = :id", nativeQuery = true)
 	ProgramSdgData findSdgSelectedTagsById(@Param("id") Long id);
+
+	@Query(value = "select * from program_sdg_mapping where program_id = :progId AND sdg_id = :sdgId", nativeQuery = true)
+	ProgramSdgData findSdgSelectedTagsByProgramIdAndBySdgId(@Param(value = "progId") Long progId,
+			@Param(value = "sdgId") Long sdgId);
 }
