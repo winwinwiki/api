@@ -17,6 +17,13 @@ public interface ProgramSpiDataMapRepository extends JpaRepository<ProgramSpiDat
 	@Query(value = "select * from program_spi_mapping where program_id = :programId AND is_checked = true", nativeQuery = true)
 	List<ProgramSpiData> getProgramSpiMapDataByOrgId(@Param(value = "programId") Long programId);
 
+	@Query(value = "select * from program_spi_mapping where program_id = :programId", nativeQuery = true)
+	List<ProgramSpiData> getAllProgramSpiMapDataByOrgId(@Param(value = "programId") Long programId);
+
 	@Query(value = "select * from program_spi_mapping where id = :id", nativeQuery = true)
 	ProgramSpiData findSpiSelectedTagsById(@Param("id") Long id);
+
+	@Query(value = "select * from program_spi_mapping where program_id = :programId AND spi_id = :spiId", nativeQuery = true)
+	ProgramSpiData findSpiSelectedTagsByProgramIdAndBySpiId(@Param(value = "programId") Long programId,
+			@Param(value = "spiId") Long spiId);
 }

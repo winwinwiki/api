@@ -333,10 +333,12 @@ public class WinWinServiceImpl implements WinWinService {
 			OrganizationSpiData spiDataMapObj, OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
 			List<Long> sdgIdsList) throws Exception {
 		@SuppressWarnings("unused")
-		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMapping(organization, user, spiDataMapObj, spiIdsList);
+		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMappingForDataMigration(organization, user, spiDataMapObj,
+				spiIdsList);
 
 		@SuppressWarnings("unused")
-		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMapping(organization, user, sdgDataMapObj, sdgIdsList);
+		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMappingForDataMigration(organization, user, sdgDataMapObj,
+				sdgIdsList);
 	}
 
 	/**
@@ -347,7 +349,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private List<OrganizationSdgData> saveOrgSdgMapping(Organization organization, UserPayload user,
+	private List<OrganizationSdgData> saveOrgSdgMappingForDataMigration(Organization organization, UserPayload user,
 			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
 		List<OrganizationSdgData> organizationSdgDataMappingList = null;
@@ -368,7 +370,8 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setAdminUrl("");
 
 					organizationSdgDataMappingList = orgSdgDataMapRepository
-							.getOrgSdgMapDataByOrgId(organization.getId());
+							.getAllOrgSdgMapDataByOrgId(organization.getId());
+
 					if (!organizationSdgDataMappingList.isEmpty()) {
 						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
 						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
@@ -382,26 +385,28 @@ public class WinWinServiceImpl implements WinWinService {
 							if (null != organizationSdgData.getSdgData()) {
 								if (orgSdgDataObj.getId()
 										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
-									sdgDataMapObj.setId(organizationSdgData.getId());
-									sdgDataMapObj.setSdgData(organizationSdgData.getSdgData());
+									organizationSdgData.setIsChecked(true);
+									organizationSdgData.setUpdatedAt(date);
+									organizationSdgData.setUpdatedBy(user.getEmail());
+									organizationSdgData.setAdminUrl("");
+									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
+									sdgDataMapList.add(organizationSdgData);
 									isSdgMapFound = true;
 									break;
-								} else {
-									sdgDataMapObj.setSdgData(orgSdgDataObj);
 								}
 							}
 						}
 						if (!isSdgMapFound) {
 							sdgDataMapObj.setSdgData(orgSdgDataObj);
+							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+							sdgDataMapList.add(sdgDataMapObj);
 						}
 
 					} else {
 						sdgDataMapObj.setSdgData(orgSdgDataObj);
+						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+						sdgDataMapList.add(sdgDataMapObj);
 					}
-
-					sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-					sdgDataMapList.add(sdgDataMapObj);
-
 					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
 							sdgDataMapObj.getSdgData().getShortName());
@@ -419,7 +424,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private List<OrganizationSpiData> saveOrgSpiMapping(Organization organization, UserPayload user,
+	private List<OrganizationSpiData> saveOrgSpiMappingForDataMigration(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
 		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
 		List<OrganizationSpiData> organizationSpiDataMappingList = null;
@@ -440,7 +445,7 @@ public class WinWinServiceImpl implements WinWinService {
 					spiDataMapObj.setAdminUrl("");
 
 					organizationSpiDataMappingList = orgSpiDataMapRepository
-							.getOrgSpiMapDataByOrgId(organization.getId());
+							.getAllOrgSpiMapDataByOrgId(organization.getId());
 
 					if (!organizationSpiDataMappingList.isEmpty()) {
 						Map<Long, Long> spiIdsMap = new HashMap<Long, Long>();
@@ -456,8 +461,12 @@ public class WinWinServiceImpl implements WinWinService {
 							if (null != organizationSpiData.getSpiData()) {
 								if (orgSpiDataObj.getId()
 										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
-									spiDataMapObj.setId(organizationSpiData.getId());
-									spiDataMapObj.setSpiData(organizationSpiData.getSpiData());
+									organizationSpiData.setIsChecked(true);
+									organizationSpiData.setUpdatedAt(date);
+									organizationSpiData.setUpdatedBy(user.getEmail());
+									organizationSpiData.setAdminUrl("");
+									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+									spiDataMapList.add(organizationSpiData);
 									isSpiMapFound = true;
 									break;
 								}
@@ -465,13 +474,14 @@ public class WinWinServiceImpl implements WinWinService {
 						}
 						if (!isSpiMapFound) {
 							spiDataMapObj.setSpiData(orgSpiDataObj);
+							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+							spiDataMapList.add(spiDataMapObj);
 						}
 					} else {
 						spiDataMapObj.setSpiData(orgSpiDataObj);
+						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+						spiDataMapList.add(spiDataMapObj);
 					}
-
-					spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-					spiDataMapList.add(spiDataMapObj);
 
 					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
@@ -746,10 +756,12 @@ public class WinWinServiceImpl implements WinWinService {
 	private void saveProgramSpiSdgMappingOffline(Program program, UserPayload user, ProgramSpiData spiDataMapObj,
 			ProgramSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
 		@SuppressWarnings("unused")
-		List<ProgramSpiData> spiDataMapList = saveProgramSpiMapping(program, user, spiDataMapObj, spiIdsList);
+		List<ProgramSpiData> spiDataMapList = saveProgramSpiMappingForDataMigration(program, user, spiDataMapObj,
+				spiIdsList);
 
 		@SuppressWarnings("unused")
-		List<ProgramSdgData> sdgDataMapList = saveProgramSdgMapping(program, user, sdgDataMapObj, sdgIdsList);
+		List<ProgramSdgData> sdgDataMapList = saveProgramSdgMappingForDataMigration(program, user, sdgDataMapObj,
+				sdgIdsList);
 	}
 
 	/**
@@ -760,8 +772,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private List<ProgramSdgData> saveProgramSdgMapping(Program program, UserPayload user, ProgramSdgData sdgDataMapObj,
-			List<Long> sdgIdsList) throws Exception {
+	private List<ProgramSdgData> saveProgramSdgMappingForDataMigration(Program program, UserPayload user,
+			ProgramSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
 		List<ProgramSdgData> sdgDataMapList = new ArrayList<ProgramSdgData>();
 		List<ProgramSdgData> programSdgDataMappingList = null;
 		Date date = CommonUtils.getFormattedDate();
@@ -781,7 +793,8 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setAdminUrl("");
 
 					programSdgDataMappingList = programSdgDataMapRepository
-							.getProgramSdgMapDataByOrgId(program.getId());
+							.getAllProgramSdgMapDataByOrgId(program.getId());
+
 					if (!programSdgDataMappingList.isEmpty()) {
 						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
 						for (ProgramSdgData programSdgData : programSdgDataMappingList) {
@@ -789,29 +802,33 @@ public class WinWinServiceImpl implements WinWinService {
 								sdgIdsMap.put(programSdgData.getSdgData().getId(), programSdgData.getSdgData().getId());
 							}
 						}
+
 						Boolean isSdgMapFound = false;
 						for (ProgramSdgData programSdgData : programSdgDataMappingList) {
 							if (null != programSdgData.getSdgData()) {
 								if (orgSdgDataObj.getId().equals(sdgIdsMap.get(programSdgData.getSdgData().getId()))) {
-									sdgDataMapObj.setId(programSdgData.getId());
-									sdgDataMapObj.setSdgData(programSdgData.getSdgData());
+									programSdgData.setIsChecked(true);
+									programSdgData.setUpdatedAt(date);
+									programSdgData.setUpdatedBy(user.getEmail());
+									programSdgData.setAdminUrl("");
+									programSdgData = programSdgDataMapRepository.saveAndFlush(programSdgData);
+									sdgDataMapList.add(programSdgData);
 									isSdgMapFound = true;
 									break;
-								} else {
-									sdgDataMapObj.setSdgData(orgSdgDataObj);
 								}
 							}
 						}
 						if (!isSdgMapFound) {
 							sdgDataMapObj.setSdgData(orgSdgDataObj);
+							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+							sdgDataMapList.add(sdgDataMapObj);
 						}
 
 					} else {
 						sdgDataMapObj.setSdgData(orgSdgDataObj);
+						sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
+						sdgDataMapList.add(sdgDataMapObj);
 					}
-
-					sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-					sdgDataMapList.add(sdgDataMapObj);
 
 					orgHistoryService.createOrganizationHistory(user, null, sdgDataMapObj.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
@@ -830,8 +847,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private List<ProgramSpiData> saveProgramSpiMapping(Program program, UserPayload user, ProgramSpiData spiDataMapObj,
-			List<Long> spiIdsList) throws Exception {
+	private List<ProgramSpiData> saveProgramSpiMappingForDataMigration(Program program, UserPayload user,
+			ProgramSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
 		List<ProgramSpiData> spiDataMapList = new ArrayList<ProgramSpiData>();
 		List<ProgramSpiData> programSpiDataMappingList = null;
 		Date date = CommonUtils.getFormattedDate();
@@ -865,8 +882,12 @@ public class WinWinServiceImpl implements WinWinService {
 						for (ProgramSpiData programSpiData : programSpiDataMappingList) {
 							if (null != programSpiData.getSpiData()) {
 								if (orgSpiDataObj.getId().equals(spiIdsMap.get(programSpiData.getSpiData().getId()))) {
-									spiDataMapObj.setId(programSpiData.getId());
-									spiDataMapObj.setSpiData(programSpiData.getSpiData());
+									programSpiData.setIsChecked(true);
+									programSpiData.setUpdatedAt(date);
+									programSpiData.setUpdatedBy(user.getEmail());
+									programSpiData.setAdminUrl("");
+									programSpiData = programSpiDataMapRepository.saveAndFlush(programSpiData);
+									spiDataMapList.add(programSpiData);
 									isSpiMapFound = true;
 									break;
 								}
@@ -874,13 +895,14 @@ public class WinWinServiceImpl implements WinWinService {
 						}
 						if (!isSpiMapFound) {
 							spiDataMapObj.setSpiData(orgSpiDataObj);
+							spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+							spiDataMapList.add(spiDataMapObj);
 						}
 					} else {
 						spiDataMapObj.setSpiData(orgSpiDataObj);
+						spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
+						spiDataMapList.add(spiDataMapObj);
 					}
-
-					spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-					spiDataMapList.add(spiDataMapObj);
 
 					orgHistoryService.createOrganizationHistory(user, null, spiDataMapObj.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),

@@ -60,7 +60,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 	@Override
 	@Transactional
-	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Long orgId) throws SpiDataException {
+	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Long progId) throws SpiDataException {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
@@ -77,14 +77,26 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							String indId = payload.getIndicatorId();
 
 							if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))) {
-								SpiData orgSpiDataObj = spiDataRepository.findSpiObjByIds(dId, cId, indId);
-								spiDataMapObj.setSpiData(orgSpiDataObj);
+								SpiData spiDataObj = spiDataRepository.findSpiObjByIds(dId, cId, indId);
+
+								if (null != spiDataObj) {
+									spiDataMapObj = programSpiDataMapRepository
+											.findSpiSelectedTagsByProgramIdAndBySpiId(progId, spiDataObj.getId());
+
+									if (spiDataMapObj == null) {
+										spiDataMapObj = new ProgramSpiData();
+										spiDataMapObj.setProgramId(progId);
+										spiDataMapObj.setSpiData(spiDataObj);
+										spiDataMapObj.setIsChecked(payload.getIsChecked());
+										spiDataMapObj.setCreatedAt(date);
+										spiDataMapObj.setUpdatedAt(date);
+										spiDataMapObj.setCreatedBy(user.getEmail());
+										spiDataMapObj.setUpdatedBy(user.getEmail());
+										spiDataMapObj.setAdminUrl(payload.getAdminUrl());
+									}
+								}
+								spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 							}
-							spiDataMapObj.setCreatedAt(date);
-							spiDataMapObj.setUpdatedAt(date);
-							spiDataMapObj.setCreatedBy(user.getEmail());
-							spiDataMapObj.setUpdatedBy(user.getEmail());
-							spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),

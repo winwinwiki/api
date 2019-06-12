@@ -57,7 +57,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 	@Override
 	@Transactional
-	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Long orgId) throws SdgDataException {
+	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Long progId) throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
 		Date date = CommonUtils.getFormattedDate();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
@@ -72,22 +72,31 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 				try {
 					ProgramSdgData sdgDataMapObj = null;
 					if (payload.getId() == null) {
-						sdgDataMapObj = new ProgramSdgData();
-						BeanUtils.copyProperties(payload, sdgDataMapObj);
-
 						if (!StringUtils.isEmpty(payload.getSubGoalCode())) {
-							SdgData orgSdgData = subGoalCodesMap.get(payload.getSubGoalCode());
-							sdgDataMapObj.setSdgData(orgSdgData);
+							SdgData sdgData = subGoalCodesMap.get(payload.getSubGoalCode());
+
+							if (null != sdgData) {
+								sdgDataMapObj = programSdgDataMapRepository
+										.findSdgSelectedTagsByProgramIdAndBySdgId(progId, sdgData.getId());
+
+								if (sdgDataMapObj == null) {
+									sdgDataMapObj = new ProgramSdgData();
+									sdgDataMapObj.setProgramId(progId);
+									sdgDataMapObj.setSdgData(sdgData);
+									sdgDataMapObj.setIsChecked(payload.getIsChecked());
+									sdgDataMapObj.setCreatedAt(date);
+									sdgDataMapObj.setUpdatedAt(date);
+									sdgDataMapObj.setCreatedBy(user.getEmail());
+									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setAdminUrl(payload.getAdminUrl());
+								}
+							}
+							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 						} else {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
 							throw new SdgDataException(
 									customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
 						}
-						sdgDataMapObj.setCreatedAt(date);
-						sdgDataMapObj.setUpdatedAt(date);
-						sdgDataMapObj.setCreatedBy(user.getEmail());
-						sdgDataMapObj.setUpdatedBy(user.getEmail());
-						sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 						if (null != sdgDataMapObj && null != payload.getOrganizationId()) {
 							orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),

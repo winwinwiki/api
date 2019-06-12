@@ -69,23 +69,31 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 					try {
 						OrganizationSpiData spiDataMapObj = null;
 						if (payload.getId() == null) {
-							spiDataMapObj = new OrganizationSpiData();
-							spiDataMapObj.setOrganizationId(orgId);
 							Long dId = payload.getDimensionId();
 							String cId = payload.getComponentId();
 							String indId = payload.getIndicatorId();
 
 							if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))) {
 								SpiData orgSpiDataObj = spiDataRepository.findSpiObjByIds(dId, cId, indId);
-								spiDataMapObj.setSpiData(orgSpiDataObj);
+
+								if (null != orgSpiDataObj) {
+									spiDataMapObj = orgSpiDataMapRepository.findSpiSelectedTagsByOrgIdAndBySpiId(orgId,
+											orgSpiDataObj.getId());
+
+									if (spiDataMapObj == null) {
+										spiDataMapObj = new OrganizationSpiData();
+										spiDataMapObj.setOrganizationId(orgId);
+										spiDataMapObj.setSpiData(orgSpiDataObj);
+										spiDataMapObj.setIsChecked(payload.getIsChecked());
+										spiDataMapObj.setCreatedAt(date);
+										spiDataMapObj.setUpdatedAt(date);
+										spiDataMapObj.setCreatedBy(user.getEmail());
+										spiDataMapObj.setUpdatedBy(user.getEmail());
+										spiDataMapObj.setAdminUrl(payload.getAdminUrl());
+									}
+								}
+								spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 							}
-							spiDataMapObj.setIsChecked(payload.getIsChecked());
-							spiDataMapObj.setCreatedAt(date);
-							spiDataMapObj.setUpdatedAt(date);
-							spiDataMapObj.setCreatedBy(user.getEmail());
-							spiDataMapObj.setUpdatedBy(user.getEmail());
-							spiDataMapObj.setAdminUrl(payload.getAdminUrl());
-							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 							if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
