@@ -345,8 +345,7 @@ public class OrganizationController extends BaseController {
 				for (Organization organization : orgList) {
 					payload = setOrganizationPayload(organization);
 					if (null != payload) {
-						OrganizationHistory history = orgHistoryRepository.findLastUpdatedHistory(organization.getId(),
-								null);
+						OrganizationHistory history = orgHistoryRepository.findLastUpdatedHistory(organization.getId());
 						payload.setLastEditedAt(history.getUpdatedAt());
 						payload.setLastEditedBy(history.getUpdatedBy());
 					}
