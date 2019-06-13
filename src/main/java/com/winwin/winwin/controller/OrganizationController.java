@@ -29,6 +29,7 @@ import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
+import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.OrganizationResource;
@@ -71,6 +72,7 @@ import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
+import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -156,6 +158,9 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	NaicsDataRepository naicsDataRepository;
+
+	@Autowired
+	OrganizationHistoryRepository orgHistoryRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
 
@@ -339,6 +344,12 @@ public class OrganizationController extends BaseController {
 			} else {
 				for (Organization organization : orgList) {
 					payload = setOrganizationPayload(organization);
+					if (null != payload) {
+						OrganizationHistory history = orgHistoryRepository.findLastUpdatedHistory(organization.getId(),
+								null);
+						payload.setLastEditedAt(history.getUpdatedAt());
+						payload.setLastEditedBy(history.getUpdatedBy());
+					}
 					payloadList.add(payload);
 				}
 			}

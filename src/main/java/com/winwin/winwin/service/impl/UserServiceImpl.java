@@ -330,9 +330,11 @@ public class UserServiceImpl implements UserService {
 				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
+			response.setException(e);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			response.setException(e);
 		}
 		cognitoClient.shutdown();
 
