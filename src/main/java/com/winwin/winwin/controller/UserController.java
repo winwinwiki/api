@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
+import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.constants.UserConstants;
@@ -57,7 +58,8 @@ public class UserController extends BaseController {
 			} else {
 				userService.createUser(payload, exceptionResponse);
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-						&& exceptionResponse.getStatusCode() != null)
+						&& exceptionResponse.getStatusCode() != null
+						&& !(exceptionResponse.getException() instanceof UserNotFoundException))
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			}
 		}

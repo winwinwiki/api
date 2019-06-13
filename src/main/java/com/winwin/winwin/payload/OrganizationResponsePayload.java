@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.Date;
+
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -56,4 +58,6 @@ public class OrganizationResponsePayload {
 	String datasetType;
 	String spiTagIds;
 	String sdgTagIds;
+	String lastEditedBy;
+	Date lastEditedAt;
 }

@@ -22,4 +22,7 @@ public interface OrganizationHistoryRepository extends JpaRepository<Organizatio
 	@Query(value = " select * from org_history where organization_id = :orgId order by id desc", nativeQuery = true)
 	List<OrganizationHistory> findOrgHistoryDetails(@Param("orgId") Long orgId);
 
+	@Query(value = "select updated_at,updated_by from org_history where organization_id = :orgId or program_id = :progId Order by id desc limit 1", nativeQuery = true)
+	OrganizationHistory findLastUpdatedHistory(@Param("orgId") Long orgId, @Param("progId") Long progId);
+
 }
