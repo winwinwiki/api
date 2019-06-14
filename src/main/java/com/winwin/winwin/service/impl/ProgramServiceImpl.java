@@ -141,7 +141,6 @@ public class ProgramServiceImpl implements ProgramService {
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("prg.error.list"), e);
 		}

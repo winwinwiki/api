@@ -22,9 +22,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ExceptionResponse {
-
 	String errorMessage;
 	HttpStatus statusCode;
 	Exception exception;
-
 }

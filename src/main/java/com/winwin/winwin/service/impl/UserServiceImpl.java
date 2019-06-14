@@ -119,7 +119,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -161,7 +160,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -202,7 +200,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		cognitoClient.shutdown();
@@ -263,7 +260,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 
@@ -311,7 +307,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		cognitoClient.shutdown();
@@ -334,13 +329,14 @@ public class UserServiceImpl implements UserService {
 		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
 				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
-			response.setStatusCode(HttpStatus.BAD_REQUEST);
 			response.setException(e);
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
 			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-			response.setException(e);
+
 		}
 		cognitoClient.shutdown();
 
@@ -399,7 +395,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -426,7 +421,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -454,7 +448,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -479,7 +472,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -505,7 +497,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 		cognitoClient.shutdown();
@@ -527,7 +518,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -573,7 +563,6 @@ public class UserServiceImpl implements UserService {
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
 

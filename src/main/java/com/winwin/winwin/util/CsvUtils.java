@@ -35,11 +35,10 @@ public class CsvUtils {
 		try {
 			CsvSchema schema = mapper.schemaFor(clazz).withHeader().withColumnReordering(true);
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
-			list = reader.<T> readValues(file.getInputStream()).readAll();
+			list = reader.<T>readValues(file.getInputStream()).readAll();
 		} catch (IOException e) {
 			log.error(customMessageSource.getMessage("csv.error"), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;
@@ -51,11 +50,10 @@ public class CsvUtils {
 		try {
 			CsvSchema schema = mapper.schemaFor(clazz).withHeader().withColumnReordering(true);
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
-			list = reader.<T> readValues(stream).readAll();
+			list = reader.<T>readValues(stream).readAll();
 		} catch (IOException e) {
 			log.error(customMessageSource.getMessage("csv.error"), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;
@@ -67,11 +65,10 @@ public class CsvUtils {
 		try {
 			CsvSchema schema = mapper.schemaFor(clazz).withHeader().withColumnReordering(true);
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
-			list = reader.<T> readValues(csv).readAll();
+			list = reader.<T>readValues(csv).readAll();
 		} catch (IOException e) {
 			log.error(customMessageSource.getMessage("csv.error"), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return list;

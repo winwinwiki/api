@@ -255,7 +255,6 @@ public class WinWinServiceImpl implements WinWinService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return organizationList;
@@ -325,10 +324,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param sdgDataMapObj
 	 * @param spiIdsList
 	 * @param sdgIdsList
-	 * @throws Exception
-	 *             Method saveOrgSpiSdgMappingOffline fetches list of spiTagIds
-	 *             and sdgTagIds from .csv file and create entries for
-	 *             particular organization
+	 * @throws Exception Method saveOrgSpiSdgMappingOffline fetches list of
+	 *                   spiTagIds and sdgTagIds from .csv file and create entries
+	 *                   for particular organization
 	 */
 	private void saveOrgSpiSdgMappingOffline(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
@@ -498,10 +496,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception
-	 *             method saveOrgDatasetAndResources fetches list of
-	 *             resourceIdsList and datasetIdsList from .csv file and create
-	 *             entries for particular organization
+	 * @throws Exception method saveOrgDatasetAndResources fetches list of
+	 *                   resourceIdsList and datasetIdsList from .csv file and
+	 *                   create entries for particular organization
 	 */
 	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -699,7 +696,6 @@ public class WinWinServiceImpl implements WinWinService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return programList;
@@ -750,10 +746,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param sdgDataMapObj
 	 * @param spiIdsList
 	 * @param sdgIdsList
-	 * @throws Exception
-	 *             Method saveProgramSpiSdgMappingOffline fetches list of
-	 *             spiTagIds and sdgTagIds from .csv file and create entries for
-	 *             particular program
+	 * @throws Exception Method saveProgramSpiSdgMappingOffline fetches list of
+	 *                   spiTagIds and sdgTagIds from .csv file and create entries
+	 *                   for particular program
 	 */
 	private void saveProgramSpiSdgMappingOffline(Program program, UserPayload user, ProgramSpiData spiDataMapObj,
 			ProgramSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
@@ -920,10 +915,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception
-	 *             method saveProgramDatasetAndResources fetches list of
-	 *             resourceIdsList and datasetIdsList from .csv file and create
-	 *             entries for particular program
+	 * @throws Exception method saveProgramDatasetAndResources fetches list of
+	 *                   resourceIdsList and datasetIdsList from .csv file and
+	 *                   create entries for particular program
 	 */
 	private void saveProgramDatasetAndResources(Program program, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
