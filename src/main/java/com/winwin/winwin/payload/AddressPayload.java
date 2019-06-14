@@ -23,7 +23,7 @@ public class AddressPayload {
 	private String state;
 	private String city;
 	private String county;
-	private Long zip;
+	private String zip;
 	private String street;
 	private String placeId;
 	private String adminUrl;

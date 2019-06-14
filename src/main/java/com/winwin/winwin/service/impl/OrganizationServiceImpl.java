@@ -133,6 +133,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
 			response.setErrorMessage(e.getMessage());
+			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return organization;
@@ -184,6 +185,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
+			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.deleted"), e);
 		}
@@ -236,6 +238,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			} catch (Exception e) {
 				response.setErrorMessage(e.getMessage());
+				response.setException(e);
 				response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 				LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
 			}
@@ -263,6 +266,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
+			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 		}
@@ -278,6 +282,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
+			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 		}
@@ -523,6 +528,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
+			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
@@ -602,13 +608,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 
-		NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
-
-		if (naicsMapPayload != null) {
-			List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
-			List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
-
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+		if (null != organization.getNaicsCode()) {
+			NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
+			if (naicsMapPayload != null) {
+				List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
+				List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
+				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+			}
 		}
 
 	}
@@ -622,13 +628,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 
-		NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
-
-		if (nteeMapPayload != null) {
-			List<Long> spiIdsList = nteeMapPayload.getSpiTagIds();
-			List<Long> sdgIdsList = nteeMapPayload.getSdgTagIds();
-
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+		if (null != organization.getNteeCode()) {
+			NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
+			if (nteeMapPayload != null) {
+				List<Long> spiIdsList = nteeMapPayload.getSpiTagIds();
+				List<Long> sdgIdsList = nteeMapPayload.getSdgTagIds();
+				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+			}
 		}
 
 	}

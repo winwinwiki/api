@@ -120,7 +120,8 @@ public class WinWinController extends BaseController {
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 			organizationPayloadList = dataMigrationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
 			organizationList = winWinService.createOrganizationsOffline(organizationPayloadList, exceptionResponse);
@@ -128,7 +129,8 @@ public class WinWinController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
@@ -153,7 +155,8 @@ public class WinWinController extends BaseController {
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 			programPayloadList = dataMigrationCsvPayload.stream().map(this::setProgramPayload)
 					.collect(Collectors.toList());
 			programList = winWinService.createProgramsOffline(programPayloadList, exceptionResponse);
@@ -161,7 +164,8 @@ public class WinWinController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 		} else {
 			return sendErrorResponse("org.file.null");
 		}

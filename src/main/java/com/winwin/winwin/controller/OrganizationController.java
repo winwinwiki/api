@@ -179,7 +179,8 @@ public class OrganizationController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 		} else {
 			return sendErrorResponse("org.bad.request");
 		}
@@ -200,7 +201,8 @@ public class OrganizationController extends BaseController {
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
@@ -209,7 +211,8 @@ public class OrganizationController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
@@ -230,7 +233,8 @@ public class OrganizationController extends BaseController {
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
 			organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
@@ -238,7 +242,8 @@ public class OrganizationController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 
 		} else {
 			return sendErrorResponse("org.file.null");
@@ -263,13 +268,16 @@ public class OrganizationController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+							exceptionResponse.getException());
 
 			} catch (Exception e) {
 				exceptionResponse.setErrorMessage(e.getMessage());
+				exceptionResponse.setException(e);
 				exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 				LOGGER.error(customMessageSource.getMessage("org.error.deleted"), e);
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 			}
 
 		} else {
@@ -303,7 +311,8 @@ public class OrganizationController extends BaseController {
 
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
-						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+								exceptionResponse.getException());
 
 					OrganizationResponsePayload responsePayload = setOrganizationPayload(organization);
 					payloadList.add(responsePayload);
@@ -311,9 +320,11 @@ public class OrganizationController extends BaseController {
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setException(e);
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.updated"), e);
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+					exceptionResponse.getException());
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -336,7 +347,8 @@ public class OrganizationController extends BaseController {
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+						exceptionResponse.getException());
 
 			if (orgList == null) {
 				return sendMsgResponse(customMessageSource.getMessage("org.error.not_found"),
@@ -354,9 +366,11 @@ public class OrganizationController extends BaseController {
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setException(e);
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+					exceptionResponse.getException());
 		}
 
 		return sendSuccessResponse(new OrganizationFilterResponse(filterPayload, payloadList));
@@ -381,9 +395,11 @@ public class OrganizationController extends BaseController {
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setException(e);
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.fetch"), e);
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+					exceptionResponse.getException());
 		}
 		return sendSuccessResponse(payload);
 
@@ -844,7 +860,8 @@ public class OrganizationController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+							exceptionResponse.getException());
 
 				if (orgRegionMasterList == null) {
 					return sendMsgResponse(customMessageSource.getMessage("org.region.error.not_found"),
@@ -864,7 +881,8 @@ public class OrganizationController extends BaseController {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.region.error.list"), e);
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+					exceptionResponse.getException());
 		}
 		return sendSuccessResponse(payloadList);
 	}
@@ -1031,7 +1049,8 @@ public class OrganizationController extends BaseController {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("prg.error.list"), e);
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
+					exceptionResponse.getException());
 		}
 		return sendSuccessResponse(payloadList);
 
