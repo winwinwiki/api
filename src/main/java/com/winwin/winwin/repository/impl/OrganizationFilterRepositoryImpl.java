@@ -81,7 +81,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 
-		if (payload.getSector() != null && payload.getSector().size() != 0) {
+		if (payload.getSectors() != null && payload.getSectors().size() != 0) {
 			sb.append(" and (o.sector IN :sectors) ");
 		}
 
@@ -155,8 +155,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
 
-		if (payload.getSector() != null && payload.getSector().size() != 0)
-			filterQuery.setParameter("sectors", payload.getSector());
+		if (payload.getSectors() != null && payload.getSectors().size() != 0)
+			filterQuery.setParameter("sectors", payload.getSectors());
 
 		if (payload.getTagStatus() != null && payload.getTagStatus().size() != 0)
 			filterQuery.setParameter("tagStatus", payload.getTagStatus());
