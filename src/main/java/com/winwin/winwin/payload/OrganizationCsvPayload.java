@@ -55,7 +55,7 @@ public class OrganizationCsvPayload {
 	private String state;
 	private String city;
 	private String county;
-	private Long zip;
+	private String zip;
 	private String street;
 	private String datasetType;
 	private String spiTagIds;

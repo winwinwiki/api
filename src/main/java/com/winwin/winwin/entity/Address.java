@@ -48,7 +48,7 @@ public class Address extends AbstractAuditableEntity {
 	private String county;
 
 	@Column(name = "zip")
-	private Long zip;
+	private String zip;
 
 	@Column(name = "street")
 	private String street;

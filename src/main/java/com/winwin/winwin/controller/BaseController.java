@@ -95,6 +95,12 @@ public class BaseController {
 		return new ResponseEntity<ResponseWrapper<String>>(new ResponseWrapper<String>(responseMsg), httpStatus);
 	}
 
+	public ResponseEntity<ResponseWrapper<String>> sendMsgResponse(String responseMsg, HttpStatus httpStatus,
+			Exception e) {
+		return new ResponseEntity<ResponseWrapper<String>>(
+				new ResponseWrapper<String>(responseMsg.concat(e.getMessage())), httpStatus);
+	}
+
 	protected ResponseEntity<ResponseWrapper<String>> sendExceptionResponse(Exception exception, String responseMsg) {
 		LOGGER.error(customMessageSource.getMessage(responseMsg), exception);
 		return new ResponseEntity<ResponseWrapper<String>>(

@@ -47,7 +47,7 @@ public class DataMigrationCsvPayload {
 	private String state;
 	private String city;
 	private String county;
-	private Long zip;
+	private String zip;
 	private String street;
 	private String resourceIds;
 	private String datasetIds;
