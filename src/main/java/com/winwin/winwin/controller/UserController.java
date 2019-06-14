@@ -50,19 +50,22 @@ public class UserController extends BaseController {
 			// Check user with status as FORCE_CHANGE_PASSWORD
 			if (isNewUser(payload.getEmail(), exceptionResponse)) {
 				userService.resendUserInvitation(payload, exceptionResponse);
+
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
-
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
 			} else {
+				if (exceptionResponse.getException() != null
+						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+					return sendMsgResponse(exceptionResponse.getException().getMessage(),
+							exceptionResponse.getStatusCode());
+				}
 				userService.createUser(payload, exceptionResponse);
+
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-						&& exceptionResponse.getStatusCode() != null
-						&& !(exceptionResponse.getException() instanceof UserNotFoundException))
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			}
 		}
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
@@ -84,11 +87,17 @@ public class UserController extends BaseController {
 
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
-						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-								exceptionResponse.getException());
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 					return sendSuccessResponse(userSignInPayload, HttpStatus.OK);
 				}
+
+				if (exceptionResponse.getException() != null
+						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+					return sendMsgResponse(exceptionResponse.getException().getMessage(),
+							exceptionResponse.getStatusCode());
+				}
+
 				authenticationResult = userService.userSignIn(payload, exceptionResponse);
 
 				if (null != authenticationResult) {
@@ -103,8 +112,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
@@ -127,8 +135,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
@@ -152,8 +159,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
@@ -179,8 +185,7 @@ public class UserController extends BaseController {
 
 					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 							&& exceptionResponse.getStatusCode() != null)
-						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-								exceptionResponse.getException());
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 				} else {
 					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 				}
@@ -210,8 +215,7 @@ public class UserController extends BaseController {
 		payloadList = userService.getUserList(exceptionResponse);
 
 		if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage())) && exceptionResponse.getStatusCode() != null)
-			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-					exceptionResponse.getException());
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
 	}
@@ -226,8 +230,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
@@ -249,8 +252,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 			} else {
 				return sendErrorResponse("org.user.bad_request", HttpStatus.BAD_REQUEST);
@@ -271,8 +273,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}
@@ -295,8 +296,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 			}
@@ -317,8 +317,7 @@ public class UserController extends BaseController {
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode(),
-							exceptionResponse.getException());
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			} else {
 				return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
 			}

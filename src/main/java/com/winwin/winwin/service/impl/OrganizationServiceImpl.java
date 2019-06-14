@@ -119,9 +119,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != organization.getId()) {
 					/*
 					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" +
-					 * organization.getId()); organization =
-					 * organizationRepository.saveAndFlush(organization);
+					 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
+					 * organization = organizationRepository.saveAndFlush(organization);
 					 */
 
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
@@ -133,7 +132,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.created"), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return organization;
@@ -185,7 +183,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.deleted"), e);
 		}
@@ -223,8 +220,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedBy(user.getEmail());
 					orgClassificationMapping = addClassification(organizationPayload, organization);
 					/*
-					 * if (orgClassificationMapping == null) { throw new
-					 * OrganizationException(
+					 * if (orgClassificationMapping == null) { throw new OrganizationException(
 					 * "Request to update classification is invalid"); }
 					 */
 					organization = organizationRepository.saveAndFlush(organization);
@@ -238,7 +234,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			} catch (Exception e) {
 				response.setErrorMessage(e.getMessage());
-				response.setException(e);
 				response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 				LOGGER.error(customMessageSource.getMessage("org.exception.updated"), e);
 			}
@@ -266,7 +261,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 		}
@@ -282,7 +276,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		} catch (Exception e) {
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
+
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			LOGGER.error(customMessageSource.getMessage("org.error.list"), e);
 		}
@@ -501,9 +495,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			for (Organization organization : organizationList) {
 				/*
 				 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-				 * OrganizationConstants.ORGANIZATIONS + "/" +
-				 * organization.getId()); organization =
-				 * organizationRepository.saveAndFlush(organization);
+				 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
+				 * organization = organizationRepository.saveAndFlush(organization);
 				 */
 				if (null != organization.getName()) {
 					String notes = notesMap.get(organization.getName());
@@ -528,7 +521,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
-			response.setException(e);
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
