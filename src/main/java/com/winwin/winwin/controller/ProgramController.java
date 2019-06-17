@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,7 @@ import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
+import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.OrganizationException;
 import com.winwin.winwin.exception.RegionServedException;
 import com.winwin.winwin.exception.ResourceCategoryException;
@@ -39,6 +41,7 @@ import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.ProgramSdgDataMapPayload;
 import com.winwin.winwin.payload.ProgramSpiDataMapPayload;
+import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.SdgGoalPayload;
@@ -56,6 +59,8 @@ import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.ProgramSpiDataService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
+
+import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
@@ -522,30 +527,42 @@ public class ProgramController extends BaseController {
 
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "') ")
-	public ResponseEntity<?> getProgramRegionsMasterList() throws RegionServedException {
-		List<RegionMaster> regionMasterList = null;
+			+ "')")
+	public ResponseEntity<?> getOrgRegionsMasterList(RegionMasterFilterPayload filterPayload)
+			throws RegionServedException {
+		List<RegionMaster> orgRegionMasterList = null;
 		RegionMasterPayload payload = null;
 		List<RegionMasterPayload> payloadList = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
-			regionMasterList = programRegionServedService.getRegionMasterList();
-			if (regionMasterList == null) {
-				throw new RegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
-			} else {
-				payloadList = new ArrayList<RegionMasterPayload>();
-				for (RegionMaster region : regionMasterList) {
-					payload = new RegionMasterPayload();
-					payload.setRegionId(region.getId());
-					payload.setRegionName(region.getRegionName());
-					payload.setAdminUrl(region.getAdminUrl());
-					payloadList.add(payload);
+			if (null != filterPayload) {
+				orgRegionMasterList = programRegionServedService.getProgramRegionMasterList(filterPayload,
+						exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
+				if (orgRegionMasterList == null) {
+					return sendMsgResponse(customMessageSource.getMessage("prog.region.error.not_found"),
+							HttpStatus.INTERNAL_SERVER_ERROR);
+				} else {
+					payloadList = new ArrayList<RegionMasterPayload>();
+					for (RegionMaster region : orgRegionMasterList) {
+						payload = new RegionMasterPayload();
+						payload.setRegionId(region.getId());
+						payload.setRegionName(region.getRegionName());
+						payload.setAdminUrl(region.getAdminUrl());
+						payloadList.add(payload);
+					}
 				}
 			}
 		} catch (Exception e) {
-			throw new RegionServedException(customMessageSource.getMessage("prog.region.error.list"));
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse(payloadList);
-
 	}
 	// Code for program region served end
 
