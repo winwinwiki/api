@@ -346,8 +346,12 @@ public class OrganizationController extends BaseController {
 					payload = setOrganizationPayload(organization);
 					if (null != payload) {
 						OrganizationHistory history = orgHistoryRepository.findLastUpdatedHistory(organization.getId());
-						payload.setLastEditedAt(history.getUpdatedAt());
-						payload.setLastEditedBy(history.getUpdatedBy());
+						if (null != history) {
+							if (null != history.getUpdatedAt())
+								payload.setLastEditedAt(history.getUpdatedAt());
+							if (!(StringUtils.isEmpty(history.getUpdatedBy())))
+								payload.setLastEditedBy(history.getUpdatedBy());
+						}
 					}
 					payloadList.add(payload);
 				}
