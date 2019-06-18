@@ -41,7 +41,7 @@ public interface OrganizationService {
 
 	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response);
-	
+
 	Integer getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response);
 
 }

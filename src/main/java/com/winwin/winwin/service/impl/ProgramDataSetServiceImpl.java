@@ -146,11 +146,13 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 					if (null != programDataSetPayLoad.getId()) {
 						organizationHistoryService.createOrganizationHistory(user,
 								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
-								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription());
+								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription(),
+								"");
 					} else {
 						organizationHistoryService.createOrganizationHistory(user,
 								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.CREATE,
-								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription());
+								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription(),
+								"");
 					}
 				}
 			}
@@ -180,7 +182,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				if (null != dataSet) {
 					organizationHistoryService.createOrganizationHistory(user, organizationId,
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
-							dataSet.getDescription());
+							dataSet.getDescription(), "");
 				}
 			}
 		} catch (Exception e) {

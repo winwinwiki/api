@@ -30,7 +30,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	@Override
 	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
-			Long entityId, String entityName) {
+			Long entityId, String entityName, String entityCode) {
 		try {
 			OrganizationHistory orgHistory = new OrganizationHistory();
 			Date date = CommonUtils.getFormattedDate();
@@ -38,9 +38,8 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setEntityId(entityId);
 			orgHistory.setEntityName(entityName);
 			orgHistory.setEntityType(entityType);
-
+			orgHistory.setEntityCode(entityCode);
 			orgHistory.setUpdatedAt(date);
-
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
 			orgHistory.setActionPerformed(actionPerformed);
 			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
@@ -53,7 +52,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	@Override
 	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
-			String entityType, Long entityId, String entityName) {
+			String entityType, Long entityId, String entityName, String entityCode) {
 		try {
 			OrganizationHistory orgHistory = new OrganizationHistory();
 			Date date = CommonUtils.getFormattedDate();
@@ -62,9 +61,8 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setEntityId(entityId);
 			orgHistory.setEntityName(entityName);
 			orgHistory.setEntityType(entityType);
-
+			orgHistory.setEntityCode(entityCode);
 			orgHistory.setUpdatedAt(date);
-
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
 			orgHistory.setActionPerformed(actionPerformed);
 			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);

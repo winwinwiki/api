@@ -156,7 +156,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				if (null != programResource && null != programResource.getProgramId()) {
 					organizationHistoryService.createOrganizationHistory(user,
 							programResourcePayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
-							OrganizationConstants.RESOURCE, programResource.getId(), programResource.getDescription());
+							OrganizationConstants.RESOURCE, programResource.getId(), programResource.getDescription(),
+							"");
 				}
 			}
 		} catch (Exception e) {
@@ -185,7 +186,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 				if (null != resource) {
 					organizationHistoryService.createOrganizationHistory(user, organizationId,
-							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription());
+							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription(), "");
 				}
 			}
 		} catch (Exception e) {

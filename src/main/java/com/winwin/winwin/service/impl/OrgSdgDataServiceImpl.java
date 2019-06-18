@@ -100,7 +100,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 							orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-									sdgDataMapObj.getSdgData().getShortName());
+									sdgDataMapObj.getSdgData().getShortName(),
+									sdgDataMapObj.getSdgData().getShortNameCode());
 						}
 
 					} else {
@@ -152,7 +153,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-										sdgDataMapObj.getSdgData().getShortName());
+										sdgDataMapObj.getSdgData().getShortName(),
+										sdgDataMapObj.getSdgData().getShortNameCode());
 							}
 						}
 					}

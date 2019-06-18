@@ -101,7 +101,8 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
 										OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-										spiDataMapObj.getSpiData().getIndicatorName());
+										spiDataMapObj.getSpiData().getIndicatorName(),
+										spiDataMapObj.getSpiData().getIndicatorId());
 							}
 						} else {
 							Boolean isValidSpiData = true;
@@ -156,7 +157,8 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 								if (null != spiDataMapObj && null != payload.getOrganizationId()) {
 									orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
 											OrganizationConstants.UPDATE, OrganizationConstants.SPI,
-											spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName());
+											spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(),
+											spiDataMapObj.getSpiData().getIndicatorId());
 								}
 							}
 						}
