@@ -24,5 +24,4 @@ public class SdgDataPayload {
 	private String goalName;
 	private Long shortNameCode;
 	private String shortName;
-	private String adminUrl;
 }

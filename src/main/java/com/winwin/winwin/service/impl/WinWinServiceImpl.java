@@ -368,8 +368,6 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setUpdatedAt(date);
 					sdgDataMapObj.setCreatedBy(user.getEmail());
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
-					sdgDataMapObj.setAdminUrl("");
-
 					organizationSdgDataMappingList = orgSdgDataMapRepository
 							.getAllOrgSdgMapDataByOrgId(organization.getId());
 
@@ -389,7 +387,6 @@ public class WinWinServiceImpl implements WinWinService {
 									organizationSdgData.setIsChecked(true);
 									organizationSdgData.setUpdatedAt(date);
 									organizationSdgData.setUpdatedBy(user.getEmail());
-									organizationSdgData.setAdminUrl("");
 									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
 									sdgDataMapList.add(organizationSdgData);
 									isSdgMapFound = true;
@@ -443,8 +440,6 @@ public class WinWinServiceImpl implements WinWinService {
 					spiDataMapObj.setUpdatedAt(date);
 					spiDataMapObj.setCreatedBy(user.getEmail());
 					spiDataMapObj.setUpdatedBy(user.getEmail());
-					spiDataMapObj.setAdminUrl("");
-
 					organizationSpiDataMappingList = orgSpiDataMapRepository
 							.getAllOrgSpiMapDataByOrgId(organization.getId());
 
@@ -465,7 +460,6 @@ public class WinWinServiceImpl implements WinWinService {
 									organizationSpiData.setIsChecked(true);
 									organizationSpiData.setUpdatedAt(date);
 									organizationSpiData.setUpdatedBy(user.getEmail());
-									organizationSpiData.setAdminUrl("");
 									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 									spiDataMapList.add(organizationSpiData);
 									isSpiMapFound = true;
@@ -792,8 +786,6 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setUpdatedAt(date);
 					sdgDataMapObj.setCreatedBy(user.getEmail());
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
-					sdgDataMapObj.setAdminUrl("");
-
 					programSdgDataMappingList = programSdgDataMapRepository
 							.getAllProgramSdgMapDataByOrgId(program.getId());
 
@@ -812,7 +804,6 @@ public class WinWinServiceImpl implements WinWinService {
 									programSdgData.setIsChecked(true);
 									programSdgData.setUpdatedAt(date);
 									programSdgData.setUpdatedBy(user.getEmail());
-									programSdgData.setAdminUrl("");
 									programSdgData = programSdgDataMapRepository.saveAndFlush(programSdgData);
 									sdgDataMapList.add(programSdgData);
 									isSdgMapFound = true;
@@ -867,8 +858,6 @@ public class WinWinServiceImpl implements WinWinService {
 					spiDataMapObj.setUpdatedAt(date);
 					spiDataMapObj.setCreatedBy(user.getEmail());
 					spiDataMapObj.setUpdatedBy(user.getEmail());
-					spiDataMapObj.setAdminUrl("");
-
 					programSpiDataMappingList = programSpiDataMapRepository
 							.getProgramSpiMapDataByOrgId(program.getId());
 
@@ -887,7 +876,6 @@ public class WinWinServiceImpl implements WinWinService {
 									programSpiData.setIsChecked(true);
 									programSpiData.setUpdatedAt(date);
 									programSpiData.setUpdatedBy(user.getEmail());
-									programSpiData.setAdminUrl("");
 									programSpiData = programSpiDataMapRepository.saveAndFlush(programSpiData);
 									spiDataMapList.add(programSpiData);
 									isSpiMapFound = true;

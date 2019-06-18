@@ -37,7 +37,4 @@ public class OrganizationClassification extends AbstractAuditableEntity {
 	@ManyToOne
 	@JoinColumn(name = "classification_id")
 	private Classification classificationId;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }

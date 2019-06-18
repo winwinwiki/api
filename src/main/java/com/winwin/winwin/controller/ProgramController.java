@@ -149,14 +149,12 @@ public class ProgramController extends BaseController {
 						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setProgramId(programDataSet.getProgramId());
 					payload.setDescription(programDataSet.getDescription());
 					payload.setType(programDataSet.getType());
 					payload.setUrl(programDataSet.getUrl());
-					payload.setAdminUrl(programDataSet.getAdminUrl());
 					payload.setIsActive(programDataSet.getIsActive());
 				}
 			} catch (Exception e) {
@@ -471,12 +469,10 @@ public class ProgramController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setProgramId(region.getProgramId());
 					payload.setIsActive(region.getIsActive());
-					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 				}
 			}
@@ -507,10 +503,8 @@ public class ProgramController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setAdminUrl(region.getAdminUrl());
 					payload.setProgramId(region.getProgramId());
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
@@ -552,7 +546,6 @@ public class ProgramController extends BaseController {
 						payload = new RegionMasterPayload();
 						payload.setRegionId(region.getId());
 						payload.setRegionName(region.getRegionName());
-						payload.setAdminUrl(region.getAdminUrl());
 						payloadList.add(payload);
 					}
 				}

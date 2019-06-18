@@ -37,7 +37,4 @@ public class Classification extends AbstractAuditableEntity {
 
 	@Column(name = "sub_class_name")
 	private String subClassName;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }

@@ -43,7 +43,4 @@ public class OrganizationSpiData extends AbstractAuditableEntity {
 
 	@Column(name = "is_checked")
 	private Boolean isChecked = false;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }

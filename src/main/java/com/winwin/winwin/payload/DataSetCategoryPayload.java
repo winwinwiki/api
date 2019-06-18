@@ -16,5 +16,4 @@ import lombok.ToString;
 public class DataSetCategoryPayload {
 	Long id;
 	private String categoryName;
-	private String adminUrl;
 }

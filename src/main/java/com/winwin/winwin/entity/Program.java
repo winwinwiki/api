@@ -112,8 +112,4 @@ public class Program extends AbstractAuditableEntity {
 
 	@Column(name = "contact_info", columnDefinition = "TEXT")
 	String contactInfo;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
-
 }

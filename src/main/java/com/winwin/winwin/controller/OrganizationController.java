@@ -534,14 +534,12 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setDataSetCategory(payloadCategory);
 					payload.setOrganizationId(dataSet.getOrganizationId());
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());
 					payload.setUrl(dataSet.getUrl());
-					payload.setAdminUrl(dataSet.getAdminUrl());
 					payload.setIsActive(dataSet.getIsActive());
 					payloadList.add(payload);
 				}
@@ -572,7 +570,6 @@ public class OrganizationController extends BaseController {
 					payload = new DataSetCategoryPayload();
 					payload.setId(category.getId());
 					payload.setCategoryName(category.getCategoryName());
-					payload.setAdminUrl(category.getAdminUrl());
 					payloadList.add(payload);
 				}
 			}
@@ -607,9 +604,7 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
-					payload.setAdminUrl(organizationResource.getAdminUrl());
 					payload.setResourceCategory(payloadCategory);
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
@@ -651,10 +646,8 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						payloadCategory.setId(category.getId());
 						payloadCategory.setCategoryName(category.getCategoryName());
-						payloadCategory.setAdminUrl(category.getAdminUrl());
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setAdminUrl(organizationResource.getAdminUrl());
 					payload.setOrganizationId(organizationResource.getOrganizationId());
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
@@ -779,12 +772,10 @@ public class OrganizationController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
-					payload.setAdminUrl(region.getAdminUrl());
 					payloadList.add(payload);
 
 				}
@@ -816,14 +807,11 @@ public class OrganizationController extends BaseController {
 						RegionMasterPayload regionMasterPayload = new RegionMasterPayload();
 						regionMasterPayload.setRegionId(region.getRegionMaster().getId());
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
-						regionMasterPayload.setAdminUrl(region.getRegionMaster().getAdminUrl());
 
 						payload.setRegion(regionMasterPayload);
 					}
 					payload.setOrganizationId(region.getOrgId());
 					payload.setIsActive(region.getIsActive());
-					payload.setAdminUrl(region.getAdminUrl());
-
 					payloadList.add(payload);
 				}
 			}
@@ -859,7 +847,6 @@ public class OrganizationController extends BaseController {
 						payload = new RegionMasterPayload();
 						payload.setRegionId(region.getId());
 						payload.setRegionName(region.getRegionName());
-						payload.setAdminUrl(region.getAdminUrl());
 						payloadList.add(payload);
 					}
 				}

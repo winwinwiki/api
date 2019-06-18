@@ -120,7 +120,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				category.setUpdatedAt(date);
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
-				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);

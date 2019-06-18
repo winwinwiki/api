@@ -71,7 +71,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet = new ProgramDataSet();
 				programDataSet.setCreatedAt(date);
 				programDataSet.setCreatedBy(user.getEmail());
-				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
 			}
 			setDataSetCategory(programDataSetPayLoad, programDataSet, user);
@@ -125,7 +124,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			category.setUpdatedAt(date);
 			category.setCreatedBy(user.getEmail());
 			category.setUpdatedBy(user.getEmail());
-			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}
@@ -217,7 +215,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet = new ProgramDataSet();
 				programDataSet.setCreatedAt(date);
 				programDataSet.setCreatedBy(user.getEmail());
-				programDataSet.setAdminUrl(programDataSetPayLoad.getAdminUrl());
 			}
 
 			if (programDataSet == null) {

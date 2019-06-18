@@ -92,7 +92,6 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 										spiDataMapObj.setUpdatedAt(date);
 										spiDataMapObj.setCreatedBy(user.getEmail());
 										spiDataMapObj.setUpdatedBy(user.getEmail());
-										spiDataMapObj.setAdminUrl(payload.getAdminUrl());
 									}
 								}
 								spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);

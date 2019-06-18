@@ -40,7 +40,4 @@ public class NteeData {
 
 	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }
