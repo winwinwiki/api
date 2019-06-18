@@ -22,5 +22,4 @@ public class ProgramDataSetPayLoad {
 	String type;
 	String url;
 	Boolean isActive;
-	private String adminUrl;
 }

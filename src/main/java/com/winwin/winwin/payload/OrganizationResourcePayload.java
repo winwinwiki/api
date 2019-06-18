@@ -24,5 +24,4 @@ public class OrganizationResourcePayload {
 	String description;
 	Long count;
 	Boolean isActive;
-	private String adminUrl;
 }

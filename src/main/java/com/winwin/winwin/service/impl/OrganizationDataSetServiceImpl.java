@@ -192,7 +192,6 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				category.setCategoryName(categoryFromPayLoad.getCategoryName());
 			}
 			Date date = CommonUtils.getFormattedDate();
-			category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			category.setCreatedAt(date);
 			category.setUpdatedAt(date);
 			category.setCreatedBy(user.getEmail());

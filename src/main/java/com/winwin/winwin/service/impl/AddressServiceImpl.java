@@ -80,8 +80,6 @@ public class AddressServiceImpl implements AddressService {
 		addressPayload.setZip(address.getZip());
 		addressPayload.setStreet(address.getStreet());
 		addressPayload.setPlaceId(address.getPlaceId());
-		addressPayload.setAdminUrl(address.getAdminUrl());
-
 		return addressPayload;
 	}
 }

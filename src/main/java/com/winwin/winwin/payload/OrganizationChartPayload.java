@@ -24,5 +24,4 @@ public class OrganizationChartPayload {
 	String name;
 	AddressPayload location;
 	List<OrganizationChartPayload> children;
-	private String adminUrl;
 }

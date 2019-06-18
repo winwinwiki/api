@@ -21,5 +21,4 @@ public class SubOrganizationPayload {
 	String childOrgType;
 	String childOrgName;
 	Long parentId;
-	private String adminUrl;
 }

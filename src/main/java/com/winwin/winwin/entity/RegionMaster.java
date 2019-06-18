@@ -34,7 +34,4 @@ public class RegionMaster extends AbstractAuditableEntity {
 
 	@Column(name = "name")
 	private String regionName;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }

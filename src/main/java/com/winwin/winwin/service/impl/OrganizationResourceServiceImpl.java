@@ -125,7 +125,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					organizationResource.setIsActive(true);
 					organizationResource.setCreatedAt(date);
 					organizationResource.setCreatedBy(user.getEmail());
-					organizationResource.setAdminUrl(orgResourcePayLoad.getAdminUrl());
 				}
 				if (organizationResource == null) {
 					throw new ResourceException("Org resource record not found for Id: " + orgResourcePayLoad.getId()
@@ -198,7 +197,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				category.setUpdatedAt(date);
 				category.setCreatedBy(user.getEmail());
 				category.setUpdatedBy(user.getEmail());
-				category.setAdminUrl(categoryFromPayLoad.getAdminUrl());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);

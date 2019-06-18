@@ -25,5 +25,4 @@ public class OrganizationNotePayload {
 	Long organizationId;
 	String createdBy;
 	Date createdAt;
-	private String adminUrl;
 }

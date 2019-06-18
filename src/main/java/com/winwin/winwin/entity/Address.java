@@ -55,8 +55,4 @@ public class Address extends AbstractAuditableEntity {
 
 	@Column(name = "place_id")
 	private String placeId;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
-
 }

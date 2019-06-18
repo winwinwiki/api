@@ -352,7 +352,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			payload.setName(organization.getName());
 			orgAddress = getLocationPayload(organization, orgAddress);
 			payload.setLocation(orgAddress);
-			payload.setAdminUrl(organization.getAdminUrl());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.chart.error.list"), e);
 		}
@@ -391,8 +390,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
 				organization.setUpdatedBy(user.getEmail());
-				organization.setAdminUrl(payload.getAdminUrl());
-
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
@@ -794,8 +791,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setUpdatedAt(date);
 					sdgDataMapObj.setCreatedBy(user.getEmail());
 					sdgDataMapObj.setUpdatedBy(user.getEmail());
-					sdgDataMapObj.setAdminUrl("");
-
 					organizationSdgDataMappingList = orgSdgDataMapRepository
 							.getAllOrgSdgMapDataByOrgId(organization.getId());
 
@@ -816,7 +811,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 									organizationSdgData.setIsChecked(true);
 									organizationSdgData.setUpdatedAt(date);
 									organizationSdgData.setUpdatedBy(user.getEmail());
-									organizationSdgData.setAdminUrl("");
 									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
 									sdgDataMapList.add(organizationSdgData);
 									isSdgMapFound = true;
@@ -871,8 +865,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj.setUpdatedAt(date);
 					spiDataMapObj.setCreatedBy(user.getEmail());
 					spiDataMapObj.setUpdatedBy(user.getEmail());
-					spiDataMapObj.setAdminUrl("");
-
 					organizationSpiDataMappingList = orgSpiDataMapRepository
 							.getAllOrgSpiMapDataByOrgId(organization.getId());
 
@@ -893,7 +885,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 									organizationSpiData.setIsChecked(true);
 									organizationSpiData.setUpdatedAt(date);
 									organizationSpiData.setUpdatedBy(user.getEmail());
-									organizationSpiData.setAdminUrl("");
 									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 									spiDataMapList.add(organizationSpiData);
 									isSpiMapFound = true;

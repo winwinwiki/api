@@ -28,5 +28,4 @@ public class DataSetPayload {
 	String type;
 	String url;
 	Boolean isActive;
-	private String adminUrl;
 }

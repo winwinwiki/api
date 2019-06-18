@@ -90,8 +90,6 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 						orgRegionServed.setUpdatedAt(date);
 						orgRegionServed.setCreatedBy(user.getEmail());
 						orgRegionServed.setUpdatedBy(user.getEmail());
-						orgRegionServed.setAdminUrl(payload.getAdminUrl());
-
 						orgRegionServed = orgRegionServedRepository.saveAndFlush(orgRegionServed);
 
 						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {

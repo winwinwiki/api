@@ -48,7 +48,4 @@ public class ProgramDataSet extends AbstractAuditableEntity {
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }

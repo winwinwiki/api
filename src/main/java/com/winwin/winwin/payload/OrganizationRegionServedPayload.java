@@ -25,5 +25,4 @@ public class OrganizationRegionServedPayload {
 	RegionMasterPayload region;
 	Long organizationId;
 	Boolean isActive;
-	private String adminUrl;
 }

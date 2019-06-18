@@ -20,5 +20,4 @@ import lombok.ToString;
 public class RegionMasterPayload {
 	Long regionId;
 	String regionName;
-	private String adminUrl;
 }

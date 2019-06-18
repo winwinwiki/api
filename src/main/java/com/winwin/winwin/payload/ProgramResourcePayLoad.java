@@ -21,5 +21,4 @@ public class ProgramResourcePayLoad {
 	String description;
 	Long count;
 	Boolean isActive;
-	private String adminUrl;
 }

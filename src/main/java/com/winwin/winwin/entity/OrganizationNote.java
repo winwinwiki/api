@@ -38,7 +38,4 @@ public class OrganizationNote extends AbstractAuditableEntity {
 
 	@JoinColumn(name = "organization_id")
 	private Long organizationId;
-
-	@Column(name = "admin_url", columnDefinition = "TEXT")
-	private String adminUrl;
 }
