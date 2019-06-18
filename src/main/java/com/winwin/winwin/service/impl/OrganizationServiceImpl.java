@@ -119,13 +119,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != organization.getId()) {
 					/*
 					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
-					 * organization = organizationRepository.saveAndFlush(organization);
+					 * OrganizationConstants.ORGANIZATIONS + "/" +
+					 * organization.getId()); organization =
+					 * organizationRepository.saveAndFlush(organization);
 					 */
 
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
-							organization.getName());
+							organization.getName(), "");
 				}
 
 			}
@@ -177,7 +178,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					if (null != organization) {
 						orgHistoryService.createOrganizationHistory(user, organization.getId(),
-								OrganizationConstants.DELETE, type, organization.getId(), organization.getName());
+								OrganizationConstants.DELETE, type, organization.getId(), organization.getName(), "");
 					}
 				}
 			}
@@ -220,14 +221,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedBy(user.getEmail());
 					orgClassificationMapping = addClassification(organizationPayload, organization);
 					/*
-					 * if (orgClassificationMapping == null) { throw new OrganizationException(
+					 * if (orgClassificationMapping == null) { throw new
+					 * OrganizationException(
 					 * "Request to update classification is invalid"); }
 					 */
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
 						orgHistoryService.createOrganizationHistory(user, organization.getId(),
-								OrganizationConstants.UPDATE, type, organization.getId(), organization.getName());
+								OrganizationConstants.UPDATE, type, organization.getId(), organization.getName(), "");
 					}
 
 				}
@@ -324,7 +326,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 				if (null != organization) {
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
-							OrganizationConstants.CREATE, OrganizationConstants.PROGRAM, organization.getId(),
+							OrganizationConstants.CREATE, OrganizationConstants.PROGRAM, organization.getId(), "",
 							organization.getName());
 				}
 			}
@@ -396,7 +398,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != organization) {
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
-							organization.getName());
+							organization.getName(), "");
 				}
 			}
 		} catch (Exception e) {
@@ -409,7 +411,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	public List<OrganizationHistoryPayload> getOrgHistoryDetails(Long orgId) {
 		List<OrganizationHistoryPayload> payloadList = null;
-
 		try {
 
 			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
@@ -427,6 +428,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					payload.setEntityType(history.getEntityType());
 					payload.setEntityName(history.getEntityName());
+					payload.setEntityCode(history.getEntityCode());
 					payload.setActionPerformed(history.getActionPerformed());
 					payload.setModifiedBy(history.getUpdatedBy());
 					payload.setModifiedAt(history.getUpdatedAt());
@@ -471,6 +473,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 						organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
+						organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 						organizationList.add(setOrganizationData(organizationPayload, user));
 					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
 						if (null != organizationPayload.getId()) {
@@ -493,11 +496,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organizationList = organizationRepository.saveAll(organizationList);
 
 			for (Organization organization : organizationList) {
-				/*
-				 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-				 * OrganizationConstants.ORGANIZATIONS + "/" + organization.getId());
-				 * organization = organizationRepository.saveAndFlush(organization);
-				 */
 				if (null != organization.getName()) {
 					String notes = notesMap.get(organization.getName());
 					OrganizationNotePayload organizationNotePayload = new OrganizationNotePayload();
@@ -515,7 +513,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					setSpiSdgMapByNteeCode(organization, user, nteeMap);
 				}
 				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
-						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
+						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
 			}
 
 		} catch (Exception e) {
@@ -586,7 +584,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 			}
 			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
-
 		}
 		return organization;
 	}
@@ -608,7 +605,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
 			}
 		}
-
 	}
 
 	/**
@@ -628,7 +624,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
 			}
 		}
-
 	}
 
 	/**
@@ -672,7 +667,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (null != naicsMappingCsvPayloadList) {
 					for (int i = 0; i < naicsMappingCsvPayloadList.size(); i++) {
 						rowNumber = i + 2;
-						;
 						NaicsMappingCsvPayload payloadData = naicsMappingCsvPayloadList.get(i);
 						NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
 
@@ -693,7 +687,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
-
 						payload.setNaicsCode(payloadData.getNaicsCode());
 						naicsMap.put(payloadData.getNaicsCode(), payload);
 					}
@@ -845,7 +838,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName());
+							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
 				}
 			}
 		}
@@ -918,10 +911,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 						spiDataMapList.add(spiDataMapObj);
 					}
-
 					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName());
+							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
 				}
 			}
 		}

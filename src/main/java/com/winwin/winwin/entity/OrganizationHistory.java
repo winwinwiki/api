@@ -40,7 +40,7 @@ public class OrganizationHistory {
 
 	@JoinColumn(name = "organization_id")
 	private Long organizationId;
-	
+
 	@JoinColumn(name = "program_id")
 	private Long programId;
 
@@ -63,6 +63,9 @@ public class OrganizationHistory {
 
 	@Column(name = "entity_name", columnDefinition = "TEXT")
 	private String entityName;
+
+	@Column(name = "entity_code")
+	private String entityCode;
 
 	@Column(name = "admin_url", columnDefinition = "TEXT")
 	private String adminUrl;

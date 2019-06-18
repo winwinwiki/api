@@ -23,6 +23,7 @@ public class OrganizationHistoryPayload {
 	Long id;
 	String entityType;
 	String entityName;
+	String entityCode;
 	String parentEntityName;
 	String actionPerformed;
 	String modifiedBy;

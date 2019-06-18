@@ -97,7 +97,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 						if (null != orgRegionServed && null != orgRegionServed.getOrgId()) {
 							orgHistoryService.createOrganizationHistory(user, orgRegionServed.getOrgId(),
 									OrganizationConstants.CREATE, OrganizationConstants.REGION, orgRegionServed.getId(),
-									orgRegionServed.getRegionMaster().getRegionName());
+									orgRegionServed.getRegionMaster().getRegionName(), "");
 						}
 						orgRegionList.add(orgRegionServed);
 					}
@@ -119,7 +119,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 							if (null != region && null != region.getOrgId()) {
 								orgHistoryService.createOrganizationHistory(user, region.getOrgId(),
 										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId(),
-										region.getRegionMaster().getRegionName());
+										region.getRegionMaster().getRegionName(), "");
 							}
 							orgRegionList.add(region);
 						}

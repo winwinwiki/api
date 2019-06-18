@@ -223,6 +223,7 @@ public class WinWinServiceImpl implements WinWinService {
 							datasetsTypeMap.put(organizationPayload.getName(), organizationPayload.getDatasetType());
 					}
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 						organizationList.add(setOrganizationData(organizationPayload, user));
 					}
 				}
@@ -250,7 +251,7 @@ public class WinWinServiceImpl implements WinWinService {
 				saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
 
 				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
-						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName());
+						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
@@ -324,9 +325,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param sdgDataMapObj
 	 * @param spiIdsList
 	 * @param sdgIdsList
-	 * @throws Exception Method saveOrgSpiSdgMappingOffline fetches list of
-	 *                   spiTagIds and sdgTagIds from .csv file and create entries
-	 *                   for particular organization
+	 * @throws Exception
+	 *             Method saveOrgSpiSdgMappingOffline fetches list of spiTagIds
+	 *             and sdgTagIds from .csv file and create entries for
+	 *             particular organization
 	 */
 	private void saveOrgSpiSdgMappingOffline(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
@@ -408,7 +410,7 @@ public class WinWinServiceImpl implements WinWinService {
 					}
 					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName());
+							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
 				}
 			}
 		}
@@ -484,7 +486,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName());
+							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
 				}
 			}
 		}
@@ -496,9 +498,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveOrgDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular organization
+	 * @throws Exception
+	 *             method saveOrgDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular organization
 	 */
 	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -558,7 +561,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (OrganizationResource orgResource : resourceList) {
 					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getDescription());
+							orgResource.getDescription(), "");
 				}
 			}
 
@@ -615,7 +618,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (OrganizationDataSet organizationDataSet : datasetList) {
 					orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.DATASET, organizationDataSet.getId(),
-							organizationDataSet.getDescription());
+							organizationDataSet.getDescription(), "");
 				}
 			}
 		}
@@ -673,6 +676,7 @@ public class WinWinServiceImpl implements WinWinService {
 							datasetsTypeMap.put(programPayload.getName(), programPayload.getDatasetType());
 					}
 					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						programPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 						programList.add(setProgramData(programPayload, user));
 					}
 				}
@@ -691,7 +695,7 @@ public class WinWinServiceImpl implements WinWinService {
 				saveProgramSpiSdgMappingOffline(program, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
 
 				orgHistoryService.createOrganizationHistory(user, null, program.getId(), operationPerformed,
-						OrganizationConstants.PROGRAM, program.getId(), program.getName());
+						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
@@ -746,9 +750,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param sdgDataMapObj
 	 * @param spiIdsList
 	 * @param sdgIdsList
-	 * @throws Exception Method saveProgramSpiSdgMappingOffline fetches list of
-	 *                   spiTagIds and sdgTagIds from .csv file and create entries
-	 *                   for particular program
+	 * @throws Exception
+	 *             Method saveProgramSpiSdgMappingOffline fetches list of
+	 *             spiTagIds and sdgTagIds from .csv file and create entries for
+	 *             particular program
 	 */
 	private void saveProgramSpiSdgMappingOffline(Program program, UserPayload user, ProgramSpiData spiDataMapObj,
 			ProgramSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
@@ -829,7 +834,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 					orgHistoryService.createOrganizationHistory(user, null, sdgDataMapObj.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName());
+							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
 				}
 			}
 		}
@@ -903,7 +908,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 					orgHistoryService.createOrganizationHistory(user, null, spiDataMapObj.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName());
+							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
 				}
 			}
 		}
@@ -915,9 +920,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveProgramDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular program
+	 * @throws Exception
+	 *             method saveProgramDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular program
 	 */
 	private void saveProgramDatasetAndResources(Program program, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -976,7 +982,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (ProgramResource programResource : resourceList) {
 					orgHistoryService.createOrganizationHistory(user, null, programResource.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getDescription());
+							programResource.getDescription(), "");
 				}
 			}
 
@@ -1033,7 +1039,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (ProgramDataSet programDataSet : datasetList) {
 					orgHistoryService.createOrganizationHistory(user, null, programDataSet.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
-							programDataSet.getDescription());
+							programDataSet.getDescription(), "");
 				}
 			}
 		}

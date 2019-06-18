@@ -32,5 +32,7 @@ public class OrganizationConstants {
 	public static final String BASE_URL = "http://d3vudu8znrvs1z.cloudfront.net/";
 	public static final String ORGANIZATIONS = "organizations";
 	public static final String AUTOTAGGED = "Auto Tag";
+	public static final String PRIORITY_NORMAL = "Normal";
+	public static final String PRIORITY_HIGH = "High";
 
 }

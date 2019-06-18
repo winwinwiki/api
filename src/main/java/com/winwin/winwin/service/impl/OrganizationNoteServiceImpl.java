@@ -66,7 +66,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 
 				if (null != note && null != note.getOrganizationId()) {
 					orgHistoryService.createOrganizationHistory(user, note.getOrganizationId(),
-							OrganizationConstants.CREATE, OrganizationConstants.NOTE, note.getId(), note.getName());
+							OrganizationConstants.CREATE, OrganizationConstants.NOTE, note.getId(), note.getName(), "");
 				}
 			}
 		} catch (Exception e) {
@@ -92,7 +92,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 
 					if (null != note && null != note.getOrganizationId()) {
 						orgHistoryService.createOrganizationHistory(user, note.getOrganizationId(),
-								OrganizationConstants.UPDATE, OrganizationConstants.NOTE, note.getId(), note.getName());
+								OrganizationConstants.UPDATE, OrganizationConstants.NOTE, note.getId(), note.getName(),
+								"");
 					}
 				}
 			}
@@ -112,7 +113,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				if (null != note) {
 					organizationNoteRepository.deleteById(noteId);
 					orgHistoryService.createOrganizationHistory(user, orgId, OrganizationConstants.DELETE,
-							OrganizationConstants.NOTE, note.getId(), note.getName());
+							OrganizationConstants.NOTE, note.getId(), note.getName(), "");
 				}
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.note.error.deleted"), e);
