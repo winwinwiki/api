@@ -70,7 +70,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				if (null != orgResource && null != orgResource.getOrganizationId()) {
 					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
 							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getDescription(), "");
+							orgResource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 		} catch (Exception e) {
@@ -99,7 +99,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 
 				if (null != resource) {
 					orgHistoryService.createOrganizationHistory(user, resource.getOrganizationId(),
-							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription(), "");
+							OrganizationConstants.DELETE, "", resource.getId(),
+							resource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 		} catch (Exception e) {

@@ -555,7 +555,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (OrganizationResource orgResource : resourceList) {
 					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getDescription(), "");
+							orgResource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 
@@ -612,7 +612,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (OrganizationDataSet organizationDataSet : datasetList) {
 					orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
 							OrganizationConstants.CREATE, OrganizationConstants.DATASET, organizationDataSet.getId(),
-							organizationDataSet.getDescription(), "");
+							organizationDataSet.getDataSetCategory().getCategoryName(), "");
 				}
 			}
 		}
@@ -970,7 +970,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (ProgramResource programResource : resourceList) {
 					orgHistoryService.createOrganizationHistory(user, null, programResource.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getDescription(), "");
+							programResource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 
@@ -1027,7 +1027,7 @@ public class WinWinServiceImpl implements WinWinService {
 				for (ProgramDataSet programDataSet : datasetList) {
 					orgHistoryService.createOrganizationHistory(user, null, programDataSet.getProgramId(),
 							OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
-							programDataSet.getDescription(), "");
+							programDataSet.getDataSetCategory().getCategoryName(), "");
 				}
 			}
 		}

@@ -30,6 +30,7 @@ import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -55,6 +56,7 @@ import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -74,6 +76,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	AddressRepository addressRepository;
 	@Autowired
 	OrganizationRepository organizationRepository;
+	@Autowired
+	ProgramRepository programRepository;
 	@Autowired
 	OrgClassificationMapRepository orgClassificationMapRepository;
 	@Autowired
@@ -422,6 +426,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					if (null != organization) {
 						payload.setParentEntityName(organization.getName());
+					}
+
+					if (null != history.getProgramId()) {
+						Program program = programRepository.findProgramById(history.getProgramId());
+						if (null != program)
+							payload.setParentEntityName(organization.getName());
 					}
 					payload.setEntityType(history.getEntityType());
 					payload.setEntityName(history.getEntityName());

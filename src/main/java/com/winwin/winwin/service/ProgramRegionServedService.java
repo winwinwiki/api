@@ -8,6 +8,10 @@ import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.ProgramRegionServedPayload;
 import com.winwin.winwin.payload.RegionMasterFilterPayload;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface ProgramRegionServedService {
 	List<ProgramRegionServed> createProgramRegionServed(List<ProgramRegionServedPayload> programRegionPayloadList);
 
