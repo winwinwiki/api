@@ -210,7 +210,8 @@ public class ProgramController extends BaseController {
 				if (dataSet == null) {
 					throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
 				}
-				programDataSetService.removeProgramDataSet(id, programDataSetPayLoad.getOrganizationId());
+				programDataSetService.removeProgramDataSet(id, programDataSetPayLoad.getOrganizationId(),
+						programDataSetPayLoad.getProgramId());
 			} else {
 				return sendErrorResponse("org.bad.request");
 			}
@@ -370,7 +371,8 @@ public class ProgramController extends BaseController {
 				if (programResource == null) {
 					throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
 				}
-				programResourceService.removeProgramResource(id, programResourcePayLoad.getOrganizationId());
+				programResourceService.removeProgramResource(id, programResourcePayLoad.getOrganizationId(),
+						programResourcePayLoad.getProgramId());
 			} else {
 				return sendErrorResponse("org.bad.request");
 			}

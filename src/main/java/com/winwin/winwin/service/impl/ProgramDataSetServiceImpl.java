@@ -143,14 +143,14 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				if (null != programDataSet.getId()) {
 					if (null != programDataSetPayLoad.getId()) {
 						organizationHistoryService.createOrganizationHistory(user,
-								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
-								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription(),
-								"");
+								programDataSetPayLoad.getOrganizationId(), programDataSetPayLoad.getProgramId(),
+								OrganizationConstants.UPDATE, OrganizationConstants.DATASET, programDataSet.getId(),
+								programDataSet.getDataSetCategory().getCategoryName(), "");
 					} else {
 						organizationHistoryService.createOrganizationHistory(user,
-								programDataSetPayLoad.getOrganizationId(), OrganizationConstants.CREATE,
-								OrganizationConstants.DATASET, programDataSet.getId(), programDataSet.getDescription(),
-								"");
+								programDataSetPayLoad.getOrganizationId(), programDataSetPayLoad.getProgramId(),
+								OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
+								programDataSet.getDataSetCategory().getCategoryName(), "");
 					}
 				}
 			}
@@ -166,7 +166,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 
 	@Override
 	@Transactional
-	public void removeProgramDataSet(Long dataSetId, Long organizationId) {
+	public void removeProgramDataSet(Long dataSetId, Long organizationId, Long programId) {
 		try {
 			ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(dataSetId);
 			UserPayload user = userService.getCurrentUserDetails();
@@ -178,9 +178,9 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				dataSet = programDataSetRepository.saveAndFlush(dataSet);
 
 				if (null != dataSet) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId,
+					organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
-							dataSet.getDescription(), "");
+							dataSet.getDataSetCategory().getCategoryName(), "");
 				}
 			}
 		} catch (Exception e) {

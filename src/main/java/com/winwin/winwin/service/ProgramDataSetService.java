@@ -6,6 +6,10 @@ import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.ProgramDataSet;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 public interface ProgramDataSetService {
 	ProgramDataSet createOrUpdateProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad);
 
@@ -13,7 +17,7 @@ public interface ProgramDataSetService {
 
 	ProgramDataSet getProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad);
 
-	void removeProgramDataSet(Long dataSetId, Long organizationId);
+	void removeProgramDataSet(Long dataSetId, Long organizationId, Long programId);
 
 	DataSetCategory getDataSetCategoryById(Long categoryId);
 

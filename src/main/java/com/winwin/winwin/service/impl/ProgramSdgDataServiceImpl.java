@@ -99,8 +99,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 						if (null != sdgDataMapObj && null != payload.getOrganizationId()) {
 							orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-									sdgDataMapObj.getSdgData().getShortName(),
+									payload.getProgramId(), OrganizationConstants.CREATE, OrganizationConstants.SDG,
+									sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName(),
 									sdgDataMapObj.getSdgData().getShortNameCode());
 						}
 					} else {
@@ -146,8 +146,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 							if (null != sdgDataMapObj && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-										sdgDataMapObj.getSdgData().getShortName(),
+										payload.getProgramId(), OrganizationConstants.UPDATE, OrganizationConstants.SDG,
+										sdgDataMapObj.getId(), sdgDataMapObj.getSdgData().getShortName(),
 										sdgDataMapObj.getSdgData().getShortNameCode());
 							}
 						}

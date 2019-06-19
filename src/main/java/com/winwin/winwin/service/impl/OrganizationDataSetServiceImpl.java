@@ -71,11 +71,13 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 					if (null != orgDataSetPayLoad.getId()) {
 						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
-								organizationDataSet.getId(), organizationDataSet.getDescription(), "");
+								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
+								"");
 					} else {
 						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
 								OrganizationConstants.CREATE, OrganizationConstants.DATASET,
-								organizationDataSet.getId(), organizationDataSet.getDescription(), "");
+								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
+								"");
 					}
 				}
 
@@ -109,7 +111,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				if (null != dataSet) {
 					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganizationId(),
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
-							dataSet.getDescription(), "");
+							dataSet.getDataSetCategory().getCategoryName(), "");
 				}
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.error.deleted"), e);

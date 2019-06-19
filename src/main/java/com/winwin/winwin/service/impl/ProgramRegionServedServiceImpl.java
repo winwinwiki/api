@@ -93,7 +93,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 						if (null != programRegionServed && null != payload.getOrganizationId()) {
 							orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-									OrganizationConstants.CREATE, OrganizationConstants.REGION,
+									payload.getProgramId(), OrganizationConstants.CREATE, OrganizationConstants.REGION,
 									programRegionServed.getId(), programRegionServed.getRegionMaster().getRegionName(),
 									"");
 						}
@@ -113,7 +113,8 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 							if (null != region && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId(),
+										payload.getProgramId(), OrganizationConstants.UPDATE,
+										OrganizationConstants.REGION, region.getId(),
 										region.getRegionMaster().getRegionName(), "");
 							}
 							programRegionList.add(region);

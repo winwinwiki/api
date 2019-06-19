@@ -154,9 +154,9 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 				if (null != programResource && null != programResource.getProgramId()) {
 					organizationHistoryService.createOrganizationHistory(user,
-							programResourcePayLoad.getOrganizationId(), OrganizationConstants.UPDATE,
-							OrganizationConstants.RESOURCE, programResource.getId(), programResource.getDescription(),
-							"");
+							programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
+							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
+							programResource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 		} catch (Exception e) {
@@ -171,7 +171,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 	@Override
 	@Transactional
-	public void removeProgramResource(Long resourceId, Long organizationId) {
+	public void removeProgramResource(Long resourceId, Long organizationId, Long programId) {
 		// TODO Auto-generated method stub
 		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
 		try {
@@ -184,8 +184,9 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResourceRepository.saveAndFlush(resource);
 
 				if (null != resource) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId,
-							OrganizationConstants.DELETE, "", resource.getId(), resource.getDescription(), "");
+					organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
+							OrganizationConstants.DELETE, "", resource.getId(),
+							resource.getResourceCategory().getCategoryName(), "");
 				}
 			}
 		} catch (Exception e) {
