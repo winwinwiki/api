@@ -119,17 +119,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != organizationPayload && null != user) {
 				organization = setOrganizationData(organizationPayload, user);
-
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
-					/*
-					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" +
-					 * organization.getId()); organization =
-					 * organizationRepository.saveAndFlush(organization);
-					 */
-
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
 							organization.getName(), "");
@@ -226,11 +218,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getEmail());
 					orgClassificationMapping = addClassification(organizationPayload, organization);
-					/*
-					 * if (orgClassificationMapping == null) { throw new
-					 * OrganizationException(
-					 * "Request to update classification is invalid"); }
-					 */
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {

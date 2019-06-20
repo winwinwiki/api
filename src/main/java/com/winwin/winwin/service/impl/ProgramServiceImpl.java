@@ -26,6 +26,7 @@ import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.AddressService;
+import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CommonUtils;
@@ -55,28 +56,71 @@ public class ProgramServiceImpl implements ProgramService {
 	UserService userService;
 
 	@Autowired
+	OrganizationHistoryService orgHistoryService;
+
+	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 
 	@Override
 	@Transactional
-	public Program createProgram(ProgramRequestPayload programPayload) {
-		Program program = getProgramFromProgramRequestPayload(programPayload);
-		return programRepository.saveAndFlush(program);
+	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
+		Program program = null;
+		try {
+			program = getProgramFromProgramRequestPayload(programPayload);
+			program = programRepository.saveAndFlush(program);
+
+			if (null != program.getId()) {
+				UserPayload user = userService.getCurrentUserDetails();
+				orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.CREATE,
+						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			}
+		} catch (Exception e) {
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			exceptionResponse.setException(e);
+			LOGGER.error(customMessageSource.getMessage("prg.error.created"), e);
+		}
+		return program;
 	}
 
 	@Override
 	@Transactional
-	public void deleteProgram(Long id) {
-		programRepository.deleteById(id);
+	public void deleteProgram(Program program, ExceptionResponse exceptionResponse) {
+		try {
+			programRepository.deleteById(program.getId());
+			UserPayload user = userService.getCurrentUserDetails();
+			orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.DELETE,
+					OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+		} catch (Exception e) {
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			exceptionResponse.setException(e);
+			LOGGER.error(customMessageSource.getMessage("prg.error.deleted"), e);
+		}
 	}
 
 	@Override
 	@Transactional
-	public Program updateProgram(ProgramRequestPayload programPayload) {
-		Program program = getProgramFromProgramRequestPayload(programPayload);
-		return programRepository.saveAndFlush(program);
+	public Program updateProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
+		Program program = null;
+		try {
+			program = getProgramFromProgramRequestPayload(programPayload);
+			program = programRepository.saveAndFlush(program);
+
+			if (null != program.getId()) {
+				UserPayload user = userService.getCurrentUserDetails();
+				orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.UPDATE,
+						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			}
+		} catch (Exception e) {
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			exceptionResponse.setException(e);
+			LOGGER.error(customMessageSource.getMessage("prg.error.updated"), e);
+		}
+		return program;
 	}
 
 	@Override

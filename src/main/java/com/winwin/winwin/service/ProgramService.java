@@ -9,11 +9,11 @@ import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 
 public interface ProgramService {
-	public Program createProgram(ProgramRequestPayload programPayload);
+	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse);
 
-	void deleteProgram(Long id);
+	void deleteProgram(Program program, ExceptionResponse exceptionResponse);
 
-	Program updateProgram(ProgramRequestPayload organizationPayload);
+	Program updateProgram(ProgramRequestPayload organizationPayload, ExceptionResponse exceptionResponse);
 
 	List<Program> getProgramList(Long orgId);
 
