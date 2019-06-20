@@ -106,6 +106,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	SdgDataRepository sdgDataRepository;
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
+	@Autowired
+	CsvUtils csvUtils;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
@@ -665,7 +667,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		Integer rowNumber = null;
 		try {
 			if (null != s3Object) {
-				List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = CsvUtils.read(NaicsMappingCsvPayload.class,
+				List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = csvUtils.read(NaicsMappingCsvPayload.class,
 						csv, exceptionResponse);
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
@@ -727,7 +729,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != s3Object) {
 				InputStream input = s3Object.getObjectContent();
 				String csv = IOUtils.toString(input);
-				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = CsvUtils.read(NteeMappingCsvPayload.class, csv,
+				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = csvUtils.read(NteeMappingCsvPayload.class, csv,
 						exceptionResponse);
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
