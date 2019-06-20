@@ -119,17 +119,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != organizationPayload && null != user) {
 				organization = setOrganizationData(organizationPayload, user);
-
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization.getId()) {
-					/*
-					 * organization.setAdminUrl(OrganizationConstants.BASE_URL +
-					 * OrganizationConstants.ORGANIZATIONS + "/" +
-					 * organization.getId()); organization =
-					 * organizationRepository.saveAndFlush(organization);
-					 */
-
 					orgHistoryService.createOrganizationHistory(user, organization.getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
 							organization.getName(), "");
@@ -226,11 +218,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getEmail());
 					orgClassificationMapping = addClassification(organizationPayload, organization);
-					/*
-					 * if (orgClassificationMapping == null) { throw new
-					 * OrganizationException(
-					 * "Request to update classification is invalid"); }
-					 */
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
@@ -367,31 +354,28 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Transactional
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
-		UserPayload user = userService.getCurrentUserDetails();
 		Organization organization = null;
 		try {
+			UserPayload user = userService.getCurrentUserDetails();
 			if (null != payload && null != user) {
 				Date date = CommonUtils.getFormattedDate();
 				Address address = new Address();
 				AddressPayload addressPayload = new AddressPayload();
+				Long parentId = null;
 				addressPayload.setCountry("");
 				organization = new Organization();
-
 				if (!(StringUtils.isEmpty(payload.getChildOrgName()))) {
 					organization.setName(payload.getChildOrgName());
 				}
-
 				if (!(StringUtils.isEmpty(payload.getChildOrgType()))) {
 					organization.setType(payload.getChildOrgType());
 				}
-
 				if (null != payload.getParentId()) {
-					organization.setParentId(payload.getParentId());
+					parentId = payload.getParentId();
+					organization.setParentId(parentId);
 				}
 				address = saveAddress(addressPayload, user);
-
 				organization.setAddress(address);
-
 				organization.setCreatedAt(date);
 				organization.setUpdatedAt(date);
 				organization.setCreatedBy(user.getEmail());
@@ -399,9 +383,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
-					orgHistoryService.createOrganizationHistory(user, organization.getId(),
-							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
-							organization.getName(), "");
+					orgHistoryService.createOrganizationHistory(user, parentId, OrganizationConstants.CREATE,
+							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
 				}
 			}
 		} catch (Exception e) {

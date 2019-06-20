@@ -987,10 +987,16 @@ public class OrganizationController extends BaseController {
 			@PathVariable("id") Long orgId) {
 		Program program = null;
 		ProgramResponsePayload payload = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.program.null"));
 		try {
-			program = programService.createProgram(programPayload);
+			program = programService.createProgram(programPayload, exceptionResponse);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			payload = programService.getProgramResponseFromProgram(program);
 
 		} catch (Exception e) {
@@ -1035,6 +1041,7 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> deleteProgram(@RequestBody ProgramRequestPayload programPayLoad) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != programPayLoad && null != programPayLoad.getId()) {
 				Long id = programPayLoad.getId();
@@ -1042,13 +1049,20 @@ public class OrganizationController extends BaseController {
 				if (program == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				}
-				programService.deleteProgram(id);
+				programService.deleteProgram(program, exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			} else {
 				return sendErrorResponse("org.bad.request");
 			}
 		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("prg.error.deleted") + ": " + e.getMessage());
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("prg.error.deleted"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse("prg.success.deleted");
 	}
@@ -1063,6 +1077,7 @@ public class OrganizationController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> updateProgramDetails(@RequestBody List<ProgramRequestPayload> prgPayloadList) {
 		Program program = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		List<ProgramResponsePayload> payloadList = new ArrayList<>();
 		try {
 			for (ProgramRequestPayload payload : prgPayloadList) {
@@ -1070,7 +1085,12 @@ public class OrganizationController extends BaseController {
 				if (program == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				} else {
-					program = programService.updateProgram(payload);
+					program = programService.updateProgram(payload, exceptionResponse);
+
+					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+							&& exceptionResponse.getStatusCode() != null)
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 					ProgramResponsePayload responsePayload = programService.getProgramResponseFromProgram(program);
 					payloadList.add(responsePayload);
 				}
