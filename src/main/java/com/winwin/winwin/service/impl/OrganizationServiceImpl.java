@@ -415,9 +415,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	public List<OrganizationHistoryPayload> getOrgHistoryDetails(Long orgId) {
 		List<OrganizationHistoryPayload> payloadList = null;
 		try {
-
 			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
-
 			if (null != orgHistoryList) {
 				payloadList = new ArrayList<OrganizationHistoryPayload>();
 				Organization organization = organizationRepository.findOrgById(orgId);
@@ -425,15 +423,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 				for (OrganizationHistory history : orgHistoryList) {
 					OrganizationHistoryPayload payload = new OrganizationHistoryPayload();
 					payload.setId(history.getId());
-
-					if (null != organization) {
+					if (null != organization && history.getProgramId() == null) {
 						payload.setParentEntityName(organization.getName());
-					}
-
-					if (null != history.getProgramId()) {
+						payload.setParentEntityType(OrganizationConstants.ORGANIZATION);
+					} else if (null != organization && null != history.getProgramId()) {
 						Program program = programRepository.findProgramById(history.getProgramId());
 						if (null != program)
-							payload.setParentEntityName(organization.getName());
+							payload.setParentEntityName(program.getName());
+						payload.setParentEntityType(OrganizationConstants.PROGRAM);
 					}
 					payload.setEntityType(history.getEntityType());
 					payload.setEntityName(history.getEntityName());
@@ -441,14 +438,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 					payload.setActionPerformed(history.getActionPerformed());
 					payload.setModifiedBy(history.getUpdatedBy());
 					payload.setModifiedAt(history.getUpdatedAt());
-
 					payloadList.add(payload);
 				}
 			}
 		} catch (Exception e) {
 			throw e;
 		}
-
 		return payloadList;
 	}
 
