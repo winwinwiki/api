@@ -100,6 +100,10 @@ public class WinWinController extends BaseController {
 	@Autowired
 	NaicsDataRepository naicsDataRepository;
 
+	@Autowired
+	CsvUtils csvUtils;
+
+	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinController.class);
 
 	/**
@@ -116,7 +120,7 @@ public class WinWinController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = CsvUtils.read(DataMigrationCsvPayload.class, file,
+			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -149,7 +153,7 @@ public class WinWinController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = CsvUtils.read(DataMigrationCsvPayload.class, file,
+			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)

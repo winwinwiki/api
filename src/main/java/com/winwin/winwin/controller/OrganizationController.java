@@ -162,6 +162,9 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
 
+	@Autowired
+	CsvUtils csvUtils;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
 
 	// Code for organization start
@@ -196,11 +199,11 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
-			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			if (null != exceptionResponse.getException())
+				return sendMsgResponse(exceptionResponse.getException().getMessage(),
+						exceptionResponse.getStatusCode());
 
 			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 					.collect(Collectors.toList());
@@ -226,7 +229,7 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
