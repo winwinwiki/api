@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.entity.ProgramResource;
 
-@Transactional
 @Repository
 public interface ProgramResourceRepository extends JpaRepository<ProgramResource, Long> {
 	@Query(value = "select * from program_resource where program_id = :program_id and is_Active = true", nativeQuery = true)

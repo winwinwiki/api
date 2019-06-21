@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 
-@Transactional
 @Repository
 public interface ProgramFilterRepository {
 	List<Program> filterProgram(OrganizationFilterPayload payload, String type, Long orgId);

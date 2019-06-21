@@ -31,7 +31,6 @@ public class AddressServiceImpl implements AddressService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
-	@Transactional
 	public Address saveAddress(AddressPayload addressPayload) {
 		Address address = new Address();
 		try {
@@ -50,7 +49,6 @@ public class AddressServiceImpl implements AddressService {
 		return addressRepository.saveAndFlush(address);
 	}
 
-	@Transactional
 	public Boolean updateAddress(Address address, AddressPayload addressPayload) {
 		try {
 			if (null != addressPayload && null != addressPayload.getId()) {
