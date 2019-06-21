@@ -107,9 +107,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
 	@Autowired
+	NteeDataRepository nteeDataRepository;
+	@Autowired
+	NaicsDataRepository naicsDataRepository;
+	@Autowired
 	CsvUtils csvUtils;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
+
+	Map<Long, NaicsData> naicsMap = null;
+	Map<Long, NteeData> nteeMap = null;
 
 	@Override
 	@Transactional
@@ -435,7 +442,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
 		List<Organization> organizationList = new ArrayList<Organization>();
-
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -452,18 +458,22 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 
 			Map<String, String> notesMap = new HashMap<String, String>();
-			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
-				if (null != organizationPayload && null != user) {
-					if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
-						if (null != organizationPayload.getName())
-							notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
-					}
-					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-						organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
-						organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-						organizationList.add(setOrganizationData(organizationPayload, user));
-					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
-						if (null != organizationPayload.getId()) {
+			if (null != organizationPayloadList) {
+				// set Naics-Ntee code map
+				setNaicsNteeMap();
+
+				for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+					if (null != organizationPayload && null != user) {
+						if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
+							if (null != organizationPayload.getName())
+								notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+						}
+						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+							organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
+							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
+							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
+
+						} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
 							if (null != organizationPayload.getId()) {
 								Organization organization = organizationRepository
 										.findOrgById(organizationPayload.getId());
@@ -471,11 +481,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 									throw new OrganizationException(
 											"organization with Id:" + organizationPayload.getId()
 													+ "is not found in DB to perform update operation");
+								organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
+							} else {
+								throw new Exception(
+										"Organization id is found as null in the file to perform bulk update operation for organizations");
 							}
-							organizationList.add(setOrganizationData(organizationPayload, user));
-						} else {
-							throw new Exception(
-									"Organization id is found as null in the file to perform bulk update operation for organizations");
 						}
 					}
 				}
@@ -532,6 +542,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			address = saveAddress(organizationPayload.getAddress(), user);
 			organization.setAddress(address);
 		}
+
 		if (organizationPayload.getNaicsCode() != null) {
 			NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 			organization.setNaicsCode(naicsCode);
@@ -543,6 +554,63 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
 		;
+
+		Date date = CommonUtils.getFormattedDate();
+		if (organization.getId() == null) {
+			organization.setCreatedAt(date);
+			organization.setCreatedBy(user.getEmail());
+		}
+		organization.setUpdatedAt(date);
+		organization.setUpdatedBy(user.getEmail());
+		organization.setIsActive(true);
+
+		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
+			List<Long> spiTagIds = new ArrayList<>();
+			List<Long> sdgTagIds = new ArrayList<>();
+
+			if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
+				String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
+				for (int j = 0; j < spiIdsList.length; j++) {
+					spiTagIds.add(Long.parseLong(spiIdsList[j]));
+				}
+			}
+
+			if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
+				String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
+				for (int j = 0; j < sdgIdsList.length; j++) {
+					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
+				}
+			}
+			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
+		}
+		return organization;
+	}
+
+	/**
+	 * @param organizationPayload
+	 * @param organization
+	 * @param user
+	 * @return
+	 * @throws Exception
+	 */
+	private Organization setOrganizationDataForBulkUpload(OrganizationRequestPayload organizationPayload,
+			UserPayload user) throws Exception {
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
+		Organization organization = new Organization();
+		Address address = new Address();
+
+		BeanUtils.copyProperties(organizationPayload, organization);
+
+		if (organizationPayload.getAddress() != null) {
+			address = saveAddress(organizationPayload.getAddress(), user);
+			organization.setAddress(address);
+		}
+
+		organization.setNaicsCode(naicsMap.get(organizationPayload.getNteeCode()));
+		organization.setNteeCode(nteeMap.get(organizationPayload.getNaicsCode()));
+		organization.setType(OrganizationConstants.ORGANIZATION);
+		organization.setIsActive(true);
 
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
@@ -901,7 +969,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return spiDataMapList;
 	}
 
-	@Transactional
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
@@ -973,6 +1040,24 @@ public class OrganizationServiceImpl implements OrganizationService {
 			BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 		}
 		return addressPayload;
+	}
+
+	/**
+	 * 
+	 */
+	private void setNaicsNteeMap() {
+		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
+		if (null != naicsCodeList) {
+			naicsMap = new HashMap<Long, NaicsData>();
+			for (NaicsData naicsData : naicsCodeList)
+				naicsMap.put(naicsData.getId(), naicsData);
+		}
+		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
+		if (null != nteeCodeList) {
+			nteeMap = new HashMap<Long, NteeData>();
+			for (NteeData nteeData : nteeCodeList)
+				nteeMap.put(nteeData.getId(), nteeData);
+		}
 	}
 
 }

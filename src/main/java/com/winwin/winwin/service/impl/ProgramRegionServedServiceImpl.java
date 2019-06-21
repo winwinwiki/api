@@ -159,7 +159,6 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		}
 	}
 
-	@Transactional
 	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {

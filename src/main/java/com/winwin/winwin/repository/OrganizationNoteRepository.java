@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.winwin.winwin.entity.OrganizationNote;
 
 /**
@@ -15,7 +13,6 @@ import com.winwin.winwin.entity.OrganizationNote;
  *
  */
 
-@Transactional
 @Repository
 public interface OrganizationNoteRepository extends JpaRepository<OrganizationNote, Long> {
 	@Query(value = "select * from org_note where organization_id = :orgId", nativeQuery = true)

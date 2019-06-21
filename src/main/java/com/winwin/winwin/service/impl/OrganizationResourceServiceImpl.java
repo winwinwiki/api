@@ -181,7 +181,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 	}
 
-	@Transactional
 	public ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		ResourceCategory category = null;
 		try {
