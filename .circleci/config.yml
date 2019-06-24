@@ -54,7 +54,7 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      #- run: sudo apt-get update -qq && sudo apt-get install -y postgresql
+      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
       # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
@@ -75,15 +75,15 @@ jobs: # a collection of steps
           # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: target/winwin-0.0.1-SNAPSHOT.jar
       
-      - run: 
-          name: Install python
-          command: sudo apt-get update && sudo apt-get install -y python-dev
-      - run: 
-          name: Install bootstrap python
-          command: sudo curl -O https://bootstrap.pypa.io/get-pip.py
-      - run: 
-          name: Install pip
-          command: sudo python get-pip.py
+      # - run: 
+          # name: Install python
+          # command: sudo apt-get update && sudo apt-get install -y python-dev
+      # - run: 
+          # name: Install bootstrap python
+          # command: sudo curl -O https://bootstrap.pypa.io/get-pip.py
+      # - run: 
+          # name: Install pip
+          # command: sudo python get-pip.py
       - run: 
           name: Install aws cli
           command: sudo pip install awscli --upgrade
