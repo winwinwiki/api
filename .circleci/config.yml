@@ -54,7 +54,7 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql
+      #- run: sudo apt-get update -qq && sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
       # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
