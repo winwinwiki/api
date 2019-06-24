@@ -118,7 +118,11 @@ jobs: # a collection of steps
             # fi
             echo "S3_BUCKET - $S3_BUCKET"
             aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+      #- run:
+      #    name: Setup Env Vars
+       #   command: |
+            
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
-            aws deploy --region us-east-1 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip

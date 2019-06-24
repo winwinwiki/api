@@ -57,7 +57,7 @@ deploy:
     bundle_type: zip
     application: WinWin-Backend-CodeDeploy-Dev
     deployment_group: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
-    region: us-east-1 #Server region
+    region: us-west-2 #Server region
     on:
       branch: dev
   # secret_access_key:
