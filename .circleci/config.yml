@@ -7,12 +7,12 @@ jobs: # a collection of steps
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:11-jdk
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
-      #- image: circleci/postgres:latest
+      - image: circleci/postgres:latest
 
     #working_directory: ~/repo
     
@@ -27,11 +27,11 @@ jobs: # a collection of steps
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
       JVM_OPTS: -Xmx3200m
-      #WINWIN_DB_HOST: 127.0.0.1
-      #WINWIN_DB_NAME: postgres
-      #WINWIN_DB_USER: postgres
-      #WINWIN_DB_PASSWORD: 
-      #WINWIN_DB_PORT: 5432
+      WINWIN_DB_HOST: 127.0.0.1
+      WINWIN_DB_NAME: postgres
+      WINWIN_DB_USER: postgres
+      WINWIN_DB_PASSWORD: 
+      WINWIN_DB_PORT: 5432
       AWS_CODE_DEPLOY_APPLICATION_NAME: WinWin-Backend-CodeDeploy-Dev
       AWS_CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
 
@@ -54,13 +54,12 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      #- run: sudo rm -rf /var/lib/apt/lists/* 
-      - run: sudo apt-get update -qq 
+      #- run: sudo rm -rf /var/lib/apt/lists/* - run: sudo apt-get update -qq 
       #- run: sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
       # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
-      #- run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
+      - run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
 
       # build now
       #- run: mvn package # run the actual tests
@@ -120,9 +119,6 @@ jobs: # a collection of steps
             # fi
             echo "S3_BUCKET - $S3_BUCKET"
             aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
-      #- run:
-      #    name: Setup Env Vars
-       #   command: |
             
       - run:
           name: Run CodeDeploy to deploy on EC2
