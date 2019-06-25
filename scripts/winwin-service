@@ -39,9 +39,4 @@ case $1 in
             echo "$SERVICE_NAME is not running ..."
         fi
     ;;
-    status)
-        if [ -f $PID_PATH_NAME ]; then
-            echo "$SERVICE_NAME is running ...";
-        else
-            echo "$SERVICE_NAME is not running ..."
 esac

@@ -27,11 +27,11 @@ jobs: # a collection of steps
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx3200m
       JVM_OPTS: -Xmx3200m
-      WINWIN_DB_HOST: 127.0.0.1
-      WINWIN_DB_NAME: postgres
-      WINWIN_DB_USER: postgres
-      WINWIN_DB_PASSWORD: 
-      WINWIN_DB_PORT: 5432
+      #WINWIN_DB_HOST: 127.0.0.1
+      #WINWIN_DB_NAME: postgres
+      #WINWIN_DB_USER: postgres
+      #WINWIN_DB_PASSWORD: 
+      #WINWIN_DB_PORT: 5432
       AWS_CODE_DEPLOY_APPLICATION_NAME: WinWin-Backend-CodeDeploy-Dev
       AWS_CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
 
@@ -54,7 +54,8 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: sudo rm -rf /var/lib/apt/lists/* && sudo apt-get update -qq 
+      #- run: sudo rm -rf /var/lib/apt/lists/* 
+      - run: sudo apt-get update -qq 
       #- run: sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
