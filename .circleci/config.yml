@@ -7,12 +7,12 @@ jobs: # a collection of steps
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/openjdk:11-jdk
+      - image: circleci/openjdk:8-jdk
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
-      - image: circleci/postgres:latest
+      #- image: circleci/postgres:latest
 
     #working_directory: ~/repo
     
@@ -54,11 +54,12 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: sudo rm -rf /var/lib/apt/lists/* && sudo apt-get update -qq && sudo apt-get install -y postgresql
+      - run: sudo rm -rf /var/lib/apt/lists/* && sudo apt-get update -qq 
+      #- run: sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
       # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
-      - run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
+      #- run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
 
       # build now
       #- run: mvn package # run the actual tests

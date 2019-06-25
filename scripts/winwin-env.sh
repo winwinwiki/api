@@ -1,0 +1,12 @@
+export WINWIN_DB_HOST=winwindbdev.ckn4xytqqsqc.us-east-1.rds.amazonaws.com
+export WINWIN_DB_NAME=winwindb-dev
+export WINWIN_DB_USER=winwindbuser
+export WINWIN_DB_PASSWORD=ejhz8kPBG5cJrbb
+export WINWIN_DB_PORT=5432
+export AWS_COGNITO_USER_POOL_ID=us-east-1_KvsqdCvky
+export AWS_COGNITO_CLIENT_ID=43qua09iodvdmk19uit16su489
+export AWS_REGION=us-west-2
+export AWS_COGNITO_ENDPOINT=cognito-idp.us-east-1.amazonaws.com
+export AWS_COGNITO_IDENTITY_POOL_ID=us-east-1:365ca2f4-ec1e-48f7-8ef7-beaf41db2dd6
+export AWS_ACCESS_KEY_ID=AKIATJT4TQ7VUZ3S5PHC
+export AWS_SECRET_ACCESS_KEY=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
