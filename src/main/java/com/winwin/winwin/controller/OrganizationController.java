@@ -348,7 +348,8 @@ public class OrganizationController extends BaseController {
 			if (null != filterPayload) {
 				LOGGER.info("getting organization list");
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
-				filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
+				//commented due to time constraint
+				//filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
 			}
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
