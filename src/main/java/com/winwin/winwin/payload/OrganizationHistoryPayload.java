@@ -25,6 +25,7 @@ public class OrganizationHistoryPayload {
 	String entityName;
 	String entityCode;
 	String parentEntityName;
+	String parentEntityType;
 	String actionPerformed;
 	String modifiedBy;
 	Date modifiedAt;

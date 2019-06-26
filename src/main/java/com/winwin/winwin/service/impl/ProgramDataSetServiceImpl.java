@@ -112,7 +112,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 		}
 	}
 
-	@Transactional
 	public DataSetCategory saveDataSetCategory(DataSetCategoryPayload categoryFromPayLoad, UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {

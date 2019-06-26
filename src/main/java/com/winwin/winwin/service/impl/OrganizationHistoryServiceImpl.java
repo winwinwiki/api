@@ -2,8 +2,6 @@ package com.winwin.winwin.service.impl;
 
 import java.util.Date;
 
-import javax.transaction.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +26,6 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationHistoryServiceImpl.class);
 
 	@Override
-	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
 			Long entityId, String entityName, String entityCode) {
 		try {
@@ -50,7 +47,6 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	}
 
 	@Override
-	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
 			String entityType, Long entityId, String entityName, String entityCode) {
 		try {

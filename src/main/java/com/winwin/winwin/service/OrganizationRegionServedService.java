@@ -20,6 +20,7 @@ public interface OrganizationRegionServedService {
 
 	List<OrganizationRegionServed> getOrgRegionServedList(Long orgId);
 
-	List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload filterPayload, ExceptionResponse exceptionResponse);
+	List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload filterPayload,
+			ExceptionResponse exceptionResponse);
 
 }

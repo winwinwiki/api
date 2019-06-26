@@ -54,7 +54,8 @@ jobs: # a collection of steps
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
 
-      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql
+      #- run: sudo rm -rf /var/lib/apt/lists/* - run: sudo apt-get update -qq 
+      #- run: sudo apt-get install -y postgresql
       # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
       # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
       # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
@@ -77,7 +78,7 @@ jobs: # a collection of steps
       
       - run: 
           name: Install python
-          command: sudo apt-get update && sudo apt-get install -y python-dev
+          command: sudo rm -rf /var/lib/apt/lists/* && sudo apt-get update && sudo apt-get install -y python-dev
       - run: 
           name: Install bootstrap python
           command: sudo curl -O https://bootstrap.pypa.io/get-pip.py
@@ -118,7 +119,8 @@ jobs: # a collection of steps
             # fi
             echo "S3_BUCKET - $S3_BUCKET"
             aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+            
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
-            aws deploy --region us-east-1 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip

@@ -1,7 +1,9 @@
 package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
@@ -104,65 +106,55 @@ public class OrganizationController extends BaseController {
 
 	@Autowired
 	private OrganizationService organizationService;
-
 	@Autowired
 	private OrganizationRepository organizationRepository;
-
 	@Autowired
 	private OrganizationDataSetService organizationDataSetService;
-
 	@Autowired
 	OrganizationDataSetRepository organizationDataSetRepository;
-
 	@Autowired
 	private OrganizationResourceService organizationResourceService;
-
 	@Autowired
 	private OrganizationResourceRepository organizationResourceRepository;
-
 	@Autowired
 	private OrganizationRegionServedService orgRegionServedService;
-
 	@Autowired
 	OrgSpiDataService orgSpiDataService;
-
 	@Autowired
 	OrgSdgDataService orgSdgDataService;
-
 	@Autowired
 	UserService userService;
-
 	@Autowired
 	OrganizationNoteService organizationNoteService;
-
 	@Autowired
 	OrganizationNoteRepository organizationNoteRepository;
-
 	@Autowired
 	OrgNaicsDataService naicsDataService;
 	@Autowired
 	OrgNteeDataService nteeDataService;
-
 	@Autowired
 	ProgramService programService;
 	@Autowired
 	ProgramRepository programRepository;
-
 	@Autowired
 	SpiDataService spiDataService;
 	@Autowired
 	SdgDataService sdgDataService;
-
 	@Autowired
 	NteeDataRepository nteeDataRepository;
-
 	@Autowired
 	NaicsDataRepository naicsDataRepository;
 
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
 
+	@Autowired
+	CsvUtils csvUtils;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
+
+	Map<String, Long> naicsMap = null;
+	Map<String, Long> nteeMap = null;
 
 	// Code for organization start
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -196,17 +188,20 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
-			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-					&& exceptionResponse.getStatusCode() != null)
-				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+			if (null != exceptionResponse.getException())
+				return sendMsgResponse(exceptionResponse.getException().getMessage(),
+						exceptionResponse.getStatusCode());
 
-			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
-					.collect(Collectors.toList());
-			organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
-			payloadList = setOrganizationPayload(organizationList);
-
+			if (null != organizationCsvPayload) {
+				// set Naics-Ntee code map
+				setNaicsNteeMap();
+				organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+						.collect(Collectors.toList());
+				organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
+				payloadList = setOrganizationPayload(organizationList);
+			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
@@ -226,16 +221,20 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<OrganizationCsvPayload> organizationCsvPayload = CsvUtils.read(OrganizationCsvPayload.class, file,
+			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-			organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
-					.collect(Collectors.toList());
-			organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
-			payloadList = setOrganizationPayload(organizationList);
 
+			if (null != organizationCsvPayload) {
+				// set Naics-Ntee code map
+				setNaicsNteeMap();
+				organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
+						.collect(Collectors.toList());
+				organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
+				payloadList = setOrganizationPayload(organizationList);
+			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
@@ -245,6 +244,24 @@ public class OrganizationController extends BaseController {
 		}
 
 		return sendSuccessResponse(payloadList);
+	}
+
+	/**
+	 * 
+	 */
+	private void setNaicsNteeMap() {
+		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
+		if (null != naicsCodeList) {
+			naicsMap = new HashMap<String, Long>();
+			for (NaicsData naicsData : naicsCodeList)
+				naicsMap.put(naicsData.getCode(), naicsData.getId());
+		}
+		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
+		if (null != nteeCodeList) {
+			nteeMap = new HashMap<String, Long>();
+			for (NteeData nteeData : nteeCodeList)
+				nteeMap.put(nteeData.getCode(), nteeData.getId());
+		}
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
@@ -985,10 +1002,16 @@ public class OrganizationController extends BaseController {
 			@PathVariable("id") Long orgId) {
 		Program program = null;
 		ProgramResponsePayload payload = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.program.null"));
 		try {
-			program = programService.createProgram(programPayload);
+			program = programService.createProgram(programPayload, exceptionResponse);
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			payload = programService.getProgramResponseFromProgram(program);
 
 		} catch (Exception e) {
@@ -1033,6 +1056,7 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> deleteProgram(@RequestBody ProgramRequestPayload programPayLoad) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != programPayLoad && null != programPayLoad.getId()) {
 				Long id = programPayLoad.getId();
@@ -1040,13 +1064,20 @@ public class OrganizationController extends BaseController {
 				if (program == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				}
-				programService.deleteProgram(id);
+				programService.deleteProgram(program, exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 			} else {
 				return sendErrorResponse("org.bad.request");
 			}
 		} catch (Exception e) {
-			throw new OrganizationException(
-					customMessageSource.getMessage("prg.error.deleted") + ": " + e.getMessage());
+			exceptionResponse.setErrorMessage(e.getMessage());
+			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(customMessageSource.getMessage("prg.error.deleted"), e);
+			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 		}
 		return sendSuccessResponse("prg.success.deleted");
 	}
@@ -1061,6 +1092,7 @@ public class OrganizationController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> updateProgramDetails(@RequestBody List<ProgramRequestPayload> prgPayloadList) {
 		Program program = null;
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		List<ProgramResponsePayload> payloadList = new ArrayList<>();
 		try {
 			for (ProgramRequestPayload payload : prgPayloadList) {
@@ -1068,7 +1100,12 @@ public class OrganizationController extends BaseController {
 				if (program == null) {
 					throw new OrganizationException(customMessageSource.getMessage("prg.error.not_found"));
 				} else {
-					program = programService.updateProgram(payload);
+					program = programService.updateProgram(payload, exceptionResponse);
+
+					if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+							&& exceptionResponse.getStatusCode() != null)
+						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
 					ProgramResponsePayload responsePayload = programService.getProgramResponseFromProgram(program);
 					payloadList.add(responsePayload);
 				}
@@ -1292,15 +1329,13 @@ public class OrganizationController extends BaseController {
 		payload.setAddress(address);
 		BeanUtils.copyProperties(csv, payload);
 
-		// Get Id from naics_code master data table and assign the id of it
-		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
-		if (null != naicsData)
-			payload.setNaicsCode(naicsData.getId());
+		// Get Id from naics_code master data Map and assign the id of it
+		if (!StringUtils.isEmpty(csv.getNaicsCode()))
+			payload.setNaicsCode(naicsMap.get(csv.getNaicsCode()));
 
-		// Get Id from ntee_code master data table and assign the id of it
-		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
-		if (null != nteeData)
-			payload.setNteeCode(nteeData.getId());
+		// Get Id from ntee_code master data Map and assign the id of it
+		if (!StringUtils.isEmpty(csv.getNteeCode()))
+			payload.setNteeCode(naicsMap.get(csv.getNteeCode()));
 
 		return payload;
 	}

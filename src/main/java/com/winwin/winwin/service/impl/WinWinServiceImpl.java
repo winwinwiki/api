@@ -78,80 +78,63 @@ import com.winwin.winwin.util.CommonUtils;
 public class WinWinServiceImpl implements WinWinService {
 	@Autowired
 	AddressRepository addressRepository;
-
 	@Autowired
 	OrganizationRepository organizationRepository;
-
 	@Autowired
 	ProgramRepository programRepository;
-
 	@Autowired
 	OrgClassificationMapRepository orgClassificationMapRepository;
-
 	@Autowired
 	ClassificationRepository classificationRepository;
-
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
-
 	@Autowired
 	NaicsDataRepository naicsRepository;
-
 	@Autowired
 	NteeDataRepository nteeRepository;
-
 	@Autowired
 	UserService userService;
-
 	@Autowired
 	OrganizationHistoryService orgHistoryService;
-
 	@Autowired
 	OrganizationNoteService organizationNoteService;
-
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
 	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
-
 	@Autowired
 	SpiDataRepository spiDataRepository;
-
 	@Autowired
 	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
 	@Autowired
 	ProgramSpiDataMapRepository programSpiDataMapRepository;
-
 	@Autowired
 	SdgDataRepository sdgDataRepository;
-
 	@Autowired
 	OrgSdgDataMapRepository orgSdgDataMapRepository;
-
 	@Autowired
 	ProgramSdgDataMapRepository programSdgDataMapRepository;
-
 	@Autowired
 	OrganizationResourceRepository organizationResourceRepository;
-
 	@Autowired
 	ProgramResourceRepository programResourceRepository;
-
 	@Autowired
 	OrganizationDataSetRepository organizationDataSetRepository;
-
 	@Autowired
 	ProgramDataSetRepository programDataSetRepository;
-
 	@Autowired
 	ResourceCategoryRepository resourceCategoryRepository;
-
 	@Autowired
 	DataSetCategoryRepository dataSetCategoryRepository;
-
+	@Autowired
+	NteeDataRepository nteeDataRepository;
+	@Autowired
+	NaicsDataRepository naicsDataRepository;
+	
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
+	
+	Map<Long, NaicsData> naicsMap = null;
+	Map<Long, NteeData> nteeMap = null;
 
 	@Override
 	@Transactional
@@ -188,45 +171,52 @@ public class WinWinServiceImpl implements WinWinService {
 
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
-			for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
-				if (null != organizationPayload && null != user) {
-					if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
-						if (null != organizationPayload.getName())
-							notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
-						String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
-						for (int j = 0; j < spiIdsList.length; j++) {
-							spiTagIds.add(Long.parseLong(spiIdsList[j]));
+			
+			if (null != organizationPayloadList) {
+				// set Naics-Ntee code map
+				setNaicsNteeMap();
+				
+				for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+					if (null != organizationPayload && null != user) {
+						if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
+							if (null != organizationPayload.getName())
+								notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+						}
+						if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
+							String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
+							for (int j = 0; j < spiIdsList.length; j++) {
+								spiTagIds.add(Long.parseLong(spiIdsList[j]));
+							}
+						}
+						if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
+							String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
+							for (int j = 0; j < sdgIdsList.length; j++) {
+								sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
+							}
+						}
+						if (!StringUtils.isEmpty(organizationPayload.getResourceIds())) {
+							String[] resourceIdsList = organizationPayload.getResourceIds().split(",");
+							for (int j = 0; j < resourceIdsList.length; j++) {
+								resourceIds.add(Long.parseLong(resourceIdsList[j]));
+							}
+						}
+						if (!StringUtils.isEmpty(organizationPayload.getDatasetIds())) {
+							String[] datasetIdsList = organizationPayload.getDatasetIds().split(",");
+							for (int j = 0; j < datasetIdsList.length; j++) {
+								datasetIds.add(Long.parseLong(datasetIdsList[j]));
+							}
+						}
+						if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
+							if (null != organizationPayload.getName())
+								datasetsTypeMap.put(organizationPayload.getName(),
+										organizationPayload.getDatasetType());
+						}
+						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
+							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
 						}
 					}
-					if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
-						String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
-						for (int j = 0; j < sdgIdsList.length; j++) {
-							sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getResourceIds())) {
-						String[] resourceIdsList = organizationPayload.getResourceIds().split(",");
-						for (int j = 0; j < resourceIdsList.length; j++) {
-							resourceIds.add(Long.parseLong(resourceIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getDatasetIds())) {
-						String[] datasetIdsList = organizationPayload.getDatasetIds().split(",");
-						for (int j = 0; j < datasetIdsList.length; j++) {
-							datasetIds.add(Long.parseLong(datasetIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
-						if (null != organizationPayload.getName())
-							datasetsTypeMap.put(organizationPayload.getName(), organizationPayload.getDatasetType());
-					}
-					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-						organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-						organizationList.add(setOrganizationData(organizationPayload, user));
-					}
-				}
+				} 
 			}
 			organizationList = organizationRepository.saveAll(organizationList);
 
@@ -267,7 +257,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationData(OrganizationRequestPayload organizationPayload, UserPayload user)
+	private Organization setOrganizationDataForBulkUpload(OrganizationRequestPayload organizationPayload, UserPayload user)
 			throws Exception {
 		Organization organization = new Organization();
 		Address address = new Address();
@@ -278,14 +268,8 @@ public class WinWinServiceImpl implements WinWinService {
 			address = saveAddress(organizationPayload.getAddress(), user);
 			organization.setAddress(address);
 		}
-		if (organizationPayload.getNaicsCode() != null) {
-			NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
-			organization.setNaicsCode(naicsCode);
-		}
-		if (organizationPayload.getNteeCode() != null) {
-			NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
-			organization.setNteeCode(naicsCode);
-		}
+		organization.setNaicsCode(naicsMap.get(organizationPayload.getNteeCode()));
+		organization.setNteeCode(nteeMap.get(organizationPayload.getNaicsCode()));
 		organization.setType(OrganizationConstants.ORGANIZATION);
 
 		Date date = CommonUtils.getFormattedDate();
@@ -298,7 +282,6 @@ public class WinWinServiceImpl implements WinWinService {
 		return organization;
 	}
 
-	@Transactional
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
@@ -1033,5 +1016,24 @@ public class WinWinServiceImpl implements WinWinService {
 		}
 		return datasetList;
 	}// end of method
+	
+	/**
+	 * 
+	 */
+	private void setNaicsNteeMap() {
+		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
+		if (null != naicsCodeList) {
+			naicsMap = new HashMap<Long, NaicsData>();
+			for (NaicsData naicsData : naicsCodeList)
+				naicsMap.put(naicsData.getId(), naicsData);
+		}
+		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
+		if (null != nteeCodeList) {
+			nteeMap = new HashMap<Long, NteeData>();
+			for (NteeData nteeData : nteeCodeList)
+				nteeMap.put(nteeData.getId(), nteeData);
+		}
+	}
+
 
 }

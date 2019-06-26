@@ -106,7 +106,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 		}
 	}
 
-	@Transactional
 	public ResourceCategory saveResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		ResourceCategory category = new ResourceCategory();
 		try {
