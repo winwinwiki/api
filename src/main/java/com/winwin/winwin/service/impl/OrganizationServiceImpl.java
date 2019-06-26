@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,6 @@ import com.winwin.winwin.payload.NteeMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
-import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -461,17 +461,18 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != organizationPayloadList) {
 				// set Naics-Ntee code map
 				setNaicsNteeMap();
-
 				for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
 					if (null != organizationPayload && null != user) {
-						if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
-							if (null != organizationPayload.getName())
-								notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+						if (!StringUtils.isEmpty(organizationPayload.getName())
+								&& !StringUtils.isEmpty(organizationPayload.getNotes())) {
+							notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
 						}
+
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 							organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
 							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
+							organizationList.add(
+									setOrganizationDataForBulkUpload(organizationPayload, user, operationPerformed));
 
 						} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
 							if (null != organizationPayload.getId()) {
@@ -481,7 +482,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 									throw new OrganizationException(
 											"organization with Id:" + organizationPayload.getId()
 													+ "is not found in DB to perform update operation");
-								organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
+								organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user,
+										operationPerformed));
 							} else {
 								throw new Exception(
 										"Organization id is found as null in the file to perform bulk update operation for organizations");
@@ -492,26 +494,60 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 			organizationList = organizationRepository.saveAll(organizationList);
 
+			// create notes for multiple organizations
+			List<OrganizationNote> organizationsNoteList = new ArrayList<OrganizationNote>();
+			// List<OrganizationHistory> organizationHistoryList = new
+			// ArrayList<OrganizationHistory>();
+
+			Date date = CommonUtils.getFormattedDate();
 			for (Organization organization : organizationList) {
-				if (null != organization.getName()) {
-					String notes = notesMap.get(organization.getName());
-					OrganizationNotePayload organizationNotePayload = new OrganizationNotePayload();
-					Date date = CommonUtils.getFormattedDate();
-					organizationNotePayload.setName(notes);
-					organizationNotePayload.setOrganizationId(organization.getId());
-					organizationNotePayload.setCreatedAt(date);
-					organizationNotePayload.setCreatedBy(user.getEmail());
-					OrganizationNote note = organizationNoteService.createOrganizationNote(organizationNotePayload);
+				// set notes list for multiple organization's
+				if (!StringUtils.isEmpty(organization.getName())) {
+					OrganizationNote note = new OrganizationNote();
+					note.setName(notesMap.get(organization.getName()));
+					note.setOrganizationId(organization.getId());
+					note.setCreatedAt(date);
+					note.setUpdatedAt(date);
+					note.setCreatedBy(user.getEmail());
+					note.setUpdatedBy(user.getEmail());
+					organizationsNoteList.add(note);
 				}
+
+				/*
+				 * // set organization history for multiple organization's
+				 * OrganizationHistory orgHistory = new OrganizationHistory();
+				 * orgHistory.setOrganizationId(organization.getId());
+				 * orgHistory.setEntityId(organization.getId());
+				 * orgHistory.setEntityName(organization.getName());
+				 * orgHistory.setEntityType(OrganizationConstants.ORGANIZATION);
+				 * orgHistory.setEntityCode(""); orgHistory.setUpdatedAt(date);
+				 * orgHistory.setUpdatedBy(user.getUserDisplayName());
+				 * orgHistory.setActionPerformed(operationPerformed);
+				 * organizationHistoryList.add(orgHistory);
+				 */
+
+				// To set spi and sdg tags by naics code and ntee code
 				if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
-					// To set spi and sdg tags by naics code
-					setSpiSdgMapByNaicsCode(organization, user, naicsMap);
-					// To set spi and sdg tags by ntee code
-					setSpiSdgMapByNteeCode(organization, user, nteeMap);
+					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						setOrganizationSpiSdgMappingByNaicsCodeForBulkCreation(organization, user, naicsMap);
+						setOrganizationSpiSdgMappingByNteeCodeForBulkCreation(organization, user, nteeMap);
+					} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
+						setOrganizationSpiSdgMappingByNaicsCode(organization, user, naicsMap);
+						setOrganizationSpiSdgMappingByNteeCode(organization, user, nteeMap);
+					}
 				}
-				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
-						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
 			}
+
+			// create notes for multiple organization's
+			if (!organizationsNoteList.isEmpty())
+				organizationsNoteList = organizationNoteService.createOrganizationsNotes(organizationsNoteList);
+
+			/*
+			 * // create history for multiple organization's if
+			 * (!organizationHistoryList.isEmpty())
+			 * orgHistoryService.createOrganizationHistory(
+			 * organizationHistoryList);
+			 */
 
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
@@ -553,7 +589,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
-		;
 
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
@@ -564,25 +599,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setUpdatedBy(user.getEmail());
 		organization.setIsActive(true);
 
-		if (organizationPayload.getNaicsCode() == null && organizationPayload.getNteeCode() == null) {
-			List<Long> spiTagIds = new ArrayList<>();
-			List<Long> sdgTagIds = new ArrayList<>();
-
-			if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
-				String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
-				for (int j = 0; j < spiIdsList.length; j++) {
-					spiTagIds.add(Long.parseLong(spiIdsList[j]));
-				}
-			}
-
-			if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
-				String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
-				for (int j = 0; j < sdgIdsList.length; j++) {
-					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
-				}
-			}
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
-		}
 		return organization;
 	}
 
@@ -594,7 +610,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws Exception
 	 */
 	private Organization setOrganizationDataForBulkUpload(OrganizationRequestPayload organizationPayload,
-			UserPayload user) throws Exception {
+			UserPayload user, String operationPerformed) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 		Organization organization = new Organization();
@@ -638,7 +654,19 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
 				}
 			}
-			saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
+
+			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+				// create organization's spi tags mapping for Bulk Creation
+				saveOrgSpiMappingForBulkCreation(organization, user, spiDataMapObj, spiTagIds);
+				// create organization's sdg tags mapping for Bulk Creation
+				saveOrgSdgMappingForBulkCreation(organization, user, sdgDataMapObj, sdgTagIds);
+			} else if (operationPerformed.equals(OrganizationConstants.UPDATE)) {
+				// create organization's spi tags mapping
+				saveOrgSpiMapping(organization, user, spiDataMapObj, spiTagIds);
+				// create organization's sdg tags mapping
+				saveOrgSdgMapping(organization, user, sdgDataMapObj, sdgTagIds);
+			}
+
 		}
 		return organization;
 	}
@@ -647,17 +675,17 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws Exception
 	 * 
 	 */
-	private void setSpiSdgMapByNaicsCode(Organization organization, UserPayload user,
+	private void setOrganizationSpiSdgMappingByNaicsCodeForBulkCreation(Organization organization, UserPayload user,
 			Map<String, NaicsDataMappingPayload> naicsMap) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
-
 		if (null != organization.getNaicsCode()) {
 			NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
 			if (naicsMapPayload != null) {
-				List<Long> spiIdsList = naicsMapPayload.getSpiTagIds();
-				List<Long> sdgIdsList = naicsMapPayload.getSdgTagIds();
-				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+				// create organization's spi tags mapping
+				saveOrgSpiMappingForBulkCreation(organization, user, spiDataMapObj, naicsMapPayload.getSpiTagIds());
+				// create organization's sdg tags mapping
+				saveOrgSdgMappingForBulkCreation(organization, user, sdgDataMapObj, naicsMapPayload.getSdgTagIds());
 			}
 		}
 	}
@@ -666,7 +694,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @throws Exception
 	 * 
 	 */
-	private void setSpiSdgMapByNteeCode(Organization organization, UserPayload user,
+	private void setOrganizationSpiSdgMappingByNteeCodeForBulkCreation(Organization organization, UserPayload user,
 			Map<String, NteeDataMappingPayload> nteeMap) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
@@ -674,30 +702,75 @@ public class OrganizationServiceImpl implements OrganizationService {
 		if (null != organization.getNteeCode()) {
 			NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
 			if (nteeMapPayload != null) {
-				List<Long> spiIdsList = nteeMapPayload.getSpiTagIds();
-				List<Long> sdgIdsList = nteeMapPayload.getSdgTagIds();
-				saveOrgSpiSdgMapping(organization, user, spiDataMapObj, sdgDataMapObj, spiIdsList, sdgIdsList);
+				// create organization's spi tags mapping
+				saveOrgSpiMappingForBulkCreation(organization, user, spiDataMapObj, nteeMapPayload.getSpiTagIds());
+				// create organization's sdg tags mapping
+				saveOrgSdgMappingForBulkCreation(organization, user, sdgDataMapObj, nteeMapPayload.getSdgTagIds());
 			}
 		}
 	}
 
 	/**
-	 * @param organization
-	 * @param user
-	 * @param spiDataMapObj
-	 * @param sdgDataMapObj
-	 * @param spiIdsList
-	 * @param sdgIdsList
 	 * @throws Exception
+	 * 
 	 */
-	private void saveOrgSpiSdgMapping(Organization organization, UserPayload user, OrganizationSpiData spiDataMapObj,
-			OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
-		@SuppressWarnings("unused")
-		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMapping(organization, user, spiDataMapObj, spiIdsList);
-
-		@SuppressWarnings("unused")
-		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMapping(organization, user, sdgDataMapObj, sdgIdsList);
+	private void setOrganizationSpiSdgMappingByNaicsCode(Organization organization, UserPayload user,
+			Map<String, NaicsDataMappingPayload> naicsMap) throws Exception {
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
+		if (null != organization.getNaicsCode()) {
+			NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
+			if (naicsMapPayload != null) {
+				// create organization's spi tags mapping
+				saveOrgSpiMapping(organization, user, spiDataMapObj, naicsMapPayload.getSpiTagIds());
+				// create organization's sdg tags mapping
+				saveOrgSdgMapping(organization, user, sdgDataMapObj, naicsMapPayload.getSdgTagIds());
+			}
+		}
 	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private void setOrganizationSpiSdgMappingByNteeCode(Organization organization, UserPayload user,
+			Map<String, NteeDataMappingPayload> nteeMap) throws Exception {
+		OrganizationSpiData spiDataMapObj = null;
+		OrganizationSdgData sdgDataMapObj = null;
+
+		if (null != organization.getNteeCode()) {
+			NteeDataMappingPayload nteeMapPayload = nteeMap.get(organization.getNteeCode().getCode());
+			if (nteeMapPayload != null) {
+				// create organization's spi tags mapping
+				saveOrgSpiMapping(organization, user, spiDataMapObj, nteeMapPayload.getSpiTagIds());
+				// create organization's sdg tags mapping
+				saveOrgSdgMapping(organization, user, sdgDataMapObj, nteeMapPayload.getSdgTagIds());
+			}
+		}
+	}
+
+	/*	*//**
+			 * @param organization
+			 * @param user
+			 * @param spiDataMapObj
+			 * @param sdgDataMapObj
+			 * @param spiIdsList
+			 * @param sdgIdsList
+			 * @throws Exception
+			 *//*
+			 * private void saveOrgSpiSdgMapping(Organization organization,
+			 * UserPayload user, OrganizationSpiData spiDataMapObj,
+			 * OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
+			 * List<Long> sdgIdsList) throws Exception {
+			 * 
+			 * @SuppressWarnings("unused") List<OrganizationSpiData>
+			 * spiDataMapList = saveOrgSpiMapping(organization, user,
+			 * spiDataMapObj, spiIdsList);
+			 * 
+			 * @SuppressWarnings("unused") List<OrganizationSdgData>
+			 * sdgDataMapList = saveOrgSdgMapping(organization, user,
+			 * sdgDataMapObj, sdgIdsList); }
+			 */
 
 	/**
 	 * @throws Exception
@@ -831,6 +904,98 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @return
 	 * @throws Exception
 	 */
+	private List<OrganizationSdgData> saveOrgSdgMappingForBulkCreation(Organization organization, UserPayload user,
+			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
+		Date date = CommonUtils.getFormattedDate();
+		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
+		List<SdgData> sdgDataList = sdgDataRepository.findAllSdgData();
+
+		if (null != sdgIdsList) {
+
+			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
+					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
+			for (Long sdgId : sdgIdsList) {
+				SdgData sdgData = sdgDataMap.get(sdgId);
+				if (null != sdgData) {
+					sdgDataMapObj = new OrganizationSdgData();
+					sdgDataMapObj.setSdgData(sdgData);
+					sdgDataMapObj.setOrganizationId(organization.getId());
+					sdgDataMapObj.setIsChecked(true);
+					sdgDataMapObj.setCreatedAt(date);
+					sdgDataMapObj.setUpdatedAt(date);
+					sdgDataMapObj.setCreatedBy(user.getEmail());
+					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapList.add(sdgDataMapObj);
+				}
+			}
+			if (!sdgDataMapList.isEmpty())
+				sdgDataMapList = orgSdgDataMapRepository.saveAll(sdgDataMapList);
+
+			/*
+			 * orgHistoryService.createOrganizationHistory(user,
+			 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+			 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
+			 * sdgDataMapObj.getSdgData().getShortName(),
+			 * sdgDataMapObj.getSdgData().getShortNameCode());
+			 */
+		}
+		return sdgDataMapList;
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param spiDataMapObj
+	 * @param spiIdsList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<OrganizationSpiData> saveOrgSpiMappingForBulkCreation(Organization organization, UserPayload user,
+			OrganizationSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
+		Date date = CommonUtils.getFormattedDate();
+		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
+		List<SpiData> spiDataList = spiDataRepository.findAllSpiData();
+		if (null != spiIdsList) {
+			Map<Long, SpiData> spiDataMap = spiDataList.stream()
+					.collect(Collectors.toMap(SpiData::getId, SpiData -> SpiData));
+			for (Long spiId : spiIdsList) {
+				SpiData spiData = spiDataMap.get(spiId);
+				if (null != spiData) {
+					spiDataMapObj = new OrganizationSpiData();
+					spiDataMapObj.setSpiData(spiData);
+					spiDataMapObj.setOrganizationId(organization.getId());
+					spiDataMapObj.setIsChecked(true);
+					spiDataMapObj.setCreatedAt(date);
+					spiDataMapObj.setUpdatedAt(date);
+					spiDataMapObj.setCreatedBy(user.getEmail());
+					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapList.add(spiDataMapObj);
+				}
+			}
+			if (!spiDataMapList.isEmpty())
+				spiDataMapList = orgSpiDataMapRepository.saveAll(spiDataMapList);
+
+		}
+
+		/*
+		 * orgHistoryService.createOrganizationHistory(user,
+		 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+		 * OrganizationConstants.SPI, spiDataMapObj.getId(),
+		 * spiDataMapObj.getSpiData().getIndicatorName(),
+		 * spiDataMapObj.getSpiData().getIndicatorId());
+		 */
+
+		return spiDataMapList;
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param sdgDataMapObj
+	 * @param sdgIdsList
+	 * @return
+	 * @throws Exception
+	 */
 	private List<OrganizationSdgData> saveOrgSdgMapping(Organization organization, UserPayload user,
 			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
@@ -888,9 +1053,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 						sdgDataMapList.add(sdgDataMapObj);
 					}
 
-					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
+					/*
+					 * orgHistoryService.createOrganizationHistory(user,
+					 * sdgDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
+					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getSdgData().getShortName(),
+					 * sdgDataMapObj.getSdgData().getShortNameCode());
+					 */
 				}
 			}
 		}
@@ -960,9 +1130,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 						spiDataMapList.add(spiDataMapObj);
 					}
-					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
+					/*
+					 * orgHistoryService.createOrganizationHistory(user,
+					 * spiDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
+					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getSpiData().getIndicatorName(),
+					 * spiDataMapObj.getSpiData().getIndicatorId());
+					 */
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 package com.winwin.winwin.service.impl;
 
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,16 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			LOGGER.error("exception occured while creating history", e);
 		}
 
+	}
+
+	@Override
+	public void createOrganizationHistory(List<OrganizationHistory> orgHistoryList) {
+		try {
+			if (orgHistoryList != null)
+				orgHistoryRepository.saveAll(orgHistoryList);
+		} catch (Exception e) {
+			LOGGER.error("exception occured while creating history", e);
+		}
 	}
 
 }
