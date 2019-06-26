@@ -74,6 +74,19 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		}
 		return note;
 	}
+	
+	@Override
+	@Transactional
+	public List<OrganizationNote> createOrganizationsNotes(List<OrganizationNote> organizationNoteList) {
+		try {
+			if (organizationNoteList != null) {
+				organizationNoteList = organizationNoteRepository.saveAll(organizationNoteList);
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.note.exception.created"), e);
+		}
+		return organizationNoteList;
+	}
 
 	@Override
 	@Transactional
