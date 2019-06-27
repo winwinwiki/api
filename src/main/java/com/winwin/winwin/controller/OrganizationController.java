@@ -38,7 +38,6 @@ import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
-import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -93,7 +92,6 @@ import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
-import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
@@ -190,7 +188,6 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			LOGGER.info(CommonUtils.getFormattedDate()+"1");
 			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
 			if (null != exceptionResponse.getException())
@@ -345,7 +342,6 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != filterPayload) {
-				LOGGER.info("getting organization list");
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
 				// commented due to time constraint
 				// filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload,
