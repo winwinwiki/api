@@ -22,7 +22,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization where type = 'organization' AND is_Active = true ", nativeQuery = true)
 	List<Organization> findAllOrganizationList();
 
-	@Query(value = "select * from organization where is_Active = true and parent_id IS NOT DISTINCT FROM :orgId", nativeQuery = true)
+	@Query(value = "select * from organization where type = 'organization' AND is_Active = true and parent_id = :orgId", nativeQuery = true)
 	List<Organization> findAllChildren(@Param("orgId") Long id);
 
 	@Query(value = "select * from organization where type = 'division' AND is_Active = true AND parent_id = :orgId", nativeQuery = true)
@@ -40,7 +40,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization where type = 'organization' AND is_Active = true "
 			+ "  AND name ILIKE %:name% ORDER BY name", nativeQuery = true)
 	List<Organization> findByNameIgnoreCaseContaining(@Param("name") String name, Pageable pageable);
-	
+
 	@Query(value = "select count(*) from organization where type = 'organization' AND is_Active = true "
 			+ "  AND name ILIKE %:name%", nativeQuery = true)
 	Integer findNumOfRecordsByNameIgnoreCaseContaining(@Param("name") String name);
