@@ -493,9 +493,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 				}
 			}
-			LOGGER.info(CommonUtils.getFormattedDate() + "saving org records");
 			organizationList = organizationRepository.saveAll(organizationList);
-			LOGGER.info(CommonUtils.getFormattedDate() + "saved org records");
 
 			// create notes for multiple organizations
 			List<OrganizationNote> organizationsNoteList = new ArrayList<OrganizationNote>();
@@ -542,10 +540,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 
 			// create notes for multiple organization's
-			LOGGER.info(CommonUtils.getFormattedDate() + "saving org notes");
 			if (!organizationsNoteList.isEmpty())
 				organizationsNoteList = organizationNoteService.createOrganizationsNotes(organizationsNoteList);
-			LOGGER.info(CommonUtils.getFormattedDate() + "saved org notes");
 
 			/*
 			 * // create history for multiple organization's if
@@ -624,9 +620,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		BeanUtils.copyProperties(organizationPayload, organization);
 
 		if (organizationPayload.getAddress() != null) {
-			LOGGER.info(CommonUtils.getFormattedDate() + "saving org address");
 			address = saveAddress(organizationPayload.getAddress(), user);
-			LOGGER.info(CommonUtils.getFormattedDate() + "saving org address");
 			organization.setAddress(address);
 		}
 
@@ -687,16 +681,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 		if (null != organization.getNaicsCode()) {
-			LOGGER.info(
-					CommonUtils.getFormattedDate() + " running setOrganizationSpiSdgMappingByNaicsCodeForBulkCreation");
 			NaicsDataMappingPayload naicsMapPayload = naicsMap.get(organization.getNaicsCode().getCode());
 			if (naicsMapPayload != null) {
 				// create organization's spi tags mapping
 				saveOrgSpiMappingForBulkCreation(organization, user, spiDataMapObj, naicsMapPayload.getSpiTagIds());
 				// create organization's sdg tags mapping
 				saveOrgSdgMappingForBulkCreation(organization, user, sdgDataMapObj, naicsMapPayload.getSdgTagIds());
-				LOGGER.info(CommonUtils.getFormattedDate()
-						+ "completed running setOrganizationSpiSdgMappingByNaicsCodeForBulkCreation");
 			}
 		}
 	}
@@ -707,7 +697,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	private void setOrganizationSpiSdgMappingByNteeCodeForBulkCreation(Organization organization, UserPayload user,
 			Map<String, NteeDataMappingPayload> nteeMap) throws Exception {
-		LOGGER.info(CommonUtils.getFormattedDate() + " running setOrganizationSpiSdgMappingByNteeCodeForBulkCreation");
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 
@@ -720,8 +709,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 				saveOrgSdgMappingForBulkCreation(organization, user, sdgDataMapObj, nteeMapPayload.getSdgTagIds());
 			}
 		}
-		LOGGER.info(CommonUtils.getFormattedDate()
-				+ " completed running setOrganizationSpiSdgMappingByNteeCodeForBulkCreation");
 	}
 
 	/**
@@ -920,12 +907,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	private List<OrganizationSdgData> saveOrgSdgMappingForBulkCreation(Organization organization, UserPayload user,
 			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
-		LOGGER.info(CommonUtils.getFormattedDate() + " running saveOrgSdgMappingForBulkCreation");
 		Date date = CommonUtils.getFormattedDate();
 		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
 		List<SdgData> sdgDataList = sdgDataRepository.findAllSdgData();
 
 		if (null != sdgIdsList) {
+
 			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 			for (Long sdgId : sdgIdsList) {
@@ -942,12 +929,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapList.add(sdgDataMapObj);
 				}
 			}
-			if (!sdgDataMapList.isEmpty()) {
-				LOGGER.info(CommonUtils.getFormattedDate() + "saving org sdg tags");
+			if (!sdgDataMapList.isEmpty())
 				sdgDataMapList = orgSdgDataMapRepository.saveAll(sdgDataMapList);
-				LOGGER.info(CommonUtils.getFormattedDate() + "saved org sdg tags");
-			}
-			LOGGER.info(CommonUtils.getFormattedDate() + " completed saveOrgSdgMappingForBulkCreation");
+
 			/*
 			 * orgHistoryService.createOrganizationHistory(user,
 			 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
@@ -969,7 +953,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	private List<OrganizationSpiData> saveOrgSpiMappingForBulkCreation(Organization organization, UserPayload user,
 			OrganizationSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
-		LOGGER.info(CommonUtils.getFormattedDate() + " running saveOrgSpiMappingForBulkCreation");
 		Date date = CommonUtils.getFormattedDate();
 		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
 		List<SpiData> spiDataList = spiDataRepository.findAllSpiData();
@@ -990,13 +973,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapList.add(spiDataMapObj);
 				}
 			}
-			if (!spiDataMapList.isEmpty()) {
-				LOGGER.info(CommonUtils.getFormattedDate() + "saving org spi tags");
+			if (!spiDataMapList.isEmpty())
 				spiDataMapList = orgSpiDataMapRepository.saveAll(spiDataMapList);
-				LOGGER.info(CommonUtils.getFormattedDate() + "saved org spi tags");
-			}
-
-			LOGGER.info(CommonUtils.getFormattedDate() + " completed saveOrgSpiMappingForBulkCreation");
 
 		}
 

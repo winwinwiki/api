@@ -32,6 +32,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		Query filterQuery = setFilterQuery(payload, type);
 
 		try {
+			@SuppressWarnings("unchecked")
 			List<Organization> organizationList = filterQuery.setMaxResults(pageSize).setFirstResult(pageNo * pageSize)
 					.getResultList();
 			return organizationList;
@@ -47,6 +48,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		Query filterQuery = setFilterQuery(payload, type);
 
 		try {
+			@SuppressWarnings("unchecked")
 			List<Organization> organizationList = filterQuery.getResultList();
 			if (null != organizationList)
 				return organizationList.size();
