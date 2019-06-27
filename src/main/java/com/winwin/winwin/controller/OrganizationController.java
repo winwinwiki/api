@@ -38,6 +38,7 @@ import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
+import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -252,15 +253,11 @@ public class OrganizationController extends BaseController {
 	private void setNaicsNteeMap() {
 		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
 		if (null != naicsCodeList) {
-			naicsMap = new HashMap<String, Long>();
-			for (NaicsData naicsData : naicsCodeList)
-				naicsMap.put(naicsData.getCode(), naicsData.getId());
+			naicsMap = naicsCodeList.stream().collect(Collectors.toMap(NaicsData::getCode, NaicsData::getId));
 		}
 		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
 		if (null != nteeCodeList) {
-			nteeMap = new HashMap<String, Long>();
-			for (NteeData nteeData : nteeCodeList)
-				nteeMap.put(nteeData.getCode(), nteeData.getId());
+			nteeMap = nteeCodeList.stream().collect(Collectors.toMap(NteeData::getCode, NteeData::getId));
 		}
 	}
 
@@ -348,8 +345,9 @@ public class OrganizationController extends BaseController {
 			if (null != filterPayload) {
 				LOGGER.info("getting organization list");
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
-				//commented due to time constraint
-				//filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
+				// commented due to time constraint
+				// filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload,
+				// exceptionResponse));
 			}
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -1335,7 +1333,7 @@ public class OrganizationController extends BaseController {
 
 		// Get Id from ntee_code master data Map and assign the id of it
 		if (!StringUtils.isEmpty(csv.getNteeCode()))
-			payload.setNteeCode(naicsMap.get(csv.getNteeCode()));
+			payload.setNteeCode(nteeMap.get(csv.getNteeCode()));
 
 		return payload;
 	}
