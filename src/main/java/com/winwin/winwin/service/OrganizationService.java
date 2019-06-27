@@ -28,7 +28,7 @@ public interface OrganizationService {
 
 	List<Organization> getProgramList(Long orgId);
 
-	OrganizationChartPayload getOrgCharts(Organization organization, Long orgId);
+	OrganizationChartPayload getOrgCharts(Organization organization);
 
 	Organization createSubOrganization(SubOrganizationPayload payload);
 

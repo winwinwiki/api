@@ -93,6 +93,7 @@ import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
@@ -189,6 +190,7 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
+			LOGGER.info(CommonUtils.getFormattedDate()+"1");
 			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
 			if (null != exceptionResponse.getException())
@@ -1131,7 +1133,7 @@ public class OrganizationController extends BaseController {
 			if (organization == null) {
 				return sendErrorResponse("org.bad.request");
 			} else {
-				payload = organizationService.getOrgCharts(organization, orgId);
+				payload = organizationService.getOrgCharts(organization);
 			}
 		} catch (Exception e) {
 			throw new OrganizationException(customMessageSource.getMessage("org.chart.error"));
