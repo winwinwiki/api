@@ -68,13 +68,14 @@ public class ProgramServiceImpl implements ProgramService {
 	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
 		Program program = null;
 		try {
-			program = getProgramFromProgramRequestPayload(programPayload);
+			UserPayload user = userService.getCurrentUserDetails();
+			program = getProgramFromProgramRequestPayload(programPayload, user);
 			program = programRepository.saveAndFlush(program);
 
-			if (null != program.getId()) {
-				UserPayload user = userService.getCurrentUserDetails();
-				orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.CREATE,
-						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			if (null != program.getId() && null != program.getOrganization()) {
+				orgHistoryService.createOrganizationHistory(user, program.getOrganization().getId(),
+						OrganizationConstants.CREATE, OrganizationConstants.PROGRAM, program.getId(), program.getName(),
+						"");
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
@@ -91,8 +92,10 @@ public class ProgramServiceImpl implements ProgramService {
 		try {
 			programRepository.deleteById(program.getId());
 			UserPayload user = userService.getCurrentUserDetails();
-			orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.DELETE,
-					OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			if (program.getOrganization() != null)
+				orgHistoryService.createOrganizationHistory(user, program.getOrganization().getId(),
+						OrganizationConstants.DELETE, OrganizationConstants.PROGRAM, program.getId(), program.getName(),
+						"");
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -106,13 +109,14 @@ public class ProgramServiceImpl implements ProgramService {
 	public Program updateProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
 		Program program = null;
 		try {
-			program = getProgramFromProgramRequestPayload(programPayload);
+			UserPayload user = userService.getCurrentUserDetails();
+			program = getProgramFromProgramRequestPayload(programPayload, user);
 			program = programRepository.saveAndFlush(program);
 
-			if (null != program.getId()) {
-				UserPayload user = userService.getCurrentUserDetails();
-				orgHistoryService.createOrganizationHistory(user, program.getId(), OrganizationConstants.UPDATE,
-						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			if (null != program.getId() && null != program.getOrganization()) {
+				orgHistoryService.createOrganizationHistory(user, program.getOrganization().getId(),
+						OrganizationConstants.UPDATE, OrganizationConstants.PROGRAM, program.getId(), program.getName(),
+						"");
 			}
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
@@ -139,16 +143,15 @@ public class ProgramServiceImpl implements ProgramService {
 	}
 
 	@Override
-	public Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload) {
+	public Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload, UserPayload user) {
 		Program program = null;
 		try {
-			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
 			if (payload.getId() != null)
 				program = programRepository.findProgramById(payload.getId());
 			if (program == null)
 				program = new Program();
-			Address address = addressService.saveAddress(payload.getAddress());
+			Address address = addressService.saveAddress(payload.getAddress(), user);
 			program.setAddress(address);
 
 			BeanUtils.copyProperties(payload, program);

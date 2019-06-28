@@ -17,8 +17,6 @@ import com.winwin.winwin.payload.SubOrganizationPayload;
 public interface OrganizationService {
 	Organization createOrganization(OrganizationRequestPayload organizationRequestPayload, ExceptionResponse response);
 
-	Organization createProgram(OrganizationRequestPayload organizationRequestPayload);
-
 	void deleteOrganization(Long id, String type, ExceptionResponse response);
 
 	Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
