@@ -22,7 +22,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization where type = 'organization' AND is_Active = true ", nativeQuery = true)
 	List<Organization> findAllOrganizationList();
 
-	@Query(value = "select * from organization where type = 'organization' AND is_Active = true and parent_id = :orgId", nativeQuery = true)
+	@Query(value = "select * from organization where parent_id = :orgId AND is_Active = true ", nativeQuery = true)
 	List<Organization> findAllChildren(@Param("orgId") Long id);
 
 	@Query(value = "select * from organization where type = 'division' AND is_Active = true AND parent_id = :orgId", nativeQuery = true)

@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.controller.BaseController;
@@ -32,7 +32,7 @@ import io.micrometer.core.instrument.util.StringUtils;
  * @author ArvindKhatik
  *
  */
-@Component
+@Service
 public class TokenFilter extends HttpFilter {
 
 	private static final long serialVersionUID = 1L;

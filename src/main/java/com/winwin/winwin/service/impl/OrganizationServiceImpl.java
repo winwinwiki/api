@@ -1,6 +1,7 @@
 package com.winwin.winwin.service.impl;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -270,8 +271,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
-	public Integer getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
-		Integer noOfRecords = 0;
+	public BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
+		BigInteger noOfRecords = null;
 		try {
 			noOfRecords = organizationRepository.getFilterOrganizationCount(payload, OrganizationConstants.ORGANIZATION,
 					null);

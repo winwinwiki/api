@@ -1,5 +1,6 @@
 package com.winwin.winwin.service;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import com.winwin.winwin.entity.Organization;
@@ -40,6 +41,6 @@ public interface OrganizationService {
 	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response);
 
-	Integer getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response);
+	BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response);
 
 }

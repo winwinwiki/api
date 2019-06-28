@@ -1,5 +1,6 @@
 package com.winwin.winwin.repository;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -15,5 +16,5 @@ public interface OrganizationFilterRepository {
 	List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId, Integer pageNo,
 			Integer pageSize);
 
-	Integer getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId);
+	BigInteger getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId);
 }
