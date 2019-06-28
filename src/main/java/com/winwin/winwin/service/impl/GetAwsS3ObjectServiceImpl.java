@@ -3,7 +3,7 @@ package com.winwin.winwin.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
@@ -20,7 +20,7 @@ import lombok.Setter;
  * @author ArvindKhatik
  *
  */
-@Component
+@Service
 @Getter
 @Setter
 public class GetAwsS3ObjectServiceImpl implements GetAwsS3ObjectService {

@@ -1,5 +1,6 @@
 package com.winwin.winwin.payload;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -30,7 +31,7 @@ public class OrganizationFilterPayload {
 	private long goalCode;
 	private Integer pageNo;
 	private Integer pageSize;
-	private Integer orgCount;
+	private BigInteger orgCount;
 	private String sortBy;
 	private String sortOrder;
 	private String address;

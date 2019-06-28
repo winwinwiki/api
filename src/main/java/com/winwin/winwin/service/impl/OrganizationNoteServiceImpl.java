@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
@@ -29,7 +29,7 @@ import com.winwin.winwin.util.CommonUtils;
  * @author ArvindKhatik
  *
  */
-@Component
+@Service
 public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	@Autowired
 	OrganizationNoteRepository organizationNoteRepository;
