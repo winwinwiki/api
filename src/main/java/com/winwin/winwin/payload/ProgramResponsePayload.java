@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import java.util.Date;
-
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 
@@ -46,11 +44,6 @@ public class ProgramResponsePayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-	String createdBy;
-	String updatedBy;
-	Date createdAt;
-	Date updatedAt;
-	String adminUrl;
 	String notes;
 	Long parentId;
 	String resourceIds;

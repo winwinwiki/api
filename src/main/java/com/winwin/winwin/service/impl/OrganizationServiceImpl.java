@@ -290,52 +290,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organizationRepository.findAllProgramList(orgId);
 	}// end of method getOrganizationList
 
-	@Override
-	@Transactional
-	public Organization createProgram(OrganizationRequestPayload organizationPayload) {
-		Organization organization = null;
-		try {
-			UserPayload user = userService.getCurrentUserDetails();
-			if (null != organizationPayload && null != user) {
-				Date date = CommonUtils.getFormattedDate();
-				Address address = new Address();
-				organization = new Organization();
-				BeanUtils.copyProperties(organizationPayload, organization);
-
-				if (organizationPayload.getAddress() != null) {
-					address = saveAddress(organizationPayload.getAddress(), user);
-					organization.setAddress(address);
-				}
-				if (organizationPayload.getNaicsCode() != null) {
-					NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
-					organization.setNaicsCode(naicsCode);
-				}
-				if (organizationPayload.getNteeCode() != null) {
-					NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
-					organization.setNteeCode(naicsCode);
-				}
-
-				organization.setType(OrganizationConstants.PROGRAM);
-				organization.setIsActive(true);
-				;
-				organization.setCreatedAt(date);
-				organization.setUpdatedAt(date);
-				organization.setCreatedBy(user.getEmail());
-				organization.setUpdatedBy(user.getEmail());
-				organization = organizationRepository.saveAndFlush(organization);
-
-				if (null != organization) {
-					orgHistoryService.createOrganizationHistory(user, organization.getId(),
-							OrganizationConstants.CREATE, OrganizationConstants.PROGRAM, organization.getId(), "",
-							organization.getName());
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("prg.exception.created"), e);
-		}
-
-		return organization;
-	}
 
 	@Override
 	public OrganizationChartPayload getOrgCharts(Organization organization) {

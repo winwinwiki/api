@@ -7,6 +7,7 @@ import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
+import com.winwin.winwin.payload.UserPayload;
 
 public interface ProgramService {
 	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse);
@@ -21,6 +22,6 @@ public interface ProgramService {
 
 	ProgramResponsePayload getProgramResponseFromProgram(Program payload);
 
-	Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload);
+	Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload,UserPayload user);
 
 }

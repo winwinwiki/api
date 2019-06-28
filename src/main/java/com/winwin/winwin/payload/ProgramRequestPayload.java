@@ -45,7 +45,6 @@ public class ProgramRequestPayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-	String adminUrl;
 	String notes;
 	Long parentId;
 	String datasetType;

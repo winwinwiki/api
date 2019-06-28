@@ -31,10 +31,9 @@ public class AddressServiceImpl implements AddressService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
-	public Address saveAddress(AddressPayload addressPayload) {
+	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
-			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
 			if (addressPayload.getId() != null)
 				address = addressRepository.findAddressById(addressPayload.getId());
@@ -68,16 +67,8 @@ public class AddressServiceImpl implements AddressService {
 
 	@Override
 	public AddressPayload getAddressPayloadFromAddress(Address address) {
-		// TODO Auto-generated method stub
 		AddressPayload addressPayload = new AddressPayload();
-		addressPayload.setId(address.getId());
-		addressPayload.setCountry(address.getCountry());
-		addressPayload.setState(address.getState());
-		addressPayload.setCity(address.getCity());
-		addressPayload.setCounty(address.getCounty());
-		addressPayload.setZip(address.getZip());
-		addressPayload.setStreet(address.getStreet());
-		addressPayload.setPlaceId(address.getPlaceId());
+		BeanUtils.copyProperties(address, addressPayload);
 		return addressPayload;
 	}
 }

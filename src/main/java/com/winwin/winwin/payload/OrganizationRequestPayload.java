@@ -51,7 +51,6 @@ public class OrganizationRequestPayload {
 	Long populationServed;
 	String missionStatement;
 	String contactInfo;
-	String adminUrl;
 	String datasetType;
 	String spiTagIds;
 	String sdgTagIds;
