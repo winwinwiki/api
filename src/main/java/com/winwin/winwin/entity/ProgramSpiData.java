@@ -26,7 +26,7 @@ import lombok.ToString;
 @Table(name = "program_spi_mapping")
 public class ProgramSpiData extends AbstractAuditableEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_spi_mapping_seq")
 	@Column(name = "id")
 	private Long id;
 

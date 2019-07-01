@@ -29,7 +29,7 @@ import lombok.ToString;
 public class Classification extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "classification_seq")
 	private Long id;
 
 	@Column(name = "name")

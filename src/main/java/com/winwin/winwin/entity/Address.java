@@ -29,7 +29,7 @@ import lombok.ToString;
 public class Address extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "address_seq")
 	private Long id;
 
 	@Column(name = "country")

@@ -29,7 +29,7 @@ import lombok.ToString;
 public class RegionMaster extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "region_master_seq")
 	private Long id;
 
 	@Column(name = "name")

@@ -31,7 +31,7 @@ import lombok.ToString;
 public class OrganizationResource extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_resource_seq")
 	private Long id;
 
 	@ManyToOne

@@ -24,7 +24,7 @@ import lombok.ToString;
 @Table(name = "dataset_category")
 public class DataSetCategory extends AbstractAuditableEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_category_seq")
 	private Long id;
 
 	@Column(name = "category")
