@@ -1,5 +1,7 @@
 package com.winwin.winwin.entity;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,7 +30,7 @@ import lombok.ToString;
 public class Program extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_seq")
 	private Long id;
 
 	@ManyToOne
@@ -39,10 +41,10 @@ public class Program extends AbstractAuditableEntity {
 	private String name;
 
 	@Column(name = "revenue")
-	private Long revenue;
+	private BigDecimal revenue;
 
 	@Column(name = "assets")
-	private Long assets;
+	private BigDecimal assets;
 
 	@Column(name = "sector")
 	private String sector;

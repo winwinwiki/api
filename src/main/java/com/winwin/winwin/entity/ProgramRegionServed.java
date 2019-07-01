@@ -27,14 +27,14 @@ import lombok.ToString;
 public class ProgramRegionServed extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_region_served_seq")
 	private Long id;
 
 	@ManyToOne
 	@JoinColumn(name = "region_master_id")
 	private RegionMaster regionMaster;
 
-	@JoinColumn(name = "program_id")
+	@Column(name = "program_id")
 	private Long programId;
 
 	@Column(name = "is_active")

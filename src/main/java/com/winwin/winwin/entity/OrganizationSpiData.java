@@ -31,7 +31,7 @@ import lombok.ToString;
 public class OrganizationSpiData extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_spi_mapping_seq")
 	private Long id;
 
 	@Column(name = "organization_id")

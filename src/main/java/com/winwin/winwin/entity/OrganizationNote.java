@@ -30,7 +30,7 @@ import lombok.ToString;
 public class OrganizationNote extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_note_seq")
 	private Long id;
 
 	@Column(name = "name", columnDefinition = "text")

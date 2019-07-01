@@ -30,7 +30,7 @@ import lombok.ToString;
 @Table(name = "org_sdg_mapping")
 public class OrganizationSdgData extends AbstractAuditableEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_sdg_mapping_seq")
 	@Column(name = "id")
 	private Long id;
 

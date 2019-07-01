@@ -27,7 +27,7 @@ import lombok.ToString;
 public class ProgramDataSet extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_dataset_seq")
 	private Long id;
 
 	@ManyToOne

@@ -25,7 +25,7 @@ import lombok.ToString;
 public class ResourceCategory extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resource_category_seq")
 	private Long id;
 
 	@Column(name = "category")

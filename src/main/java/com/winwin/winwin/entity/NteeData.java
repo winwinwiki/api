@@ -29,7 +29,7 @@ import lombok.ToString;
 public class NteeData {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ntee_data_seq")
 	private Long id;
 
 	@Column(name = "name")

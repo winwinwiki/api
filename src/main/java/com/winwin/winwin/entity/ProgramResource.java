@@ -27,7 +27,7 @@ import lombok.ToString;
 public class ProgramResource extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_resource_seq")
 	private Long id;
 
 	@ManyToOne
@@ -40,7 +40,7 @@ public class ProgramResource extends AbstractAuditableEntity {
 	@Column(name = "count")
 	private Long count;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "is_active")

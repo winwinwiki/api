@@ -27,7 +27,7 @@ import lombok.ToString;
 public class OrganizationClassification extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_classification_mapping_seq")
 	private Long id;
 
 	@ManyToOne

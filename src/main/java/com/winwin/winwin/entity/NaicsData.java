@@ -29,7 +29,7 @@ import lombok.ToString;
 public class NaicsData {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "naics_data_seq")
 	private Long id;
 
 	@Column(name = "name")
