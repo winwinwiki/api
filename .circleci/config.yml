@@ -123,4 +123,4 @@ jobs: # a collection of steps
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
-            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip

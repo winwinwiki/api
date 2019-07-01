@@ -10,6 +10,7 @@ hooks:
   #   - location: stop_server
   #     runas: root
   #   - location: Scripts/UnzipDataBundle.sh
+  
   # AfterInstall:
   #   - location: service winwin-service start
   #     timeout: 180
