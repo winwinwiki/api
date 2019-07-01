@@ -92,6 +92,12 @@ jobs: # a collection of steps
           name: Check aws version
           command: aws --version
       - run: 
+          name: export Aws Access Key Id
+          command: export AWS_ACCESS_KEY_ID=[secure]          
+      - run: 
+          name: export Aws Secret Access Key
+          command: export AWS_SECRET_ACCESS_KEY=[secure]
+      - run: 
           name: Check S3 directory
           command: aws s3 ls
       - run:
