@@ -6,6 +6,7 @@ import java.util.List;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationChartPayload;
+import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
@@ -35,7 +36,7 @@ public interface OrganizationService {
 
 	List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response);
 
-	List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+	List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response);
 
 	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,

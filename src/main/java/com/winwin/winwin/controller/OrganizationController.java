@@ -181,9 +181,7 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
-		List<OrganizationRequestPayload> organizationPayloadList = new ArrayList<>();
 		List<Organization> organizationList = null;
-		List<OrganizationResponsePayload> payloadList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
@@ -196,10 +194,7 @@ public class OrganizationController extends BaseController {
 			if (null != organizationCsvPayload) {
 				// set Naics-Ntee code map
 				setNaicsNteeMap();
-				organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
-						.collect(Collectors.toList());
-				organizationList = organizationService.createOrganizations(organizationPayloadList, exceptionResponse);
-				payloadList = setOrganizationPayload(organizationList);
+				organizationList = organizationService.createOrganizations(organizationCsvPayload, exceptionResponse);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -207,7 +202,7 @@ public class OrganizationController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(payloadList);
+		return sendSuccessResponse(organizationList);
 	}
 
 	@RequestMapping(value = "/updateAll", method = RequestMethod.PUT)

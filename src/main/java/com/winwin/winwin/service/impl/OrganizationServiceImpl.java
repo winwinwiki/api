@@ -43,6 +43,7 @@ import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
+import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationHistoryPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
@@ -116,8 +117,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
-	Map<Long, NaicsData> naicsMap = null;
-	Map<Long, NteeData> nteeMap = null;
+	Map<String, NaicsData> naicsMap = null;
+	Map<String, NteeData> nteeMap = null;
 
 	@Override
 	@Transactional
@@ -146,7 +147,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
-	public List<Organization> createOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+	public List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response) {
 		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.CREATE, "org.exception.created");
@@ -158,8 +159,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Transactional
 	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
-		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
-				OrganizationConstants.UPDATE, "org.exception.updated");
+		List<Organization> organizationList = null;/*
+													 * saveOrganizationsForBulkUpload
+													 * (organizationPayloadList,
+													 * response,
+													 * OrganizationConstants.
+													 * UPDATE,
+													 * "org.exception.updated");
+													 */
 
 		return organizationList;
 	}
@@ -291,7 +298,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organizationRepository.findAllProgramList(orgId);
 	}// end of method getOrganizationList
 
-
 	@Override
 	public OrganizationChartPayload getOrgCharts(Organization organization) {
 		List<Organization> childOrganizations = organizationRepository.findAllChildren(organization.getId());
@@ -393,7 +399,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return payloadList;
 	}
 
-	public List<Organization> saveOrganizationsForBulkUpload(List<OrganizationRequestPayload> organizationPayloadList,
+	public List<Organization> saveOrganizationsForBulkUpload(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
@@ -417,7 +423,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != organizationPayloadList) {
 				// set Naics-Ntee code map
 				setNaicsNteeMap();
-				for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+				for (OrganizationCsvPayload organizationPayload : organizationPayloadList) {
 					if (null != organizationPayload && null != user) {
 						if (!StringUtils.isEmpty(organizationPayload.getName())
 								&& !StringUtils.isEmpty(organizationPayload.getNotes())) {
@@ -565,8 +571,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationDataForBulkUpload(OrganizationRequestPayload organizationPayload,
-			UserPayload user, String operationPerformed) throws Exception {
+	private Organization setOrganizationDataForBulkUpload(OrganizationCsvPayload organizationPayload, UserPayload user,
+			String operationPerformed) throws Exception {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
 		Organization organization = new Organization();
@@ -574,13 +580,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 		BeanUtils.copyProperties(organizationPayload, organization);
 
-		if (organizationPayload.getAddress() != null) {
-			address = saveAddress(organizationPayload.getAddress(), user);
-			organization.setAddress(address);
-		}
-
-		organization.setNaicsCode(naicsMap.get(organizationPayload.getNteeCode()));
-		organization.setNteeCode(nteeMap.get(organizationPayload.getNaicsCode()));
+		address = saveAddressForBulkUpload(organizationPayload, user);
+		organization.setAddress(address);
+		organization.setNaicsCode(naicsMap.get(organizationPayload.getNaicsCode()));
+		organization.setNteeCode(nteeMap.get(organizationPayload.getNteeCode()));
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
 
@@ -1100,6 +1103,27 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return spiDataMapList;
 	}
 
+	public Address saveAddressForBulkUpload(OrganizationCsvPayload payload, UserPayload user) {
+		Address address = null;
+		try {
+			if (null != payload) {
+				address = new Address();
+				Date date = CommonUtils.getFormattedDate();
+				BeanUtils.copyProperties(payload, address);
+				if (payload.getAddressId() == null) {
+					address.setId(null);
+					address.setCreatedAt(date);
+					address.setCreatedBy(user.getEmail());
+				}
+				address.setUpdatedAt(date);
+				address.setUpdatedBy(user.getEmail());
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
+		}
+		return addressRepository.saveAndFlush(address);
+	}
+
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
@@ -1177,18 +1201,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * 
 	 */
 	private void setNaicsNteeMap() {
-		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
-		if (null != naicsCodeList) {
-			naicsMap = new HashMap<Long, NaicsData>();
-			for (NaicsData naicsData : naicsCodeList)
-				naicsMap.put(naicsData.getId(), naicsData);
+		if (naicsMap == null) {
+			List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
+			if (null != naicsCodeList) {
+				naicsMap = new HashMap<String, NaicsData>();
+				for (NaicsData naicsData : naicsCodeList)
+					naicsMap.put(naicsData.getCode(), naicsData);
+			}
 		}
-		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
-		if (null != nteeCodeList) {
-			nteeMap = new HashMap<Long, NteeData>();
-			for (NteeData nteeData : nteeCodeList)
-				nteeMap.put(nteeData.getId(), nteeData);
+		if (nteeMap == null) {
+			List<NteeData> nteeCodeList = nteeDataRepository.findAll();
+			if (null != nteeCodeList) {
+				nteeMap = new HashMap<String, NteeData>();
+				for (NteeData nteeData : nteeCodeList)
+					nteeMap.put(nteeData.getCode(), nteeData);
+			}
 		}
+
 	}
 
 }
