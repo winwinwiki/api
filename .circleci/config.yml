@@ -94,7 +94,7 @@ jobs: # a collection of steps
       - run: 
           name: export Aws Access Key Id
           command: export AWS_ACCESS_KEY_ID=[secure]          
-       - run: 
+      - run: 
           name: export Aws Secret Access Key
           command: export AWS_SECRET_ACCESS_KEY=[secure]
       - run: 
