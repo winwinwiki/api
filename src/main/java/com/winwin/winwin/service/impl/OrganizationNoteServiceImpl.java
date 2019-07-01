@@ -79,7 +79,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	@Transactional
 	public List<OrganizationNote> createOrganizationsNotes(List<OrganizationNote> organizationNoteList) {
 		try {
-			if (organizationNoteList != null) {
+			if (!organizationNoteList.isEmpty()) {
 				organizationNoteList = organizationNoteRepository.saveAll(organizationNoteList);
 			}
 		} catch (Exception e) {

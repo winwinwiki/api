@@ -24,7 +24,7 @@ public class CommonUtils {
 	}
 
 	public static Date getFormattedDate() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));
 		Date date = null;
 		try {
