@@ -92,12 +92,6 @@ jobs: # a collection of steps
           name: Check aws version
           command: aws --version
       - run: 
-          name: export Aws Access Key Id
-          command: export AWS_ACCESS_KEY_ID=[secure]          
-      - run: 
-          name: export Aws Secret Access Key
-          command: export AWS_SECRET_ACCESS_KEY=[secure]
-      - run: 
           name: Check S3 directory
           command: aws s3 ls
       - run:
@@ -129,4 +123,4 @@ jobs: # a collection of steps
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
-            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description "Deployment through CircleCI" --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
