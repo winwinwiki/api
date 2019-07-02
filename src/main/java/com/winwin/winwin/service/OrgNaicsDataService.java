@@ -15,6 +15,6 @@ public class OrgNaicsDataService {
 	private NaicsDataRepository naicsDataRepository;
 
 	public List<NaicsData> getAllOrgNaicsData() {
-		return naicsDataRepository.findAll();
+		return naicsDataRepository.findAllNaicsData();
 	}
 }

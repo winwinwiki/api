@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.exception.SdgDataException;
@@ -55,7 +56,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 
 	@Override
 	@Transactional
-	public void createSdgDataMapping(List<OrganizationSdgDataMapPayload> payloadList, Long orgId)
+	public void createSdgDataMapping(List<OrganizationSdgDataMapPayload> payloadList, Organization organization)
 			throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
@@ -75,12 +76,12 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 							SdgData sdgData = subGoalCodesMap.get(payload.getSubGoalCode());
 
 							if (null != sdgData) {
-								sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsByOrgIdAndBySdgId(orgId,
-										sdgData.getId());
+								sdgDataMapObj = orgSdgDataMapRepository
+										.findSdgSelectedTagsByOrgIdAndBySdgId(organization.getId(), sdgData.getId());
 
 								if (sdgDataMapObj == null) {
 									sdgDataMapObj = new OrganizationSdgData();
-									sdgDataMapObj.setOrganizationId(orgId);
+									sdgDataMapObj.setOrganization(organization);
 									sdgDataMapObj.setSdgData(sdgData);
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
@@ -96,8 +97,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 									customMessageSource.getMessage("org.sdgdata.exception.subgoalcode_null"));
 						}
 
-						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
-							orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
+						if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganization()) {
+							orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganization().getId(),
 									OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
 									sdgDataMapObj.getSdgData().getShortName(),
 									sdgDataMapObj.getSdgData().getShortNameCode());
@@ -117,7 +118,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 							throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 						}
 
-						if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
+						if (payload.getOrganizationId() == null
+								|| !(payload.getOrganizationId().equals(organization.getId()))) {
 							isValidSdgData = false;
 						}
 
@@ -147,9 +149,10 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
-							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganizationId()) {
-								orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
-										OrganizationConstants.UPDATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
+							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganization()) {
+								orgHistoryService.createOrganizationHistory(user,
+										sdgDataMapObj.getOrganization().getId(), OrganizationConstants.UPDATE,
+										OrganizationConstants.SDG, sdgDataMapObj.getId(),
 										sdgDataMapObj.getSdgData().getShortName(),
 										sdgDataMapObj.getSdgData().getShortNameCode());
 							}

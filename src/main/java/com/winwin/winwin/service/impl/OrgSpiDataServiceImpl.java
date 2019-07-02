@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.SpiDataException;
@@ -59,7 +60,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	@Override
 	@Transactional
-	public void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Long orgId)
+	public void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Organization organization)
 			throws SpiDataException {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -77,12 +78,12 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								SpiData orgSpiDataObj = spiDataRepository.findSpiObjByIds(dId, cId, indId);
 
 								if (null != orgSpiDataObj) {
-									spiDataMapObj = orgSpiDataMapRepository.findSpiSelectedTagsByOrgIdAndBySpiId(orgId,
-											orgSpiDataObj.getId());
+									spiDataMapObj = orgSpiDataMapRepository.findSpiSelectedTagsByOrgIdAndBySpiId(
+											organization.getId(), orgSpiDataObj.getId());
 
 									if (spiDataMapObj == null) {
 										spiDataMapObj = new OrganizationSpiData();
-										spiDataMapObj.setOrganizationId(orgId);
+										spiDataMapObj.setOrganization(organization);
 										spiDataMapObj.setSpiData(orgSpiDataObj);
 										spiDataMapObj.setIsChecked(payload.getIsChecked());
 										spiDataMapObj.setCreatedAt(date);
@@ -94,9 +95,10 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 							}
 
-							if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
-								orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
-										OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
+							if (null != spiDataMapObj && null != spiDataMapObj.getOrganization()) {
+								orgHistoryService.createOrganizationHistory(user,
+										spiDataMapObj.getOrganization().getId(), OrganizationConstants.CREATE,
+										OrganizationConstants.SPI, spiDataMapObj.getId(),
 										spiDataMapObj.getSpiData().getIndicatorName(),
 										spiDataMapObj.getSpiData().getIndicatorId());
 							}
@@ -117,7 +119,8 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 										customMessageSource.getMessage("org.spidata.error.not_found"));
 							}
 
-							if (payload.getOrganizationId() == null || !(payload.getOrganizationId().equals(orgId))) {
+							if (payload.getOrganizationId() == null
+									|| !(payload.getOrganizationId().equals(organization.getId()))) {
 								isValidSpiData = false;
 							}
 
@@ -151,11 +154,11 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								spiDataMapObj.setUpdatedBy(user.getEmail());
 								spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
-								if (null != spiDataMapObj && null != spiDataMapObj.getOrganizationId()) {
-									orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
-											OrganizationConstants.UPDATE, OrganizationConstants.SPI,
-											spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(),
-											spiDataMapObj.getSpiData().getIndicatorId());
+								if (null != spiDataMapObj && null != spiDataMapObj.getOrganization()) {
+									orgHistoryService.createOrganizationHistory(user,
+											spiDataMapObj.getOrganization().getId(), OrganizationConstants.UPDATE,
+											OrganizationConstants.SPI, spiDataMapObj.getId(),
+											spiDataMapObj.getSpiData().getIndicatorName(), "");
 								}
 							}
 						}

@@ -114,9 +114,7 @@ public class WinWinController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
-		List<OrganizationRequestPayload> organizationPayloadList = new ArrayList<>();
 		List<Organization> organizationList = null;
-		List<OrganizationResponsePayload> payloadList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
@@ -125,10 +123,7 @@ public class WinWinController extends BaseController {
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-			organizationPayloadList = dataMigrationCsvPayload.stream().map(this::setOrganizationPayload)
-					.collect(Collectors.toList());
-			organizationList = winWinService.createOrganizationsOffline(organizationPayloadList, exceptionResponse);
-			payloadList = setOrganizationPayload(organizationList);
+			organizationList = winWinService.createOrganizationsOffline(dataMigrationCsvPayload, exceptionResponse);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -136,7 +131,7 @@ public class WinWinController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(payloadList);
+		return sendSuccessResponse(organizationList);
 	}
 
 	/**
