@@ -2,6 +2,7 @@ package com.winwin.winwin.service;
 
 import java.util.List;
 
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
 
@@ -11,7 +12,7 @@ import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
  */
 public interface OrgSpiDataService {
 
-	void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Long orgId) throws SpiDataException;
+	void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Organization organization) throws SpiDataException;
 
 	List<OrganizationSpiDataMapPayload> getSelectedSpiData(Long orgId);
 

@@ -91,6 +91,7 @@ import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
@@ -185,16 +186,18 @@ public class OrganizationController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
+			LOGGER.info("csv read start - "+CommonUtils.getFormattedDate());
 			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
+			LOGGER.info("csv read end - "+CommonUtils.getFormattedDate());
 			if (null != exceptionResponse.getException())
 				return sendMsgResponse(exceptionResponse.getException().getMessage(),
 						exceptionResponse.getStatusCode());
 
 			if (null != organizationCsvPayload) {
-				// set Naics-Ntee code map
-				setNaicsNteeMap();
+				LOGGER.info("org service createOrganizations() start - "+CommonUtils.getFormattedDate());
 				organizationList = organizationService.createOrganizations(organizationCsvPayload, exceptionResponse);
+				LOGGER.info("org service createOrganizations() end - "+CommonUtils.getFormattedDate());
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -337,7 +340,6 @@ public class OrganizationController extends BaseController {
 		try {
 			if (null != filterPayload) {
 				orgList = organizationService.getOrganizationList(filterPayload, exceptionResponse);
-				// commented due to time constraint
 				filterPayload.setOrgCount(organizationService.getOrgCounts(filterPayload, exceptionResponse));
 			}
 
@@ -870,10 +872,10 @@ public class OrganizationController extends BaseController {
 	// Code for organization region served end
 
 	// Code for organization SPI data start
-	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
+	@RequestMapping(value = "/spidata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgSpiDataList() throws SpiDataException {
+	public ResponseEntity<?> getSpiDataList() throws SpiDataException {
 		List<SpiDataDimensionsPayload> payloadList = new ArrayList<SpiDataDimensionsPayload>();
 		try {
 			payloadList = spiDataService.getSpiDataForResponse();
@@ -891,11 +893,12 @@ public class OrganizationController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<OrganizationSpiDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws SpiDataException {
-		if (orgId == null)
+		Organization organization = organizationRepository.findOrgById(orgId);
+		if (organization == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
 			try {
-				orgSpiDataService.createSpiDataMapping(payloadList, orgId);
+				orgSpiDataService.createSpiDataMapping(payloadList, organization);
 			} catch (Exception e) {
 				throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.created"));
 			}
@@ -926,7 +929,7 @@ public class OrganizationController extends BaseController {
 	}// Code for organization SPI data end
 
 	// Code for organization SDG data start
-	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
+	@RequestMapping(value = "/sdgdata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getOrgSdgDataList() throws SdgDataException {
@@ -948,11 +951,12 @@ public class OrganizationController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> createOrgSdgDataMapping(@RequestBody List<OrganizationSdgDataMapPayload> payloadList,
 			@PathVariable("id") Long orgId) throws SdgDataException {
-		if (orgId == null)
+		Organization organization = organizationRepository.findOrgById(orgId);
+		if (organization == null)
 			return sendErrorResponse(customMessageSource.getMessage("org.error.organization.null"));
 		if (null != payloadList) {
 			try {
-				orgSdgDataService.createSdgDataMapping(payloadList, orgId);
+				orgSdgDataService.createSdgDataMapping(payloadList, organization);
 			} catch (Exception e) {
 				throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.created"));
 			}

@@ -64,8 +64,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				note.setUpdatedBy(user.getEmail());
 				note = organizationNoteRepository.saveAndFlush(note);
 
-				if (null != note && null != note.getOrganizationId()) {
-					orgHistoryService.createOrganizationHistory(user, note.getOrganizationId(),
+				if (null != note && null != note.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, note.getOrganization().getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.NOTE, note.getId(), note.getName(), "");
 				}
 			}
@@ -74,7 +74,7 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		}
 		return note;
 	}
-	
+
 	@Override
 	@Transactional
 	public List<OrganizationNote> createOrganizationsNotes(List<OrganizationNote> organizationNoteList) {
@@ -103,8 +103,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 					note.setUpdatedBy(user.getEmail());
 					note = organizationNoteRepository.saveAndFlush(note);
 
-					if (null != note && null != note.getOrganizationId()) {
-						orgHistoryService.createOrganizationHistory(user, note.getOrganizationId(),
+					if (null != note && null != note.getOrganization()) {
+						orgHistoryService.createOrganizationHistory(user, note.getOrganization().getId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.NOTE, note.getId(), note.getName(),
 								"");
 					}

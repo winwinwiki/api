@@ -1,11 +1,13 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -36,6 +38,7 @@ public class OrganizationNote extends AbstractAuditableEntity {
 	@Column(name = "name", columnDefinition = "text")
 	private String name;
 
-	@JoinColumn(name = "organization_id")
-	private Long organizationId;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name="organization_id")
+	private Organization organization;
 }

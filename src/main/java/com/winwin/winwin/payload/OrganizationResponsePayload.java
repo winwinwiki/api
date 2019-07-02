@@ -58,6 +58,7 @@ public class OrganizationResponsePayload {
 	String datasetType;
 	String spiTagIds;
 	String sdgTagIds;
+	String createdBy;
 	String lastEditedBy;
 	Date lastEditedAt;
 }

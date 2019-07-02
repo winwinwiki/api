@@ -15,6 +15,6 @@ public class OrgNteeDataService {
 	private NteeDataRepository nteeDataRepository;
 
 	public List<NteeData> getAllOrgNteeData() {
-		return nteeDataRepository.findAll();
+		return nteeDataRepository.findAllNteeData();
 	}
 }

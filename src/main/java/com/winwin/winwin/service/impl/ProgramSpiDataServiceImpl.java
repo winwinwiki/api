@@ -157,8 +157,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 									orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
 											payload.getProgramId(), OrganizationConstants.UPDATE,
 											OrganizationConstants.SPI, spiDataMapObj.getId(),
-											spiDataMapObj.getSpiData().getIndicatorName(),
-											spiDataMapObj.getSpiData().getIndicatorId());
+											spiDataMapObj.getSpiData().getIndicatorName(), "");
 								}
 							}
 						}

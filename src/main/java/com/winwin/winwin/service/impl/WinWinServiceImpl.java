@@ -40,8 +40,7 @@ import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.OrganizationNotePayload;
-import com.winwin.winwin.payload.OrganizationRequestPayload;
+import com.winwin.winwin.payload.DataMigrationCsvPayload;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
@@ -130,15 +129,15 @@ public class WinWinServiceImpl implements WinWinService {
 	NteeDataRepository nteeDataRepository;
 	@Autowired
 	NaicsDataRepository naicsDataRepository;
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
-	
+
 	Map<Long, NaicsData> naicsMap = null;
 	Map<Long, NteeData> nteeMap = null;
 
 	@Override
 	@Transactional
-	public List<Organization> createOrganizationsOffline(List<OrganizationRequestPayload> organizationPayloadList,
+	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
 			ExceptionResponse response) {
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.CREATE, "org.exception.created");
@@ -157,7 +156,7 @@ public class WinWinServiceImpl implements WinWinService {
 	}
 
 	public List<Organization> saveOrganizationsOfflineForBulkUpload(
-			List<OrganizationRequestPayload> organizationPayloadList, ExceptionResponse response,
+			List<DataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			String operationPerformed, String customMessage) {
 		OrganizationSpiData spiDataMapObj = null;
 		OrganizationSdgData sdgDataMapObj = null;
@@ -166,21 +165,24 @@ public class WinWinServiceImpl implements WinWinService {
 		List<Long> sdgTagIds = new ArrayList<Long>();
 		List<Long> resourceIds = new ArrayList<Long>();
 		List<Long> datasetIds = new ArrayList<Long>();
-		Map<String, String> notesMap = new HashMap<String, String>();
-		Map<String, String> datasetsTypeMap = new HashMap<String, String>();
+		Map<Long, String> notesMap = new HashMap<Long, String>();
+		Map<Long, String> datasetsTypeMap = new HashMap<Long, String>();
+		// create notes for multiple organizations
+		List<OrganizationNote> organizationsNoteList = null;
 
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
-			
+			Date date = CommonUtils.getFormattedDate();
+
 			if (null != organizationPayloadList) {
 				// set Naics-Ntee code map
 				setNaicsNteeMap();
-				
-				for (OrganizationRequestPayload organizationPayload : organizationPayloadList) {
+
+				for (DataMigrationCsvPayload organizationPayload : organizationPayloadList) {
 					if (null != organizationPayload && null != user) {
 						if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
-							if (null != organizationPayload.getName())
-								notesMap.put(organizationPayload.getName(), organizationPayload.getNotes());
+							if (null != organizationPayload.getId())
+								notesMap.put(organizationPayload.getId(), organizationPayload.getNotes());
 						}
 						if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
 							String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
@@ -207,42 +209,46 @@ public class WinWinServiceImpl implements WinWinService {
 							}
 						}
 						if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
-							if (null != organizationPayload.getName())
-								datasetsTypeMap.put(organizationPayload.getName(),
-										organizationPayload.getDatasetType());
+							if (null != organizationPayload.getId())
+								datasetsTypeMap.put(organizationPayload.getId(), organizationPayload.getDatasetType());
 						}
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user));
+							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user, date));
 						}
 					}
-				} 
+				}
 			}
 			organizationList = organizationRepository.saveAll(organizationList);
 
-			for (Organization organization : organizationList) {
-				if (null != organization.getName()) {
-					String notes = notesMap.get(organization.getName());
-					OrganizationNotePayload organizationNotePayload = new OrganizationNotePayload();
-					Date date = CommonUtils.getFormattedDate();
-					organizationNotePayload.setName(notes);
-					organizationNotePayload.setOrganizationId(organization.getId());
-					organizationNotePayload.setCreatedAt(date);
-					organizationNotePayload.setCreatedBy(user.getEmail());
-					OrganizationNote note = organizationNoteService.createOrganizationNote(organizationNotePayload);
+			if (null != organizationList) {
+				organizationsNoteList = new ArrayList<OrganizationNote>();
+				for (Organization organization : organizationList) {
+					// set notes list for multiple organization's
+					OrganizationNote note = new OrganizationNote();
+					note.setName(notesMap.get(organization.getId()));
+					note.setOrganization(organization);
+					note.setCreatedAt(date);
+					note.setUpdatedAt(date);
+					note.setCreatedBy(user.getEmail());
+					note.setUpdatedBy(user.getEmail());
+					organizationsNoteList.add(note);
 
-					// To save list of resourceIds and datasetIds fetched from
+					// To save list of resourceIds and datasetIds fetched
+					// from
 					// .csv file
-					String datasetType = datasetsTypeMap.get(organization.getName());
-					saveOrgDatasetAndResources(organization, user, resourceIds, datasetIds, datasetType);
-				}
-				// To save list of spiTagIds and sdgTagIds fetched from .csv
-				// file
-				saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
 
-				orgHistoryService.createOrganizationHistory(user, organization.getId(), operationPerformed,
-						OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
+					saveOrgDatasetAndResources(organization, user, resourceIds, datasetIds,
+							datasetsTypeMap.get(organization.getId()));
+					// To save list of spiTagIds and sdgTagIds fetched from .csv
+					// file
+					saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
+				}
+
+				// create notes for multiple organization's
+				if (null != organizationsNoteList)
+					organizationsNoteList = organizationNoteService.createOrganizationsNotes(organizationsNoteList);
 			}
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
@@ -257,22 +263,22 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationDataForBulkUpload(OrganizationRequestPayload organizationPayload, UserPayload user)
-			throws Exception {
+	private Organization setOrganizationDataForBulkUpload(DataMigrationCsvPayload organizationPayload, UserPayload user,
+			Date date) throws Exception {
 		Organization organization = new Organization();
-		Address address = new Address();
-
 		BeanUtils.copyProperties(organizationPayload, organization);
 
-		if (organizationPayload.getAddress() != null) {
-			address = saveAddress(organizationPayload.getAddress(), user);
-			organization.setAddress(address);
-		}
-		organization.setNaicsCode(naicsMap.get(organizationPayload.getNteeCode()));
-		organization.setNteeCode(nteeMap.get(organizationPayload.getNaicsCode()));
-		organization.setType(OrganizationConstants.ORGANIZATION);
+		organization.setAddress(saveAddressForBulkUpload(organizationPayload, user));
 
-		Date date = CommonUtils.getFormattedDate();
+		if (!naicsMap.isEmpty())
+			organization.setNaicsCode(naicsMap.get(organizationPayload.getNaicsCode()));
+
+		if (!nteeMap.isEmpty())
+			organization.setNteeCode(nteeMap.get(organizationPayload.getNteeCode()));
+
+		organization.setType(OrganizationConstants.ORGANIZATION);
+		organization.setPriority(OrganizationConstants.PRIORITY_NORMAL);
+
 		organization.setCreatedAt(date);
 		organization.setCreatedBy(user.getEmail());
 		organization.setIsActive(true);
@@ -280,6 +286,27 @@ public class WinWinServiceImpl implements WinWinService {
 		organization.setUpdatedBy(user.getEmail());
 
 		return organization;
+	}
+
+	public Address saveAddressForBulkUpload(DataMigrationCsvPayload payload, UserPayload user) {
+		Address address = null;
+		try {
+			if (null != payload) {
+				address = new Address();
+				Date date = CommonUtils.getFormattedDate();
+				BeanUtils.copyProperties(payload, address);
+				if (payload.getAddressId() == null) {
+					address.setId(null);
+					address.setCreatedAt(date);
+					address.setCreatedBy(user.getEmail());
+				}
+				address.setUpdatedAt(date);
+				address.setUpdatedBy(user.getEmail());
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
+		}
+		return addressRepository.saveAndFlush(address);
 	}
 
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
@@ -345,7 +372,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 				if (null != orgSdgDataObj) {
 					sdgDataMapObj = new OrganizationSdgData();
-					sdgDataMapObj.setOrganizationId(organization.getId());
+					sdgDataMapObj.setOrganization(organization);
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(date);
 					sdgDataMapObj.setUpdatedAt(date);
@@ -388,7 +415,7 @@ public class WinWinServiceImpl implements WinWinService {
 						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 						sdgDataMapList.add(sdgDataMapObj);
 					}
-					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganizationId(),
+					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganization().getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
 							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
 				}
@@ -417,7 +444,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 				if (null != orgSpiDataObj) {
 					spiDataMapObj = new OrganizationSpiData();
-					spiDataMapObj.setOrganizationId(organization.getId());
+					spiDataMapObj.setOrganization(organization);
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(date);
 					spiDataMapObj.setUpdatedAt(date);
@@ -461,7 +488,7 @@ public class WinWinServiceImpl implements WinWinService {
 						spiDataMapList.add(spiDataMapObj);
 					}
 
-					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganizationId(),
+					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganization().getId(),
 							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
 							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
 				}
@@ -1016,7 +1043,7 @@ public class WinWinServiceImpl implements WinWinService {
 		}
 		return datasetList;
 	}// end of method
-	
+
 	/**
 	 * 
 	 */
@@ -1034,6 +1061,5 @@ public class WinWinServiceImpl implements WinWinService {
 				nteeMap.put(nteeData.getId(), nteeData);
 		}
 	}
-
 
 }

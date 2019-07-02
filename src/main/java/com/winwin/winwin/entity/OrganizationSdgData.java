@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,8 +35,9 @@ public class OrganizationSdgData extends AbstractAuditableEntity {
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "organization_id")
-	private Long organizationId;
+	@JoinColumn(name = "organization_id")
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Organization organization;
 
 	@ManyToOne
 	@JoinColumn(name = "sdg_id")
