@@ -13,7 +13,7 @@ hooks:
   
   # AfterInstall:
   #   - location: service winwin-service start
-  #     timeout: 180
+  #        timeout: 180
   ApplicationStart:
     - location: /start_server.sh
       timeout: 3600
