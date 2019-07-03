@@ -70,6 +70,7 @@ import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.SdgGoalPayload;
 import com.winwin.winwin.payload.SpiDataDimensionsPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
+import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
@@ -182,22 +183,21 @@ public class OrganizationController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
-		List<Organization> organizationList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			LOGGER.info("csv read start - "+CommonUtils.getFormattedDate());
+			LOGGER.info("csv read started - " + CommonUtils.getFormattedDate());
 			List<OrganizationCsvPayload> organizationCsvPayload = csvUtils.read(OrganizationCsvPayload.class, file,
 					exceptionResponse);
-			LOGGER.info("csv read end - "+CommonUtils.getFormattedDate());
+			LOGGER.info("csv read ended - " + CommonUtils.getFormattedDate());
 			if (null != exceptionResponse.getException())
 				return sendMsgResponse(exceptionResponse.getException().getMessage(),
 						exceptionResponse.getStatusCode());
 
 			if (null != organizationCsvPayload) {
-				LOGGER.info("org service createOrganizations() start - "+CommonUtils.getFormattedDate());
-				organizationList = organizationService.createOrganizations(organizationCsvPayload, exceptionResponse);
-				LOGGER.info("org service createOrganizations() end - "+CommonUtils.getFormattedDate());
+				LOGGER.info("org service createOrganizations() started - " + CommonUtils.getFormattedDate());
+				UserPayload user = userService.getCurrentUserDetails();
+				organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -205,7 +205,7 @@ public class OrganizationController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(organizationList);
+		return sendSuccessResponse("org.file.upload.success");
 	}
 
 	@RequestMapping(value = "/updateAll", method = RequestMethod.PUT)
