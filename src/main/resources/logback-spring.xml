@@ -6,7 +6,7 @@
 	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
 		<Target>System.out</Target>
 		<encoder>
-			<Pattern>.%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg %n
+			<Pattern>.%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} %L - %msg %n
 			</Pattern>
 		</encoder>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -24,18 +24,18 @@
 		</rollingPolicy>
 
 		<encoder>
-			<Pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{35} - %msg %n
+			<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{35} %L - %msg %n
 			</Pattern>
 		</encoder>
 	</appender>
 
 	<logger name="com.winwin.winwin" additivity="false">
+		<level value="INFO" />
 		<level value="DEBUG" />
-	    <level value="INFO" />
 	    <level value="WARN" />
 	    <level value="ERROR" />
-		<appender-ref ref="RFA"/>
 		<appender-ref ref="console" /> 
+		<appender-ref ref="RFA"/>
 	</logger>
 
 	<root>

@@ -562,7 +562,7 @@ public class ProgramController extends BaseController {
 	// Code for program region served end
 
 	// Code for program SPI data start
-	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.GET)
+	@RequestMapping(value = "/spidata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getOrgSpiDataList() throws SpiDataException {
@@ -620,7 +620,7 @@ public class ProgramController extends BaseController {
 	}// Code for program SPI data end
 
 	// Code for program SDG data start
-	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.GET)
+	@RequestMapping(value = "/sdgdata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getOrgSdgDataList() throws SdgDataException {

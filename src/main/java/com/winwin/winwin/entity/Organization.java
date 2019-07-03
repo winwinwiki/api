@@ -127,8 +127,8 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "contact_info", columnDefinition = "TEXT")
 	String contactInfo;
 
-	@ManyToOne(cascade = CascadeType.ALL)
-	private OrganizationNote note;
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationNote> note;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
 	private List<OrganizationSpiData> organizationSpiData;

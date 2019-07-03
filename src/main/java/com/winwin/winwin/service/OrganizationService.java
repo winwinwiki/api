@@ -11,6 +11,7 @@ import com.winwin.winwin.payload.OrganizationHistoryPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
+import com.winwin.winwin.payload.UserPayload;
 
 /**
  * @author ArvindKhatik
@@ -37,7 +38,7 @@ public interface OrganizationService {
 	List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response);
 
 	List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
-			ExceptionResponse response);
+			ExceptionResponse response, UserPayload user);
 
 	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response);

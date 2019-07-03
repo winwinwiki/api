@@ -58,14 +58,13 @@ public class UserController extends BaseController {
 			} else {
 				if (exceptionResponse.getException() != null
 						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+					userService.createUser(payload, exceptionResponse);
+					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
+				} else if (exceptionResponse.getException() != null
+						&& !(exceptionResponse.getException() instanceof UserNotFoundException)) {
 					return sendMsgResponse(exceptionResponse.getException().getMessage(),
 							exceptionResponse.getStatusCode());
 				}
-				userService.createUser(payload, exceptionResponse);
-
-				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
-						&& exceptionResponse.getStatusCode() != null)
-					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			}
 		}
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
