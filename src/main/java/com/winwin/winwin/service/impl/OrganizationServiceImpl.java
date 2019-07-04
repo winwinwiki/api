@@ -67,6 +67,7 @@ import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationService;
+import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
@@ -119,6 +120,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	CsvUtils csvUtils;
 	@Autowired
 	OrganizationNoteRepository organizationNoteRepository;
+	@Autowired
+	SlackNotificationSenderService slackNotificationSenderService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
@@ -409,7 +412,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
 		List<Organization> organizationList = new ArrayList<Organization>();
 		try {
-			// UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
 			// get NaicsCode AutoTag SpiSdgMapping
 			Map<String, NaicsDataMappingPayload> naicsMapForS3 = getNaicsSpiSdgMap(errorResForNaics);
 			if (!StringUtils.isEmpty(errorResForNaics.getErrorMessage())) {
@@ -439,10 +442,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
 							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 							/*
-							 * organizationList.add(
-							 * setOrganizationDataForBulkUpload(
-							 * organizationPayload, user, operationPerformed,
-							 * naicsMapForS3, nteeMapForS3));
+							 * organizationList.add( setOrganizationDataForBulkUpload( organizationPayload,
+							 * user, operationPerformed, naicsMapForS3, nteeMapForS3));
 							 */
 							Organization organization = setOrganizationDataForBulkUpload(organizationPayload, user,
 									operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
@@ -454,20 +455,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 							organizationList.add(organization);
 
 						} /*
-							 * else if
-							 * (operationPerformed.equals(OrganizationConstants.
-							 * UPDATE)) { if (null !=
-							 * organizationPayload.getId()) { Organization
-							 * organization = organizationRepository
-							 * .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new
-							 * OrganizationException( "organization with Id:" +
-							 * organizationPayload.getId() +
-							 * "is not found in DB to perform update operation"
-							 * ); organizationList.add(
-							 * setOrganizationDataForBulkUpload(
-							 * organizationPayload, user, operationPerformed));
-							 * } else { throw new Exception(
+							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
+							 * != organizationPayload.getId()) { Organization organization =
+							 * organizationRepository .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new OrganizationException(
+							 * "organization with Id:" + organizationPayload.getId() +
+							 * "is not found in DB to perform update operation" ); organizationList.add(
+							 * setOrganizationDataForBulkUpload( organizationPayload, user,
+							 * operationPerformed)); } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
@@ -475,7 +470,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 			}
 			LOGGER.info("Saving organizations : " + i);
-			organizationRepository.saveAll(organizationList);
+			organizationList = organizationRepository.saveAll(organizationList);
+			if (null != organizationList) {
+				slackNotificationSenderService.sendSlackNotification(organizationList, user, date);
+			}
 			LOGGER.info("Saved organizations : " + i);
 
 		} catch (Exception e) {
@@ -946,9 +944,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1023,9 +1020,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
