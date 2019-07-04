@@ -92,7 +92,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-csv</artifactId>
-		</dependency>	
+		</dependency>
+		<dependency>
+    		<groupId>com.github.seratch</groupId>
+    		<artifactId>jslack</artifactId>
+    		<version>1.7.2</version>
+		</dependency>
 		
 	</dependencies>
 
