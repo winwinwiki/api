@@ -5,6 +5,8 @@ package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -29,7 +31,7 @@ import lombok.ToString;
 @Table(name = "spi_data")
 public class SpiData {
 	@Id
-	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "spi_data_seq")
 	private Long id;
 
 	@Column(name = "dimension_id")
@@ -49,17 +51,17 @@ public class SpiData {
 
 	@Column(name = "indicator_name")
 	private String indicatorName;
-	
+
 	@Column(name = "indicator_definition", columnDefinition = "TEXT")
 	private String indicatorDefinition;
-	
+
 	@Column(name = "indicator_description", columnDefinition = "TEXT")
 	private String indicatorDescription;
-	
+
 	@Column(name = "spi_source")
 	private String spiSource;
-	
+
 	@Column(name = "is_active")
-	private Boolean isActive; 
+	private Boolean isActive;
 
 }

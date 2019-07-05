@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,6 +27,7 @@ public class SpiDataServiceImpl implements SpiDataService {
 	SpiDataRepository spiDataRepository;
 
 	@Override
+	@Cacheable("spi_data_list")
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {
 		List<SpiDataDimensionsPayload> dimensionPayloadList = null;
 		List<SpiData> spiList = spiDataRepository.findAllSpiData();

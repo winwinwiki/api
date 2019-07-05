@@ -92,6 +92,14 @@ public class UserServiceImpl implements UserService {
 	ClasspathPropertiesFileCredentialsProvider propertiesFileCredentialsProvider = new ClasspathPropertiesFileCredentialsProvider();
 	EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 
+	/**
+	 * The below method createUser creates new user in AWS COGNITO with
+	 * email_verified =true and custom attributes and accepts a UserPayload and
+	 * requires Environment Variables such as
+	 * AWS_COGNITO_USER_POOL_ID,AWS_REGION The new user will get an welcome
+	 * email with Temporary password (here for COGNITO the user status will be
+	 * FORCE_CHANGE_PASSWORD
+	 */
 	@SuppressWarnings("unused")
 	@Override
 	public void createUser(UserPayload payload, ExceptionResponse response) throws UserException {
@@ -125,6 +133,19 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	/**
+	 * The below method resendUserInvitation resends the user invitation for
+	 * newly created users in AWS COGNITO with user status as
+	 * FORCE_CHANGE_PASSWORD i.e. case 'a': when user didn't receive welcome
+	 * email with temp password? if the user didn't get email then the admin
+	 * again need to create the same user (here for cognito the user status will
+	 * be FORCE_CHANGE_PASSWORD)
+	 * 
+	 * case 'b': What will happen when the user receives an welcome email? Once
+	 * the user will get the welcome email, he need to login with the received
+	 * credentials and once he try to login with temp password he will have to
+	 * pass temp password as old password as well as new proposed password.
+	 */
 	@SuppressWarnings("unused")
 	@Override
 	public void resendUserInvitation(UserPayload payload, ExceptionResponse response) throws UserException {
@@ -141,10 +162,11 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		/*
-		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e. user
-		 * status as force_change_password and hit the create user again then setting
-		 * cognito request with messageAction as RESEND will resends the welcome message
-		 * again with extending account user expiration limit
+		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e.
+		 * user status as force_change_password and hit the create user again
+		 * then setting cognito request with messageAction as RESEND will
+		 * resends the welcome message again with extending account user
+		 * expiration limit
 		 */
 		cognitoRequest.setMessageAction("RESEND");
 
@@ -166,6 +188,10 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	/**
+	 * The below method getUserInfo return the user info according to the passed
+	 * userName.
+	 */
 	@Override
 	public UserPayload getUserInfo(String userName, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -207,6 +233,10 @@ public class UserServiceImpl implements UserService {
 		return payload;
 	}
 
+	/**
+	 * The below method updateUserInfo update the user info according to the
+	 * passed UserPayload.
+	 */
 	@Override
 	public void updateUserInfo(UserPayload payload, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -265,6 +295,10 @@ public class UserServiceImpl implements UserService {
 
 	}
 
+	/**
+	 * The below method getUserList returns the list of users whose AWS Status
+	 * is CONFIRMED.
+	 */
 	@Override
 	public List<UserPayload> getUserList(ExceptionResponse response) {
 		List<UserPayload> payloadList = new ArrayList<UserPayload>();
@@ -314,6 +348,10 @@ public class UserServiceImpl implements UserService {
 		return payloadList;
 	}
 
+	/**
+	 * The below method getUserStatus return the user status in COGNITO
+	 * according to the passed userName.
+	 */
 	@Override
 	public String getUserStatus(String userName, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -343,6 +381,10 @@ public class UserServiceImpl implements UserService {
 		return userStatus;
 	}
 
+	/**
+	 * The below method userSignIn accepts UserSignInPayload and returns the
+	 * accessToken if the credentials are vaild.
+	 */
 	@Override
 	public AuthenticationResultType userSignIn(UserSignInPayload payload, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -402,6 +444,25 @@ public class UserServiceImpl implements UserService {
 		return authenticationResult;
 	}
 
+	/**
+	 * The below method resetUserPassword accepts UserPayload and reset the
+	 * Existing User Credentials. The user will get an confirmation code through
+	 * email..(here for cognito the user status will become CONFIRMED to
+	 * RESET_REQUIRED)
+	 * 
+	 * case 'a': when user didn't receive confirmation code on email? if the
+	 * user didn't get email then the user again need to call the same method
+	 * resetUserPassword( here for cognito the user status will remain as
+	 * RESET_REQUIRED)
+	 * 
+	 * case 'b': What will happen when the user receives an email with
+	 * confirmation code? Once the user will get the email with confirmation
+	 * code, he need to pass confirmation code and new proposed password.
+	 * 
+	 * After the success for the above case 2.b user can login with new
+	 * credentials.( here for cognito the user status will become RESET_REQUIRED
+	 * to CONFIRMED)
+	 */
 	@Override
 	public void resetUserPassword(UserPayload payload, ExceptionResponse response) {
 
@@ -426,6 +487,15 @@ public class UserServiceImpl implements UserService {
 		cognitoClient.shutdown();
 	}
 
+	/**
+	 * The below method confirmResetPassword is the next step of
+	 * resetUserPassword which accepts confimationCode in UserSignInPayload.
+	 * Once the user will get the email with confirmation code, he need to pass
+	 * confirmation code and new proposed password.
+	 * 
+	 * After the success user can login with new credentials.( here for cognito
+	 * the user status will become RESET_REQUIRED to CONFIRMED)
+	 */
 	@Override
 	public void confirmResetPassword(UserSignInPayload payload, ExceptionResponse response) {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -453,6 +523,9 @@ public class UserServiceImpl implements UserService {
 		cognitoClient.shutdown();
 	}
 
+	/**
+	 * The below method resendConfirmationCode resends the confirmation
+	 */
 	@Override
 	public void resendConfirmationCode(UserPayload payload, ExceptionResponse response) {
 
@@ -477,6 +550,10 @@ public class UserServiceImpl implements UserService {
 		cognitoClient.shutdown();
 	}
 
+	/**
+	 * The below method changePassword accepts the accessToken in
+	 * UserSignInPayload and changes password for User
+	 */
 	@Override
 	public void changePassword(UserSignInPayload payload, ExceptionResponse response) {
 
@@ -502,6 +579,10 @@ public class UserServiceImpl implements UserService {
 		cognitoClient.shutdown();
 	}
 
+	/**
+	 * The below method deleteUser accepts the UserName in UserPayload and
+	 * delete the user from COGNITO
+	 */
 	@Override
 	public void deleteUser(UserPayload payload, ExceptionResponse response) {
 
@@ -522,6 +603,10 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	/**
+	 * The below method getLoggedInUser accepts the accessToken and returns the
+	 * current logged in user information
+	 */
 	@Override
 	public UserPayload getLoggedInUser(String accessToken, ExceptionResponse response) {
 
@@ -569,7 +654,7 @@ public class UserServiceImpl implements UserService {
 		return payload;
 	}
 
-	public AWSCognitoIdentityProvider getAmazonCognitoIdentityClient() {
+	private AWSCognitoIdentityProvider getAmazonCognitoIdentityClient() {
 		return AWSCognitoIdentityProviderClientBuilder.standard().withRegion(System.getenv("AWS_REGION"))
 				.withCredentials(envCredentialsProvider).build();
 	}

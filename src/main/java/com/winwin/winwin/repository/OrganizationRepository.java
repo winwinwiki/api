@@ -2,6 +2,7 @@ package com.winwin.winwin.repository;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +24,7 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	List<Organization> findAllOrganizationList();
 
 	@Query(value = "select * from organization where parent_id = :orgId AND is_Active = true ", nativeQuery = true)
+	@Cacheable("organization_children_list")
 	List<Organization> findAllChildren(@Param("orgId") Long id);
 
 	@Query(value = "select * from organization where type = 'division' AND is_Active = true AND parent_id = :orgId", nativeQuery = true)

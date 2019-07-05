@@ -8,8 +8,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -41,6 +39,6 @@ public class OrganizationNote extends AbstractAuditableEntity {
 	private String name;
 
 	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name="organization_id")
+	@JoinColumn(name = "organization_id")
 	private Organization organization;
 }

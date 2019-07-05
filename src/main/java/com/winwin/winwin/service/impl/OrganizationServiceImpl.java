@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -264,6 +265,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional(readOnly = true)
+	@Cacheable("organization_filter_list")
 	public List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {
@@ -285,6 +287,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
+	@Cacheable("organization_filter_count")
 	public BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
 		BigInteger noOfRecords = null;
 		try {
@@ -306,6 +309,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}// end of method getOrganizationList
 
 	@Override
+	@Cacheable("organization_chart_list")
 	public OrganizationChartPayload getOrgCharts(Organization organization) {
 		List<Organization> childOrganizations = organizationRepository.findAllChildren(organization.getId());
 		OrganizationChartPayload payload = null;
@@ -441,41 +445,50 @@ public class OrganizationServiceImpl implements OrganizationService {
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 							organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
 							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-							/*
-							 * organizationList.add( setOrganizationDataForBulkUpload( organizationPayload,
-							 * user, operationPerformed, naicsMapForS3, nteeMapForS3));
-							 */
-							Organization organization = setOrganizationDataForBulkUpload(organizationPayload, user,
-									operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
-							// LOGGER.info("Saving object : "+i);
-							// organization =
-							// organizationRepository.save(organization);
-							// LOGGER.info("Saved object : "+i);
+
+							// Implemented below logic to log failed and success
+							// organizations for bulk upload
+							try {
+								Organization organization = setOrganizationDataForBulkUpload(organizationPayload, user,
+										operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
+								LOGGER.info("Saving organization : " + i);
+								organization = organizationRepository.save(organization);
+								LOGGER.info("Saved organization " + i + "with id as:" + organization.getId());
+								organizationList.add(organization);
+							} catch (Exception e) {
+								Organization failedOrganization = new Organization();
+								LOGGER.info("Logging failed organization for notifications: " + i);
+								failedOrganization.setName(organizationPayload.getName());
+								organizationList.add(failedOrganization);
+							}
 							i++;
-							organizationList.add(organization);
 
 						} /*
-							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
-							 * != organizationPayload.getId()) { Organization organization =
-							 * organizationRepository .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new OrganizationException(
-							 * "organization with Id:" + organizationPayload.getId() +
-							 * "is not found in DB to perform update operation" ); organizationList.add(
-							 * setOrganizationDataForBulkUpload( organizationPayload, user,
-							 * operationPerformed)); } else { throw new Exception(
+							 * else if
+							 * (operationPerformed.equals(OrganizationConstants.
+							 * UPDATE)) { if (null !=
+							 * organizationPayload.getId()) { Organization
+							 * organization = organizationRepository
+							 * .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new
+							 * OrganizationException( "organization with Id:" +
+							 * organizationPayload.getId() +
+							 * "is not found in DB to perform update operation"
+							 * ); organizationList.add(
+							 * setOrganizationDataForBulkUpload(
+							 * organizationPayload, user, operationPerformed));
+							 * } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
 					}
 				}
 			}
-			LOGGER.info("Saving organizations : " + i);
-			organizationList = organizationRepository.saveAll(organizationList);
+			// To send failed and success organization through slack
+			// notification for bulk upload
 			if (null != organizationList) {
 				slackNotificationSenderService.sendSlackNotification(organizationList, user, date);
 			}
-			LOGGER.info("Saved organizations : " + i);
-
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
@@ -944,8 +957,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
+					 * sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1020,8 +1034,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
+					 * spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
