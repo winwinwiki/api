@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -180,6 +181,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	}
 
 	@Override
+	@Cacheable("organization_region_master")
 	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
 		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();
 		try {

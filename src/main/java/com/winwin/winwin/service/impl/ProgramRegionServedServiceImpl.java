@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -177,6 +178,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	}// end of method saveOrganizationRegionMaster
 
 	@Override
+	@Cacheable("program_region_master")
 	public List<RegionMaster> getProgramRegionMasterList(RegionMasterFilterPayload filterPayload,
 			ExceptionResponse response) {
 		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();

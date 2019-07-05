@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -137,6 +138,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	}// end of method getOrganizationResourceCategoryById
 
 	@Override
+	@Cacheable("program_resource_category_list")
 	public List<ResourceCategory> getResourceCategoryList() {
 		return resourceCategoryRepository.findAll();
 	}// end of method getOrganizationResourceCategoryList
@@ -194,6 +196,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	}
 
 	@Override
+	@Cacheable("program_resource__list")
 	public List<ProgramResource> getProgramResourceList(Long programId) {
 		return programResourceRepository.findAllProgramResourceByProgramId(programId);
 	}

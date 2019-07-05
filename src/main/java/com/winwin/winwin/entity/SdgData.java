@@ -2,6 +2,8 @@ package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -26,7 +28,7 @@ import lombok.ToString;
 @Table(name = "sdg_data")
 public class SdgData {
 	@Id
-	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sdg_data_seq")
 	private Long id;
 
 	@Column(name = "goal_code")

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,6 +150,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	}
 
 	@Override
+	@Cacheable("organization_dataset_list")
 	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
 		return organizationDataSetRepository.findAllOrgDataSetList(id);
 	}// end of method getOrganizationDataSetList
@@ -211,6 +213,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	}// end of method getOrganizationDataSetCategoryById
 
 	@Override
+	@Cacheable("organization_dataset_category_list")
 	public List<DataSetCategory> getDataSetCategoryList() {
 		return dataSetCategoryRepository.findAll();
 	}// end of method getOrganizationDataSetCategoryList

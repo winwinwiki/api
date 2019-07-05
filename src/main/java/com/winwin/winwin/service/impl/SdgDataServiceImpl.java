@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.winwin.winwin.entity.SdgData;
@@ -24,6 +25,7 @@ public class SdgDataServiceImpl implements SdgDataService {
 	SdgDataRepository orgSdgDataRepository;
 
 	@Override
+	@Cacheable("sdg_data_list")
 	public List<SdgGoalPayload> getSdgDataForResponse() {
 		List<SdgGoalPayload> payloadList = null;
 		List<SdgData> sdgList = orgSdgDataRepository.findAllSdgData();
