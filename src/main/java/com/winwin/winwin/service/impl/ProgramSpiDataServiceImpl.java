@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramSpiData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.SpiDataException;
@@ -60,7 +61,8 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 	@Override
 	@Transactional
-	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Long progId) throws SpiDataException {
+	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Program program)
+			throws SpiDataException {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
@@ -81,11 +83,12 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 								if (null != spiDataObj) {
 									spiDataMapObj = programSpiDataMapRepository
-											.findSpiSelectedTagsByProgramIdAndBySpiId(progId, spiDataObj.getId());
+											.findSpiSelectedTagsByProgramIdAndBySpiId(program.getId(),
+													spiDataObj.getId());
 
 									if (spiDataMapObj == null) {
 										spiDataMapObj = new ProgramSpiData();
-										spiDataMapObj.setProgramId(progId);
+										spiDataMapObj.setProgram(program);
 										spiDataMapObj.setSpiData(spiDataObj);
 										spiDataMapObj.setIsChecked(payload.getIsChecked());
 										spiDataMapObj.setCreatedAt(date);

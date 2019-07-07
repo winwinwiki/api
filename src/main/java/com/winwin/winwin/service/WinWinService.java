@@ -9,7 +9,7 @@ import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.DataMigrationCsvPayload;
-import com.winwin.winwin.payload.ProgramRequestPayload;
+import com.winwin.winwin.payload.UserPayload;
 
 /**
  * @author ArvindKhatik
@@ -17,8 +17,9 @@ import com.winwin.winwin.payload.ProgramRequestPayload;
  */
 public interface WinWinService {
 	List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
-			ExceptionResponse response);
+			ExceptionResponse response, UserPayload user);
 
-	List<Program> createProgramsOffline(List<ProgramRequestPayload> programPayloadList, ExceptionResponse response);
+	List<Program> createProgramsOffline(List<DataMigrationCsvPayload> programPayloadList, ExceptionResponse response,
+			UserPayload user);
 
 }
