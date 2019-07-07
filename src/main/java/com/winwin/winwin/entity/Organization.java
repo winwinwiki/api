@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -36,7 +37,8 @@ import lombok.ToString;
 public class Organization extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_seq")
+	@SequenceGenerator(name = "organization_generator", sequenceName = "organization_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_generator")
 	private Long id;
 
 	@ManyToOne(cascade = CascadeType.ALL)

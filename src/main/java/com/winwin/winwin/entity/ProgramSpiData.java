@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -30,8 +31,9 @@ public class ProgramSpiData extends AbstractAuditableEntity {
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "program_id")
-	private Long programId;
+	@JoinColumn(name = "program_id")
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Program program;
 
 	@ManyToOne
 	@JoinColumn(name = "spi_id")

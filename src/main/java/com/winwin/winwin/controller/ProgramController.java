@@ -582,12 +582,13 @@ public class ProgramController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<ProgramSpiDataMapPayload> payloadList,
-			@PathVariable("id") Long orgId) throws SpiDataException {
-		if (orgId == null)
-			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
+			@PathVariable("id") Long progId) throws SpiDataException {
+		Program program = programRepository.findProgramById(progId);
+		if (program == null)
+			return sendErrorResponse(customMessageSource.getMessage("prg.error.not_found"));
 		if (null != payloadList) {
 			try {
-				programSpiDataService.createSpiDataMapping(payloadList, orgId);
+				programSpiDataService.createSpiDataMapping(payloadList, program);
 			} catch (Exception e) {
 				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.created"));
 			}
@@ -641,12 +642,13 @@ public class ProgramController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgramSdgDataMapping(@RequestBody List<ProgramSdgDataMapPayload> payloadList,
-			@PathVariable("id") Long orgId) throws SdgDataException {
-		if (orgId == null)
-			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
+			@PathVariable("id") Long progId) throws SdgDataException {
+		Program program = programRepository.findProgramById(progId);
+		if (program == null)
+			return sendErrorResponse(customMessageSource.getMessage("prg.error.not_found"));
 		if (null != payloadList) {
 			try {
-				programSdgDataService.createSdgDataMapping(payloadList, orgId);
+				programSdgDataService.createSdgDataMapping(payloadList, program);
 			} catch (Exception e) {
 				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.created"));
 			}

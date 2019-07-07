@@ -126,8 +126,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
-	Map<String, NaicsData> naicsMap = null;
-	Map<String, NteeData> nteeMap = null;
+	private Map<String, NaicsData> naicsMap = null;
+	private Map<String, NteeData> nteeMap = null;
 
 	@Override
 	@Transactional
@@ -464,20 +464,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 							i++;
 
 						} /*
-							 * else if
-							 * (operationPerformed.equals(OrganizationConstants.
-							 * UPDATE)) { if (null !=
-							 * organizationPayload.getId()) { Organization
-							 * organization = organizationRepository
-							 * .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new
-							 * OrganizationException( "organization with Id:" +
-							 * organizationPayload.getId() +
-							 * "is not found in DB to perform update operation"
-							 * ); organizationList.add(
-							 * setOrganizationDataForBulkUpload(
-							 * organizationPayload, user, operationPerformed));
-							 * } else { throw new Exception(
+							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
+							 * != organizationPayload.getId()) { Organization organization =
+							 * organizationRepository .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new OrganizationException(
+							 * "organization with Id:" + organizationPayload.getId() +
+							 * "is not found in DB to perform update operation" ); organizationList.add(
+							 * setOrganizationDataForBulkUpload( organizationPayload, user,
+							 * operationPerformed)); } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
@@ -558,8 +552,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 		BeanUtils.copyProperties(csvPayload, organization);
 		organization.setAddress(saveAddressForBulkUpload(csvPayload, user));
 
-		organization.setNaicsCode(naicsMap.get(csvPayload.getNaicsCode()));
-		organization.setNteeCode(nteeMap.get(csvPayload.getNteeCode()));
+		if (!StringUtils.isEmpty(csvPayload.getNaicsCode()))
+			organization.setNaicsCode(naicsMap.get(csvPayload.getNaicsCode()));
+
+		if (!StringUtils.isEmpty(csvPayload.getNteeCode()))
+			organization.setNteeCode(nteeMap.get(csvPayload.getNteeCode()));
 
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
@@ -573,7 +570,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setUpdatedBy(user.getEmail());
 		organization.setIsActive(true);
 
-		organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
+		if (!StringUtils.isEmpty(csvPayload.getNotes()))
+			organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
 
 		if (csvPayload.getNaicsCode() == null && csvPayload.getNteeCode() == null) {
 			List<Long> spiTagIds = new ArrayList<>();
@@ -707,7 +705,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap(ExceptionResponse errorResForNaics)
 			throws Exception {
 		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNaicsAwsKey());
-		Map<String, NaicsDataMappingPayload> naicsMap = new HashMap<>();
+		Map<String, NaicsDataMappingPayload> naicsMapForS3 = new HashMap<>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		InputStream input = s3Object.getObjectContent();
 		String csv = IOUtils.toString(input);
@@ -744,7 +742,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 							payload.setSdgTagIds(sdgIdsList);
 						}
 						payload.setNaicsCode(payloadData.getNaicsCode());
-						naicsMap.put(payloadData.getNaicsCode(), payload);
+						naicsMapForS3.put(payloadData.getNaicsCode(), payload);
 					}
 				}
 			}
@@ -759,7 +757,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				errorResForNaics.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		return naicsMap;
+		return naicsMapForS3;
 	}
 
 	/**
@@ -767,11 +765,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * 
 	 */
 	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap(ExceptionResponse errorResForNtee) throws Exception {
-		Map<String, NteeDataMappingPayload> nteeMap = null;
+		Map<String, NteeDataMappingPayload> nteeMapForS3 = new HashMap<>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		Integer rowNumber = null;
 		try {
-			nteeMap = new HashMap<>();
 			S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNteeAwsKey());
 			if (null != s3Object) {
 				InputStream input = s3Object.getObjectContent();
@@ -806,7 +803,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 
 						payload.setNteeCode(payloadData.getNteeCode());
-						nteeMap.put(payloadData.getNteeCode(), payload);
+						nteeMapForS3.put(payloadData.getNteeCode(), payload);
 					}
 				}
 			}
@@ -821,7 +818,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				errorResForNtee.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
-		return nteeMap;
+		return nteeMapForS3;
 	}
 
 	/**
@@ -957,9 +954,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1034,9 +1030,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */

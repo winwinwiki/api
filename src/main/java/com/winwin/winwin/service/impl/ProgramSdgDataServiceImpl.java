@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.exception.SdgDataException;
@@ -57,7 +58,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 	@Override
 	@Transactional
-	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Long progId) throws SdgDataException {
+	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Program program)
+			throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
 		Date date = CommonUtils.getFormattedDate();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
@@ -77,11 +79,11 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 							if (null != sdgData) {
 								sdgDataMapObj = programSdgDataMapRepository
-										.findSdgSelectedTagsByProgramIdAndBySdgId(progId, sdgData.getId());
+										.findSdgSelectedTagsByProgramIdAndBySdgId(program.getId(), sdgData.getId());
 
 								if (sdgDataMapObj == null) {
 									sdgDataMapObj = new ProgramSdgData();
-									sdgDataMapObj.setProgramId(progId);
+									sdgDataMapObj.setProgram(program);
 									sdgDataMapObj.setSdgData(sdgData);
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
@@ -140,7 +142,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(date);
 							sdgDataMapObj.setUpdatedBy(user.getEmail());
-							sdgDataMapObj.setProgramId(payload.getProgramId());
+							sdgDataMapObj.setProgram(program);
 
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
