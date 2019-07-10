@@ -149,7 +149,6 @@ public class WinWinServiceImpl implements WinWinService {
 
 	@Override
 	@Transactional
-	@Async
 	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
@@ -173,8 +172,6 @@ public class WinWinServiceImpl implements WinWinService {
 			List<DataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			String operationPerformed, String customMessage, UserPayload user) {
 		List<Organization> organizationList = new ArrayList<Organization>();
-		List<Long> resourceIds = new ArrayList<Long>();
-		List<Long> datasetIds = new ArrayList<Long>();
 		Map<Long, String> datasetsTypeMap = new HashMap<Long, String>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
@@ -199,23 +196,30 @@ public class WinWinServiceImpl implements WinWinService {
 			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 
+			Map<Long, List<Long>> dataSetMapById = new HashMap<Long, List<Long>>();
+			Map<Long, List<Long>> resourceMapById = new HashMap<Long, List<Long>>();
+
 			if (null != organizationPayloadList) {
 				// set Naics-Ntee code map
 				setNaicsNteeMap();
 
 				for (DataMigrationCsvPayload organizationPayload : organizationPayloadList) {
-					if (null != organizationPayload && null != user) {
+					if (null != organizationPayload && null != organizationPayload.getId()) {
 						if (!StringUtils.isEmpty(organizationPayload.getResourceIds())) {
 							String[] resourceIdsList = organizationPayload.getResourceIds().split(",");
+							List<Long> resourceIds = new ArrayList<Long>();
 							for (int j = 0; j < resourceIdsList.length; j++) {
 								resourceIds.add(Long.parseLong(resourceIdsList[j]));
 							}
+							resourceMapById.put(organizationPayload.getId(), resourceIds);
 						}
 						if (!StringUtils.isEmpty(organizationPayload.getDatasetIds())) {
 							String[] datasetIdsList = organizationPayload.getDatasetIds().split(",");
+							List<Long> datasetIds = new ArrayList<Long>();
 							for (int j = 0; j < datasetIdsList.length; j++) {
 								datasetIds.add(Long.parseLong(datasetIdsList[j]));
 							}
+							dataSetMapById.put(organizationPayload.getId(), datasetIds);
 						}
 						if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
 							if (null != organizationPayload.getId())
@@ -236,8 +240,8 @@ public class WinWinServiceImpl implements WinWinService {
 				for (Organization organization : organizationList) {
 					// To save list of resourceIds and datasetIds fetched
 					// from .csv file
-					saveOrgDatasetAndResources(organization, user, resourceIds, datasetIds,
-							datasetsTypeMap.get(organization.getId()));
+					saveOrgDatasetAndResources(organization, user, resourceMapById.get(organization.getId()),
+							dataSetMapById.get(organization.getId()), datasetsTypeMap.get(organization.getId()));
 				}
 			}
 		} catch (Exception e) {
@@ -457,9 +461,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveOrgDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular organization
+	 * @throws Exception
+	 *             method saveOrgDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular organization
 	 */
 	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -488,22 +493,25 @@ public class WinWinServiceImpl implements WinWinService {
 				ResourceCategory resourceCategory = resourceCategoryRepository.findResourceCategoryById(categoryId);
 				if (null != resourceCategory) {
 					OrganizationResource resource = null;
-					List<OrganizationResource> resources = organizationResourceRepository
-							.findAllOrgResourceById(organization.getId());
-					if (null != resources) {
-						for (OrganizationResource organizationResource : resources) {
-							resource = organizationResource;
-							if (null != organizationResource.getResourceCategory() && organizationResource
-									.getResourceCategory().getId().equals(resourceCategory.getId())) {
-								resource.setResourceCategory(organizationResource.getResourceCategory());
-							} else {
-								resource.setResourceCategory(resourceCategory);
-							}
-						}
-					} else {
-						resource = new OrganizationResource();
-						resource.setResourceCategory(resourceCategory);
-					}
+					/*
+					 * List<OrganizationResource> resources =
+					 * organizationResourceRepository
+					 * .findAllOrgResourceById(organization.getId()); if (null
+					 * != resources && !resources.isEmpty()) { for
+					 * (OrganizationResource organizationResource : resources) {
+					 * resource = organizationResource; if (null !=
+					 * organizationResource.getResourceCategory() &&
+					 * organizationResource
+					 * .getResourceCategory().getId().equals(resourceCategory.
+					 * getId())) {
+					 * resource.setResourceCategory(organizationResource.
+					 * getResourceCategory()); } else {
+					 * resource.setResourceCategory(resourceCategory); } } }
+					 * else {
+					 */
+					resource = new OrganizationResource();
+					resource.setResourceCategory(resourceCategory);
+					// }
 					resource.setOrganizationId(organization.getId());
 					resource.setCreatedAt(date);
 					resource.setUpdatedAt(date);
@@ -515,13 +523,6 @@ public class WinWinServiceImpl implements WinWinService {
 
 			if (!resourceList.isEmpty()) {
 				resourceList = organizationResourceRepository.saveAll(resourceList);
-				/*
-				 * for (OrganizationResource orgResource : resourceList) {
-				 * orgHistoryService.createOrganizationHistory(user,
-				 * orgResource.getOrganizationId(), OrganizationConstants.CREATE,
-				 * OrganizationConstants.RESOURCE, orgResource.getId(),
-				 * orgResource.getResourceCategory().getCategoryName(), ""); }
-				 */
 			}
 
 		}
@@ -545,22 +546,24 @@ public class WinWinServiceImpl implements WinWinService {
 				DataSetCategory datasetCategory = dataSetCategoryRepository.findDataSetCategoryById(categoryId);
 				if (null != datasetCategory) {
 					OrganizationDataSet dataset = null;
-					List<OrganizationDataSet> datasets = organizationDataSetRepository
-							.findAllOrgDataSetList(organization.getId());
-					if (null != datasets) {
-						for (OrganizationDataSet organizationDataset : datasets) {
-							dataset = organizationDataset;
-							if (null != organizationDataset.getDataSetCategory() && organizationDataset
-									.getDataSetCategory().getId().equals(datasetCategory.getId())) {
-								dataset.setDataSetCategory(organizationDataset.getDataSetCategory());
-							} else {
-								dataset.setDataSetCategory(datasetCategory);
-							}
-						}
-					} else {
-						dataset = new OrganizationDataSet();
-						dataset.setDataSetCategory(datasetCategory);
-					}
+					/*
+					 * List<OrganizationDataSet> datasets =
+					 * organizationDataSetRepository
+					 * .findAllOrgDataSetList(organization.getId()); if (null !=
+					 * datasets && !datasets.isEmpty()) { for
+					 * (OrganizationDataSet organizationDataset : datasets) {
+					 * dataset = organizationDataset; if (null !=
+					 * organizationDataset.getDataSetCategory() &&
+					 * organizationDataset
+					 * .getDataSetCategory().getId().equals(datasetCategory.
+					 * getId())) {
+					 * dataset.setDataSetCategory(organizationDataset.
+					 * getDataSetCategory()); } else {
+					 * dataset.setDataSetCategory(datasetCategory); } } } else {
+					 */
+					dataset = new OrganizationDataSet();
+					dataset.setDataSetCategory(datasetCategory);
+					// }
 					dataset.setOrganizationId(organization.getId());
 					if (!StringUtils.isEmpty(datasetType)) {
 						dataset.setType(datasetType);
@@ -574,13 +577,6 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 			if (!datasetList.isEmpty()) {
 				datasetList = organizationDataSetRepository.saveAll(datasetList);
-				/*
-				 * for (OrganizationDataSet organizationDataSet : datasetList) {
-				 * orgHistoryService.createOrganizationHistory(user,
-				 * organizationDataSet.getOrganizationId(), OrganizationConstants.CREATE,
-				 * OrganizationConstants.DATASET, organizationDataSet.getId(),
-				 * organizationDataSet.getDataSetCategory().getCategoryName(), ""); }
-				 */
 			}
 		}
 		return datasetList;
@@ -596,8 +592,6 @@ public class WinWinServiceImpl implements WinWinService {
 	public List<Program> saveProgramOfflineForBulkUpload(List<DataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		List<Program> programList = new ArrayList<Program>();
-		List<Long> resourceIds = new ArrayList<Long>();
-		List<Long> datasetIds = new ArrayList<Long>();
 		Map<Long, String> datasetsTypeMap = new HashMap<Long, String>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
@@ -622,19 +616,26 @@ public class WinWinServiceImpl implements WinWinService {
 			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 
+			Map<Long, List<Long>> dataSetMapById = new HashMap<Long, List<Long>>();
+			Map<Long, List<Long>> resourceMapById = new HashMap<Long, List<Long>>();
+
 			for (DataMigrationCsvPayload programPayload : programPayloadList) {
-				if (null != programPayload && null != user) {
+				if (null != programPayload && null != programPayload.getId()) {
 					if (!StringUtils.isEmpty(programPayload.getResourceIds())) {
 						String[] resourceIdsList = programPayload.getResourceIds().split(",");
+						List<Long> resourceIds = new ArrayList<Long>();
 						for (int j = 0; j < resourceIdsList.length; j++) {
 							resourceIds.add(Long.parseLong(resourceIdsList[j]));
 						}
+						resourceMapById.put(programPayload.getId(), resourceIds);
 					}
 					if (!StringUtils.isEmpty(programPayload.getDatasetIds())) {
 						String[] datasetIdsList = programPayload.getDatasetIds().split(",");
+						List<Long> datasetIds = new ArrayList<Long>();
 						for (int j = 0; j < datasetIdsList.length; j++) {
 							datasetIds.add(Long.parseLong(datasetIdsList[j]));
 						}
+						dataSetMapById.put(programPayload.getId(), datasetIds);
 					}
 					if (!StringUtils.isEmpty(programPayload.getDatasetType())) {
 						if (null != programPayload.getName())
@@ -653,8 +654,8 @@ public class WinWinServiceImpl implements WinWinService {
 				if (null != program.getId()) {
 					// To save list of resourceIds and datasetIds fetched from
 					// .csv file
-					saveProgramDatasetAndResources(program, user, resourceIds, datasetIds,
-							datasetsTypeMap.get(program.getId()));
+					saveProgramDatasetAndResources(program, user, resourceMapById.get(program.getId()),
+							dataSetMapById.get(program.getId()), datasetsTypeMap.get(program.getId()));
 				}
 			}
 		} catch (Exception e) {
@@ -851,9 +852,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveProgramDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular program
+	 * @throws Exception
+	 *             method saveProgramDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular program
 	 */
 	private void saveProgramDatasetAndResources(Program program, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -881,22 +883,24 @@ public class WinWinServiceImpl implements WinWinService {
 				ResourceCategory resourceCategory = resourceCategoryRepository.findResourceCategoryById(categoryId);
 				if (null != resourceCategory) {
 					ProgramResource resource = null;
-					List<ProgramResource> resources = programResourceRepository
-							.findAllProgramResourceByProgramId(program.getId());
-					if (null != resources) {
-						for (ProgramResource programResource : resources) {
-							resource = programResource;
-							if (null != programResource.getResourceCategory()
-									&& programResource.getResourceCategory().getId().equals(resourceCategory.getId())) {
-								resource.setResourceCategory(programResource.getResourceCategory());
-							} else {
-								resource.setResourceCategory(resourceCategory);
-							}
-						}
-					} else {
-						resource = new ProgramResource();
-						resource.setResourceCategory(resourceCategory);
-					}
+					/*
+					 * List<ProgramResource> resources =
+					 * programResourceRepository
+					 * .findAllProgramResourceByProgramId(program.getId()); if
+					 * (null != resources && !resources.isEmpty()) { for
+					 * (ProgramResource programResource : resources) { resource
+					 * = programResource; if (null !=
+					 * programResource.getResourceCategory() &&
+					 * programResource.getResourceCategory().getId().equals(
+					 * resourceCategory.getId())) {
+					 * resource.setResourceCategory(programResource.
+					 * getResourceCategory()); } else {
+					 * resource.setResourceCategory(resourceCategory); } } }
+					 * else {
+					 */
+					resource = new ProgramResource();
+					resource.setResourceCategory(resourceCategory);
+					// }
 					resource.setProgramId(program.getId());
 					resource.setCreatedAt(date);
 					resource.setUpdatedAt(date);
@@ -908,12 +912,6 @@ public class WinWinServiceImpl implements WinWinService {
 
 			if (!resourceList.isEmpty()) {
 				resourceList = programResourceRepository.saveAll(resourceList);
-
-				for (ProgramResource programResource : resourceList) {
-					orgHistoryService.createOrganizationHistory(user, null, programResource.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getResourceCategory().getCategoryName(), "");
-				}
 			}
 
 		}
@@ -937,22 +935,22 @@ public class WinWinServiceImpl implements WinWinService {
 				DataSetCategory datasetCategory = dataSetCategoryRepository.findDataSetCategoryById(categoryId);
 				if (null != datasetCategory) {
 					ProgramDataSet dataset = null;
-					List<ProgramDataSet> datasets = programDataSetRepository
-							.findAllProgramDataSetListByProgramId(program.getId());
-					if (null != datasets) {
-						for (ProgramDataSet programDataset : datasets) {
-							dataset = programDataset;
-							if (null != programDataset.getDataSetCategory()
-									&& programDataset.getDataSetCategory().getId().equals(datasetCategory.getId())) {
-								dataset.setDataSetCategory(programDataset.getDataSetCategory());
-							} else {
-								dataset.setDataSetCategory(datasetCategory);
-							}
-						}
-					} else {
-						dataset = new ProgramDataSet();
-						dataset.setDataSetCategory(datasetCategory);
-					}
+					/*
+					 * List<ProgramDataSet> datasets = programDataSetRepository
+					 * .findAllProgramDataSetListByProgramId(program.getId());
+					 * if (null != datasets && !datasets.isEmpty()) { for
+					 * (ProgramDataSet programDataset : datasets) { dataset =
+					 * programDataset; if (null !=
+					 * programDataset.getDataSetCategory() &&
+					 * programDataset.getDataSetCategory().getId().equals(
+					 * datasetCategory.getId())) {
+					 * dataset.setDataSetCategory(programDataset.
+					 * getDataSetCategory()); } else {
+					 * dataset.setDataSetCategory(datasetCategory); } } } else {
+					 */
+					dataset = new ProgramDataSet();
+					dataset.setDataSetCategory(datasetCategory);
+					// }
 					dataset.setProgramId(program.getId());
 					if (!StringUtils.isEmpty(datasetType)) {
 						dataset.setType(datasetType);
@@ -966,11 +964,6 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 			if (!datasetList.isEmpty()) {
 				datasetList = programDataSetRepository.saveAll(datasetList);
-				for (ProgramDataSet programDataSet : datasetList) {
-					orgHistoryService.createOrganizationHistory(user, null, programDataSet.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
-							programDataSet.getDataSetCategory().getCategoryName(), "");
-				}
 			}
 		}
 		return datasetList;

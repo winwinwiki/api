@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -29,7 +30,8 @@ import lombok.ToString;
 public class NteeData {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ntee_data_seq")
+	@SequenceGenerator(name = "ntee_data_generator", sequenceName = "ntee_data_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ntee_data_generator")
 	private Long id;
 
 	@Column(name = "name")

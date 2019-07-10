@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -28,7 +29,8 @@ import lombok.ToString;
 @Table(name = "sdg_data")
 public class SdgData {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sdg_data_seq")
+	@SequenceGenerator(name = "sdg_data_generator", sequenceName = "sdg_data_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sdg_data_generator")
 	private Long id;
 
 	@Column(name = "goal_code")

@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -25,9 +26,10 @@ import lombok.ToString;
 public class ResourceCategory extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resource_category_seq")
+	@SequenceGenerator(name = "resource_category_generator", sequenceName = "resource_category_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resource_category_generator")
 	private Long id;
 
-	@Column(name = "category")
+	@Column(name = "category", columnDefinition = "TEXT")
 	private String categoryName;
 }
