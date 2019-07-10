@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -27,7 +28,8 @@ import lombok.ToString;
 @Table(name = "program_sdg_mapping")
 public class ProgramSdgData extends AbstractAuditableEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_sdg_mapping_seq")
+	@SequenceGenerator(name = "program_sdg_mapping_generator", sequenceName = "program_sdg_mapping_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_sdg_mapping_generator")
 	@Column(name = "id")
 	private Long id;
 

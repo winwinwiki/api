@@ -206,7 +206,8 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> getUserList() {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		List<UserPayload> payloadList = null;
