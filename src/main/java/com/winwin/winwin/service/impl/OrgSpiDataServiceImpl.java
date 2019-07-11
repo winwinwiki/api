@@ -99,8 +99,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								orgHistoryService.createOrganizationHistory(user,
 										spiDataMapObj.getOrganization().getId(), OrganizationConstants.CREATE,
 										OrganizationConstants.SPI, spiDataMapObj.getId(),
-										spiDataMapObj.getSpiData().getIndicatorName(),
-										spiDataMapObj.getSpiData().getIndicatorId());
+										spiDataMapObj.getSpiData().getIndicatorName(), "");
 							}
 						} else {
 							Boolean isValidSpiData = true;
