@@ -196,8 +196,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					addressRepository.saveAndFlush(organization.getAddress());
 					organization = organizationRepository.saveAndFlush(organization);
 
-					if (null != organization) {
-						orgHistoryService.createOrganizationHistory(user, organization.getId(),
+					if (null != organization && null != organization.getParentId()) {
+						orgHistoryService.createOrganizationHistory(user, organization.getParentId(),
 								OrganizationConstants.DELETE, type, organization.getId(), organization.getName(), "");
 					}
 				}
