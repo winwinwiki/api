@@ -38,7 +38,7 @@ public class Program extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_generator")
 	private Long id;
 
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "address_id")
 	private Address address;
 
@@ -74,7 +74,7 @@ public class Program extends AbstractAuditableEntity {
 	@Column(name = "priority")
 	private String priority = "Normal";
 
-	@OneToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "org_id")
 	private Organization organization;
 
@@ -119,7 +119,7 @@ public class Program extends AbstractAuditableEntity {
 
 	@Column(name = "contact_info", columnDefinition = "TEXT")
 	String contactInfo;
-	
+
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
 	private List<ProgramSpiData> programSpiData;
 

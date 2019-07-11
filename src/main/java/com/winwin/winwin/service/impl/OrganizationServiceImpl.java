@@ -437,9 +437,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 			int i = 1;
 			if (null != organizationPayloadList) {
-				// set Naics-Ntee code map
-				setNaicsNteeMap();
-
 				for (OrganizationCsvPayload organizationPayload : organizationPayloadList) {
 					if (null != organizationPayload) {
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -552,11 +549,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 		BeanUtils.copyProperties(csvPayload, organization);
 		organization.setAddress(saveAddressForBulkUpload(csvPayload, user));
 
-		if (!StringUtils.isEmpty(csvPayload.getNaicsCode()))
+		if (!StringUtils.isEmpty(csvPayload.getNaicsCode())) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
 			organization.setNaicsCode(naicsMap.get(csvPayload.getNaicsCode()));
+		}
 
-		if (!StringUtils.isEmpty(csvPayload.getNteeCode()))
+		if (!StringUtils.isEmpty(csvPayload.getNteeCode())) {
+			// set Naics-Ntee code map
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
 			organization.setNteeCode(nteeMap.get(csvPayload.getNteeCode()));
+		}
 
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
@@ -578,13 +584,17 @@ public class OrganizationServiceImpl implements OrganizationService {
 			List<Long> sdgTagIds = new ArrayList<>();
 
 			if (!StringUtils.isEmpty(csvPayload.getSpiTagIds())) {
-				String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
+				// split string with comma separated values with removing leading and trailing
+				// whitespace
+				String[] spiIdsList = csvPayload.getSpiTagIds().split("\\S*,\\S*");
 				for (int j = 0; j < spiIdsList.length; j++) {
 					spiTagIds.add(Long.parseLong(spiIdsList[j]));
 				}
 			}
 			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
-				String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
+				// split string with comma separated values with removing leading and trailing
+				// whitespace
+				String[] sdgIdsList = csvPayload.getSdgTagIds().split("\\S*,\\S*");
 				for (int j = 0; j < sdgIdsList.length; j++) {
 					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
 				}
@@ -725,7 +735,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
 
 						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
-							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							// split string with comma separated values with removing leading and trailing
+							// whitespace
+							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
 								spiIdsList.add(Long.parseLong(spiIds[j]));
@@ -734,7 +746,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 
 						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
-							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							// split string with comma separated values with removing leading and trailing
+							// whitespace
+							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
 								sdgIdsList.add(Long.parseLong(sdgIds[j]));
@@ -785,7 +799,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						NteeDataMappingPayload payload = new NteeDataMappingPayload();
 
 						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
-							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							// split string with comma separated values with removing leading and trailing
+							// whitespace
+							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
 								spiIdsList.add(Long.parseLong(spiIds[j]));
@@ -794,7 +810,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 
 						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
-							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							// split string with comma separated values with removing leading and trailing
+							// whitespace
+							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
 								sdgIdsList.add(Long.parseLong(sdgIds[j]));

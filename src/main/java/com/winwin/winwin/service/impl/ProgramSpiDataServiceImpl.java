@@ -103,8 +103,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
 										payload.getProgramId(), OrganizationConstants.CREATE, OrganizationConstants.SPI,
-										spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(),
-										spiDataMapObj.getSpiData().getIndicatorId());
+										spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(), "");
 							}
 						} else {
 							Boolean isValidSpiData = true;

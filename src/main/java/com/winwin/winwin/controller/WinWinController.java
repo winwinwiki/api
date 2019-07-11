@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,9 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.AddressPayload;
 import com.winwin.winwin.payload.DataMigrationCsvPayload;
-import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
@@ -136,8 +133,7 @@ public class WinWinController extends BaseController {
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
-		List<Program> programList = null;
-		List<ProgramResponsePayload> payloadList = null;
+		List<Program> programList = new ArrayList<Program>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
@@ -148,7 +144,6 @@ public class WinWinController extends BaseController {
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			UserPayload user = userService.getCurrentUserDetails();
 			programList = winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
-			payloadList = setProgramPayload(programList);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -156,37 +151,7 @@ public class WinWinController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(payloadList);
-	}
-
-	/**
-	 * @param programList
-	 * @return
-	 */
-	private List<ProgramResponsePayload> setProgramPayload(List<Program> programList) {
-		List<ProgramResponsePayload> payload = new ArrayList<>();
-		for (int i = 0; i < programList.size(); i++)
-			payload.add(setProgramPayload(programList.get(i)));
-		return payload;
-	}
-
-	private ProgramResponsePayload setProgramPayload(Program program) {
-		AddressPayload addressPayload;
-		ProgramResponsePayload payload = null;
-		if (null != program) {
-			payload = new ProgramResponsePayload();
-			BeanUtils.copyProperties(program, payload);
-			if (null != program.getAddress()) {
-				addressPayload = new AddressPayload();
-				BeanUtils.copyProperties(program.getAddress(), addressPayload);
-				payload.setAddress(addressPayload);
-			}
-			if (null != program.getOrganization()) {
-				payload.setOrganizationId(program.getOrganization().getId());
-				payload.setParentId(program.getOrganization().getId());
-			}
-		}
-		return payload;
+		return sendSuccessResponse(programList);
 	}
 
 }
