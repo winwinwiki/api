@@ -1,3 +1,8 @@
+/**
+ * The class ProgramController is mapped to all incoming request comes at '/program' for creating new programs and it's associated entities.
+ * i.e. SPI tags mapping,SDG tags mapping, address, Resources, DataSets.
+ * 
+ */
 package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
@@ -64,6 +69,7 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @RestController
@@ -109,6 +115,12 @@ public class ProgramController extends BaseController {
 	private ProgramResourceRepository programResourceRepository;
 
 	// Code for program data set start
+	/**
+	 * Returns an Program Details by Id
+	 * 
+	 * @param id
+	 * @return
+	 */
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
@@ -123,28 +135,32 @@ public class ProgramController extends BaseController {
 				payload = programService.getProgramResponseFromProgram(program);
 			}
 		} catch (Exception e) {
-			throw new OrganizationException(customMessageSource.getMessage("prg.error.fetch") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prg.error.fetch");
 		}
 		return sendSuccessResponse(payload);
 	}
 
+	/**
+	 * Creates DataSet for an Program by Id
+	 * 
+	 * @param programDataSetPayLoad
+	 * @return
+	 * @throws DataSetException
+	 */
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgrmDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
 			throws DataSetException {
 		ProgramDataSet programDataSet = null;
-		ProgramDataSetPayLoad payload = null;
-		DataSetCategory category = null;
-		DataSetCategoryPayload payloadCategory = null;
-
+		ProgramDataSetPayLoad payload = new ProgramDataSetPayLoad();
 		if (null != programDataSetPayLoad) {
 			try {
 				programDataSet = programDataSetService.createOrUpdateProgramDataSet(programDataSetPayLoad);
 				if (null != programDataSet) {
-					payload = new ProgramDataSetPayLoad();
 					payload.setId(programDataSet.getId());
-					category = programDataSet.getDataSetCategory();
+					DataSetCategory category = programDataSet.getDataSetCategory();
+					DataSetCategoryPayload payloadCategory = null;
 					if (null != category) {
 						payloadCategory = new DataSetCategoryPayload();
 						payloadCategory.setId(category.getId());
@@ -158,8 +174,7 @@ public class ProgramController extends BaseController {
 					payload.setIsActive(programDataSet.getIsActive());
 				}
 			} catch (Exception e) {
-				throw new DataSetException(
-						customMessageSource.getMessage("prog.dataset.error.created") + ": " + e.getMessage());
+				return sendExceptionResponse(e, "prog.dataset.error.created");
 			}
 		} else {
 			return sendErrorResponse("org.bad.request");
@@ -167,25 +182,30 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
+	/**
+	 * Update DataSet for an Program by Id
+	 * 
+	 * @param programDataSetPayLoad
+	 * @return
+	 * @throws DataSetException
+	 */
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateProgramDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
 			throws DataSetException {
-		ProgramDataSet dataSet = null;
-		DataSetCategory category = null;
-		DataSetCategoryPayload payloadCategory = null;
-		ProgramDataSetPayLoad payload = null;
+		ProgramDataSetPayLoad payload = new ProgramDataSetPayLoad();
+
 		if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
 			Long id = programDataSetPayLoad.getId();
-			dataSet = programDataSetRepository.findProgramDataSetById(id);
+			ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(id);
 			if (dataSet == null) {
-				throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
+				return sendErrorResponse("prog.dataset.error.not_found");
 			} else {
-				payload = new ProgramDataSetPayLoad();
 				dataSet = programDataSetService.createOrUpdateProgramDataSet(programDataSetPayLoad);
 				BeanUtils.copyProperties(dataSet, payload);
-				category = dataSet.getDataSetCategory();
+				DataSetCategory category = dataSet.getDataSetCategory();
+				DataSetCategoryPayload payloadCategory = null;
 				if (null != category) {
 					payloadCategory = new DataSetCategoryPayload();
 					BeanUtils.copyProperties(category, payloadCategory);
@@ -198,6 +218,13 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
+	/**
+	 * Delete a DataSet for an Program by Id
+	 * 
+	 * @param programDataSetPayLoad
+	 * @return
+	 * @throws DataSetException
+	 */
 	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -208,7 +235,7 @@ public class ProgramController extends BaseController {
 				Long id = programDataSetPayLoad.getId();
 				ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(id);
 				if (dataSet == null) {
-					throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
+					return sendErrorResponse("prog.dataset.error.not_found");
 				}
 				programDataSetService.removeProgramDataSet(id, programDataSetPayLoad.getOrganizationId(),
 						programDataSetPayLoad.getProgramId());
@@ -216,31 +243,33 @@ public class ProgramController extends BaseController {
 				return sendErrorResponse("org.bad.request");
 			}
 		} catch (Exception e) {
-			throw new DataSetException(
-					customMessageSource.getMessage("prog.dataset.error.deleted") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.dataset.error.deleted");
 		}
 		return sendSuccessResponse("prog.dataset.success.deleted");
 	}
 
+	/**
+	 * Returns a DataSet List associated with Program by Id
+	 * 
+	 * @param id
+	 * @return
+	 * @throws DataSetException
+	 */
 	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) throws DataSetException {
 		List<ProgramDataSet> programDataSetList = null;
 		ProgramDataSetPayLoad payload = null;
-		DataSetCategory category = null;
-		DataSetCategoryPayload payloadCategory = null;
-		List<ProgramDataSetPayLoad> payloadList = null;
+		List<ProgramDataSetPayLoad> payloadList = new ArrayList<ProgramDataSetPayLoad>();
 		try {
 			programDataSetList = programDataSetService.getProgramDataSetList(id);
-			if (programDataSetList == null) {
-				throw new DataSetException(customMessageSource.getMessage("prog.dataset.error.not_found"));
-			} else {
-				payloadList = new ArrayList<>();
+			if (programDataSetList != null) {
 				for (ProgramDataSet dataSet : programDataSetList) {
 					payload = new ProgramDataSetPayLoad();
 					BeanUtils.copyProperties(dataSet, payload);
-					category = dataSet.getDataSetCategory();
+					DataSetCategory category = dataSet.getDataSetCategory();
+					DataSetCategoryPayload payloadCategory = null;
 					if (null != category) {
 						payloadCategory = new DataSetCategoryPayload();
 						BeanUtils.copyProperties(category, payloadCategory);
@@ -250,37 +279,36 @@ public class ProgramController extends BaseController {
 				}
 			}
 		} catch (Exception e) {
-			throw new DataSetException(
-					customMessageSource.getMessage("prog.dataset.error.list") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.dataset.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 
 	}
 
+	/**
+	 * Returns a DataSet Category Master List
+	 * 
+	 * @return
+	 * @throws DataSetCategoryException
+	 */
 	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getDataSetCategoryList(HttpServletResponse httpServletResponce)
 			throws DataSetCategoryException {
 		List<DataSetCategory> dataSetCategoryList = null;
-		List<DataSetCategoryPayload> payloadList = null;
-		DataSetCategoryPayload payload = null;
+		List<DataSetCategoryPayload> payloadList = new ArrayList<DataSetCategoryPayload>();
 		try {
 			dataSetCategoryList = programDataSetService.getDataSetCategoryList();
-			if (dataSetCategoryList == null) {
-				throw new DataSetCategoryException(
-						customMessageSource.getMessage("prog.dataset.category.error.not_found"));
-			} else {
-				payloadList = new ArrayList<>();
+			if (dataSetCategoryList != null) {
 				for (DataSetCategory category : dataSetCategoryList) {
-					payload = new DataSetCategoryPayload();
+					DataSetCategoryPayload payload = new DataSetCategoryPayload();
 					BeanUtils.copyProperties(category, payload);
 					payloadList.add(payload);
 				}
 			}
 		} catch (Exception e) {
-			throw new DataSetCategoryException(
-					customMessageSource.getMessage("prog.dataset.category.error.list") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.dataset.category.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 	}
@@ -289,6 +317,13 @@ public class ProgramController extends BaseController {
 
 	// Code for program resource start
 
+	/**
+	 * Creates Resources for an Program by Id
+	 * 
+	 * @param programResourcePayLoad
+	 * @return
+	 * @throws ResourceException
+	 */
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -313,8 +348,7 @@ public class ProgramController extends BaseController {
 					payload.setResourceCategory(payloadCategory);
 				}
 			} catch (Exception e) {
-				throw new ResourceException(
-						customMessageSource.getMessage("prog.resource.error.created") + ": " + e.getMessage());
+				return sendExceptionResponse(e, "prog.resource.error.created");
 			}
 		} else {
 			return sendErrorResponse("org.bad.request");
@@ -322,6 +356,13 @@ public class ProgramController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
+	/**
+	 * Update Resource for an Program by Id
+	 * 
+	 * @param programResourcePayLoad
+	 * @return
+	 * @throws ResourceException
+	 */
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -330,16 +371,15 @@ public class ProgramController extends BaseController {
 		ProgramResource programResource = null;
 		ResourceCategory category = null;
 		ResourceCategoryPayLoad payloadCategory = null;
-		ProgramResourcePayLoad payload = null;
+		ProgramResourcePayLoad payload = new ProgramResourcePayLoad();
 		try {
 			if (null != programResourcePayLoad && null != programResourcePayLoad.getId()) {
 				Long id = programResourcePayLoad.getId();
 				programResource = programResourceRepository.findProgramResourceById(id);
 				if (programResource == null) {
-					throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
+					return sendErrorResponse("prog.resource.error.not_found");
 				} else {
 					programResource = programResourceService.createOrUpdateProgramResource(programResourcePayLoad);
-					payload = new ProgramResourcePayLoad();
 					BeanUtils.copyProperties(programResource, payload);
 
 					category = programResource.getResourceCategory();
@@ -353,12 +393,18 @@ public class ProgramController extends BaseController {
 				return sendErrorResponse("org.bad.request");
 			}
 		} catch (Exception e) {
-			throw new ResourceException(
-					customMessageSource.getMessage("prog.resource.error.updated") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.resource.error.updated");
 		}
 		return sendSuccessResponse(payload);
 	}
 
+	/**
+	 * Delete Resource associated with Program by Id
+	 * 
+	 * @param programResourcePayLoad
+	 * @return
+	 * @throws ResourceException
+	 */
 	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -369,7 +415,7 @@ public class ProgramController extends BaseController {
 				Long id = programResourcePayLoad.getId();
 				ProgramResource programResource = programResourceRepository.findProgramResourceById(id);
 				if (programResource == null) {
-					throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
+					return sendErrorResponse("prog.resource.error.not_found");
 				}
 				programResourceService.removeProgramResource(id, programResourcePayLoad.getOrganizationId(),
 						programResourcePayLoad.getProgramId());
@@ -377,12 +423,18 @@ public class ProgramController extends BaseController {
 				return sendErrorResponse("org.bad.request");
 			}
 		} catch (Exception e) {
-			throw new ResourceException(
-					customMessageSource.getMessage("prog.resource.error.deleted") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.resource.error.deleted");
 		}
 		return sendSuccessResponse("prog.resource.success.deleted");
 	}
 
+	/**
+	 * Returns a List of Resources for an Program by Id
+	 * 
+	 * @param id
+	 * @return
+	 * @throws ResourceException
+	 */
 	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
@@ -391,13 +443,10 @@ public class ProgramController extends BaseController {
 		ProgramResourcePayLoad payload = null;
 		ResourceCategory category = null;
 		ResourceCategoryPayLoad payloadCategory = null;
-		List<ProgramResourcePayLoad> payloadList = null;
+		List<ProgramResourcePayLoad> payloadList = new ArrayList<ProgramResourcePayLoad>();
 		try {
 			programResourceList = programResourceService.getProgramResourceList(id);
-			if (programResourceList == null) {
-				throw new ResourceException(customMessageSource.getMessage("prog.resource.error.not_found"));
-			} else {
-				payloadList = new ArrayList<>();
+			if (programResourceList != null) {
 				for (ProgramResource resource : programResourceList) {
 					payload = new ProgramResourcePayLoad();
 					BeanUtils.copyProperties(resource, payload);
@@ -412,28 +461,27 @@ public class ProgramController extends BaseController {
 				}
 			}
 		} catch (Exception e) {
-			throw new ResourceException(
-					customMessageSource.getMessage("prog.resource.error.list") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.resource.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 	}
 
+	/**
+	 * Returns an Resource Category Master List
+	 * 
+	 * @return
+	 * @throws ResourceCategoryException
+	 */
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> getResourceCategoryList(HttpServletResponse httpServletResponce)
-			throws ResourceCategoryException {
+	public ResponseEntity<?> getResourceCategoryList() throws ResourceCategoryException {
 		List<ResourceCategory> resourceCategoryList = null;
 		ResourceCategoryPayLoad payload = null;
-		List<ResourceCategoryPayLoad> payloadList = null;
-
+		List<ResourceCategoryPayLoad> payloadList = new ArrayList<>();
 		try {
 			resourceCategoryList = programResourceService.getResourceCategoryList();
-			if (resourceCategoryList == null) {
-				throw new ResourceCategoryException(
-						customMessageSource.getMessage("prog.resource.category.error.not_found"));
-			} else {
-				payloadList = new ArrayList<>();
+			if (resourceCategoryList != null) {
 				for (ResourceCategory category : resourceCategoryList) {
 					payload = new ResourceCategoryPayLoad();
 					BeanUtils.copyProperties(category, payload);
@@ -441,8 +489,7 @@ public class ProgramController extends BaseController {
 				}
 			}
 		} catch (Exception e) {
-			throw new ResourceCategoryException(
-					customMessageSource.getMessage("prog.resource.category.error.list") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.resource.category.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 
@@ -451,19 +498,25 @@ public class ProgramController extends BaseController {
 	// Code for program resource end
 
 	// Code for program region served start
+	/**
+	 * Creates ProgramRegionServed for an Program by Id
+	 * 
+	 * @param programRegionServedPayloadList
+	 * @return
+	 * @throws RegionServedException
+	 */
 	@RequestMapping(value = "/{id}/region", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> createOrgRegions(
 			@RequestBody List<ProgramRegionServedPayload> programRegionServedPayloadList) throws RegionServedException {
 		List<ProgramRegionServed> progranRegionServedList = null;
-		List<ProgramRegionServedPayload> payloadList = null;
+		List<ProgramRegionServedPayload> payloadList = new ArrayList<ProgramRegionServedPayload>();
 		ProgramRegionServedPayload payload = null;
 		try {
 			progranRegionServedList = programRegionServedService
 					.createProgramRegionServed(programRegionServedPayloadList);
 			if (null != progranRegionServedList) {
-				payloadList = new ArrayList<>();
 				for (ProgramRegionServed region : progranRegionServedList) {
 					payload = new ProgramRegionServedPayload();
 					payload.setId(region.getId());
@@ -479,25 +532,28 @@ public class ProgramController extends BaseController {
 				}
 			}
 		} catch (Exception e) {
-			throw new RegionServedException(
-					customMessageSource.getMessage("prog.region.error.created") + ": " + e.getMessage());
+			return sendExceptionResponse(e, "prog.region.error.created");
 		}
 		return sendSuccessResponse(payloadList);
 	}
 
+	/**
+	 * Returns ProgramRegionServed List
+	 * 
+	 * @param id
+	 * @return
+	 * @throws RegionServedException
+	 */
 	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws RegionServedException {
 		List<ProgramRegionServed> programRegionList = null;
 		ProgramRegionServedPayload payload = null;
-		List<ProgramRegionServedPayload> payloadList = null;
+		List<ProgramRegionServedPayload> payloadList = new ArrayList<ProgramRegionServedPayload>();
 		try {
 			programRegionList = programRegionServedService.getProgramRegionServedList(id);
-			if (programRegionList == null) {
-				throw new RegionServedException(customMessageSource.getMessage("prog.region.error.not_found"));
-			} else {
-				payloadList = new ArrayList<>();
+			if (programRegionList != null) {
 				for (ProgramRegionServed region : programRegionList) {
 					payload = new ProgramRegionServedPayload();
 					payload.setId(region.getId());
@@ -512,15 +568,21 @@ public class ProgramController extends BaseController {
 					payloadList.add(payload);
 
 				}
-
 			}
 		} catch (Exception e) {
-			throw new RegionServedException(customMessageSource.getMessage("prog.region.error.list"));
+			return sendExceptionResponse(e, "prog.region.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 
 	}
 
+	/**
+	 * Returns a Region Master List
+	 * 
+	 * @param filterPayload
+	 * @return
+	 * @throws RegionServedException
+	 */
 	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -528,7 +590,7 @@ public class ProgramController extends BaseController {
 			throws RegionServedException {
 		List<RegionMaster> orgRegionMasterList = null;
 		RegionMasterPayload payload = null;
-		List<RegionMasterPayload> payloadList = null;
+		List<RegionMasterPayload> payloadList = new ArrayList<RegionMasterPayload>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != filterPayload) {
@@ -539,11 +601,7 @@ public class ProgramController extends BaseController {
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-				if (orgRegionMasterList == null) {
-					return sendMsgResponse(customMessageSource.getMessage("prog.region.error.not_found"),
-							HttpStatus.INTERNAL_SERVER_ERROR);
-				} else {
-					payloadList = new ArrayList<RegionMasterPayload>();
+				if (orgRegionMasterList != null) {
 					for (RegionMaster region : orgRegionMasterList) {
 						payload = new RegionMasterPayload();
 						payload.setRegionId(region.getId());
@@ -562,6 +620,12 @@ public class ProgramController extends BaseController {
 	// Code for program region served end
 
 	// Code for program SPI data start
+	/**
+	 * Returns a SpiData Master List
+	 * 
+	 * @return
+	 * @throws SpiDataException
+	 */
 	@RequestMapping(value = "/spidata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -569,15 +633,20 @@ public class ProgramController extends BaseController {
 		List<SpiDataDimensionsPayload> payloadList = new ArrayList<SpiDataDimensionsPayload>();
 		try {
 			payloadList = spiDataService.getSpiDataForResponse();
-			if (payloadList == null) {
-				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
-			}
 		} catch (Exception e) {
-			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.list"));
+			return sendExceptionResponse(e, "prog.spidata.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 	}
 
+	/**
+	 * Creates SpiData Mapping for an Program by Id
+	 * 
+	 * @param payloadList
+	 * @param progId
+	 * @return
+	 * @throws SpiDataException
+	 */
 	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -590,7 +659,7 @@ public class ProgramController extends BaseController {
 			try {
 				programSpiDataService.createSpiDataMapping(payloadList, program);
 			} catch (Exception e) {
-				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.created"));
+				return sendExceptionResponse(e, "prog.spidata.error.created");
 			}
 			return sendSuccessResponse("prog.spidata.success.created");
 		} else {
@@ -599,28 +668,36 @@ public class ProgramController extends BaseController {
 
 	}
 
+	/**
+	 * Returns a SpiData selected list for an Program by Id
+	 * 
+	 * @param orgId
+	 * @return
+	 * @throws SpiDataException
+	 */
 	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws SpiDataException {
-		List<ProgramSpiDataMapPayload> payloadList = null;
+		List<ProgramSpiDataMapPayload> payloadList = new ArrayList<ProgramSpiDataMapPayload>();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 
 		try {
 			payloadList = programSpiDataService.getSelectedSpiData(orgId);
-
-			if (payloadList == null) {
-				throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.not_found"));
-			}
-
 		} catch (Exception e) {
-			throw new SpiDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
+			return sendExceptionResponse(e, "prog.spidata.error.selectedlist");
 		}
 		return sendSuccessResponse(payloadList);
 	}// Code for program SPI data end
 
 	// Code for program SDG data start
+	/**
+	 * Returns a SdgData Master List
+	 * 
+	 * @return
+	 * @throws SdgDataException
+	 */
 	@RequestMapping(value = "/sdgdata", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -628,16 +705,21 @@ public class ProgramController extends BaseController {
 		List<SdgGoalPayload> payloadList = new ArrayList<SdgGoalPayload>();
 		try {
 			payloadList = sdgDataService.getSdgDataForResponse();
-			if (payloadList == null) {
-				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
-			}
 		} catch (Exception e) {
-			throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.list"));
+			return sendExceptionResponse(e, "prog.sdgdata.error.list");
 		}
 		return sendSuccessResponse(payloadList);
 
 	}
 
+	/**
+	 * Creates SdgData Mapping for an Program by Id
+	 * 
+	 * @param payloadList
+	 * @param progId
+	 * @return
+	 * @throws SdgDataException
+	 */
 	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.PUT)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
@@ -650,7 +732,7 @@ public class ProgramController extends BaseController {
 			try {
 				programSdgDataService.createSdgDataMapping(payloadList, program);
 			} catch (Exception e) {
-				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.created"));
+				return sendExceptionResponse(e, "prog.sdgdata.error.created");
 			}
 			return sendSuccessResponse("prog.sdgdata.success.created");
 		} else {
@@ -659,21 +741,24 @@ public class ProgramController extends BaseController {
 
 	}
 
+	/**
+	 * Returns a SdgData selected list for an Program by Id
+	 * 
+	 * @param orgId
+	 * @return
+	 * @throws SdgDataException
+	 */
 	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws SdgDataException {
-		List<ProgramSdgDataMapPayload> payloadList = null;
+		List<ProgramSdgDataMapPayload> payloadList = new ArrayList<ProgramSdgDataMapPayload>();
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 		try {
 			payloadList = programSdgDataService.getSelectedSdgData(orgId);
-
-			if (payloadList == null) {
-				throw new SdgDataException(customMessageSource.getMessage("prog.sdgdata.error.not_found"));
-			}
 		} catch (Exception e) {
-			throw new SdgDataException(customMessageSource.getMessage("prog.spidata.error.selectedlist"));
+			return sendExceptionResponse(e, "prog.spidata.error.selectedlist");
 		}
 		return sendSuccessResponse(payloadList);
 	}// Code for program SDG data end
