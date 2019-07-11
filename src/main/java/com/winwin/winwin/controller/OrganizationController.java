@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -412,7 +411,7 @@ public class OrganizationController extends BaseController {
 	}
 
 	/**
-	 * Returns an Organization by Id
+	 * Returns an Organization Details by Id
 	 * 
 	 * @param id
 	 * @return
@@ -814,15 +813,13 @@ public class OrganizationController extends BaseController {
 	/**
 	 * Returns an Resource Category Master List
 	 * 
-	 * @param httpServletResponce
 	 * @return
 	 * @throws ResourceCategoryException
 	 */
 	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> getOrganizationResourceCategoryList(HttpServletResponse httpServletResponce)
-			throws ResourceCategoryException {
+	public ResponseEntity<?> getOrganizationResourceCategoryList() throws ResourceCategoryException {
 		List<ResourceCategory> orgResourceCategoryList = null;
 		ResourceCategoryPayLoad payload = null;
 		List<ResourceCategoryPayLoad> payloadList = new ArrayList<ResourceCategoryPayLoad>();
