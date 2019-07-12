@@ -34,7 +34,6 @@ import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
-import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.OrganizationResource;
@@ -371,7 +370,6 @@ public class OrganizationController extends BaseController {
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getOrganizationList(OrganizationFilterPayload filterPayload) throws OrganizationException {
 		List<OrganizationResponsePayload> payloadList = new ArrayList<>();
-		OrganizationResponsePayload payload = null;
 		List<Organization> orgList = new ArrayList<Organization>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
@@ -385,22 +383,27 @@ public class OrganizationController extends BaseController {
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
 			if (orgList != null) {
+				OrganizationResponsePayload payload = null;
 				for (Organization organization : orgList) {
 					payload = setOrganizationPayload(organization);
 					if (null != payload) {
-						OrganizationHistory history = orgHistoryRepository.findLastUpdatedHistory(organization.getId());
-						if (null != history) {
-							if (null != history.getUpdatedAt())
-								payload.setLastEditedAt(history.getUpdatedAt());
-							else
-								payload.setLastEditedAt(organization.getUpdatedAt());
-
-							if (!(StringUtils.isEmpty(history.getUpdatedBy())))
-								payload.setLastEditedBy(history.getUpdatedBy());
-							else
-								payload.setLastEditedBy(organization.getUpdatedBy());
-
-						}
+						payload.setLastEditedAt(organization.getUpdatedAt());
+						payload.setLastEditedBy(organization.getUpdatedBy());
+						payload.setLastEditedByEmail(organization.getUpdatedByEmail());
+						/*
+						 * OrganizationHistory history =
+						 * orgHistoryRepository.findLastUpdatedHistory(
+						 * organization.getId()); if (null != history) { if
+						 * (null != history.getUpdatedAt())
+						 * payload.setLastEditedAt(history.getUpdatedAt()); else
+						 * payload.setLastEditedAt(organization.getUpdatedAt());
+						 * 
+						 * if (!(StringUtils.isEmpty(history.getUpdatedBy())))
+						 * payload.setLastEditedBy(history.getUpdatedBy()); else
+						 * payload.setLastEditedBy(organization.getUpdatedBy());
+						 * 
+						 * }
+						 */
 					}
 					payloadList.add(payload);
 				}
@@ -459,13 +462,12 @@ public class OrganizationController extends BaseController {
 	}
 
 	private OrganizationResponsePayload setOrganizationPayload(Organization organization) {
-		AddressPayload addressPayload;
 		OrganizationResponsePayload payload = null;
 		if (null != organization) {
 			payload = new OrganizationResponsePayload();
 			BeanUtils.copyProperties(organization, payload);
 			if (null != organization.getAddress()) {
-				addressPayload = new AddressPayload();
+				AddressPayload addressPayload = new AddressPayload();
 				BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 				payload.setAddress(addressPayload);
 			}

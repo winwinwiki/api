@@ -64,7 +64,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	@Autowired
 	ProgramRegionServedRepository programRegionServedRepository;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRegionServedServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
 
 	private final Long REGION_ID = -1L;
 
@@ -190,7 +190,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 				Pageable pageable = PageRequest.of(filterPayload.getPageNo(), filterPayload.getPageSize(),
 						Sort.by("name"));
-				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, pageable);
+				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName,regionName, pageable);
 			} else if (filterPayload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (filterPayload.getPageSize() == null) {

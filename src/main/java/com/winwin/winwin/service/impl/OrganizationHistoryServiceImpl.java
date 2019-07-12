@@ -8,9 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationHistory;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.util.CommonUtils;
 
@@ -23,6 +27,10 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
+	@Autowired
+	private OrganizationRepository organizationRepository;
+	@Autowired
+	private ProgramRepository programRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationHistoryServiceImpl.class);
 
@@ -32,6 +40,12 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 		try {
 			OrganizationHistory orgHistory = new OrganizationHistory();
 			Date date = CommonUtils.getFormattedDate();
+			Organization organization = organizationRepository.findOrgById(orgId);
+			if (null != organization) {
+				organization.setUpdatedAt(date);
+				organization.setUpdatedBy(user.getUserDisplayName());
+				organization.setUpdatedByEmail(user.getEmail());
+			}
 			orgHistory.setOrganizationId(orgId);
 			orgHistory.setEntityId(entityId);
 			orgHistory.setEntityName(entityName);
@@ -53,6 +67,22 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 		try {
 			OrganizationHistory orgHistory = new OrganizationHistory();
 			Date date = CommonUtils.getFormattedDate();
+			if (null != orgId) {
+				Organization organization = organizationRepository.findOrgById(orgId);
+				if (null != organization) {
+					organization.setUpdatedAt(date);
+					organization.setUpdatedBy(user.getUserDisplayName());
+					organization.setUpdatedByEmail(user.getEmail());
+				}
+			}
+			if (null != programId) {
+				Program program = programRepository.findProgramById(programId);
+				if (null != program) {
+					program.setUpdatedAt(date);
+					program.setUpdatedBy(user.getUserDisplayName());
+					program.setUpdatedByEmail(user.getEmail());
+				}
+			}
 			orgHistory.setOrganizationId(orgId);
 			orgHistory.setProgramId(programId);
 			orgHistory.setEntityId(entityId);

@@ -189,7 +189,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					Date date = CommonUtils.getFormattedDate();
 					organization.setIsActive(false);
 					organization.setUpdatedAt(date);
-					organization.setUpdatedBy(user.getEmail());
+					organization.setUpdatedBy(user.getUserDisplayName());
+					organization.setUpdatedByEmail(user.getEmail());
 					organization.getAddress().setIsActive(false);
 					organization.getAddress().setUpdatedAt(date);
 					organization.getAddress().setUpdatedBy(user.getEmail());
@@ -238,7 +239,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					organization.setIsActive(true);
 					organization.setUpdatedAt(date);
-					organization.setUpdatedBy(user.getEmail());
+					organization.setUpdatedBy(user.getUserDisplayName());
+					organization.setUpdatedByEmail(user.getEmail());
 					orgClassificationMapping = addClassification(organizationPayload, organization);
 					organization = organizationRepository.saveAndFlush(organization);
 
@@ -358,8 +360,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization.setAddress(address);
 				organization.setCreatedAt(date);
 				organization.setUpdatedAt(date);
-				organization.setCreatedBy(user.getEmail());
-				organization.setUpdatedBy(user.getEmail());
+				organization.setCreatedBy(user.getUserDisplayName());
+				organization.setUpdatedBy(user.getUserDisplayName());
+				organization.setCreatedByEmail(user.getEmail());
+				organization.setUpdatedByEmail(user.getEmail());
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
@@ -522,10 +526,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
 			organization.setCreatedAt(date);
-			organization.setCreatedBy(user.getEmail());
+			organization.setCreatedBy(user.getUserDisplayName());
+			organization.setCreatedByEmail(user.getEmail());
 		}
 		organization.setUpdatedAt(date);
-		organization.setUpdatedBy(user.getEmail());
+		organization.setUpdatedBy(user.getUserDisplayName());
+		organization.setUpdatedByEmail(user.getEmail());
 		organization.setIsActive(true);
 
 		return organization;
@@ -570,10 +576,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		Date date = CommonUtils.getFormattedDate();
 		if (organization.getId() == null) {
 			organization.setCreatedAt(date);
-			organization.setCreatedBy(user.getEmail());
+			organization.setCreatedBy(user.getUserDisplayName());
+			organization.setCreatedByEmail(user.getEmail());
 		}
 		organization.setUpdatedAt(date);
-		organization.setUpdatedBy(user.getEmail());
+		organization.setUpdatedBy(user.getUserDisplayName());
+		organization.setUpdatedByEmail(user.getEmail());
 		organization.setIsActive(true);
 
 		if (!StringUtils.isEmpty(csvPayload.getNotes()))

@@ -48,11 +48,14 @@ public class OrganizationHistory {
 
 	@LastModifiedDate
 	@Column(name = "updated_at")
-	protected Date updatedAt;
+	private Date updatedAt;
 
 	@LastModifiedBy
 	@Column(name = "updated_by")
-	protected String updatedBy;
+	private String updatedBy;
+
+	@Column(name = "updated_by_email")
+	private String updatedByEmail;
 
 	@Column(name = "action_performed")
 	private String actionPerformed;

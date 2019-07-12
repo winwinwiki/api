@@ -168,8 +168,10 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setIsActive(true);
 			program.setCreatedAt(date);
 			program.setUpdatedAt(date);
-			program.setCreatedBy(user.getEmail());
-			program.setUpdatedBy(user.getEmail());
+			program.setCreatedBy(user.getUserDisplayName());
+			program.setUpdatedBy(user.getUserDisplayName());
+			program.setCreatedByEmail(user.getEmail());
+			program.setUpdatedByEmail(user.getEmail());
 			return program;
 		} catch (Exception e) {
 			return null;
