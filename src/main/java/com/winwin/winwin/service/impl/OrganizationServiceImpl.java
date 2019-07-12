@@ -270,7 +270,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {
 			if (null != payload.getPageNo() && null != payload.getPageSize()) {
-				return organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null,
+				orgList = organizationRepository.filterOrganization(payload, OrganizationConstants.ORGANIZATION, null,
 						payload.getPageNo(), payload.getPageSize());
 			} else if (payload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
