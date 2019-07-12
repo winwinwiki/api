@@ -392,8 +392,14 @@ public class OrganizationController extends BaseController {
 						if (null != history) {
 							if (null != history.getUpdatedAt())
 								payload.setLastEditedAt(history.getUpdatedAt());
+							else
+								payload.setLastEditedAt(organization.getUpdatedAt());
+
 							if (!(StringUtils.isEmpty(history.getUpdatedBy())))
 								payload.setLastEditedBy(history.getUpdatedBy());
+							else
+								payload.setLastEditedBy(organization.getUpdatedBy());
+
 						}
 					}
 					payloadList.add(payload);

@@ -8,7 +8,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +28,6 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	EntityManager entityManager;
 
 	@Override
-	@Cacheable("organization_filter_result")
 	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId,
 			Integer pageNo, Integer pageSize) {
 		Query filterQuery = setFilterQuery(payload, type);
@@ -279,10 +277,6 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append(
 					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
 		}
-
-		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
-			sb.append(" order by " + payload.getSortBy() + " "
-					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString());
