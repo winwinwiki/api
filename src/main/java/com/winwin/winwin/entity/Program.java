@@ -125,4 +125,10 @@ public class Program extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
 	private List<ProgramSdgData> programSdgData;
+	
+	@Column(name = "created_by_email")
+	private String createdByEmail;
+
+	@Column(name = "updated_by_email")
+	private String updatedByEmail;
 }

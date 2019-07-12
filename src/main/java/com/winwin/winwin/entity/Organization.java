@@ -136,4 +136,10 @@ public class Organization extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
 	private List<OrganizationSdgData> organizationSdgData;
+
+	@Column(name = "created_by_email")
+	private String createdByEmail;
+
+	@Column(name = "updated_by_email")
+	private String updatedByEmail;
 }

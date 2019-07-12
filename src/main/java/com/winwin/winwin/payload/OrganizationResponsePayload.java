@@ -59,6 +59,8 @@ public class OrganizationResponsePayload {
 	String spiTagIds;
 	String sdgTagIds;
 	String createdBy;
+	String createdByEmail;
 	String lastEditedBy;
+	String lastEditedByEmail;
 	Date lastEditedAt;
 }

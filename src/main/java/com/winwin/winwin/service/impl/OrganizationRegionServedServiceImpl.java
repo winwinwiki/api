@@ -191,7 +191,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 					regionName = payload.getNameSearch();
 
 				Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize());
-				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, pageable);
+				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName,regionName, pageable);
 			} else if (payload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (payload.getPageSize() == null) {
