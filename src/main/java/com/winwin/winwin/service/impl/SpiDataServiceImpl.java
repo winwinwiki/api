@@ -29,14 +29,13 @@ public class SpiDataServiceImpl implements SpiDataService {
 	@Override
 	@Cacheable("spi_data_list")
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {
-		List<SpiDataDimensionsPayload> dimensionPayloadList = null;
+		List<SpiDataDimensionsPayload> dimensionPayloadList = new ArrayList<SpiDataDimensionsPayload>();
 		List<SpiData> spiList = spiDataRepository.findAllSpiData();
 		if (null != spiList) {
 			HashMap<Long, List<SpiData>> spiDimensionsMap = new HashMap<Long, List<SpiData>>();
 			setSpiDimensionsMap(spiList, spiDimensionsMap);
 
 			if ((!spiDimensionsMap.isEmpty())) {
-				dimensionPayloadList = new ArrayList<SpiDataDimensionsPayload>();
 				for (List<SpiData> spiComponentsList : spiDimensionsMap.values()) {
 					SpiDataDimensionsPayload dimensionPayloadObj = new SpiDataDimensionsPayload();
 					dimensionPayloadObj.setDimensionId(spiComponentsList.get(0).getDimensionId());
