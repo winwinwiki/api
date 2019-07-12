@@ -181,10 +181,9 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	@Override
 	public List<OrganizationSpiDataMapPayload> getSelectedSpiData(Long orgId) {
-		List<OrganizationSpiDataMapPayload> payloadList = null;
+		List<OrganizationSpiDataMapPayload> payloadList = new ArrayList<OrganizationSpiDataMapPayload>();
 		List<OrganizationSpiData> spiDataMapList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(orgId);
 		if (null != spiDataMapList) {
-			payloadList = new ArrayList<OrganizationSpiDataMapPayload>();
 			for (OrganizationSpiData spiMapData : spiDataMapList) {
 				OrganizationSpiDataMapPayload payload = new OrganizationSpiDataMapPayload();
 				BeanUtils.copyProperties(spiMapData, payload);

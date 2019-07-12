@@ -173,12 +173,10 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 
 	@Override
 	public List<OrganizationSdgDataMapPayload> getSelectedSdgData(Long orgId) {
-		List<OrganizationSdgDataMapPayload> payloadList = null;
+		List<OrganizationSdgDataMapPayload> payloadList = new ArrayList<OrganizationSdgDataMapPayload>();
 		List<OrganizationSdgData> sdgDataMapList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(orgId);
 
 		if (null != sdgDataMapList) {
-			payloadList = new ArrayList<OrganizationSdgDataMapPayload>();
-
 			for (OrganizationSdgData sdgMapData : sdgDataMapList) {
 				OrganizationSdgDataMapPayload payload = new OrganizationSdgDataMapPayload();
 				BeanUtils.copyProperties(sdgMapData, payload);

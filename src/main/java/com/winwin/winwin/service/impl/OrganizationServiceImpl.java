@@ -314,13 +314,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Cacheable("organization_chart_list")
 	public OrganizationChartPayload getOrgCharts(Organization organization) {
 		List<Organization> childOrganizations = organizationRepository.findAllChildren(organization.getId());
-		OrganizationChartPayload payload = null;
 		AddressPayload location = null;
 		List<OrganizationChartPayload> orgChartList = new ArrayList<>();
 		for (Organization childOrg : childOrganizations)
 			orgChartList.add(getOrgCharts(childOrg));
 
-		payload = new OrganizationChartPayload();
+		OrganizationChartPayload payload = new OrganizationChartPayload();
 		payload.setChildren(orgChartList);
 		try {
 			payload.setId(organization.getId());
@@ -380,11 +379,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	public List<OrganizationHistoryPayload> getOrgHistoryDetails(Long orgId) {
-		List<OrganizationHistoryPayload> payloadList = null;
+		List<OrganizationHistoryPayload> payloadList = new ArrayList<OrganizationHistoryPayload>();
 		try {
 			List<OrganizationHistory> orgHistoryList = orgHistoryRepository.findOrgHistoryDetails(orgId);
 			if (null != orgHistoryList) {
-				payloadList = new ArrayList<OrganizationHistoryPayload>();
 				Organization organization = organizationRepository.findOrgById(orgId);
 
 				for (OrganizationHistory history : orgHistoryList) {
@@ -465,14 +463,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 							i++;
 
 						} /*
-							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
-							 * != organizationPayload.getId()) { Organization organization =
-							 * organizationRepository .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new OrganizationException(
-							 * "organization with Id:" + organizationPayload.getId() +
-							 * "is not found in DB to perform update operation" ); organizationList.add(
-							 * setOrganizationDataForBulkUpload( organizationPayload, user,
-							 * operationPerformed)); } else { throw new Exception(
+							 * else if
+							 * (operationPerformed.equals(OrganizationConstants.
+							 * UPDATE)) { if (null !=
+							 * organizationPayload.getId()) { Organization
+							 * organization = organizationRepository
+							 * .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new
+							 * OrganizationException( "organization with Id:" +
+							 * organizationPayload.getId() +
+							 * "is not found in DB to perform update operation"
+							 * ); organizationList.add(
+							 * setOrganizationDataForBulkUpload(
+							 * organizationPayload, user, operationPerformed));
+							 * } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
@@ -592,7 +596,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			List<Long> sdgTagIds = new ArrayList<>();
 
 			if (!StringUtils.isEmpty(csvPayload.getSpiTagIds())) {
-				// split string with comma separated values with removing leading and trailing
+				// split string with comma separated values with removing
+				// leading and trailing
 				// whitespace
 				String[] spiIdsList = csvPayload.getSpiTagIds().split("\\S*,\\S*");
 				for (int j = 0; j < spiIdsList.length; j++) {
@@ -600,7 +605,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				}
 			}
 			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
-				// split string with comma separated values with removing leading and trailing
+				// split string with comma separated values with removing
+				// leading and trailing
 				// whitespace
 				String[] sdgIdsList = csvPayload.getSdgTagIds().split("\\S*,\\S*");
 				for (int j = 0; j < sdgIdsList.length; j++) {
@@ -743,7 +749,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 						NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
 
 						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
-							// split string with comma separated values with removing leading and trailing
+							// split string with comma separated values with
+							// removing leading and trailing
 							// whitespace
 							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
 							List<Long> spiIdsList = new ArrayList<>();
@@ -754,7 +761,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 
 						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
-							// split string with comma separated values with removing leading and trailing
+							// split string with comma separated values with
+							// removing leading and trailing
 							// whitespace
 							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
 							List<Long> sdgIdsList = new ArrayList<>();
@@ -807,7 +815,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 						NteeDataMappingPayload payload = new NteeDataMappingPayload();
 
 						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
-							// split string with comma separated values with removing leading and trailing
+							// split string with comma separated values with
+							// removing leading and trailing
 							// whitespace
 							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
 							List<Long> spiIdsList = new ArrayList<>();
@@ -818,7 +827,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 						}
 
 						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
-							// split string with comma separated values with removing leading and trailing
+							// split string with comma separated values with
+							// removing leading and trailing
 							// whitespace
 							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
 							List<Long> sdgIdsList = new ArrayList<>();
@@ -980,8 +990,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
+					 * sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1056,8 +1067,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
+					 * spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
