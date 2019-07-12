@@ -21,6 +21,10 @@ import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminDisableUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminEnableUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthRequest;
@@ -95,10 +99,9 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * The below method createUser creates new user in AWS COGNITO with
 	 * email_verified =true and custom attributes and accepts a UserPayload and
-	 * requires Environment Variables such as
-	 * AWS_COGNITO_USER_POOL_ID,AWS_REGION The new user will get an welcome
-	 * email with Temporary password (here for COGNITO the user status will be
-	 * FORCE_CHANGE_PASSWORD
+	 * requires Environment Variables such as AWS_COGNITO_USER_POOL_ID,AWS_REGION
+	 * The new user will get an welcome email with Temporary password (here for
+	 * COGNITO the user status will be FORCE_CHANGE_PASSWORD
 	 */
 	@SuppressWarnings("unused")
 	@Override
@@ -134,17 +137,16 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method resendUserInvitation resends the user invitation for
-	 * newly created users in AWS COGNITO with user status as
-	 * FORCE_CHANGE_PASSWORD i.e. case 'a': when user didn't receive welcome
-	 * email with temp password? if the user didn't get email then the admin
-	 * again need to create the same user (here for cognito the user status will
-	 * be FORCE_CHANGE_PASSWORD)
+	 * The below method resendUserInvitation resends the user invitation for newly
+	 * created users in AWS COGNITO with user status as FORCE_CHANGE_PASSWORD i.e.
+	 * case 'a': when user didn't receive welcome email with temp password? if the
+	 * user didn't get email then the admin again need to create the same user (here
+	 * for cognito the user status will be FORCE_CHANGE_PASSWORD)
 	 * 
-	 * case 'b': What will happen when the user receives an welcome email? Once
-	 * the user will get the welcome email, he need to login with the received
-	 * credentials and once he try to login with temp password he will have to
-	 * pass temp password as old password as well as new proposed password.
+	 * case 'b': What will happen when the user receives an welcome email? Once the
+	 * user will get the welcome email, he need to login with the received
+	 * credentials and once he try to login with temp password he will have to pass
+	 * temp password as old password as well as new proposed password.
 	 */
 	@SuppressWarnings("unused")
 	@Override
@@ -162,11 +164,10 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		/*
-		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e.
-		 * user status as force_change_password and hit the create user again
-		 * then setting cognito request with messageAction as RESEND will
-		 * resends the welcome message again with extending account user
-		 * expiration limit
+		 * Added cognitoRequest.setMessageAction("RESEND"); if user is new i.e. user
+		 * status as force_change_password and hit the create user again then setting
+		 * cognito request with messageAction as RESEND will resends the welcome message
+		 * again with extending account user expiration limit
 		 */
 		cognitoRequest.setMessageAction("RESEND");
 
@@ -234,8 +235,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method updateUserInfo update the user info according to the
-	 * passed UserPayload.
+	 * The below method updateUserInfo update the user info according to the passed
+	 * UserPayload.
 	 */
 	@Override
 	public void updateUserInfo(UserPayload payload, ExceptionResponse response) {
@@ -268,6 +269,12 @@ public class UserServiceImpl implements UserService {
 			attribute.setName("custom:isActive");
 			attribute.setValue(payload.getIsActive());
 			userAttributes.add(attribute);
+
+			// enable or disable a user from AWS_COGNITO_USER_POOL_ID
+			if (payload.getIsActive().equalsIgnoreCase("true"))
+				enableUser(payload, response);
+			if (payload.getIsActive().equalsIgnoreCase("false"))
+				disableUser(payload, response);
 		}
 		if (!StringUtils.isEmpty(payload.getImageUrl())) {
 			AttributeType attribute = new AttributeType();
@@ -276,7 +283,6 @@ public class UserServiceImpl implements UserService {
 			userAttributes.add(attribute);
 		}
 		cognitoUpdateUserRequest.withUserAttributes(userAttributes);
-
 		try {
 			@SuppressWarnings("unused")
 			AdminUpdateUserAttributesResult userResult = cognitoClient
@@ -292,12 +298,13 @@ public class UserServiceImpl implements UserService {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
 		}
+		cognitoClient.shutdown();
 
 	}
 
 	/**
-	 * The below method getUserList returns the list of users whose AWS Status
-	 * is CONFIRMED.
+	 * The below method getUserList returns the list of users whose AWS Status is
+	 * CONFIRMED.
 	 */
 	@Override
 	public List<UserPayload> getUserList(ExceptionResponse response) {
@@ -349,8 +356,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method getUserStatus return the user status in COGNITO
-	 * according to the passed userName.
+	 * The below method getUserStatus return the user status in COGNITO according to
+	 * the passed userName.
 	 */
 	@Override
 	public String getUserStatus(String userName, ExceptionResponse response) {
@@ -382,10 +389,10 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method userSignIn accepts UserSignInPayload and checks whether
-	 * the user is trying to login with temporary password generated by AWS
-	 * through createUser method, i.e. user is supposed to get in via new user
-	 * invitation mail and returns the accessToken if the credentials are valid.
+	 * The below method userSignIn accepts UserSignInPayload and checks whether the
+	 * user is trying to login with temporary password generated by AWS through
+	 * createUser method, i.e. user is supposed to get in via new user invitation
+	 * mail and returns the accessToken if the credentials are valid.
 	 */
 	@Override
 	public AuthenticationResultType userSignIn(UserSignInPayload payload, ExceptionResponse response) {
@@ -450,23 +457,22 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method resetUserPassword accepts UserPayload and reset the
-	 * Existing User Credentials. The user will get an confirmation code through
-	 * email..(here for cognito the user status will become CONFIRMED to
-	 * RESET_REQUIRED)
+	 * The below method resetUserPassword accepts UserPayload and reset the Existing
+	 * User Credentials. The user will get an confirmation code through email..(here
+	 * for cognito the user status will become CONFIRMED to RESET_REQUIRED)
 	 * 
-	 * case 'a': when user didn't receive confirmation code on email? if the
-	 * user didn't get email then the user again need to call the same method
+	 * case 'a': when user didn't receive confirmation code on email? if the user
+	 * didn't get email then the user again need to call the same method
 	 * resetUserPassword( here for cognito the user status will remain as
 	 * RESET_REQUIRED)
 	 * 
-	 * case 'b': What will happen when the user receives an email with
-	 * confirmation code? Once the user will get the email with confirmation
-	 * code, he need to pass confirmation code and new proposed password.
+	 * case 'b': What will happen when the user receives an email with confirmation
+	 * code? Once the user will get the email with confirmation code, he need to
+	 * pass confirmation code and new proposed password.
 	 * 
 	 * After the success for the above case 2.b user can login with new
-	 * credentials.( here for cognito the user status will become RESET_REQUIRED
-	 * to CONFIRMED)
+	 * credentials.( here for cognito the user status will become RESET_REQUIRED to
+	 * CONFIRMED)
 	 */
 	@Override
 	public void resetUserPassword(UserPayload payload, ExceptionResponse response) {
@@ -493,13 +499,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method confirmResetPassword is the next step of
-	 * resetUserPassword which accepts confimationCode in UserSignInPayload.
-	 * Once the user will get the email with confirmation code, he need to pass
-	 * confirmation code and new proposed password.
+	 * The below method confirmResetPassword is the next step of resetUserPassword
+	 * which accepts confimationCode in UserSignInPayload. Once the user will get
+	 * the email with confirmation code, he need to pass confirmation code and new
+	 * proposed password.
 	 * 
-	 * After the success user can login with new credentials.( here for cognito
-	 * the user status will become RESET_REQUIRED to CONFIRMED)
+	 * After the success user can login with new credentials.( here for cognito the
+	 * user status will become RESET_REQUIRED to CONFIRMED)
 	 */
 	@Override
 	public void confirmResetPassword(UserSignInPayload payload, ExceptionResponse response) {
@@ -556,8 +562,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method changePassword accepts the accessToken in
-	 * UserSignInPayload and changes password for User
+	 * The below method changePassword accepts the accessToken in UserSignInPayload
+	 * and changes password for User
 	 */
 	@Override
 	public void changePassword(UserSignInPayload payload, ExceptionResponse response) {
@@ -585,8 +591,8 @@ public class UserServiceImpl implements UserService {
 	}
 
 	/**
-	 * The below method deleteUser accepts the UserName in UserPayload and
-	 * delete the user from COGNITO
+	 * The below method deleteUser accepts the UserName in UserPayload and delete
+	 * the user from COGNITO
 	 */
 	@Override
 	public void deleteUser(UserPayload payload, ExceptionResponse response) {
@@ -606,6 +612,7 @@ public class UserServiceImpl implements UserService {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		cognitoClient.shutdown();
 	}
 
 	/**
@@ -657,6 +664,61 @@ public class UserServiceImpl implements UserService {
 		}
 
 		return payload;
+	}
+
+	/**
+	 * Enable User from the mentioned AWS_COGNITO_USER_POOL_ID
+	 * 
+	 * @param payload
+	 * @param response
+	 */
+	private void enableUser(UserPayload payload, ExceptionResponse response) {
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		AdminEnableUserRequest adminEnableUserRequest = new AdminEnableUserRequest()
+				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
+		try {
+			@SuppressWarnings("unused")
+			AdminEnableUserResult adminEnableUserResult = cognitoClient.adminEnableUser(adminEnableUserRequest);
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+				| TooManyRequestsException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		} catch (InternalErrorException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		}
+		cognitoClient.shutdown();
+	}
+
+	/**
+	 * Disable User from the mentioned AWS_COGNITO_USER_POOL_ID
+	 * 
+	 * @param payload
+	 * @param response
+	 */
+	private void disableUser(UserPayload payload, ExceptionResponse response) {
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		AdminDisableUserRequest adminDisableUserRequest = new AdminDisableUserRequest()
+				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
+		try {
+			@SuppressWarnings("unused")
+			AdminDisableUserResult adminDisableUserResult = cognitoClient.adminDisableUser(adminDisableUserRequest);
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+				| TooManyRequestsException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		} catch (InternalErrorException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		}
+		cognitoClient.shutdown();
+
 	}
 
 	private AWSCognitoIdentityProvider getAmazonCognitoIdentityClient() {
