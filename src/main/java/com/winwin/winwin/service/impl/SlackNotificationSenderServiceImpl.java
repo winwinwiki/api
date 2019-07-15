@@ -1,6 +1,5 @@
 package com.winwin.winwin.service.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -34,11 +33,11 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 
 	/**
 	 * The below method sendSlackNotification accepts a list of failed and
-	 * successfully created organizations in bulk upload operation and creates
-	 * an attachment with all the organizations with along with there status and
-	 * send notification to the channel set in Environment Variables. This
-	 * method needs a channel name and a WEBHOOK_URL which will be created
-	 * through Slack for the particular channel
+	 * successfully created organizations in bulk upload operation and creates an
+	 * attachment with all the organizations with along with there status and send
+	 * notification to the channel set in Environment Variables. This method needs a
+	 * channel name and a WEBHOOK_URL which will be created through Slack for the
+	 * particular channel
 	 */
 	@Override
 	public void sendSlackNotification(List<Organization> organizations, UserPayload user, Date date) {
@@ -114,9 +113,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			@SuppressWarnings("unused")
 			WebhookResponse response = slack.send(url, payload);
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			LOGGER.error("exception occured while sending notifications", e);
 		}
 
 	}
