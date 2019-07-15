@@ -1,6 +1,7 @@
 package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -25,6 +26,7 @@ import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.payload.UserSignInResponsePayload;
 import com.winwin.winwin.service.impl.UserServiceImpl;
+import com.winwin.winwin.util.UserComparator;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
@@ -210,12 +212,16 @@ public class UserController extends BaseController {
 			+ "')")
 	public ResponseEntity<?> getUserList() {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
-		List<UserPayload> payloadList = null;
+		List<UserPayload> payloadList = new ArrayList<UserPayload>();
 
 		payloadList = userService.getUserList(exceptionResponse);
 
 		if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage())) && exceptionResponse.getStatusCode() != null)
 			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
+		// Sort user list by name in ascending order
+		if (!payloadList.isEmpty())
+			Collections.sort(payloadList, new UserComparator());
 
 		return sendSuccessResponse(payloadList, HttpStatus.OK);
 	}
