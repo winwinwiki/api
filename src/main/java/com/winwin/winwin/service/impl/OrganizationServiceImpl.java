@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -131,6 +133,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
+	@Caching(evict = { @CacheEvict(value = "organization_filter_list"),
+			@CacheEvict(value = "organization_filter_count") })
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
 		try {
@@ -157,6 +161,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Async
 	@Transactional
+	@Caching(evict = { @CacheEvict(value = "organization_filter_list"),
+			@CacheEvict(value = "organization_filter_count") })
 	public List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
@@ -180,6 +186,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
+	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list"),
+			@CacheEvict(value = "organization_filter_count") })
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -213,6 +221,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
+	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list") })
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		@SuppressWarnings("unused")
@@ -334,6 +343,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
+	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list"),
+			@CacheEvict(value = "organization_filter_count") })
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		Organization organization = null;
 		try {
