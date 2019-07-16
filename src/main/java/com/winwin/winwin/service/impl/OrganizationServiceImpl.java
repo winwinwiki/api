@@ -238,8 +238,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 						organization.setNaicsCode(naicsCode);
 					}
 					if (organizationPayload.getNteeCode() != null) {
-						NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
-						organization.setNteeCode(naicsCode);
+						NteeData nteeCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+						organization.setNteeCode(nteeCode);
 					}
 
 					Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress(), user);
@@ -474,20 +474,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 							i++;
 
 						} /*
-							 * else if
-							 * (operationPerformed.equals(OrganizationConstants.
-							 * UPDATE)) { if (null !=
-							 * organizationPayload.getId()) { Organization
-							 * organization = organizationRepository
-							 * .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new
-							 * OrganizationException( "organization with Id:" +
-							 * organizationPayload.getId() +
-							 * "is not found in DB to perform update operation"
-							 * ); organizationList.add(
-							 * setOrganizationDataForBulkUpload(
-							 * organizationPayload, user, operationPerformed));
-							 * } else { throw new Exception(
+							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
+							 * != organizationPayload.getId()) { Organization organization =
+							 * organizationRepository .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new OrganizationException(
+							 * "organization with Id:" + organizationPayload.getId() +
+							 * "is not found in DB to perform update operation" ); organizationList.add(
+							 * setOrganizationDataForBulkUpload( organizationPayload, user,
+							 * operationPerformed)); } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
@@ -532,8 +526,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setNaicsCode(naicsCode);
 		}
 		if (organizationPayload.getNteeCode() != null) {
-			NteeData naicsCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
-			organization.setNteeCode(naicsCode);
+			NteeData nteeCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
+			organization.setNteeCode(nteeCode);
 		}
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setIsActive(true);
@@ -1001,9 +995,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1078,9 +1071,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
