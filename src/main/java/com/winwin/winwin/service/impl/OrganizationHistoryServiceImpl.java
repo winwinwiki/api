@@ -53,6 +53,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setEntityCode(entityCode);
 			orgHistory.setUpdatedAt(date);
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
+			orgHistory.setUpdatedByEmail(user.getEmail());
 			orgHistory.setActionPerformed(actionPerformed);
 			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 		} catch (Exception e) {
@@ -91,6 +92,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setEntityCode(entityCode);
 			orgHistory.setUpdatedAt(date);
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
+			orgHistory.setUpdatedByEmail(user.getEmail());
 			orgHistory.setActionPerformed(actionPerformed);
 			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
 		} catch (Exception e) {

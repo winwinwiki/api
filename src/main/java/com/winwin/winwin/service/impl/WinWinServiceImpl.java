@@ -110,7 +110,7 @@ public class WinWinServiceImpl implements WinWinService {
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 	@Autowired
 	CsvUtils csvUtils;
 	@Autowired

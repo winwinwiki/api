@@ -45,27 +45,20 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 	@Autowired
 	AddressRepository addressRepository;
-
 	@Autowired
 	private RegionMasterRepository regionMasterRepository;
-
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
-
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
 	UserService userService;
-
 	@Autowired
 	OrganizationHistoryService orgHistoryService;
-
 	@Autowired
 	ProgramRegionServedRepository programRegionServedRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
-
 	private final Long REGION_ID = -1L;
 
 	@Override
@@ -85,7 +78,6 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						setProgramRegionMasterData(payload, programRegionServed, user);
 						BeanUtils.copyProperties(payload, programRegionServed);
 						programRegionServed.setIsActive(true);
-						;
 						programRegionServed.setCreatedAt(date);
 						programRegionServed.setUpdatedAt(date);
 						programRegionServed.setCreatedBy(user.getEmail());
