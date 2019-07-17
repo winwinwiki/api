@@ -106,7 +106,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 	@Autowired
 	SpiDataRepository spiDataRepository;
 	@Autowired
@@ -186,8 +186,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
-	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list"),
-			@CacheEvict(value = "organization_filter_count") })
+	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -221,7 +220,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
-	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list") })
+	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		@SuppressWarnings("unused")
@@ -343,8 +342,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
-	@Caching(evict = { @CacheEvict("organization_chart_list"), @CacheEvict(value = "organization_filter_list"),
-			@CacheEvict(value = "organization_filter_count") })
+	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		Organization organization = null;
 		try {
@@ -474,14 +472,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 							i++;
 
 						} /*
-							 * else if (operationPerformed.equals(OrganizationConstants. UPDATE)) { if (null
-							 * != organizationPayload.getId()) { Organization organization =
-							 * organizationRepository .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new OrganizationException(
-							 * "organization with Id:" + organizationPayload.getId() +
-							 * "is not found in DB to perform update operation" ); organizationList.add(
-							 * setOrganizationDataForBulkUpload( organizationPayload, user,
-							 * operationPerformed)); } else { throw new Exception(
+							 * else if
+							 * (operationPerformed.equals(OrganizationConstants.
+							 * UPDATE)) { if (null !=
+							 * organizationPayload.getId()) { Organization
+							 * organization = organizationRepository
+							 * .findOrgById(organizationPayload.getId()); if
+							 * (organization == null) throw new
+							 * OrganizationException( "organization with Id:" +
+							 * organizationPayload.getId() +
+							 * "is not found in DB to perform update operation"
+							 * ); organizationList.add(
+							 * setOrganizationDataForBulkUpload(
+							 * organizationPayload, user, operationPerformed));
+							 * } else { throw new Exception(
 							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
 							 * ); } }
 							 */
@@ -995,8 +999,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
+					 * sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1071,8 +1076,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
+					 * spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
