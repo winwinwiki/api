@@ -31,6 +31,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,18 +41,26 @@ import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.SlackNotificationSenderService;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * @author ArvindKhatik
  * @version 1.0
  *
  */
 @Service
+@Getter
+@Setter
 public class SlackNotificationSenderServiceImpl implements SlackNotificationSenderService {
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
 	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SlackNotificationSenderServiceImpl.class);
 
@@ -60,7 +69,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 * successfully created organizations in bulk upload operation and creates
 	 * an attachment with all the organizations along with there status and send
 	 * notification to the channel set in Environment Variables. This method
-	 * requires environment variables as SLACK_CHANNEL_NAME,SLACK_AUTH_TOKEN and
+	 * requires environment, application.properties variables,as SLACK_CHANNEL,SLACK_AUTH_TOKEN and
 	 * SLACK_UPLOAD_FILE_API_URL which will be created through Slack for the
 	 * particular channel
 	 */
@@ -122,8 +131,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 					.username("WinWinUploadNotifier").content(fileContent)
 					.initial_comment("WinWinWiki editor bulk upload status file, created by: "
 							+ user.getUserDisplayName() + " at " + date)
-					.channels(System.getenv("SLACK_CHANNEL_NAME")).build();
-
+					.channels(SLACK_CHANNEL).build();
+			LOGGER.info("SLACK_CHANNEL_NAME "+SLACK_CHANNEL);
 			sendPostRequest(slackMessage);
 
 		} catch (Exception e) {
@@ -176,6 +185,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			}
 			result = buf.toString();
 			LOGGER.info(result);
+			LOGGER.info("SLACK_CHANNEL_NAME "+message.getChannels());
 
 		} catch (MalformedURLException e) {
 			LOGGER.error("exception occured while sending notifications", e);
