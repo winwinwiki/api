@@ -133,8 +133,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Transactional
-	@Caching(evict = { @CacheEvict(value = "organization_filter_list"),
-			@CacheEvict(value = "organization_filter_count") })
+	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
 		try {
@@ -160,9 +159,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Override
 	@Async
-	@Transactional
-	@Caching(evict = { @CacheEvict(value = "organization_filter_list"),
-			@CacheEvict(value = "organization_filter_count") })
+	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
@@ -172,7 +169,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	@Override
-	@Transactional
 	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
 		List<Organization> organizationList = null;
@@ -461,7 +457,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 										operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
 								LOGGER.info("Saving organization : " + i);
 								organization = organizationRepository.save(organization);
-								LOGGER.info("Saved organization " + i + "with id as:" + organization.getId());
+								LOGGER.info("Saved organization " + i + " with id as:" + organization.getId());
 								organizationList.add(organization);
 							} catch (Exception e) {
 								Organization failedOrganization = new Organization();

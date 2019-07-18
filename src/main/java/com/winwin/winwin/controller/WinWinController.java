@@ -102,8 +102,7 @@ public class WinWinController extends BaseController {
 	 */
 	// for offline bulk organization creation
 	@RequestMapping(value = "/organization/addAll", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -130,8 +129,7 @@ public class WinWinController extends BaseController {
 	 */
 	// for offline bulk program creation
 	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
 		List<Program> programList = new ArrayList<Program>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();

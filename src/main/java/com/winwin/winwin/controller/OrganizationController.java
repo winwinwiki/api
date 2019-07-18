@@ -196,8 +196,7 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/addAll", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createOrganizations(@RequestParam("file") MultipartFile file) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != file) {
@@ -231,8 +230,7 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "/updateAll", method = RequestMethod.PUT)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> updateOrganizations(@RequestParam("file") MultipartFile file) {
 		List<OrganizationRequestPayload> organizationPayloadList = new ArrayList<>();
 		List<Organization> organizationList = null;
