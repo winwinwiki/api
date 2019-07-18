@@ -104,7 +104,7 @@ public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
 	}
 
 	/**
-	 * Returns AWS S3 Client Object 
+	 * Returns AWS S3 Client Object
 	 * 
 	 * @return
 	 */

@@ -249,7 +249,7 @@ public class OrganizationController extends BaseController {
 				setNaicsNteeMap();
 				organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 						.collect(Collectors.toList());
-				organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
+				organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
 				payloadList = setOrganizationPayload(organizationList);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -284,7 +284,8 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationRequestPayload organizationPayLoad) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != organizationPayLoad && null != organizationPayLoad.getId()) {

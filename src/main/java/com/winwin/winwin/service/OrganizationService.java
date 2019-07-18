@@ -37,11 +37,10 @@ public interface OrganizationService {
 
 	List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response);
 
-	List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
-			ExceptionResponse response, UserPayload user);
+	void createOrganizations(List<OrganizationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			UserPayload user);
 
-	List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
-			ExceptionResponse response);
+	void updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList, ExceptionResponse response);
 
 	BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response);
 

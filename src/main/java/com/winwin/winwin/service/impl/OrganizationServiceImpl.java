@@ -160,24 +160,19 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Async
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
-	public List<Organization> createOrganizations(List<OrganizationCsvPayload> organizationPayloadList,
-			ExceptionResponse response, UserPayload user) {
-		List<Organization> organizationList = saveOrganizationsForBulkUpload(organizationPayloadList, response,
-				OrganizationConstants.CREATE, "org.exception.created", user);
-
-		return organizationList;
+	public void createOrganizations(List<OrganizationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			UserPayload user) {
+		saveOrganizationsForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
+				"org.exception.created", user);
 	}
 
 	@Override
-	public List<Organization> updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
+	public void updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
-		List<Organization> organizationList = null;
 		/*
 		 * saveOrganizationsForBulkUpload (organizationPayloadList, response,
 		 * OrganizationConstants.UPDATE,"org.exception.updated");
 		 */
-
-		return organizationList;
 	}
 
 	@Override
@@ -417,7 +412,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return payloadList;
 	}
 
-	public List<Organization> saveOrganizationsForBulkUpload(List<OrganizationCsvPayload> organizationPayloadList,
+	private void saveOrganizationsForBulkUpload(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
@@ -442,52 +437,37 @@ public class OrganizationServiceImpl implements OrganizationService {
 			List<SdgData> sdgDataList = sdgDataRepository.findAllSdgData();
 			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
-			int i = 1;
+
 			if (null != organizationPayloadList) {
+				List<Organization> organizationsListToSaveIntoDB = new ArrayList<Organization>();
+				int batchInsertSize = 1000;
+				int numOfOrganizations = organizationPayloadList.size();
+				int remainingNumOfOrganizations = numOfOrganizations % batchInsertSize;
+
+				int i = 1;
 				for (OrganizationCsvPayload organizationPayload : organizationPayloadList) {
-					if (null != organizationPayload) {
-						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-							organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
-							organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
+					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+						organizationPayload.setTagStatus(OrganizationConstants.AUTOTAGGED);
+						organizationPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 
-							// Implemented below logic to log failed and success
-							// organizations for bulk upload
-							try {
-								Organization organization = setOrganizationDataForBulkUpload(organizationPayload, user,
-										operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
-								LOGGER.info("Saving organization : " + i);
-								organization = organizationRepository.save(organization);
-								LOGGER.info("Saved organization " + i + " with id as:" + organization.getId());
-								organizationList.add(organization);
-							} catch (Exception e) {
-								Organization failedOrganization = new Organization();
-								LOGGER.info("Logging failed organization for notifications: " + i);
-								failedOrganization.setName(organizationPayload.getName());
-								organizationList.add(failedOrganization);
-							}
-							i++;
+						// prepare the data to save into DB
+						Organization organization = setOrganizationDataForBulkUpload(organizationPayload, user,
+								operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap);
+						organizationsListToSaveIntoDB.add(organization);
 
-						} /*
-							 * else if
-							 * (operationPerformed.equals(OrganizationConstants.
-							 * UPDATE)) { if (null !=
-							 * organizationPayload.getId()) { Organization
-							 * organization = organizationRepository
-							 * .findOrgById(organizationPayload.getId()); if
-							 * (organization == null) throw new
-							 * OrganizationException( "organization with Id:" +
-							 * organizationPayload.getId() +
-							 * "is not found in DB to perform update operation"
-							 * ); organizationList.add(
-							 * setOrganizationDataForBulkUpload(
-							 * organizationPayload, user, operationPerformed));
-							 * } else { throw new Exception(
-							 * "Organization id is found as null in the file to perform bulk update operation for organizations"
-							 * ); } }
-							 */
-					}
-				}
-			}
+						// save the organizations in the batches of 1000 and
+						// save the remaining organizations
+						if (i % 1000 == 0 || organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
+							organizationList.addAll(saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i));
+							organizationsListToSaveIntoDB = new ArrayList<Organization>();
+						}
+
+						i++;
+
+					} // end of if (operationPerformed.
+				} // end of for loop
+			} // end of if (null != organizationPayloadList)
+
 			// To send failed and success organization through slack
 			// notification for bulk upload
 			if (null != organizationList) {
@@ -498,8 +478,28 @@ public class OrganizationServiceImpl implements OrganizationService {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
 
+	@Transactional
+	@Async
+	private List<Organization> saveOrganizationsIntoDB(List<Organization> organizations, int i) {
+		// Implemented below logic to log failed and success
+		// organizations for bulk upload
+		List<Organization> organizationList = new ArrayList<Organization>();
+		try {
+			LOGGER.info("Saving organizations : " + organizations.size() + " Starting from: " + i);
+			organizationList.addAll(organizationRepository.saveAll(organizations));
+
+			// Flush all pending changes to the database
+			organizationRepository.flush();
+
+			LOGGER.info("Saved organizations: " + organizations.size());
+		} catch (Exception e) {
+			LOGGER.info("Failed to save organizations starting from : " + i);
+			organizationList.addAll(organizations);
+		}
 		return organizationList;
+
 	}
 
 	/**
