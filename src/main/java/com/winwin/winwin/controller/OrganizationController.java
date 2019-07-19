@@ -209,8 +209,9 @@ public class OrganizationController extends BaseController {
 						exceptionResponse.getStatusCode());
 
 			if (null != organizationCsvPayload) {
-				LOGGER.info("org service createOrganizations() started - " + CommonUtils.getFormattedDate());
 				UserPayload user = userService.getCurrentUserDetails();
+				LOGGER.info("org service createOrganizations() started  with number of organizations - "
+						+ organizationCsvPayload.size() + " created by: " + user.getUserDisplayName());
 				organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))

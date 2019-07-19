@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -90,12 +91,16 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 				if (null != organization.getId()) {
 					successOrganizations.append(organization.getId().toString());
 					successOrganizations.append(",");
+					successOrganizations.append("\"");
 					successOrganizations.append(organization.getName());
+					successOrganizations.append("\"");
 					successOrganizations.append(",");
 					successOrganizations.append("SUCCESS");
 					successOrganizations.append("\n");
 				} else {
+					failedOrganizations.append("\"");
 					failedOrganizations.append(organization.getName());
+					failedOrganizations.append("\"");
 					failedOrganizations.append(",");
 					failedOrganizations.append("FAILED");
 					failedOrganizations.append("\n");
@@ -103,9 +108,10 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			} // end of for loop
 
 			successOrganizations.append("\n").append("\n").append("\n");
-
+			
+			String formattedDte = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
 			// write list of success and failed organizations into .csv
-			File file = new File("organization_bulk_upload_result.csv");
+			File file = new File("organization_bulk_upload_result_" + formattedDte + ".csv");
 			// Create the file
 			LOGGER.info("creating Bulk Upload File " + file.getName());
 			if (file.createNewFile()) {
@@ -134,6 +140,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 					.channels(SLACK_CHANNEL).build();
 			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
 			sendPostRequest(slackMessage);
+			LOGGER.info("org service createOrganizations() ended with number of organizations - " + organizations.size()
+					+ " created by: " + user.getUserDisplayName());
 
 		} catch (Exception e) {
 			LOGGER.error("exception occured while sending notifications", e);
