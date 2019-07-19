@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,7 +59,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	protected CustomMessageSource customMessageSource;
 	@Autowired
 	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
-	
+
 	@Value("${slack.channel}")
 	String SLACK_CHANNEL;
 
@@ -69,9 +70,9 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 * successfully created organizations in bulk upload operation and creates
 	 * an attachment with all the organizations along with there status and send
 	 * notification to the channel set in Environment Variables. This method
-	 * requires environment, application.properties variables,as SLACK_CHANNEL,SLACK_AUTH_TOKEN and
-	 * SLACK_UPLOAD_FILE_API_URL which will be created through Slack for the
-	 * particular channel
+	 * requires environment, application.properties variables,as
+	 * SLACK_CHANNEL,SLACK_AUTH_TOKEN and SLACK_UPLOAD_FILE_API_URL which will
+	 * be created through Slack for the particular channel
 	 */
 	@Override
 	public void sendSlackNotification(List<Organization> organizations, UserPayload user, Date date) {
@@ -90,12 +91,16 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 				if (null != organization.getId()) {
 					successOrganizations.append(organization.getId().toString());
 					successOrganizations.append(",");
+					successOrganizations.append("\"");
 					successOrganizations.append(organization.getName());
+					successOrganizations.append("\"");
 					successOrganizations.append(",");
 					successOrganizations.append("SUCCESS");
 					successOrganizations.append("\n");
 				} else {
+					failedOrganizations.append("\"");
 					failedOrganizations.append(organization.getName());
+					failedOrganizations.append("\"");
 					failedOrganizations.append(",");
 					failedOrganizations.append("FAILED");
 					failedOrganizations.append("\n");
@@ -103,9 +108,10 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			} // end of for loop
 
 			successOrganizations.append("\n").append("\n").append("\n");
-
+			
+			String formattedDte = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
 			// write list of success and failed organizations into .csv
-			File file = new File("organization_bulk_upload_result.csv");
+			File file = new File("organization_bulk_upload_result_" + formattedDte + ".csv");
 			// Create the file
 			LOGGER.info("creating Bulk Upload File " + file.getName());
 			if (file.createNewFile()) {
@@ -132,8 +138,10 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 					.initial_comment("WinWinWiki editor bulk upload status file, created by: "
 							+ user.getUserDisplayName() + " at " + date)
 					.channels(SLACK_CHANNEL).build();
-			LOGGER.info("SLACK_CHANNEL_NAME "+SLACK_CHANNEL);
+			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
 			sendPostRequest(slackMessage);
+			LOGGER.info("org service createOrganizations() ended with number of organizations - " + organizations.size()
+					+ " created by: " + user.getUserDisplayName());
 
 		} catch (Exception e) {
 			LOGGER.error("exception occured while sending notifications", e);
@@ -185,7 +193,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			}
 			result = buf.toString();
 			LOGGER.info(result);
-			LOGGER.info("SLACK_CHANNEL_NAME "+message.getChannels());
+			LOGGER.info("SLACK_CHANNEL_NAME " + message.getChannels());
 
 		} catch (MalformedURLException e) {
 			LOGGER.error("exception occured while sending notifications", e);

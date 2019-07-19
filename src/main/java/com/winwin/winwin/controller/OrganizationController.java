@@ -209,8 +209,9 @@ public class OrganizationController extends BaseController {
 						exceptionResponse.getStatusCode());
 
 			if (null != organizationCsvPayload) {
-				LOGGER.info("org service createOrganizations() started - " + CommonUtils.getFormattedDate());
 				UserPayload user = userService.getCurrentUserDetails();
+				LOGGER.info("org service createOrganizations() started  with number of organizations - "
+						+ organizationCsvPayload.size() + " created by: " + user.getUserDisplayName());
 				organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -249,7 +250,7 @@ public class OrganizationController extends BaseController {
 				setNaicsNteeMap();
 				organizationPayloadList = organizationCsvPayload.stream().map(this::setOrganizationPayload)
 						.collect(Collectors.toList());
-				organizationList = organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
+				organizationService.updateOrganizations(organizationPayloadList, exceptionResponse);
 				payloadList = setOrganizationPayload(organizationList);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -284,7 +285,8 @@ public class OrganizationController extends BaseController {
 	 * @return
 	 */
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> deleteOrganization(@RequestBody OrganizationRequestPayload organizationPayLoad) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != organizationPayLoad && null != organizationPayLoad.getId()) {
