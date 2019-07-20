@@ -25,6 +25,9 @@ public interface SpiDataRepository extends JpaRepository<SpiData, Long> {
 	SpiData findSpiObjById(@Param("id") Long id);
 
 	@Query(value = "select * from spi_data where is_active = true", nativeQuery = true)
+	List<SpiData> findAllActiveSpiData();
+
+	@Query(value = "select * from spi_data", nativeQuery = true)
 	List<SpiData> findAllSpiData();
 
 }

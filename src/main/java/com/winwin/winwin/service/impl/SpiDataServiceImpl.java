@@ -30,7 +30,7 @@ public class SpiDataServiceImpl implements SpiDataService {
 	@Cacheable("spi_data_list")
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {
 		List<SpiDataDimensionsPayload> dimensionPayloadList = new ArrayList<SpiDataDimensionsPayload>();
-		List<SpiData> spiList = spiDataRepository.findAllSpiData();
+		List<SpiData> spiList = spiDataRepository.findAllActiveSpiData();
 		if (null != spiList) {
 			HashMap<Long, List<SpiData>> spiDimensionsMap = new HashMap<Long, List<SpiData>>();
 			setSpiDimensionsMap(spiList, spiDimensionsMap);
