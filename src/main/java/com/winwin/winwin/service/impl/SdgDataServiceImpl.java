@@ -28,7 +28,7 @@ public class SdgDataServiceImpl implements SdgDataService {
 	@Cacheable("sdg_data_list")
 	public List<SdgGoalPayload> getSdgDataForResponse() {
 		List<SdgGoalPayload> payloadList = new ArrayList<SdgGoalPayload>();
-		List<SdgData> sdgList = orgSdgDataRepository.findAllSdgData();
+		List<SdgData> sdgList = orgSdgDataRepository.findAllActiveSdgData();
 		if (null != sdgList) {
 			HashMap<Long, List<SdgData>> sdgDataMap = new HashMap<Long, List<SdgData>>();
 			setSdgDataMap(sdgList, sdgDataMap);

@@ -61,7 +61,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 		UserPayload user = userService.getCurrentUserDetails();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<SdgData> sdgList = orgSdgDataRepository.findAllSdgData();
+			List<SdgData> sdgList = orgSdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
 				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);

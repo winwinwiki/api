@@ -16,7 +16,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,11 +27,9 @@ import com.amazonaws.util.IOUtils;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
-import com.winwin.winwin.entity.Classification;
 import com.winwin.winwin.entity.NaicsData;
 import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
-import com.winwin.winwin.entity.OrganizationClassification;
 import com.winwin.winwin.entity.OrganizationHistory;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.entity.OrganizationSdgData;
@@ -55,10 +52,8 @@ import com.winwin.winwin.payload.OrganizationRequestPayload;
 import com.winwin.winwin.payload.SubOrganizationPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.AddressRepository;
-import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
-import com.winwin.winwin.repository.OrgClassificationMapRepository;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
@@ -87,10 +82,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	OrganizationRepository organizationRepository;
 	@Autowired
 	ProgramRepository programRepository;
-	@Autowired
-	OrgClassificationMapRepository orgClassificationMapRepository;
-	@Autowired
-	ClassificationRepository classificationRepository;
 	@Autowired
 	OrganizationHistoryRepository orgHistoryRepository;
 	@Autowired
@@ -214,9 +205,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
-		@SuppressWarnings("unused")
-		OrganizationClassification orgClassificationMapping = new OrganizationClassification();
-
 		if (null != organizationPayload) {
 			Date date = CommonUtils.getFormattedDate();
 			try {
@@ -240,7 +228,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getUserDisplayName());
 					organization.setUpdatedByEmail(user.getEmail());
-					orgClassificationMapping = addClassification(organizationPayload, organization);
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization) {
@@ -430,11 +417,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 				throw new Exception(errorResForNtee.getErrorMessage());
 			}
 
-			List<SpiData> spiDataList = spiDataRepository.findAllSpiData();
+			List<SpiData> spiDataList = spiDataRepository.findAllActiveSpiData();
 			Map<Long, SpiData> spiDataMap = spiDataList.stream()
 					.collect(Collectors.toMap(SpiData::getId, SpiData -> SpiData));
 
-			List<SdgData> sdgDataList = sdgDataRepository.findAllSdgData();
+			List<SdgData> sdgDataList = sdgDataRepository.findAllActiveSdgData();
 			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
 					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 
@@ -604,18 +591,18 @@ public class OrganizationServiceImpl implements OrganizationService {
 				// split string with comma separated values with removing
 				// leading and trailing
 				// whitespace
-				String[] spiIdsList = csvPayload.getSpiTagIds().split("\\S*,\\S*");
+				String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
 				for (int j = 0; j < spiIdsList.length; j++) {
-					spiTagIds.add(Long.parseLong(spiIdsList[j]));
+					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 				}
 			}
 			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
 				// split string with comma separated values with removing
 				// leading and trailing
 				// whitespace
-				String[] sdgIdsList = csvPayload.getSdgTagIds().split("\\S*,\\S*");
+				String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
 				for (int j = 0; j < sdgIdsList.length; j++) {
-					sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
+					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
 				}
 			}
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -757,10 +744,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 							// split string with comma separated values with
 							// removing leading and trailing
 							// whitespace
-							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j]));
+								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -769,10 +756,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 							// split string with comma separated values with
 							// removing leading and trailing
 							// whitespace
-							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j]));
+								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
@@ -823,10 +810,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 							// split string with comma separated values with
 							// removing leading and trailing
 							// whitespace
-							String[] spiIds = payloadData.getSpiTagIds().split("\\S*,\\S*");
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j]));
+								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -835,10 +822,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 							// split string with comma separated values with
 							// removing leading and trailing
 							// whitespace
-							String[] sdgIds = payloadData.getSdgTagIds().split("\\S*,\\S*");
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j]));
+								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
@@ -995,9 +982,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1072,9 +1058,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
@@ -1161,32 +1146,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			}
 		}
 		return false;
-	}
-
-	public OrganizationClassification addClassification(OrganizationRequestPayload organizationPayload,
-			Organization organization) {
-		Classification classification = null;
-		OrganizationClassification orgClassificationMapping = null;
-		if (null != organizationPayload && null != organizationPayload.getId()) {
-			orgClassificationMapping = orgClassificationMapRepository.findMappingForOrg(organizationPayload.getId());
-		}
-
-		if (null != organizationPayload.getClassificationId()) {
-			classification = classificationRepository.findClassificationById(organizationPayload.getClassificationId());
-		}
-
-		if (StringUtils.isEmpty(classification)) {
-			return null;
-		} else {
-			OrganizationClassification orgClassificationMappingObj = new OrganizationClassification();
-			if (StringUtils.isEmpty(orgClassificationMapping)) {
-				orgClassificationMappingObj.setOrgId(organization);
-				orgClassificationMappingObj.setClassificationId(classification);
-			} else {
-				orgClassificationMappingObj.setClassificationId(classification);
-			}
-			return orgClassificationMapRepository.saveAndFlush(orgClassificationMappingObj);
-		}
 	}
 
 	/**

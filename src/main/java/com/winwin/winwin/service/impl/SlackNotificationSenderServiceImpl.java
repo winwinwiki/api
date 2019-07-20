@@ -67,12 +67,12 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 
 	/**
 	 * The below method sendSlackNotification accepts a list of failed and
-	 * successfully created organizations in bulk upload operation and creates
-	 * an attachment with all the organizations along with there status and send
+	 * successfully created organizations in bulk upload operation and creates an
+	 * attachment with all the organizations along with there status and send
 	 * notification to the channel set in Environment Variables. This method
 	 * requires environment, application.properties variables,as
-	 * SLACK_CHANNEL,SLACK_AUTH_TOKEN and SLACK_UPLOAD_FILE_API_URL which will
-	 * be created through Slack for the particular channel
+	 * SLACK_CHANNEL,SLACK_AUTH_TOKEN and SLACK_UPLOAD_FILE_API_URL which will be
+	 * created through Slack for the particular channel
 	 */
 	@Override
 	public void sendSlackNotification(List<Organization> organizations, UserPayload user, Date date) {
@@ -108,7 +108,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			} // end of for loop
 
 			successOrganizations.append("\n").append("\n").append("\n");
-			
+
 			String formattedDte = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
 			// write list of success and failed organizations into .csv
 			File file = new File("organization_bulk_upload_result_" + formattedDte + ".csv");
@@ -139,7 +139,15 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 							+ user.getUserDisplayName() + " at " + date)
 					.channels(SLACK_CHANNEL).build();
 			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
+			// send post request to slack channel
 			sendPostRequest(slackMessage);
+			try {
+				LOGGER.info("deleting existing Bulk Upload file: " + file.getName());
+				file.delete();
+				LOGGER.info("Bulk Upload file  " + file.getName() + " has been successfully deleted");
+			} catch (Exception e) {
+				LOGGER.error("failed to delete file: " + file.getName(), e);
+			}
 			LOGGER.info("org service createOrganizations() ended with number of organizations - " + organizations.size()
 					+ " created by: " + user.getUserDisplayName());
 

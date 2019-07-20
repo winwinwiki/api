@@ -64,7 +64,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 		Date date = CommonUtils.getFormattedDate();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<SdgData> sdgList = sdgDataRepository.findAllSdgData();
+			List<SdgData> sdgList = sdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
 				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
