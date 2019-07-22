@@ -1,5 +1,6 @@
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import com.winwin.winwin.entity.NaicsData;
@@ -22,8 +23,8 @@ public class OrganizationResponsePayload {
 	Long id;
 	AddressPayload address;
 	String name;
-	Long revenue;
-	Long assets;
+	BigDecimal revenue;
+	BigDecimal assets;
 	String sector;
 	String sectorLevel;
 	String sectorLevelName;
@@ -38,7 +39,7 @@ public class OrganizationResponsePayload {
 	Boolean isActive;
 	Boolean isTaggingReady;
 	String tagStatus;
-	Long totalAssets;
+	BigDecimal totalAssets;
 	String websiteUrl;
 	String facebookUrl;
 	String linkedinUrl;

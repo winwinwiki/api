@@ -35,4 +35,8 @@ public class OrganizationFilterPayload {
 	private String sortBy;
 	private String sortOrder;
 	private String address;
+	private String country;
+	private String state;
+	private String city;
+	private String county;
 }

@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,8 +23,8 @@ public class OrganizationCsvPayload {
 	private Long id;
 	private Long addressId;
 	private String name;
-	private Long revenue;
-	private Long assets;
+	private BigDecimal revenue;
+	private BigDecimal assets;
 	private String sector;
 	private String sectorLevel;
 	private String sectorLevelName;
@@ -37,7 +39,7 @@ public class OrganizationCsvPayload {
 	private Boolean isActive;
 	private Boolean isTaggingReady;
 	private String tagStatus;
-	private Long totalAssets;
+	private BigDecimal totalAssets;
 	private String websiteUrl;
 	private String facebookUrl;
 	private String linkedinUrl;
