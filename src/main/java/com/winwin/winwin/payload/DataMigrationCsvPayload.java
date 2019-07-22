@@ -4,6 +4,8 @@
 
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,8 +26,8 @@ import lombok.ToString;
 public class DataMigrationCsvPayload {
 	private Long id;
 	private String name;
-	private Long revenue;
-	private Long assets;
+	private BigDecimal revenue;
+	private BigDecimal assets;
 	private String sector;
 	private String sectorLevel;
 	private String sectorLevelName;
