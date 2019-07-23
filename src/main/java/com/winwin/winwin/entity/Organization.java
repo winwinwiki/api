@@ -120,7 +120,7 @@ public class Organization extends AbstractAuditableEntity {
 	String businessModel;
 
 	@Column(name = "population_served")
-	Long populationServed;
+	String populationServed;
 
 	@Column(name = "mission_statement", columnDefinition = "TEXT")
 	String missionStatement;

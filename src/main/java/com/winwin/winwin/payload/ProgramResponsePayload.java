@@ -41,7 +41,7 @@ public class ProgramResponsePayload {
 	String purpose;
 	String selfInterest;
 	String businessModel;
-	Long populationServed;
+	String populationServed;
 	String missionStatement;
 	String contactInfo;
 	String notes;
