@@ -139,14 +139,19 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append(
 					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
-			sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getState())) {
-			sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCity())) {
-			sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
-			sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+		} else {
+			if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
+				sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getState())) {
+				sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCity())) {
+				sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
+				sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+			}
 		}
 
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
@@ -292,14 +297,19 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append(
 					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
-			sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getState())) {
-			sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCity())) {
-			sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
-		} else if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
-			sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+		} else {
+			if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
+				sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getState())) {
+				sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCity())) {
+				sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
+				sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+			}
 		}
 
 		query.append(sb);

@@ -50,7 +50,7 @@ public class OrganizationCsvPayload {
 	private String purpose;
 	private String selfInterest;
 	private String businessModel;
-	private Long populationServed;
+	private String populationServed;
 	private String missionStatement;
 	private String contactInfo;
 	private String country;
