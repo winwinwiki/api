@@ -44,6 +44,7 @@ import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
+import com.winwin.winwin.payload.OrganizationBulkResultPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationCsvPayload;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
@@ -403,7 +404,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
-		List<Organization> organizationList = new ArrayList<Organization>();
+		List<Organization> successOrganizationList = new ArrayList<Organization>();
+		List<Organization> failedOrganizationList = new ArrayList<Organization>();
 		try {
 			Date date = CommonUtils.getFormattedDate();
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -445,8 +447,17 @@ public class OrganizationServiceImpl implements OrganizationService {
 						// save the organizations in the batches of 1000 and
 						// save the remaining organizations
 						if (i % 1000 == 0 || organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
-							organizationList.addAll(saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i));
-							organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+									organizationsListToSaveIntoDB, i);
+							if (!payload.getIsFailed()) {
+								successOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							} else {
+								failedOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							}
 						}
 
 						i++;
@@ -457,8 +468,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			// To send failed and success organization through slack
 			// notification for bulk upload
-			if (null != organizationList) {
-				slackNotificationSenderService.sendSlackNotification(organizationList, user, date);
+			if (null != successOrganizationList || null != failedOrganizationList) {
+				slackNotificationSenderService.sendSlackNotification(successOrganizationList, failedOrganizationList,
+						user, date);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
@@ -469,10 +481,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	@Transactional
 	@Async
-	private List<Organization> saveOrganizationsIntoDB(List<Organization> organizations, int i) {
+	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
 		// Implemented below logic to log failed and success
 		// organizations for bulk upload
 		List<Organization> organizationList = new ArrayList<Organization>();
+		Boolean isFailed = false;
 		try {
 			LOGGER.info("Saving organizations : " + organizations.size() + " Starting from: " + i);
 			organizationList.addAll(organizationRepository.saveAll(organizations));
@@ -484,8 +497,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		} catch (Exception e) {
 			LOGGER.info("Failed to save organizations starting from : " + i);
 			organizationList.addAll(organizations);
+			isFailed = true;
 		}
-		return organizationList;
+		OrganizationBulkResultPayload payload = new OrganizationBulkResultPayload();
+		payload.setOrganizationList(organizationList);
+		payload.setIsFailed(isFailed);
+		return payload;
 
 	}
 
@@ -982,8 +999,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
+					 * sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1058,8 +1076,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
-					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(),
+					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
+					 * spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */

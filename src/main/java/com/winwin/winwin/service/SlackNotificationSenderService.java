@@ -14,6 +14,7 @@ import com.winwin.winwin.payload.UserPayload;
  *
  */
 public interface SlackNotificationSenderService {
-	public void sendSlackNotification(List<Organization> organizations, UserPayload user, Date date);
+	public void sendSlackNotification(List<Organization> successOrganizations, List<Organization> failedOrganizations,
+			UserPayload user, Date date);
 
 }
