@@ -1,8 +1,11 @@
+/**
+ * Constants class for Organization
+ */
 package com.winwin.winwin.constants;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 public class OrganizationConstants {
 	public static final String CREATED_BY = "admin";

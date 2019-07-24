@@ -18,7 +18,7 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class AddressServiceImpl implements AddressService {
@@ -30,6 +30,12 @@ public class AddressServiceImpl implements AddressService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
+	/**
+	 * save new address
+	 * 
+	 * @param addressPayload
+	 * @param user
+	 */
 	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
@@ -47,6 +53,12 @@ public class AddressServiceImpl implements AddressService {
 		return addressRepository.saveAndFlush(address);
 	}
 
+	/**
+	 * update existing address
+	 * 
+	 * @param address
+	 * @param addressPayload
+	 */
 	public Boolean updateAddress(Address address, AddressPayload addressPayload) {
 		try {
 			if (null != addressPayload && null != addressPayload.getId()) {
@@ -64,6 +76,11 @@ public class AddressServiceImpl implements AddressService {
 		return false;
 	}
 
+	/**
+	 * returns AddressPayload from Address
+	 * 
+	 * @param address
+	 */
 	@Override
 	public AddressPayload getAddressPayloadFromAddress(Address address) {
 		AddressPayload addressPayload = new AddressPayload();

@@ -1,3 +1,6 @@
+/**
+ * Class OrganizationFilterRepositoryImpl returns the Total Organizations based on filter criteria
+ */
 package com.winwin.winwin.repository.impl;
 
 import java.math.BigInteger;
@@ -18,7 +21,7 @@ import com.winwin.winwin.repository.OrganizationFilterRepository;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Repository
 @Transactional(readOnly = true)
@@ -27,6 +30,15 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	@PersistenceContext
 	EntityManager entityManager;
 
+	/**
+	 * Get Organization List by OrganizationFilterPayload
+	 * 
+	 * @param payload
+	 * @param type
+	 * @param orgId
+	 * @param pageNo
+	 * @param pageSize
+	 */
 	@Override
 	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId,
 			Integer pageNo, Integer pageSize) {
@@ -44,6 +56,13 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 	}
 
+	/**
+	 * Get Organization Total Count by OrganizationFilterPayload
+	 * 
+	 * @param payload
+	 * @param type
+	 * @param orgId
+	 */
 	@Override
 	public BigInteger getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId) {
 		Query filterQuery = setFilterQueryForOrgCounts(payload, type);
@@ -220,6 +239,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		return filterQuery;
 	}
 
+	/**
+	 * @param payload
+	 * @param type
+	 * @return
+	 */
 	private Query setFilterQueryForOrgCounts(OrganizationFilterPayload payload, String type) {
 		StringBuilder query = new StringBuilder("select count(distinct o.id) from organization o ");
 		boolean spi = false;

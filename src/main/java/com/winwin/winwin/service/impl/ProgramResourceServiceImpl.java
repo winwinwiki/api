@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,6 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -31,30 +31,128 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramResourceServiceImpl implements ProgramResourceService {
 
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
-	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService organizationHistoryService;
-
+	private OrganizationHistoryService organizationHistoryService;
 	@Autowired
-	ProgramResourceRepository programResourceRepository;
+	private ProgramResourceRepository programResourceRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
 
 	@Autowired
 	private ResourceCategoryRepository resourceCategoryRepository;
+
+	/**
+	 * create or update OrganizationResource and ResourceCategory, create new
+	 * entry in ResourceCategory if the value of CATEGORY_ID is -1L;
+	 * 
+	 * @param orgResourcePayLoad
+	 */
+	@Override
+	@Transactional
+	@CacheEvict(value = "program_resource__list,program_resource_category_list")
+	public ProgramResource createOrUpdateProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
+		ProgramResource programResource = null;
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			if (null != programResourcePayLoad && null != user) {
+				programResource = constructProgramResource(programResourcePayLoad);
+				programResource = programResourceRepository.saveAndFlush(programResource);
+
+				if (null != programResource && null != programResource.getProgramId()) {
+					organizationHistoryService.createOrganizationHistory(user,
+							programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
+							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
+							programResource.getResourceCategory().getCategoryName(), "");
+				}
+			}
+		} catch (Exception e) {
+			if (null != programResourcePayLoad.getId()) {
+				LOGGER.error(customMessageSource.getMessage("org.resource.exception.updated"), e);
+			} else {
+				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
+			}
+		}
+		return programResource;
+	}
+
+	/**
+	 * delete ProgramResource by Id
+	 * 
+	 * @param resourceId
+	 * @param organizationId
+	 * @param programId
+	 */
+	@Override
+	@Transactional
+	@CacheEvict(value = "program_resource__list,program_resource_category_list")
+	public void removeProgramResource(Long resourceId, Long organizationId, Long programId) {
+		// TODO Auto-generated method stub
+		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
+		try {
+			UserPayload user = userService.getCurrentUserDetails();
+			Date date = CommonUtils.getFormattedDate();
+			if (null != resource && null != user) {
+				resource.setIsActive(false);
+				resource.setUpdatedAt(date);
+				resource.setUpdatedBy(user.getEmail());
+				programResourceRepository.saveAndFlush(resource);
+
+				if (null != resource) {
+					organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
+							OrganizationConstants.DELETE, "", resource.getId(),
+							resource.getResourceCategory().getCategoryName(), "");
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
+		}
+	}
+
+	@Override
+	public ProgramResource getProgramResourceById(Long id) {
+		return programResourceRepository.findProgramResourceById(id);
+	}// end of method getOrganizationResourceById
+
+	/**
+	 * returns ResourceCategory by Id
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	public ResourceCategory getResourceCategoryById(Long categoryId) {
+		return resourceCategoryRepository.getOne(categoryId);
+	}// end of method getOrganizationResourceCategoryById
+
+	/**
+	 * returns ResourceCategory List
+	 * 
+	 * @param id
+	 */
+	@Override
+	@Cacheable("program_resource_category_list")
+	public List<ResourceCategory> getResourceCategoryList() {
+		return resourceCategoryRepository.findAll();
+	}// end of method getOrganizationResourceCategoryList
+
+	/**
+	 * returns ProgramResource List by programId
+	 * 
+	 * @param programId
+	 */
+	@Override
+	@Cacheable("program_resource__list")
+	public List<ProgramResource> getProgramResourceList(Long programId) {
+		return programResourceRepository.findAllProgramResourceByProgramId(programId);
+	}
 
 	private ProgramResource constructProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
 		ProgramResource programResource = null;
@@ -107,7 +205,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 		}
 	}
 
-	public ResourceCategory saveResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
+	private ResourceCategory saveResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		ResourceCategory category = new ResourceCategory();
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -125,80 +223,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
 		return resourceCategoryRepository.saveAndFlush(category);
-	}
-
-	@Override
-	public ProgramResource getProgramResourceById(Long id) {
-		return programResourceRepository.findProgramResourceById(id);
-	}// end of method getOrganizationResourceById
-
-	@Override
-	public ResourceCategory getResourceCategoryById(Long categoryId) {
-		return resourceCategoryRepository.getOne(categoryId);
-	}// end of method getOrganizationResourceCategoryById
-
-	@Override
-	@Cacheable("program_resource_category_list")
-	public List<ResourceCategory> getResourceCategoryList() {
-		return resourceCategoryRepository.findAll();
-	}// end of method getOrganizationResourceCategoryList
-
-	@Override
-	@Transactional
-	public ProgramResource createOrUpdateProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
-		ProgramResource programResource = null;
-		try {
-			UserPayload user = userService.getCurrentUserDetails();
-			if (null != programResourcePayLoad && null != user) {
-				programResource = constructProgramResource(programResourcePayLoad);
-				programResource = programResourceRepository.saveAndFlush(programResource);
-
-				if (null != programResource && null != programResource.getProgramId()) {
-					organizationHistoryService.createOrganizationHistory(user,
-							programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
-							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getResourceCategory().getCategoryName(), "");
-				}
-			}
-		} catch (Exception e) {
-			if (null != programResourcePayLoad.getId()) {
-				LOGGER.error(customMessageSource.getMessage("org.resource.exception.updated"), e);
-			} else {
-				LOGGER.error(customMessageSource.getMessage("org.resource.exception.created"), e);
-			}
-		}
-		return programResource;
-	}
-
-	@Override
-	@Transactional
-	public void removeProgramResource(Long resourceId, Long organizationId, Long programId) {
-		// TODO Auto-generated method stub
-		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
-		try {
-			UserPayload user = userService.getCurrentUserDetails();
-			Date date = CommonUtils.getFormattedDate();
-			if (null != resource && null != user) {
-				resource.setIsActive(false);
-				resource.setUpdatedAt(date);
-				resource.setUpdatedBy(user.getEmail());
-				programResourceRepository.saveAndFlush(resource);
-
-				if (null != resource) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
-							OrganizationConstants.DELETE, "", resource.getId(),
-							resource.getResourceCategory().getCategoryName(), "");
-				}
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
-		}
-	}
-
-	@Override
-	@Cacheable("program_resource__list")
-	public List<ProgramResource> getProgramResourceList(Long programId) {
-		return programResourceRepository.findAllProgramResourceByProgramId(programId);
 	}
 
 }

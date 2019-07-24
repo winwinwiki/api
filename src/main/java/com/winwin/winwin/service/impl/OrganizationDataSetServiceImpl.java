@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,6 @@ import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.UserService;
@@ -32,34 +32,33 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationDataSetServiceImpl implements OrganizationDataSetService {
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-
+	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
-	DataSetCategoryRepository dataSetCategoryRepository;
-
+	private DataSetCategoryRepository dataSetCategoryRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private UserService userService;
 	@Autowired
+	private OrganizationHistoryService orgHistoryService;
 	protected CustomMessageSource customMessageSource;
-
-	@Autowired
-	UserService userService;
-
-	@Autowired
-	OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
 	private final Long CATEGORY_ID = -1L;
 
+	/**
+	 * create or update OrganizationDataSet and DataSetCategory, create new
+	 * entry in DataSetCategory if the value of CATEGORY_ID is -1L;
+	 * 
+	 * @param orgDataSetPayLoad
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		OrganizationDataSet organizationDataSet = null;
 		try {
@@ -95,8 +94,14 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 
 	}// end of method createOrUpdateOrganizationDataSet
 
+	/**
+	 * delete OrganizationDataSet by Id
+	 * 
+	 * @param dataSetId
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
 	public void removeOrganizationDataSet(Long dataSetId) {
 		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
 		UserPayload user = userService.getCurrentUserDetails();
@@ -138,6 +143,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				organizationDataSet.setCreatedAt(date);
 				organizationDataSet.setCreatedBy(user.getEmail());
 			}
+			// set Organization DataSetCategory
 			setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
 			BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
 			organizationDataSet.setIsActive(true);
@@ -149,11 +155,37 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 		return organizationDataSet;
 	}
 
+	/**
+	 * returns DataSetCategory by Id
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	public DataSetCategory getDataSetCategoryById(Long categoryId) {
+		return dataSetCategoryRepository.getOne(categoryId);
+	}// end of method getOrganizationDataSetCategoryById
+
+	/**
+	 * returns OrganizationDataSet List by OrgId
+	 * 
+	 * @param id
+	 */
 	@Override
 	@Cacheable("organization_dataset_list")
 	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
 		return organizationDataSetRepository.findAllOrgDataSetList(id);
 	}// end of method getOrganizationDataSetList
+
+	/**
+	 * returns DataSetCategory List
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	@Cacheable("organization_dataset_category_list")
+	public List<DataSetCategory> getDataSetCategoryList() {
+		return dataSetCategoryRepository.findAll();
+	}// end of method getOrganizationDataSetCategoryList
 
 	/**
 	 * @param organizationDataSetPayLoad
@@ -188,7 +220,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	}
 
 	@Transactional
-	public DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
+	private DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
@@ -206,16 +238,5 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 
 		return dataSetCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationDataSetCategory
-
-	@Override
-	public DataSetCategory getDataSetCategoryById(Long categoryId) {
-		return dataSetCategoryRepository.getOne(categoryId);
-	}// end of method getOrganizationDataSetCategoryById
-
-	@Override
-	@Cacheable("organization_dataset_category_list")
-	public List<DataSetCategory> getDataSetCategoryList() {
-		return dataSetCategoryRepository.findAll();
-	}// end of method getOrganizationDataSetCategoryList
 
 }

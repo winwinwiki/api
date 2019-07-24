@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +39,7 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramRegionServedServiceImpl implements ProgramRegionServedService {
@@ -61,8 +62,16 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
 	private final Long REGION_ID = -1L;
 
+	/**
+	 * create or update multiple ProgramRegionServed for Program create new
+	 * entry in RegionMaster if value of REGION_ID is -1L
+	 * 
+	 * @param programRegionPayloadList
+	 * @return
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "program_region_master")
 	public List<ProgramRegionServed> createProgramRegionServed(
 			List<ProgramRegionServedPayload> programRegionPayloadList) {
 		List<ProgramRegionServed> programRegionList = null;
@@ -121,6 +130,11 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		return programRegionList;
 	}
 
+	/**
+	 * returns ProgramRegionServed List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
 	public List<ProgramRegionServed> getProgramRegionServedList(Long programId) {
 		// TODO Auto-generated method stub
@@ -152,7 +166,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		}
 	}
 
-	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
+	private RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {
 			Date date = CommonUtils.getFormattedDate();
@@ -169,6 +183,12 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		return regionMasterRepository.saveAndFlush(region);
 	}// end of method saveOrganizationRegionMaster
 
+	/**
+	 * returns RegionMaster List
+	 * 
+	 * @param payload
+	 * @param response
+	 */
 	@Override
 	@Cacheable("program_region_master")
 	public List<RegionMaster> getProgramRegionMasterList(RegionMasterFilterPayload filterPayload,
@@ -182,7 +202,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 				Pageable pageable = PageRequest.of(filterPayload.getPageNo(), filterPayload.getPageSize(),
 						Sort.by("name"));
-				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName,regionName, pageable);
+				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, regionName, pageable);
 			} else if (filterPayload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (filterPayload.getPageSize() == null) {

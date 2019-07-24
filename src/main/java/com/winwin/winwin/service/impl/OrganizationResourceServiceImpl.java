@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,6 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.OrganizationResourcePayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -32,34 +32,34 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationResourceServiceImpl implements OrganizationResourceService {
 	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
-
+	private OrganizationResourceRepository organizationResourceRepository;
 	@Autowired
-	ResourceCategoryRepository resourceCategoryRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private ResourceCategoryRepository resourceCategoryRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
 
 	private final Long CATEGORY_ID = -1L;
 
+	/**
+	 * create or update OrganizationResource and ResourceCategory, create new
+	 * entry in ResourceCategory if the value of CATEGORY_ID is -1L;
+	 * 
+	 * @param orgResourcePayLoad
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
 		OrganizationResource orgResource = null;
 		try {
@@ -84,8 +84,14 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		return orgResource;
 	}// end of method createOrUpdateOrganizationResource
 
+	/**
+	 * delete OrganizationResource by Id
+	 * 
+	 * @param resourceId
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
 	public void removeOrganizationResource(Long resourceId) {
 		try {
 			OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
@@ -109,6 +115,43 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 
 	}// end of method removeOrganizationResource
+
+	@Override
+	public OrganizationResource getOrgResourceById(Long id) {
+		return organizationResourceRepository.findOrgResourceById(id);
+	}
+
+	/**
+	 * returns ResourceCategory by Id
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	public ResourceCategory getResourceCategoryById(Long categoryId) {
+		return resourceCategoryRepository.getOne(categoryId);
+	}
+
+	/**
+	 * returns ResourceCategory List
+	 * 
+	 * @param id
+	 */
+	@Override
+	@Cacheable("organization_resource_category_list")
+	public List<ResourceCategory> getResourceCategoryList() {
+		return resourceCategoryRepository.findAll();
+	}
+
+	/**
+	 * returns OrganizationResource List by OrgId
+	 * 
+	 * @param id
+	 */
+	@Override
+	@Cacheable("organization_resource_list")
+	public List<OrganizationResource> getOrganizationResourceList(Long id) {
+		return organizationResourceRepository.findAllOrgResourceById(id);
+	}// end of method getOrganizationResourceList
 
 	/**
 	 * @param orgResourcePayLoad
@@ -145,12 +188,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		return organizationResource;
 	}
 
-	@Override
-	@Cacheable("organization_resource_list")
-	public List<OrganizationResource> getOrganizationResourceList(Long id) {
-		return organizationResourceRepository.findAllOrgResourceById(id);
-	}// end of method getOrganizationResourceList
-
 	/**
 	 * @param organizationResourcePayLoad
 	 * @param organizationResource
@@ -183,7 +220,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 	}
 
-	public ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
+	private ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		ResourceCategory category = null;
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -205,21 +242,5 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 		return resourceCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationResourceCategory
-
-	@Override
-	public OrganizationResource getOrgResourceById(Long id) {
-		return organizationResourceRepository.findOrgResourceById(id);
-	}
-
-	@Override
-	public ResourceCategory getResourceCategoryById(Long categoryId) {
-		return resourceCategoryRepository.getOne(categoryId);
-	}
-
-	@Override
-	@Cacheable("organization_resource_category_list")
-	public List<ResourceCategory> getResourceCategoryList() {
-		return resourceCategoryRepository.findAll();
-	}
 
 }

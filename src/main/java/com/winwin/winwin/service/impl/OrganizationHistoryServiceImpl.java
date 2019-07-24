@@ -20,7 +20,7 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationHistoryServiceImpl implements OrganizationHistoryService {
@@ -34,6 +34,17 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationHistoryServiceImpl.class);
 
+	/**
+	 * create OrganizationHistory by orgId
+	 * 
+	 * @param user
+	 * @param orgId
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
+	 * @param entityCode
+	 */
 	@Override
 	public void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
 			Long entityId, String entityName, String entityCode) {
@@ -62,6 +73,18 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
 	}
 
+	/**
+	 * create OrganizationHistory by orgId and programId
+	 * 
+	 * @param user
+	 * @param orgId
+	 * @param programId
+	 * @param actionPerformed
+	 * @param entityType
+	 * @param entityId
+	 * @param entityName
+	 * @param entityCode
+	 */
 	@Override
 	public void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
 			String entityType, Long entityId, String entityName, String entityCode) {
@@ -101,6 +124,11 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
 	}
 
+	/**
+	 * create OrganizationHistory from List
+	 * 
+	 * @param orgHistoryList
+	 */
 	@Override
 	public void createOrganizationHistory(List<OrganizationHistory> orgHistoryList) {
 		try {

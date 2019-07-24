@@ -16,14 +16,19 @@ import com.winwin.winwin.service.SdgDataService;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class SdgDataServiceImpl implements SdgDataService {
 
 	@Autowired
-	SdgDataRepository orgSdgDataRepository;
+	private SdgDataRepository orgSdgDataRepository;
 
+	/**
+	 * returns SdgData List
+	 * 
+	 * @return
+	 */
 	@Override
 	@Cacheable("sdg_data_list")
 	public List<SdgGoalPayload> getSdgDataForResponse() {

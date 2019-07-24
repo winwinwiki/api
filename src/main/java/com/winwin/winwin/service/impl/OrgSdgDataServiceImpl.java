@@ -23,7 +23,6 @@ import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.OrganizationSdgDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -32,28 +31,29 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 	@Autowired
-	SdgDataRepository orgSdgDataRepository;
-
+	private SdgDataRepository orgSdgDataRepository;
 	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private OrgSdgDataMapRepository orgSdgDataMapRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgSdgDataServiceImpl.class);
 
+	/**
+	 * create or update OrganizationSdgData
+	 * 
+	 * @param payloadList
+	 * @param organization
+	 */
 	@Override
 	@Transactional
 	public void createSdgDataMapping(List<OrganizationSdgDataMapPayload> payloadList, Organization organization)
@@ -171,6 +171,11 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 		}
 	}// end of method createSdgDataMapping
 
+	/**
+	 * returns OrganizationSdgData List by OrgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationSdgDataMapPayload> getSelectedSdgData(Long orgId) {
 		List<OrganizationSdgDataMapPayload> payloadList = new ArrayList<OrganizationSdgDataMapPayload>();

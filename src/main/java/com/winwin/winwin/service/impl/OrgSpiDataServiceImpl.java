@@ -24,7 +24,6 @@ import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -33,31 +32,30 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
-
+	private SpiDataRepository spiDataRepository;
 	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private OrgSpiDataMapRepository orgSpiDataMapRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgSpiDataServiceImpl.class);
 
+	/**
+	 * create or update OrganizationSpiData
+	 * 
+	 * @param payloadList
+	 * @param organization
+	 */
 	@Override
 	@Transactional
 	public void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Organization organization)
@@ -179,6 +177,11 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	}// end of method public void createSpiDataMapping(
 
+	/**
+	 * returns OrganizationSpiData List by OrgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationSpiDataMapPayload> getSelectedSpiData(Long orgId) {
 		List<OrganizationSpiDataMapPayload> payloadList = new ArrayList<OrganizationSpiDataMapPayload>();

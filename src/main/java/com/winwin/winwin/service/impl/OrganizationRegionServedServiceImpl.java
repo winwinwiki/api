@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,8 +29,6 @@ import com.winwin.winwin.payload.OrganizationRegionServedPayload;
 import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.AddressRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRegionServedRepository;
 import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -41,37 +40,35 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationRegionServedServiceImpl implements OrganizationRegionServedService {
 
 	@Autowired
-	AddressRepository addressRepository;
-
-	@Autowired
 	private OrganizationRegionServedRepository orgRegionServedRepository;
-
 	@Autowired
 	private RegionMasterRepository orgRegionMasterRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRegionServedServiceImpl.class);
 
 	private final Long REGION_ID = -1L;
 
+	/**
+	 * create or update multiple OrganizationRegionServed for Organization
+	 * create new entry in RegionMaster if value of REGION_ID is -1L
+	 * 
+	 * @param orgRegionPayloadlist
+	 * @return
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_region_master")
 	public List<OrganizationRegionServed> createOrgRegionServed(
 			List<OrganizationRegionServedPayload> orgRegionPayloadlist) {
 		UserPayload user = userService.getCurrentUserDetails();
@@ -159,7 +156,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 		}
 	}
 
-	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
+	private RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {
 			Date date = CommonUtils.getFormattedDate();
@@ -174,11 +171,22 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 		return orgRegionMasterRepository.saveAndFlush(region);
 	}// end of method saveOrganizationRegionMaster
 
+	/**
+	 * returns OrganizationRegionServed List by orgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationRegionServed> getOrgRegionServedList(Long orgId) {
 		return orgRegionServedRepository.findAllOrgRegionsList(orgId);
 	}
 
+	/**
+	 * returns RegionMaster List
+	 * 
+	 * @param payload
+	 * @param response
+	 */
 	@Override
 	@Cacheable("organization_region_master")
 	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
@@ -190,7 +198,8 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 					regionName = payload.getNameSearch();
 
 				Pageable pageable = PageRequest.of(payload.getPageNo(), payload.getPageSize());
-				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName,regionName, pageable);
+				return orgRegionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, regionName,
+						pageable);
 			} else if (payload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (payload.getPageSize() == null) {

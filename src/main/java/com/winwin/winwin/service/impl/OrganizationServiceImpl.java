@@ -58,13 +58,11 @@ import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationHistoryRepository;
-import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
-import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.UserService;
@@ -73,56 +71,58 @@ import com.winwin.winwin.util.CsvUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationServiceImpl implements OrganizationService {
 	@Autowired
-	AddressRepository addressRepository;
+	private AddressRepository addressRepository;
 	@Autowired
-	OrganizationRepository organizationRepository;
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	ProgramRepository programRepository;
+	private ProgramRepository programRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
+	private OrganizationHistoryRepository orgHistoryRepository;
 	@Autowired
-	NaicsDataRepository naicsRepository;
+	private NaicsDataRepository naicsRepository;
 	@Autowired
-	NteeDataRepository nteeRepository;
+	private NteeDataRepository nteeRepository;
 	@Autowired
-	UserService userService;
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-	@Autowired
-	OrganizationNoteService organizationNoteService;
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	private AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 	@Autowired
-	SpiDataRepository spiDataRepository;
+	private SpiDataRepository spiDataRepository;
 	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
+	private OrgSpiDataMapRepository orgSpiDataMapRepository;
 	@Autowired
-	SdgDataRepository sdgDataRepository;
+	private SdgDataRepository sdgDataRepository;
 	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
+	private OrgSdgDataMapRepository orgSdgDataMapRepository;
 	@Autowired
-	NteeDataRepository nteeDataRepository;
+	private NteeDataRepository nteeDataRepository;
 	@Autowired
-	NaicsDataRepository naicsDataRepository;
+	private NaicsDataRepository naicsDataRepository;
 	@Autowired
-	CsvUtils csvUtils;
+	private CsvUtils csvUtils;
 	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
-	@Autowired
-	SlackNotificationSenderService slackNotificationSenderService;
+	private SlackNotificationSenderService slackNotificationSenderService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationServiceImpl.class);
 
 	private Map<String, NaicsData> naicsMap = null;
 	private Map<String, NteeData> nteeMap = null;
 
+	/**
+	 * create new Organization
+	 * 
+	 * @param organizationPayload
+	 * @param response
+	 */
 	@Override
 	@Transactional
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
@@ -149,6 +149,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organization;
 	}
 
+	/**
+	 * create bulk Organizations from OrganizationCsvPayload
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 */
 	@Override
 	@Async
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
@@ -158,6 +164,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 				"org.exception.created", user);
 	}
 
+	/**
+	 * update bulk Organization from OrganizationRequestPayload
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 */
 	@Override
 	public void updateOrganizations(List<OrganizationRequestPayload> organizationPayloadList,
 			ExceptionResponse response) {
@@ -167,6 +179,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 		 */
 	}
 
+	/**
+	 * delete Organization by Id
+	 * 
+	 * @param id
+	 * @param type
+	 * @param response
+	 */
 	@Override
 	@Transactional
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
@@ -201,6 +220,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	}
 
+	/**
+	 * update Organization by Id
+	 * 
+	 * @param organizationPayload
+	 * @param organization
+	 * @param type
+	 * @param response
+	 */
 	@Override
 	@Transactional
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
@@ -247,11 +274,24 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organization;
 	}
 
+	/**
+	 * returns Organization List
+	 * 
+	 * @return
+	 */
 	@Override
 	public List<Organization> getOrganizationList() {
 		return organizationRepository.findAllOrganizationList();
 	}// end of method getOrganizationList
 
+	/**
+	 * returns OrganizationFilterPayload based Organization List
+	 * 
+	 * @param payload
+	 * @param orgId
+	 * @param response
+	 * @return
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	@Cacheable("organization_filter_list")
@@ -275,6 +315,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return orgList;
 	}
 
+	/**
+	 * returns OrganizationFilterPayload based Organization Count
+	 * 
+	 * @param payload
+	 * @param orgId
+	 * @param response
+	 * @return
+	 */
 	@Override
 	@Cacheable("organization_filter_count")
 	public BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
@@ -297,6 +345,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organizationRepository.findAllProgramList(orgId);
 	}// end of method getOrganizationList
 
+	/**
+	 * return Organization Chart for Organization
+	 * 
+	 * @param organization
+	 * @return
+	 */
 	@Override
 	@Cacheable("organization_chart_list")
 	public OrganizationChartPayload getOrgCharts(Organization organization) {
@@ -319,6 +373,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return payload;
 	}
 
+	/**
+	 * create new sub organization for Organization
+	 * 
+	 * @param payload
+	 * @return
+	 */
 	@Override
 	@Transactional
 	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
@@ -365,6 +425,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return organization;
 	}
 
+	/**
+	 * return OrganizationHistory List by orgId
+	 * 
+	 * @param orgId
+	 * @return
+	 */
 	@Override
 	public List<OrganizationHistoryPayload> getOrgHistoryDetails(Long orgId) {
 		List<OrganizationHistoryPayload> payloadList = new ArrayList<OrganizationHistoryPayload>();
@@ -400,6 +466,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return payloadList;
 	}
 
+	/**
+	 * save Organization list for bulk upload
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 * @param operationPerformed
+	 * @param customMessage
+	 * @param user
+	 */
 	private void saveOrganizationsForBulkUpload(List<OrganizationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
@@ -479,6 +554,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 	}
 
+	/**
+	 * save and Flush Organizations into DB
+	 * 
+	 * @param organizations
+	 * @param i
+	 * @return
+	 */
 	@Transactional
 	@Async
 	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
@@ -507,6 +589,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	/**
+	 * prepare Organization Data from OrganizationRequestPayload
+	 * 
 	 * @param organizationPayload
 	 * @param organization
 	 * @param user
@@ -551,9 +635,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	/**
-	 * @param organizationPayload
-	 * @param organization
+	 * prepare Organization Data from OrganizationCsvPayload
+	 * 
+	 * @param csvPayload
 	 * @param user
+	 * @param operationPerformed
+	 * @param naicsMapForS3
+	 * @param nteeMapForS3
+	 * @param spiDataMap
+	 * @param sdgDataMap
 	 * @return
 	 * @throws Exception
 	 */
@@ -652,6 +742,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	/**
+	 * return Organization Object by setting OrganizationSpiData,
+	 * OrganizationSdgData
+	 * 
 	 * @throws Exception
 	 * 
 	 */
@@ -1088,7 +1181,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		return spiDataMapList;
 	}
 
-	public Address saveAddressForBulkUpload(OrganizationCsvPayload payload, UserPayload user) {
+	private Address saveAddressForBulkUpload(OrganizationCsvPayload payload, UserPayload user) {
 		Address address = null;
 		try {
 			if (null != payload) {
@@ -1133,7 +1226,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	}
 
-	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
+	private Address saveAddress(AddressPayload addressPayload, UserPayload user) {
 		Address address = new Address();
 		try {
 			if (null != addressPayload) {

@@ -22,7 +22,6 @@ import com.winwin.winwin.exception.SdgDataException;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.ProgramSdgDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -32,30 +31,30 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 	@Autowired
-	SdgDataRepository sdgDataRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private SdgDataRepository sdgDataRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	ProgramSdgDataMapRepository programSdgDataMapRepository;
+	private ProgramSdgDataMapRepository programSdgDataMapRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramSdgDataServiceImpl.class);
 
+	/**
+	 * create or update ProgramSdgData
+	 * 
+	 * @param payloadList
+	 * @param program
+	 */
 	@Override
 	@Transactional
 	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Program program)
@@ -167,6 +166,11 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 		}
 	}
 
+	/**
+	 * returns ProgramSdgData List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
 	public List<ProgramSdgDataMapPayload> getSelectedSdgData(Long programId) {
 		// TODO Auto-generated method stub
