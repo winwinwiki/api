@@ -20,8 +20,6 @@ import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.ProgramSpiDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrgSpiDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -31,34 +29,30 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
-
-	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private SpiDataRepository spiDataRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	ProgramSpiDataMapRepository programSpiDataMapRepository;
+	private ProgramSpiDataMapRepository programSpiDataMapRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramSpiDataServiceImpl.class);
 
+	/**
+	 * create or update ProgramSpiData
+	 * 
+	 * @param payloadList
+	 * @param program
+	 */
 	@Override
 	@Transactional
 	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Program program)
@@ -180,10 +174,15 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 		}
 	}
 
+	/**
+	 * returns ProgramSpiData List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
-	public List<ProgramSpiDataMapPayload> getSelectedSpiData(Long orgId) {
+	public List<ProgramSpiDataMapPayload> getSelectedSpiData(Long programId) {
 		List<ProgramSpiDataMapPayload> payloadList = null;
-		List<ProgramSpiData> spiDataMapList = programSpiDataMapRepository.getProgramSpiMapDataByOrgId(orgId);
+		List<ProgramSpiData> spiDataMapList = programSpiDataMapRepository.getProgramSpiMapDataByOrgId(programId);
 		if (null != spiDataMapList) {
 			payloadList = new ArrayList<>();
 

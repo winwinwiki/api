@@ -58,7 +58,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	private AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 
 	@Value("${slack.channel}")
 	String SLACK_CHANNEL;
@@ -80,14 +80,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 		try {
 			// list of failed and success organizations
 			StringBuilder successOrganizations = new StringBuilder();
-			successOrganizations.append("# Below are the List of Successfully uploaded organizations").append("\n")
-					.append("Organization Id").append(",").append("Organization Name").append(",")
-					.append("Organization Status").append("\n");
-
 			StringBuilder failedOrganizations = new StringBuilder();
-			failedOrganizations.append("# Below are the List of organizations that are failed to upload").append("\n")
-					.append("Organization Name").append(",").append("Organization Status").append("\n");
-
 			// append success organizations
 			for (Organization organization : successOrganizationsList) {
 				if (null != organization.getId()) {
@@ -104,6 +97,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 
 			// append failed organizations
 			for (Organization organization : failedOrganizationsList) {
+				failedOrganizations.append("");
+				failedOrganizations.append(",");
 				failedOrganizations.append("\"");
 				failedOrganizations.append(organization.getName());
 				failedOrganizations.append("\"");
@@ -111,8 +106,6 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 				failedOrganizations.append("FAILED");
 				failedOrganizations.append("\n");
 			} // end of for loop
-
-			successOrganizations.append("\n").append("\n").append("\n");
 
 			String formattedDte = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
 			// write list of success and failed organizations into .csv
@@ -132,6 +125,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			}
 
 			FileWriter csvWriter = new FileWriter(file, true);
+			csvWriter.append("# Below are the List of uploaded organizations").append("\n").append("Organization Id")
+					.append(",").append("Organization Name").append(",").append("Organization Status").append("\n");
 			csvWriter.append(successOrganizations);
 			csvWriter.append(failedOrganizations);
 			csvWriter.flush();

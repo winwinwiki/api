@@ -1,3 +1,6 @@
+/**
+ * Class OrganizationFilterRepositoryImpl returns the Total Programs based on filter criteria
+ */
 package com.winwin.winwin.repository.impl;
 
 import java.util.List;
@@ -14,6 +17,11 @@ import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
 import com.winwin.winwin.repository.ProgramFilterRepository;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ */
+
 @Repository
 @Transactional(readOnly = true)
 public class ProgramFilterRepositoryImpl implements ProgramFilterRepository {
@@ -21,6 +29,11 @@ public class ProgramFilterRepositoryImpl implements ProgramFilterRepository {
 	@PersistenceContext
 	EntityManager entityManager;
 
+	/**
+	 * Get Program List by ProgramFilter Payload
+	 * 
+	 * @param payload
+	 */
 	@Override
 	public List<Program> filterProgram(OrganizationFilterPayload payload, String type, Long orgId) {
 		// TODO Auto-generated method stub
@@ -37,12 +50,13 @@ public class ProgramFilterRepositoryImpl implements ProgramFilterRepository {
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
-//			String inQuery = "( ";
-//			int i = 0;
-//			for (; i < payload.getSectorLevel().size() - 1; i++)
-//				inQuery = inQuery + ":sectorLevel" + i + " , ";
-//			inQuery = inQuery + " :sectorLevel" + i + " ) ";
-//			sb.append(" and ( o.sector_level IN ").append(inQuery).append(" ) ");
+			// String inQuery = "( ";
+			// int i = 0;
+			// for (; i < payload.getSectorLevel().size() - 1; i++)
+			// inQuery = inQuery + ":sectorLevel" + i + " , ";
+			// inQuery = inQuery + " :sectorLevel" + i + " ) ";
+			// sb.append(" and ( o.sector_level IN ").append(inQuery).append(" )
+			// ");
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
 		}
 

@@ -18,14 +18,19 @@ import com.winwin.winwin.service.SpiDataService;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class SpiDataServiceImpl implements SpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
+	private SpiDataRepository spiDataRepository;
 
+	/**
+	 * returns SpiData List
+	 * 
+	 * @return
+	 */
 	@Override
 	@Cacheable("spi_data_list")
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {

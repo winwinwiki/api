@@ -27,7 +27,7 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationNoteServiceImpl implements OrganizationNoteService {
@@ -48,6 +48,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationNoteServiceImpl.class);
 
+	/**
+	 * create OrganizationNote
+	 * 
+	 * @param organizationNotePayload
+	 */
 	@Override
 	@Transactional
 	public OrganizationNote createOrganizationNote(OrganizationNotePayload organizationNotePayload) {
@@ -75,6 +80,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return note;
 	}
 
+	/**
+	 * create OrganizationNote from List
+	 * 
+	 * @param organizationNoteList
+	 */
 	@Override
 	@Transactional
 	public List<OrganizationNote> createOrganizationsNotes(List<OrganizationNote> organizationNoteList) {
@@ -88,6 +98,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return organizationNoteList;
 	}
 
+	/**
+	 * update OrganizationNote
+	 * 
+	 * @param organizationNotePayload
+	 */
 	@Override
 	@Transactional
 	public OrganizationNote updateOrganizationNote(OrganizationNotePayload organizationNotePayload) {
@@ -116,6 +131,12 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return note;
 	}
 
+	/**
+	 * delete OrganizationNote
+	 * 
+	 * @param noteId
+	 * @param orgId
+	 */
 	@Override
 	@Transactional
 	public void removeOrganizationNote(Long noteId, Long orgId) {
@@ -134,6 +155,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		}
 	}
 
+	/**
+	 * returns OrganizationNote List by orgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationNote> getOrganizationNoteList(Long orgId) {
 		return organizationNoteRepository.findAllOrgNotesList(orgId);

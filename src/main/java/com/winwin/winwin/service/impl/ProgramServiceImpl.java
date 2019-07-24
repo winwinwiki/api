@@ -33,36 +33,36 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramServiceImpl implements ProgramService {
 	@Autowired
-	ProgramRepository programRepository;
-
+	private ProgramRepository programRepository;
 	@Autowired
-	NaicsDataRepository naicsRepository;
-
+	private NaicsDataRepository naicsRepository;
 	@Autowired
-	NteeDataRepository nteeRepository;
-
+	private NteeDataRepository nteeRepository;
 	@Autowired
-	AddressService addressService;
-
+	private AddressService addressService;
 	@Autowired
-	OrganizationRepository organizationRepository;
-
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 
+	/**
+	 * create new Program for Organization
+	 * 
+	 * @param programPayload
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
@@ -86,6 +86,12 @@ public class ProgramServiceImpl implements ProgramService {
 		return program;
 	}
 
+	/**
+	 * delete Program by Id
+	 * 
+	 * @param program
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public void deleteProgram(Program program, ExceptionResponse exceptionResponse) {
@@ -104,6 +110,12 @@ public class ProgramServiceImpl implements ProgramService {
 		}
 	}
 
+	/**
+	 * update Program by Id
+	 * 
+	 * @param programPayload
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public Program updateProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
@@ -127,6 +139,12 @@ public class ProgramServiceImpl implements ProgramService {
 		return program;
 	}
 
+	/**
+	 * returns Program List by orgId
+	 * 
+	 * @param orgId
+	 * @return
+	 */
 	@Override
 	public List<Program> getProgramList(Long orgId) {
 		return programRepository.findAllProgramList(orgId);
@@ -142,6 +160,13 @@ public class ProgramServiceImpl implements ProgramService {
 		return responsePayload;
 	}
 
+	/**
+	 * return Program from ProgramRequestPayload
+	 * 
+	 * @param payload
+	 * @param user
+	 * @return
+	 */
 	@Override
 	public Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload, UserPayload user) {
 		Program program = null;
@@ -178,6 +203,14 @@ public class ProgramServiceImpl implements ProgramService {
 		}
 	}
 
+	/**
+	 * returns OrganizationFilterPayload based Program List by orgId
+	 * 
+	 * @param payload
+	 * @param orgId
+	 * @param response
+	 * @return
+	 */
 	@Override
 	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
 		List<Program> programList = new ArrayList<Program>();
