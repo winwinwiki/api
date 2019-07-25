@@ -36,6 +36,7 @@ public class OrganizationResponsePayload {
 	String ein;
 	String notes;
 	Long parentId;
+	String parentName;
 	Boolean isActive;
 	Boolean isTaggingReady;
 	String tagStatus;

@@ -390,20 +390,6 @@ public class OrganizationController extends BaseController {
 						payload.setLastEditedAt(organization.getUpdatedAt());
 						payload.setLastEditedBy(organization.getUpdatedBy());
 						payload.setLastEditedByEmail(organization.getUpdatedByEmail());
-						/*
-						 * OrganizationHistory history =
-						 * orgHistoryRepository.findLastUpdatedHistory(
-						 * organization.getId()); if (null != history) { if
-						 * (null != history.getUpdatedAt())
-						 * payload.setLastEditedAt(history.getUpdatedAt()); else
-						 * payload.setLastEditedAt(organization.getUpdatedAt());
-						 * 
-						 * if (!(StringUtils.isEmpty(history.getUpdatedBy())))
-						 * payload.setLastEditedBy(history.getUpdatedBy()); else
-						 * payload.setLastEditedBy(organization.getUpdatedBy());
-						 * 
-						 * }
-						 */
 					}
 					payloadList.add(payload);
 				}
@@ -470,6 +456,11 @@ public class OrganizationController extends BaseController {
 				AddressPayload addressPayload = new AddressPayload();
 				BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 				payload.setAddress(addressPayload);
+			}
+			if (null != organization.getParentId()) {
+				Organization parentOrganization = organizationRepository.findOrgById(organization.getParentId());
+				if (null != parentOrganization)
+					payload.setParentName(parentOrganization.getName());
 			}
 		}
 		return payload;
