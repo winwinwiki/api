@@ -11,7 +11,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,7 +21,9 @@ import lombok.ToString;
 @ToString
 public class OrganizationChartPayload {
 	Long id;
+	Long parentId;
 	String name;
+	String parentName;
 	AddressPayload location;
 	List<OrganizationChartPayload> children;
 }
