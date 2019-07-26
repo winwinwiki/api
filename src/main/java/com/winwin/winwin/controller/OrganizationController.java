@@ -1276,6 +1276,14 @@ public class OrganizationController extends BaseController {
 				return sendErrorResponse("org.bad.request");
 			} else {
 				payload = organizationService.getOrgCharts(organization);
+				if (null != organization.getParentId()) {
+					Organization parentOrganization = organizationRepository.findOrgById(organization.getParentId());
+					if (null != parentOrganization) {
+						payload.setParentId(parentOrganization.getId());
+						payload.setParentName(parentOrganization.getName());
+					}
+				}
+
 			}
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "org.chart.error");
