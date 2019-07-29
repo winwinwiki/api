@@ -44,7 +44,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	private UserService userService;
 	@Autowired
 	private OrganizationHistoryService orgHistoryService;
-	protected CustomMessageSource customMessageSource;
+	@Autowired
+	private CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
@@ -110,7 +111,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			try {
 				Date date = CommonUtils.getFormattedDate();
 				dataSet.setUpdatedAt(date);
-				dataSet.setUpdatedBy(user.getEmail());
+				dataSet.setUpdatedBy(user.getUserDisplayName());
+				dataSet.setUpdatedByEmail(user.getEmail());
 				dataSet.setIsActive(false);
 				dataSet = organizationDataSetRepository.saveAndFlush(dataSet);
 
@@ -141,14 +143,16 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			} else {
 				organizationDataSet = new OrganizationDataSet();
 				organizationDataSet.setCreatedAt(date);
-				organizationDataSet.setCreatedBy(user.getEmail());
+				organizationDataSet.setCreatedBy(user.getUserDisplayName());
+				organizationDataSet.setCreatedByEmail(user.getEmail());
 			}
 			// set Organization DataSetCategory
 			setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
 			BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
 			organizationDataSet.setIsActive(true);
 			organizationDataSet.setUpdatedAt(date);
-			organizationDataSet.setUpdatedBy(user.getEmail());
+			organizationDataSet.setUpdatedBy(user.getUserDisplayName());
+			organizationDataSet.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
@@ -230,8 +234,10 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			Date date = CommonUtils.getFormattedDate();
 			category.setCreatedAt(date);
 			category.setUpdatedAt(date);
-			category.setCreatedBy(user.getEmail());
-			category.setUpdatedBy(user.getEmail());
+			category.setCreatedBy(user.getUserDisplayName());
+			category.setUpdatedBy(user.getUserDisplayName());
+			category.setCreatedByEmail(user.getEmail());
+			category.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}

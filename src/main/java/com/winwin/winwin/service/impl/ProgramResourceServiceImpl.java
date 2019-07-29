@@ -103,7 +103,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			if (null != resource && null != user) {
 				resource.setIsActive(false);
 				resource.setUpdatedAt(date);
-				resource.setUpdatedBy(user.getEmail());
+				resource.setUpdatedBy(user.getUserDisplayName());
+				resource.setUpdatedByEmail(user.getEmail());
 				programResourceRepository.saveAndFlush(resource);
 
 				if (null != resource) {
@@ -166,7 +167,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				BeanUtils.copyProperties(programResourcePayLoad, programResource);
 				programResource.setIsActive(true);
 				programResource.setCreatedAt(date);
-				programResource.setCreatedBy(user.getEmail());
+				programResource.setCreatedBy(user.getUserDisplayName());
+				programResource.setCreatedByEmail(user.getEmail());
 			}
 
 			if (programResource == null) {
@@ -177,7 +179,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				BeanUtils.copyProperties(programResourcePayLoad, programResource);
 				programResource.setIsActive(true);
 				programResource.setUpdatedAt(date);
-				programResource.setUpdatedBy(user.getEmail());
+				programResource.setUpdatedBy(user.getUserDisplayName());
+				programResource.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);
@@ -216,8 +219,10 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				}
 				category.setCreatedAt(date);
 				category.setUpdatedAt(date);
-				category.setCreatedBy(user.getEmail());
-				category.setUpdatedBy(user.getEmail());
+				category.setCreatedBy(user.getUserDisplayName());
+				category.setUpdatedBy(user.getUserDisplayName());
+				category.setCreatedByEmail(user.getEmail());
+				category.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);

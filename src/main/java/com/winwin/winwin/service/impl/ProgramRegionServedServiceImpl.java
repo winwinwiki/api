@@ -89,8 +89,10 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						programRegionServed.setIsActive(true);
 						programRegionServed.setCreatedAt(date);
 						programRegionServed.setUpdatedAt(date);
-						programRegionServed.setCreatedBy(user.getEmail());
-						programRegionServed.setUpdatedBy(user.getEmail());
+						programRegionServed.setCreatedBy(user.getUserDisplayName());
+						programRegionServed.setUpdatedBy(user.getUserDisplayName());
+						programRegionServed.setCreatedByEmail(user.getEmail());
+						programRegionServed.setUpdatedByEmail(user.getEmail());
 						programRegionServed = programRegionServedRepository.saveAndFlush(programRegionServed);
 
 						if (null != programRegionServed && null != payload.getOrganizationId()) {
@@ -110,7 +112,8 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						} else {
 							region.setIsActive(payload.getIsActive());
 							region.setUpdatedAt(date);
-							region.setUpdatedBy(user.getEmail());
+							region.setUpdatedBy(user.getUserDisplayName());
+							region.setUpdatedByEmail(user.getEmail());
 							region = programRegionServedRepository.saveAndFlush(region);
 
 							if (null != region && null != payload.getOrganizationId()) {
@@ -175,8 +178,10 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 			}
 			region.setCreatedAt(date);
 			region.setUpdatedAt(date);
-			region.setCreatedBy(user.getEmail());
-			region.setUpdatedBy(user.getEmail());
+			region.setCreatedBy(user.getUserDisplayName());
+			region.setUpdatedBy(user.getUserDisplayName());
+			region.setCreatedByEmail(user.getEmail());
+			region.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
 		}

@@ -202,7 +202,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedByEmail(user.getEmail());
 					organization.getAddress().setIsActive(false);
 					organization.getAddress().setUpdatedAt(date);
-					organization.getAddress().setUpdatedBy(user.getEmail());
+					organization.getAddress().setUpdatedBy(user.getUserDisplayName());
+					organization.getAddress().setUpdatedByEmail(user.getEmail());
 					addressRepository.saveAndFlush(organization.getAddress());
 					organization = organizationRepository.saveAndFlush(organization);
 
@@ -983,8 +984,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(date);
 					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 					sdgDataMapList.add(sdgDataMapObj);
 				}
 			}
@@ -1015,8 +1018,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(date);
 					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
 					spiDataMapList.add(spiDataMapObj);
 				}
 			}
@@ -1049,8 +1054,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(date);
 					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 					organizationSdgDataMappingList = orgSdgDataMapRepository
 							.getAllOrgSdgMapDataByOrgId(organization.getId());
 
@@ -1070,7 +1077,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
 									organizationSdgData.setIsChecked(true);
 									organizationSdgData.setUpdatedAt(date);
-									organizationSdgData.setUpdatedBy(user.getEmail());
+									organizationSdgData.setUpdatedBy(user.getUserDisplayName());
+									organizationSdgData.setUpdatedByEmail(user.getEmail());
 									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
 									sdgDataMapList.add(organizationSdgData);
 									isSdgMapFound = true;
@@ -1128,8 +1136,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(date);
 					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
 					organizationSpiDataMappingList = orgSpiDataMapRepository
 							.getAllOrgSpiMapDataByOrgId(organization.getId());
 
@@ -1149,7 +1159,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
 									organizationSpiData.setIsChecked(true);
 									organizationSpiData.setUpdatedAt(date);
-									organizationSpiData.setUpdatedBy(user.getEmail());
+									organizationSpiData.setUpdatedBy(user.getUserDisplayName());
+									organizationSpiData.setUpdatedByEmail(user.getEmail());
 									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 									spiDataMapList.add(organizationSpiData);
 									isSpiMapFound = true;
@@ -1191,10 +1202,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (payload.getAddressId() == null) {
 					address.setId(null);
 					address.setCreatedAt(date);
-					address.setCreatedBy(user.getEmail());
+					address.setCreatedBy(user.getUserDisplayName());
+					address.setCreatedByEmail(user.getEmail());
+
 				}
 				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
+				address.setUpdatedBy(user.getUserDisplayName());
+				address.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
@@ -1215,8 +1229,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 				note.setOrganization(organization);
 				note.setCreatedAt(date);
 				note.setUpdatedAt(date);
-				note.setCreatedBy(user.getEmail());
-				note.setUpdatedBy(user.getEmail());
+				note.setCreatedBy(user.getUserDisplayName());
+				note.setUpdatedBy(user.getUserDisplayName());
+				note.setCreatedByEmail(user.getEmail());
+				note.setUpdatedByEmail(user.getEmail());
 				notes.add(note);
 			}
 		} catch (Exception e) {
@@ -1234,10 +1250,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 				BeanUtils.copyProperties(addressPayload, address);
 				if (addressPayload.getId() == null) {
 					address.setCreatedAt(date);
-					address.setCreatedBy(user.getEmail());
+					address.setCreatedBy(user.getUserDisplayName());
+					address.setCreatedByEmail(user.getEmail());
 				}
 				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
+				address.setUpdatedBy(user.getUserDisplayName());
+				address.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
@@ -1251,7 +1269,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			try {
 				BeanUtils.copyProperties(addressPayload, organization.getAddress());
 				organization.getAddress().setUpdatedAt(date);
-				organization.getAddress().setUpdatedBy(user.getEmail());
+				organization.getAddress().setUpdatedBy(user.getUserDisplayName());
+				organization.getAddress().setUpdatedByEmail(user.getEmail());
 				return true;
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);

@@ -24,7 +24,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -137,9 +137,6 @@ public class Organization extends AbstractAuditableEntity {
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
 	private List<OrganizationSdgData> organizationSdgData;
 
-	@Column(name = "created_by_email")
-	private String createdByEmail;
-
-	@Column(name = "updated_by_email")
-	private String updatedByEmail;
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationRegionServed> organizationRegionServed;
 }

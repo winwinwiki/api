@@ -12,7 +12,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -23,6 +22,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -125,10 +128,7 @@ public class Program extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
 	private List<ProgramSdgData> programSdgData;
-	
-	@Column(name = "created_by_email")
-	private String createdByEmail;
 
-	@Column(name = "updated_by_email")
-	private String updatedByEmail;
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
+	private List<ProgramRegionServed> programRegionServed;
 }

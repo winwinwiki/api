@@ -86,8 +86,10 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
 									sdgDataMapObj.setUpdatedAt(date);
-									sdgDataMapObj.setCreatedBy(user.getEmail());
-									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setCreatedByEmail(user.getEmail());
+									sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 								}
 							}
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
@@ -146,7 +148,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 						} else {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(date);
-							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+							sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganization()) {

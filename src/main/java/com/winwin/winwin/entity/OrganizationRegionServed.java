@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,7 +20,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,7 +42,8 @@ public class OrganizationRegionServed extends AbstractAuditableEntity {
 	private RegionMaster regionMaster;
 
 	@JoinColumn(name = "org_id")
-	private Long orgId;
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Organization organization;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;

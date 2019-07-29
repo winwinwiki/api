@@ -22,7 +22,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @NoArgsConstructor
 @AllArgsConstructor
@@ -57,4 +57,10 @@ public class AbstractAuditableEntity {
 	@Column(name = "updated_by")
 	@JoinColumn(name = "updated_by")
 	protected String updatedBy;
+
+	@Column(name = "created_by_email")
+	protected String createdByEmail;
+
+	@Column(name = "updated_by_email")
+	protected String updatedByEmail;
 }

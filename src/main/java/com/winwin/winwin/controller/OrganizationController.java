@@ -77,7 +77,6 @@ import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
@@ -115,7 +114,7 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	private OrganizationDataSetService organizationDataSetService;
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
+	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
 	private OrganizationResourceService organizationResourceService;
 	@Autowired
@@ -123,42 +122,38 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	private OrganizationRegionServedService orgRegionServedService;
 	@Autowired
-	OrgSpiDataService orgSpiDataService;
+	private OrgSpiDataService orgSpiDataService;
 	@Autowired
-	OrgSdgDataService orgSdgDataService;
+	private OrgSdgDataService orgSdgDataService;
 	@Autowired
-	UserService userService;
+	private UserService userService;
 	@Autowired
-	OrganizationNoteService organizationNoteService;
+	private OrganizationNoteService organizationNoteService;
 	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
+	private OrganizationNoteRepository organizationNoteRepository;
 	@Autowired
-	OrgNaicsDataService naicsDataService;
+	private OrgNaicsDataService naicsDataService;
 	@Autowired
-	OrgNteeDataService nteeDataService;
+	private OrgNteeDataService nteeDataService;
 	@Autowired
-	ProgramService programService;
+	private ProgramService programService;
 	@Autowired
-	ProgramRepository programRepository;
+	private ProgramRepository programRepository;
 	@Autowired
-	SpiDataService spiDataService;
+	private SpiDataService spiDataService;
 	@Autowired
-	SdgDataService sdgDataService;
+	private SdgDataService sdgDataService;
 	@Autowired
-	NteeDataRepository nteeDataRepository;
+	private NteeDataRepository nteeDataRepository;
 	@Autowired
-	NaicsDataRepository naicsDataRepository;
-
+	private NaicsDataRepository naicsDataRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
-	@Autowired
-	CsvUtils csvUtils;
+	private CsvUtils csvUtils;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
 
-	Map<String, Long> naicsMap = null;
-	Map<String, Long> nteeMap = null;
+	private Map<String, Long> naicsMap = null;
+	private Map<String, Long> nteeMap = null;
 
 	// Code for organization start
 	/**
@@ -869,7 +864,9 @@ public class OrganizationController extends BaseController {
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setOrganizationId(region.getOrgId());
+					if (null != region.getOrganization())
+						payload.setOrganizationId(region.getOrganization().getId());
+
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 
@@ -908,7 +905,9 @@ public class OrganizationController extends BaseController {
 
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setOrganizationId(region.getOrgId());
+					if (null != region.getOrganization())
+						payload.setOrganizationId(region.getOrganization().getId());
+
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 				}
