@@ -44,6 +44,7 @@ public class DataMigrationCsvPayload {
 	private String selfInterest;
 	private String businessModel;
 	private String populationServed;
+	private String regionServedIds;
 	private String missionStatement;
 	private String country;
 	private String state;

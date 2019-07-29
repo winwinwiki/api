@@ -23,19 +23,6 @@ import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.DataMigrationCsvPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.NaicsDataRepository;
-import com.winwin.winwin.repository.NteeDataRepository;
-import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationNoteRepository;
-import com.winwin.winwin.repository.ProgramRepository;
-import com.winwin.winwin.service.OrgNaicsDataService;
-import com.winwin.winwin.service.OrgNteeDataService;
-import com.winwin.winwin.service.OrgSdgDataService;
-import com.winwin.winwin.service.OrgSpiDataService;
-import com.winwin.winwin.service.OrganizationNoteService;
-import com.winwin.winwin.service.ProgramService;
-import com.winwin.winwin.service.SdgDataService;
-import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CsvUtils;
@@ -52,56 +39,22 @@ import io.micrometer.core.instrument.util.StringUtils;
 public class WinWinController extends BaseController {
 	@Autowired
 	private WinWinService winWinService;
-
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-
+	private UserService userService;
 	@Autowired
-	OrgSpiDataService orgSpiDataService;
-
-	@Autowired
-	OrgSdgDataService orgSdgDataService;
-
-	@Autowired
-	UserService userService;
-
-	@Autowired
-	OrganizationNoteService organizationNoteService;
-
-	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
-
-	@Autowired
-	OrgNaicsDataService naicsDataService;
-	@Autowired
-	OrgNteeDataService nteeDataService;
-
-	@Autowired
-	ProgramService programService;
-	@Autowired
-	ProgramRepository programRepository;
-
-	@Autowired
-	SpiDataService spiDataService;
-	@Autowired
-	SdgDataService sdgDataService;
-
-	@Autowired
-	NteeDataRepository nteeDataRepository;
-
-	@Autowired
-	NaicsDataRepository naicsDataRepository;
-
-	@Autowired
-	CsvUtils csvUtils;
+	private CsvUtils csvUtils;
 
 	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinController.class);
 
 	/**
+	 * end point to create organizations in bulk, call this method only when the
+	 * organization id's are already imported into organization table. end point
+	 * method for data migration and can only be used for new environment setup
 	 * 
+	 * @param file
+	 * @return
 	 */
-	// for offline bulk organization creation
 	@RequestMapping(value = "/organization/addAll", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
@@ -127,8 +80,13 @@ public class WinWinController extends BaseController {
 
 	/**
 	 * 
+	 * end point to create organizations in bulk, call this method only when the
+	 * organization id's are already imported into organization table. end point
+	 * method for data migration and can only be used for new environment setup
+	 * 
+	 * @param file
+	 * @return
 	 */
-	// for offline bulk program creation
 	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {

@@ -99,7 +99,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			Date date = CommonUtils.getFormattedDate();
 			if (null != resource && null != user) {
 				resource.setUpdatedAt(date);
-				resource.setUpdatedBy(user.getEmail());
+				resource.setUpdatedBy(user.getUserDisplayName());
+				resource.setUpdatedByEmail(user.getEmail());
 				resource.setIsActive(false);
 
 				organizationResourceRepository.saveAndFlush(resource);
@@ -169,7 +170,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					organizationResource = new OrganizationResource();
 					organizationResource.setIsActive(true);
 					organizationResource.setCreatedAt(date);
-					organizationResource.setCreatedBy(user.getEmail());
+					organizationResource.setCreatedBy(user.getUserDisplayName());
+					organizationResource.setCreatedByEmail(user.getEmail());
 				}
 				if (organizationResource == null) {
 					throw new ResourceException("Org resource record not found for Id: " + orgResourcePayLoad.getId()
@@ -179,7 +181,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
 					organizationResource.setIsActive(true);
 					organizationResource.setUpdatedAt(date);
-					organizationResource.setUpdatedBy(user.getEmail());
+					organizationResource.setUpdatedBy(user.getUserDisplayName());
+					organizationResource.setUpdatedByEmail(user.getEmail());
 				}
 			}
 		} catch (Exception e) {
@@ -234,8 +237,10 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				}
 				category.setCreatedAt(date);
 				category.setUpdatedAt(date);
-				category.setCreatedBy(user.getEmail());
-				category.setUpdatedBy(user.getEmail());
+				category.setCreatedBy(user.getUserDisplayName());
+				category.setUpdatedBy(user.getUserDisplayName());
+				category.setCreatedByEmail(user.getEmail());
+				category.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);

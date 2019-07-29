@@ -18,7 +18,6 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationNoteService;
@@ -32,19 +31,13 @@ import com.winwin.winwin.util.CommonUtils;
 @Service
 public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
-
+	private OrganizationNoteRepository organizationNoteRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
-
+	private UserService userService;
 	@Autowired
-	UserService userService;
-
-	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationNoteServiceImpl.class);
 
@@ -65,8 +58,10 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				BeanUtils.copyProperties(organizationNotePayload, note);
 				note.setCreatedAt(date);
 				note.setUpdatedAt(date);
-				note.setCreatedBy(user.getEmail());
-				note.setUpdatedBy(user.getEmail());
+				note.setCreatedBy(user.getUserDisplayName());
+				note.setUpdatedBy(user.getUserDisplayName());
+				note.setCreatedByEmail(user.getEmail());
+				note.setUpdatedByEmail(user.getEmail());
 				note = organizationNoteRepository.saveAndFlush(note);
 
 				if (null != note && null != note.getOrganization()) {
@@ -115,7 +110,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 					BeanUtils.copyProperties(organizationNotePayload, note);
 					Date date = CommonUtils.getFormattedDate();
 					note.setUpdatedAt(date);
-					note.setUpdatedBy(user.getEmail());
+					note.setUpdatedBy(user.getUserDisplayName());
+					note.setUpdatedByEmail(user.getEmail());
 					note = organizationNoteRepository.saveAndFlush(note);
 
 					if (null != note && null != note.getOrganization()) {

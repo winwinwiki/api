@@ -45,8 +45,10 @@ public class AddressServiceImpl implements AddressService {
 			BeanUtils.copyProperties(addressPayload, address);
 			address.setCreatedAt(date);
 			address.setUpdatedAt(date);
-			address.setCreatedBy(user.getEmail());
-			address.setUpdatedBy(user.getEmail());
+			address.setCreatedBy(user.getUserDisplayName());
+			address.setUpdatedBy(user.getUserDisplayName());
+			address.setCreatedByEmail(user.getEmail());
+			address.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error("exception occured while creating address", e);
 		}
@@ -66,7 +68,8 @@ public class AddressServiceImpl implements AddressService {
 				Date date = CommonUtils.getFormattedDate();
 				BeanUtils.copyProperties(addressPayload, address);
 				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
+				address.setUpdatedBy(user.getUserDisplayName());
+				address.setUpdatedByEmail(user.getEmail());
 				addressRepository.saveAndFlush(address);
 				return true;
 			}

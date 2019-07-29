@@ -20,7 +20,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,7 +32,7 @@ import lombok.ToString;
 @Table(name = "org_sdg_mapping")
 public class OrganizationSdgData extends AbstractAuditableEntity {
 	@Id
-	@SequenceGenerator(name = "org_sdg_mapping_generator", sequenceName = "org_sdg_mapping_seq",allocationSize=1)
+	@SequenceGenerator(name = "org_sdg_mapping_generator", sequenceName = "org_sdg_mapping_seq", allocationSize = 1)
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_sdg_mapping_generator")
 	@Column(name = "id")
 	private Long id;

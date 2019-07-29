@@ -112,6 +112,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
+		
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			sb.append(" and o.created_by IN :createdBy ");
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
 			sb.append(" and o.updated_by IN :editedBy ");
@@ -204,6 +207,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
+		
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			filterQuery.setParameter("createdBy", payload.getCreatedBy());
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
 			filterQuery.setParameter("editedBy", payload.getEditedBy());
@@ -275,6 +281,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
+		
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			sb.append(" and o.created_by IN :createdBy ");
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
 			sb.append(" and o.updated_by IN :editedBy ");
@@ -363,6 +372,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
+		
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			filterQuery.setParameter("createdBy", payload.getCreatedBy());
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
 			filterQuery.setParameter("editedBy", payload.getEditedBy());

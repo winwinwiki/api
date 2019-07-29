@@ -87,8 +87,10 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
 									sdgDataMapObj.setUpdatedAt(date);
-									sdgDataMapObj.setCreatedBy(user.getEmail());
-									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setCreatedByEmail(user.getEmail());
+									sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 								}
 							}
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
@@ -140,7 +142,8 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 						} else {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(date);
-							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+							sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 							sdgDataMapObj.setProgram(program);
 
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);

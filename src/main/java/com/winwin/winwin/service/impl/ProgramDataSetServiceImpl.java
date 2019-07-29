@@ -108,7 +108,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			Date date = CommonUtils.getFormattedDate();
 			if (null != dataSet && null != user) {
 				dataSet.setUpdatedAt(date);
-				dataSet.setUpdatedBy(user.getEmail());
+				dataSet.setUpdatedBy(user.getUserDisplayName());
+				dataSet.setUpdatedByEmail(user.getEmail());
 				dataSet.setIsActive(false);
 				dataSet = programDataSetRepository.saveAndFlush(dataSet);
 
@@ -168,14 +169,17 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			} else {
 				programDataSet = new ProgramDataSet();
 				programDataSet.setCreatedAt(date);
-				programDataSet.setCreatedBy(user.getEmail());
+				programDataSet.setCreatedBy(user.getUserDisplayName());
+				programDataSet.setCreatedByEmail(user.getEmail());
+
 				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
 			}
 			setDataSetCategory(programDataSetPayLoad, programDataSet, user);
 			BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
 			programDataSet.setIsActive(true);
 			programDataSet.setUpdatedAt(date);
-			programDataSet.setUpdatedBy(user.getEmail());
+			programDataSet.setUpdatedBy(user.getUserDisplayName());
+			programDataSet.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
@@ -219,8 +223,10 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			}
 			category.setCreatedAt(date);
 			category.setUpdatedAt(date);
-			category.setCreatedBy(user.getEmail());
-			category.setUpdatedBy(user.getEmail());
+			category.setCreatedBy(user.getUserDisplayName());
+			category.setUpdatedBy(user.getUserDisplayName());
+			category.setCreatedByEmail(user.getEmail());
+			category.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}

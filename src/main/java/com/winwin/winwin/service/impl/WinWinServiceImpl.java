@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,14 +34,17 @@ import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationNote;
+import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramDataSet;
+import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.ProgramSpiData;
+import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
@@ -50,97 +54,81 @@ import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
-import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.AddressRepository;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
-import com.winwin.winwin.repository.OrgSdgDataMapRepository;
-import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
+import com.winwin.winwin.repository.OrganizationRegionServedRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ProgramDataSetRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
-import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
-import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
+import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
-import com.winwin.winwin.service.OrganizationHistoryService;
-import com.winwin.winwin.service.OrganizationNoteService;
-import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class WinWinServiceImpl implements WinWinService {
 	@Autowired
-	AddressRepository addressRepository;
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	OrganizationRepository organizationRepository;
+	private ProgramRepository programRepository;
 	@Autowired
-	ProgramRepository programRepository;
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
+	private AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 	@Autowired
-	NaicsDataRepository naicsRepository;
+	private CsvUtils csvUtils;
 	@Autowired
-	NteeDataRepository nteeRepository;
+	private SpiDataRepository spiDataRepository;
 	@Autowired
-	UserService userService;
+	private SdgDataRepository sdgDataRepository;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationResourceRepository organizationResourceRepository;
 	@Autowired
-	OrganizationNoteService organizationNoteService;
+	private ProgramResourceRepository programResourceRepository;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
+	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
-	AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	private ProgramDataSetRepository programDataSetRepository;
 	@Autowired
-	CsvUtils csvUtils;
+	private ResourceCategoryRepository resourceCategoryRepository;
 	@Autowired
-	SpiDataRepository spiDataRepository;
+	private DataSetCategoryRepository dataSetCategoryRepository;
 	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
+	private OrganizationRegionServedRepository orgRegionServedRepository;
 	@Autowired
-	ProgramSpiDataMapRepository programSpiDataMapRepository;
+	private RegionMasterRepository regionMasterRepository;
 	@Autowired
-	SdgDataRepository sdgDataRepository;
+	private NteeDataRepository nteeDataRepository;
 	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
-	@Autowired
-	ProgramSdgDataMapRepository programSdgDataMapRepository;
-	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
-	@Autowired
-	ProgramResourceRepository programResourceRepository;
-	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-	@Autowired
-	ProgramDataSetRepository programDataSetRepository;
-	@Autowired
-	ResourceCategoryRepository resourceCategoryRepository;
-	@Autowired
-	DataSetCategoryRepository dataSetCategoryRepository;
-	@Autowired
-	NteeDataRepository nteeDataRepository;
-	@Autowired
-	NaicsDataRepository naicsDataRepository;
+	private NaicsDataRepository naicsDataRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
 
 	private Map<String, NaicsData> naicsMap = null;
 	private Map<String, NteeData> nteeMap = null;
 
+	/**
+	 * create organizations in bulk, call this method only when the organization
+	 * id's are already imported into organization table. This is the utility
+	 * method for data migration and can only be used for new environment setup
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 * @param user
+	 * @return
+	 */
 	@Override
 	@Transactional
 	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
@@ -151,6 +139,16 @@ public class WinWinServiceImpl implements WinWinService {
 		return organizationList;
 	}
 
+	/**
+	 * create programs in bulk, call this method only when the program id's are
+	 * already imported into program table. This is the utility method for data
+	 * migration and can only be used for new environment setup
+	 * 
+	 * @param programPayloadList
+	 * @param response
+	 * @param user
+	 * @return
+	 */
 	@Override
 	@Transactional
 	@Async
@@ -162,6 +160,16 @@ public class WinWinServiceImpl implements WinWinService {
 		return programList;
 	}
 
+	/**
+	 * save organizations in bulk
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 * @param operationPerformed
+	 * @param customMessage
+	 * @param user
+	 * @return
+	 */
 	public List<Organization> saveOrganizationsOfflineForBulkUpload(
 			List<DataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			String operationPerformed, String customMessage, UserPayload user) {
@@ -293,8 +301,14 @@ public class WinWinServiceImpl implements WinWinService {
 		organization.setUpdatedByEmail(user.getEmail());
 		organization.setIsActive(true);
 
+		// set note for organization
 		if (!StringUtils.isEmpty(csvPayload.getNotes()))
 			organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
+
+		// set all the regionServed for organization
+		if (!StringUtils.isEmpty(csvPayload.getRegionServedIds()))
+			organization.setOrganizationRegionServed(
+					saveOrganizationRegionServedForBulkUpload(csvPayload, user, organization));
 
 		if (csvPayload.getNaicsCode() == null && csvPayload.getNteeCode() == null) {
 			List<Long> spiTagIds = new ArrayList<>();
@@ -393,14 +407,60 @@ public class WinWinServiceImpl implements WinWinService {
 				note.setOrganization(organization);
 				note.setCreatedAt(date);
 				note.setUpdatedAt(date);
-				note.setCreatedBy(user.getEmail());
-				note.setUpdatedBy(user.getEmail());
+				note.setCreatedBy(user.getUserDisplayName());
+				note.setUpdatedBy(user.getUserDisplayName());
+				note.setCreatedByEmail(user.getEmail());
+				note.setUpdatedByEmail(user.getEmail());
 				notes.add(note);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
 		return notes;
+
+	}
+
+	private List<OrganizationRegionServed> saveOrganizationRegionServedForBulkUpload(DataMigrationCsvPayload payload,
+			UserPayload user, Organization organization) {
+		List<Long> regionIds = new ArrayList<>();
+		List<OrganizationRegionServed> orgRegionServedList = new ArrayList<OrganizationRegionServed>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
+				for (int j = 0; j < regionMasterIdsList.length; j++) {
+					regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != regionIds) {
+					for (Long regionId : regionIds) {
+						// for organization regionServed creation
+						OrganizationRegionServed orgRegionServed = new OrganizationRegionServed();
+						// find regionMaster obj by id
+						RegionMaster regionMaster = regionMasterRepository.findRegionById(regionId);
+						orgRegionServed.setCreatedAt(date);
+						orgRegionServed.setUpdatedAt(date);
+						orgRegionServed.setCreatedBy(user.getUserDisplayName());
+						orgRegionServed.setCreatedByEmail(user.getEmail());
+						orgRegionServed.setUpdatedBy(user.getUserDisplayName());
+						orgRegionServed.setUpdatedByEmail(user.getEmail());
+						orgRegionServed.setIsActive(true);
+						orgRegionServed.setOrganization(organization);
+						orgRegionServed.setRegionMaster(regionMaster);
+
+						orgRegionServedList.add(orgRegionServed);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.region.error.created"), e);
+		}
+		return orgRegionServedList;
 
 	}
 
@@ -428,8 +488,10 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(date);
 					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 					sdgDataMapList.add(sdgDataMapObj);
 				}
 			}
@@ -460,8 +522,10 @@ public class WinWinServiceImpl implements WinWinService {
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(date);
 					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
 					spiDataMapList.add(spiDataMapObj);
 				}
 			}
@@ -475,9 +539,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveOrgDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular organization
+	 * @throws Exception
+	 *             method saveOrgDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular organization
 	 */
 	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -507,14 +572,20 @@ public class WinWinServiceImpl implements WinWinService {
 				if (null != resourceCategory) {
 					OrganizationResource resource = null;
 					/*
-					 * List<OrganizationResource> resources = organizationResourceRepository
-					 * .findAllOrgResourceById(organization.getId()); if (null != resources &&
-					 * !resources.isEmpty()) { for (OrganizationResource organizationResource :
-					 * resources) { resource = organizationResource; if (null !=
-					 * organizationResource.getResourceCategory() && organizationResource
-					 * .getResourceCategory().getId().equals(resourceCategory. getId())) {
-					 * resource.setResourceCategory(organizationResource. getResourceCategory()); }
-					 * else { resource.setResourceCategory(resourceCategory); } } } else {
+					 * List<OrganizationResource> resources =
+					 * organizationResourceRepository
+					 * .findAllOrgResourceById(organization.getId()); if (null
+					 * != resources && !resources.isEmpty()) { for
+					 * (OrganizationResource organizationResource : resources) {
+					 * resource = organizationResource; if (null !=
+					 * organizationResource.getResourceCategory() &&
+					 * organizationResource
+					 * .getResourceCategory().getId().equals(resourceCategory.
+					 * getId())) {
+					 * resource.setResourceCategory(organizationResource.
+					 * getResourceCategory()); } else {
+					 * resource.setResourceCategory(resourceCategory); } } }
+					 * else {
 					 */
 					resource = new OrganizationResource();
 					resource.setResourceCategory(resourceCategory);
@@ -522,8 +593,10 @@ public class WinWinServiceImpl implements WinWinService {
 					resource.setOrganizationId(organization.getId());
 					resource.setCreatedAt(date);
 					resource.setUpdatedAt(date);
-					resource.setCreatedBy(user.getEmail());
-					resource.setUpdatedBy(user.getEmail());
+					resource.setCreatedBy(user.getUserDisplayName());
+					resource.setUpdatedBy(user.getUserDisplayName());
+					resource.setCreatedByEmail(user.getEmail());
+					resource.setUpdatedByEmail(user.getEmail());
 					resourceList.add(resource);
 				}
 			}
@@ -554,14 +627,19 @@ public class WinWinServiceImpl implements WinWinService {
 				if (null != datasetCategory) {
 					OrganizationDataSet dataset = null;
 					/*
-					 * List<OrganizationDataSet> datasets = organizationDataSetRepository
-					 * .findAllOrgDataSetList(organization.getId()); if (null != datasets &&
-					 * !datasets.isEmpty()) { for (OrganizationDataSet organizationDataset :
-					 * datasets) { dataset = organizationDataset; if (null !=
-					 * organizationDataset.getDataSetCategory() && organizationDataset
-					 * .getDataSetCategory().getId().equals(datasetCategory. getId())) {
-					 * dataset.setDataSetCategory(organizationDataset. getDataSetCategory()); } else
-					 * { dataset.setDataSetCategory(datasetCategory); } } } else {
+					 * List<OrganizationDataSet> datasets =
+					 * organizationDataSetRepository
+					 * .findAllOrgDataSetList(organization.getId()); if (null !=
+					 * datasets && !datasets.isEmpty()) { for
+					 * (OrganizationDataSet organizationDataset : datasets) {
+					 * dataset = organizationDataset; if (null !=
+					 * organizationDataset.getDataSetCategory() &&
+					 * organizationDataset
+					 * .getDataSetCategory().getId().equals(datasetCategory.
+					 * getId())) {
+					 * dataset.setDataSetCategory(organizationDataset.
+					 * getDataSetCategory()); } else {
+					 * dataset.setDataSetCategory(datasetCategory); } } } else {
 					 */
 					dataset = new OrganizationDataSet();
 					dataset.setDataSetCategory(datasetCategory);
@@ -572,8 +650,10 @@ public class WinWinServiceImpl implements WinWinService {
 					}
 					dataset.setCreatedAt(date);
 					dataset.setUpdatedAt(date);
-					dataset.setCreatedBy(user.getEmail());
-					dataset.setUpdatedBy(user.getEmail());
+					dataset.setCreatedBy(user.getUserDisplayName());
+					dataset.setUpdatedBy(user.getUserDisplayName());
+					dataset.setCreatedByEmail(user.getEmail());
+					dataset.setUpdatedByEmail(user.getEmail());
 					datasetList.add(dataset);
 				}
 			}
@@ -693,6 +773,10 @@ public class WinWinServiceImpl implements WinWinService {
 		BeanUtils.copyProperties(requestPayload, program);
 		program.setAddress(saveAddressForBulkUpload(requestPayload, user));
 
+		// set all the regionServed for program
+		if (!StringUtils.isEmpty(requestPayload.getRegionServedIds()))
+			program.setProgramRegionServed(saveProgramRegionServedForBulkUpload(requestPayload, user, program));
+
 		if (null != requestPayload.getNaicsCode()) {
 			// set Naics-Ntee code map
 			if (naicsMap == null || nteeMap == null)
@@ -766,6 +850,50 @@ public class WinWinServiceImpl implements WinWinService {
 		return program;
 	}
 
+	private List<ProgramRegionServed> saveProgramRegionServedForBulkUpload(DataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
+		List<Long> regionIds = new ArrayList<>();
+		List<ProgramRegionServed> programRegionServedList = new ArrayList<ProgramRegionServed>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
+				for (int j = 0; j < regionMasterIdsList.length; j++) {
+					regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != regionIds) {
+					for (Long regionId : regionIds) {
+						// for program regionServed creation
+						ProgramRegionServed programRegionServed = new ProgramRegionServed();
+						// find regionMaster obj by id
+						RegionMaster regionMaster = regionMasterRepository.findRegionById(regionId);
+						programRegionServed.setCreatedAt(date);
+						programRegionServed.setUpdatedAt(date);
+						programRegionServed.setCreatedBy(user.getUserDisplayName());
+						programRegionServed.setCreatedByEmail(user.getEmail());
+						programRegionServed.setUpdatedBy(user.getUserDisplayName());
+						programRegionServed.setUpdatedByEmail(user.getEmail());
+						programRegionServed.setIsActive(true);
+						programRegionServed.setProgram(program);
+						programRegionServed.setRegionMaster(regionMaster);
+
+						programRegionServedList.add(programRegionServed);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("prog.region.error.created"), e);
+		}
+		return programRegionServedList;
+
+	}
+
 	/**
 	 * @throws Exception
 	 * 
@@ -831,8 +959,10 @@ public class WinWinServiceImpl implements WinWinService {
 					sdgDataMapObj.setIsChecked(true);
 					sdgDataMapObj.setCreatedAt(date);
 					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 					sdgDataMapList.add(sdgDataMapObj);
 				}
 			}
@@ -863,8 +993,10 @@ public class WinWinServiceImpl implements WinWinService {
 					spiDataMapObj.setIsChecked(true);
 					spiDataMapObj.setCreatedAt(date);
 					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
 					spiDataMapList.add(spiDataMapObj);
 				}
 			}
@@ -878,9 +1010,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @param resourceIdsList
 	 * @param datasetIdsList
-	 * @throws Exception method saveProgramDatasetAndResources fetches list of
-	 *                   resourceIdsList and datasetIdsList from .csv file and
-	 *                   create entries for particular program
+	 * @throws Exception
+	 *             method saveProgramDatasetAndResources fetches list of
+	 *             resourceIdsList and datasetIdsList from .csv file and create
+	 *             entries for particular program
 	 */
 	private void saveProgramDatasetAndResources(Program program, UserPayload user, List<Long> resourceIdsList,
 			List<Long> datasetIdsList, String datasetType) throws Exception {
@@ -909,14 +1042,19 @@ public class WinWinServiceImpl implements WinWinService {
 				if (null != resourceCategory) {
 					ProgramResource resource = null;
 					/*
-					 * List<ProgramResource> resources = programResourceRepository
-					 * .findAllProgramResourceByProgramId(program.getId()); if (null != resources &&
-					 * !resources.isEmpty()) { for (ProgramResource programResource : resources) {
-					 * resource = programResource; if (null != programResource.getResourceCategory()
-					 * && programResource.getResourceCategory().getId().equals(
-					 * resourceCategory.getId())) { resource.setResourceCategory(programResource.
+					 * List<ProgramResource> resources =
+					 * programResourceRepository
+					 * .findAllProgramResourceByProgramId(program.getId()); if
+					 * (null != resources && !resources.isEmpty()) { for
+					 * (ProgramResource programResource : resources) { resource
+					 * = programResource; if (null !=
+					 * programResource.getResourceCategory() &&
+					 * programResource.getResourceCategory().getId().equals(
+					 * resourceCategory.getId())) {
+					 * resource.setResourceCategory(programResource.
 					 * getResourceCategory()); } else {
-					 * resource.setResourceCategory(resourceCategory); } } } else {
+					 * resource.setResourceCategory(resourceCategory); } } }
+					 * else {
 					 */
 					resource = new ProgramResource();
 					resource.setResourceCategory(resourceCategory);
@@ -924,8 +1062,10 @@ public class WinWinServiceImpl implements WinWinService {
 					resource.setProgramId(program.getId());
 					resource.setCreatedAt(date);
 					resource.setUpdatedAt(date);
-					resource.setCreatedBy(user.getEmail());
-					resource.setUpdatedBy(user.getEmail());
+					resource.setCreatedBy(user.getUserDisplayName());
+					resource.setUpdatedBy(user.getUserDisplayName());
+					resource.setCreatedByEmail(user.getEmail());
+					resource.setUpdatedByEmail(user.getEmail());
 					resourceList.add(resource);
 				}
 			}
@@ -957,11 +1097,15 @@ public class WinWinServiceImpl implements WinWinService {
 					ProgramDataSet dataset = null;
 					/*
 					 * List<ProgramDataSet> datasets = programDataSetRepository
-					 * .findAllProgramDataSetListByProgramId(program.getId()); if (null != datasets
-					 * && !datasets.isEmpty()) { for (ProgramDataSet programDataset : datasets) {
-					 * dataset = programDataset; if (null != programDataset.getDataSetCategory() &&
-					 * programDataset.getDataSetCategory().getId().equals( datasetCategory.getId()))
-					 * { dataset.setDataSetCategory(programDataset. getDataSetCategory()); } else {
+					 * .findAllProgramDataSetListByProgramId(program.getId());
+					 * if (null != datasets && !datasets.isEmpty()) { for
+					 * (ProgramDataSet programDataset : datasets) { dataset =
+					 * programDataset; if (null !=
+					 * programDataset.getDataSetCategory() &&
+					 * programDataset.getDataSetCategory().getId().equals(
+					 * datasetCategory.getId())) {
+					 * dataset.setDataSetCategory(programDataset.
+					 * getDataSetCategory()); } else {
 					 * dataset.setDataSetCategory(datasetCategory); } } } else {
 					 */
 					dataset = new ProgramDataSet();
@@ -973,8 +1117,10 @@ public class WinWinServiceImpl implements WinWinService {
 					}
 					dataset.setCreatedAt(date);
 					dataset.setUpdatedAt(date);
-					dataset.setCreatedBy(user.getEmail());
-					dataset.setUpdatedBy(user.getEmail());
+					dataset.setCreatedBy(user.getUserDisplayName());
+					dataset.setUpdatedBy(user.getUserDisplayName());
+					dataset.setCreatedByEmail(user.getEmail());
+					dataset.setUpdatedByEmail(user.getEmail());
 					datasetList.add(dataset);
 				}
 			}
@@ -1121,25 +1267,6 @@ public class WinWinServiceImpl implements WinWinService {
 		return nteeMapForS3;
 	}
 
-	public Address saveAddressForBulkUpload(ProgramRequestPayload payload, UserPayload user) {
-		Address address = null;
-		try {
-			if (null != payload) {
-				address = new Address();
-				Date date = CommonUtils.getFormattedDate();
-				BeanUtils.copyProperties(payload, address);
-				address.setId(null);
-				address.setCreatedAt(date);
-				address.setCreatedBy(user.getEmail());
-				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
-		}
-		return address;
-	}
-
 	/**
 	 * 
 	 */
@@ -1163,7 +1290,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 	}
 
-	public Address saveAddressForBulkUpload(DataMigrationCsvPayload payload, UserPayload user) {
+	private Address saveAddressForBulkUpload(DataMigrationCsvPayload payload, UserPayload user) {
 		Address address = null;
 		try {
 			if (null != payload) {
@@ -1173,10 +1300,12 @@ public class WinWinServiceImpl implements WinWinService {
 				if (payload.getAddressId() == null) {
 					address.setId(null);
 					address.setCreatedAt(date);
-					address.setCreatedBy(user.getEmail());
+					address.setCreatedBy(user.getUserDisplayName());
+					address.setCreatedByEmail(user.getEmail());
 				}
 				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
+				address.setUpdatedBy(user.getUserDisplayName());
+				address.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);

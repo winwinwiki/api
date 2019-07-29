@@ -54,8 +54,6 @@ import com.winwin.winwin.payload.SpiDataDimensionsPayload;
 import com.winwin.winwin.repository.ProgramDataSetRepository;
 import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
-import com.winwin.winwin.service.OrgSdgDataService;
-import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.ProgramDataSetService;
 import com.winwin.winwin.service.ProgramRegionServedService;
 import com.winwin.winwin.service.ProgramResourceService;
@@ -78,38 +76,24 @@ public class ProgramController extends BaseController {
 
 	@Autowired
 	private ProgramRegionServedService programRegionServedService;
-
 	@Autowired
-	OrgSpiDataService orgSpiDataService;
-
+	private SpiDataService spiDataService;
 	@Autowired
-	SpiDataService spiDataService;
+	private SdgDataService sdgDataService;
 	@Autowired
-	SdgDataService sdgDataService;
-
+	private ProgramSdgDataService programSdgDataService;
 	@Autowired
-	OrgSdgDataService orgSdgDataService;
-
+	private ProgramSpiDataService programSpiDataService;
 	@Autowired
-	ProgramSdgDataService programSdgDataService;
+	private ProgramService programService;
 	@Autowired
-	ProgramSpiDataService programSpiDataService;
-
+	private ProgramRepository programRepository;
 	@Autowired
-	ProgramService programService;
-
+	private ProgramDataSetRepository programDataSetRepository;
 	@Autowired
-	ProgramRepository programRepository;
-
+	private ProgramDataSetService programDataSetService;
 	@Autowired
-	ProgramDataSetRepository programDataSetRepository;
-
-	@Autowired
-	ProgramDataSetService programDataSetService;
-
-	@Autowired
-	ProgramResourceService programResourceService;
-
+	private ProgramResourceService programResourceService;
 	@Autowired
 	private ProgramResourceRepository programResourceRepository;
 
@@ -525,7 +509,10 @@ public class ProgramController extends BaseController {
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setProgramId(region.getProgramId());
+
+					if (null != region.getProgram())
+						payload.setProgramId(region.getProgram().getId());
+
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 				}
@@ -562,7 +549,9 @@ public class ProgramController extends BaseController {
 						regionMasterPayload.setRegionName(region.getRegionMaster().getRegionName());
 						payload.setRegion(regionMasterPayload);
 					}
-					payload.setProgramId(region.getProgramId());
+					if (null != region.getProgram())
+						payload.setProgramId(region.getProgram().getId());
+
 					payload.setIsActive(region.getIsActive());
 					payloadList.add(payload);
 
