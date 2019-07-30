@@ -150,7 +150,10 @@ public class ProgramController extends BaseController {
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
 					payload.setDataSetCategory(payloadCategory);
-					payload.setProgramId(programDataSet.getProgramId());
+
+					if (null != programDataSet.getProgram())
+						payload.setProgramId(programDataSet.getProgram().getId());
+
 					payload.setDescription(programDataSet.getDescription());
 					payload.setType(programDataSet.getType());
 					payload.setUrl(programDataSet.getUrl());
@@ -193,6 +196,10 @@ public class ProgramController extends BaseController {
 					payloadCategory = new DataSetCategoryPayload();
 					BeanUtils.copyProperties(category, payloadCategory);
 				}
+
+				if (null != dataSet.getProgram())
+					payload.setProgramId(dataSet.getProgram().getId());
+
 				payload.setDataSetCategory(payloadCategory);
 			}
 		} else {
@@ -258,6 +265,10 @@ public class ProgramController extends BaseController {
 						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setDataSetCategory(payloadCategory);
+
+					if (null != dataSet.getProgram())
+						payload.setProgramId(dataSet.getProgram().getId());
+
 					payloadList.add(payload);
 				}
 			}
@@ -329,6 +340,9 @@ public class ProgramController extends BaseController {
 						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
+
+					if (null != programResource.getProgram())
+						payload.setProgramId(programResource.getProgram().getId());
 				}
 			} catch (Exception e) {
 				return sendExceptionResponse(e, "prog.resource.error.created");
@@ -371,6 +385,10 @@ public class ProgramController extends BaseController {
 						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
+
+					if (null != programResource.getProgram())
+						payload.setProgramId(programResource.getProgram().getId());
+
 				}
 			} else {
 				return sendErrorResponse("org.bad.request");
@@ -440,6 +458,10 @@ public class ProgramController extends BaseController {
 						BeanUtils.copyProperties(category, payloadCategory);
 					}
 					payload.setResourceCategory(payloadCategory);
+
+					if (null != resource.getProgram())
+						payload.setProgramId(resource.getProgram().getId());
+
 					payloadList.add(payload);
 				}
 			}

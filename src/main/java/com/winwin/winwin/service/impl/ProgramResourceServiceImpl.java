@@ -14,12 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -35,7 +37,8 @@ import io.micrometer.core.instrument.util.StringUtils;
  */
 @Service
 public class ProgramResourceServiceImpl implements ProgramResourceService {
-
+	@Autowired
+	private ProgramRepository programRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
@@ -67,7 +70,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResource = constructProgramResource(programResourcePayLoad);
 				programResource = programResourceRepository.saveAndFlush(programResource);
 
-				if (null != programResource && null != programResource.getProgramId()) {
+				if (null != programResource && null != programResource.getProgram()
+						&& null != programResource.getProgram().getId()) {
 					organizationHistoryService.createOrganizationHistory(user,
 							programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
 							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
@@ -181,6 +185,11 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResource.setUpdatedAt(date);
 				programResource.setUpdatedBy(user.getUserDisplayName());
 				programResource.setUpdatedByEmail(user.getEmail());
+
+				if (null != programResourcePayLoad.getProgramId()) {
+					Program program = programRepository.findProgramById(programResourcePayLoad.getProgramId());
+					programResource.setProgram(program);
+				}
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);

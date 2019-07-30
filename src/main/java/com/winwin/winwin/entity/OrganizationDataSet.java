@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,7 +20,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -40,8 +41,9 @@ public class OrganizationDataSet extends AbstractAuditableEntity {
 	@JoinColumn(name = "category_id")
 	private DataSetCategory dataSetCategory;
 
-	@Column(name = "organization_id")
-	private Long organizationId;
+	@JoinColumn(name = "organization_id")
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Organization organization;
 
 	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;

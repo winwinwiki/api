@@ -1,5 +1,6 @@
 package com.winwin.winwin.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,6 +18,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -36,8 +41,9 @@ public class ProgramResource extends AbstractAuditableEntity {
 	@JoinColumn(name = "category_id")
 	private ResourceCategory resourceCategory;
 
-	@Column(name = "program_id")
-	private Long programId;
+	@JoinColumn(name = "program_id")
+	@ManyToOne(cascade = CascadeType.ALL)
+	private Program program;
 
 	@Column(name = "count")
 	private Long count;

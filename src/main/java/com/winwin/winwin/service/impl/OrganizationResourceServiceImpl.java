@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.exception.ResourceCategoryException;
@@ -21,6 +22,7 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.OrganizationResourcePayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -36,6 +38,8 @@ import io.micrometer.core.instrument.util.StringUtils;
  */
 @Service
 public class OrganizationResourceServiceImpl implements OrganizationResourceService {
+	@Autowired
+	private OrganizationRepository organizationRepository;
 	@Autowired
 	private OrganizationResourceRepository organizationResourceRepository;
 	@Autowired
@@ -68,8 +72,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				orgResource = constructOrganizationResource(orgResourcePayLoad);
 				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
 
-				if (null != orgResource && null != orgResource.getOrganizationId()) {
-					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
+				if (null != orgResource && null != orgResource.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
 							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
 							orgResource.getResourceCategory().getCategoryName(), "");
 				}
@@ -105,8 +109,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 
 				organizationResourceRepository.saveAndFlush(resource);
 
-				if (null != resource) {
-					orgHistoryService.createOrganizationHistory(user, resource.getOrganizationId(),
+				if (null != resource && null != resource.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, resource.getOrganization().getId(),
 							OrganizationConstants.DELETE, "", resource.getId(),
 							resource.getResourceCategory().getCategoryName(), "");
 				}
@@ -183,6 +187,12 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					organizationResource.setUpdatedAt(date);
 					organizationResource.setUpdatedBy(user.getUserDisplayName());
 					organizationResource.setUpdatedByEmail(user.getEmail());
+
+					if (null != orgResourcePayLoad.getOrganizationId()) {
+						Organization organization = organizationRepository
+								.findOrgById(orgResourcePayLoad.getOrganizationId());
+						organizationResource.setOrganization(organization);
+					}
 				}
 			}
 		} catch (Exception e) {
