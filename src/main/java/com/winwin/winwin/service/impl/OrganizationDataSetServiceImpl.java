@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.DataSetCategory;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
@@ -23,6 +24,7 @@ import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.UserService;
@@ -36,6 +38,8 @@ import io.micrometer.core.instrument.util.StringUtils;
  */
 @Service
 public class OrganizationDataSetServiceImpl implements OrganizationDataSetService {
+	@Autowired
+	private OrganizationRepository organizationRepository;
 	@Autowired
 	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
@@ -68,14 +72,14 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				organizationDataSet = constructOrganizationDataSet(orgDataSetPayLoad, user);
 				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
 
-				if (null != organizationDataSet.getId()) {
+				if (null != organizationDataSet.getId() && null != organizationDataSet.getOrganization()) {
 					if (null != orgDataSetPayLoad.getId()) {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganization().getId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
 								"");
 					} else {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganization().getId(),
 								OrganizationConstants.CREATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
 								"");
@@ -116,8 +120,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				dataSet.setIsActive(false);
 				dataSet = organizationDataSetRepository.saveAndFlush(dataSet);
 
-				if (null != dataSet) {
-					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganizationId(),
+				if (null != dataSet && null != dataSet.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganization().getId(),
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
 							dataSet.getDataSetCategory().getCategoryName(), "");
 				}
@@ -153,6 +157,12 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			organizationDataSet.setUpdatedAt(date);
 			organizationDataSet.setUpdatedBy(user.getUserDisplayName());
 			organizationDataSet.setUpdatedByEmail(user.getEmail());
+
+			if (null != orgDataSetPayLoad.getOrganizationId()) {
+				Organization organization = organizationRepository.findOrgById(orgDataSetPayLoad.getOrganizationId());
+				organizationDataSet.setOrganization(organization);
+			}
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}

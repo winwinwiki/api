@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.DataSetCategory;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramDataSet;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
@@ -23,6 +24,7 @@ import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.ProgramDataSetRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramDataSetService;
 import com.winwin.winwin.service.UserService;
@@ -36,6 +38,8 @@ import io.micrometer.core.instrument.util.StringUtils;
  */
 @Service
 public class ProgramDataSetServiceImpl implements ProgramDataSetService {
+	@Autowired
+	private ProgramRepository programRepository;
 	@Autowired
 	private ProgramDataSetRepository programDataSetRepository;
 	@Autowired
@@ -171,8 +175,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet.setCreatedAt(date);
 				programDataSet.setCreatedBy(user.getUserDisplayName());
 				programDataSet.setCreatedByEmail(user.getEmail());
-
-				programDataSet.setProgramId(programDataSetPayLoad.getProgramId());
 			}
 			setDataSetCategory(programDataSetPayLoad, programDataSet, user);
 			BeanUtils.copyProperties(programDataSetPayLoad, programDataSet);
@@ -180,6 +182,12 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			programDataSet.setUpdatedAt(date);
 			programDataSet.setUpdatedBy(user.getUserDisplayName());
 			programDataSet.setUpdatedByEmail(user.getEmail());
+
+			if (null != programDataSetPayLoad.getProgramId()) {
+				Program program = programRepository.findProgramById(programDataSetPayLoad.getProgramId());
+				programDataSet.setProgram(program);
+			}
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}

@@ -486,6 +486,9 @@ public class OrganizationController extends BaseController {
 					payload = new DataSetPayload();
 					BeanUtils.copyProperties(organizationDataSet, payload);
 
+					if (null != organizationDataSet.getOrganization())
+						payload.setOrganizationId(organizationDataSet.getOrganization().getId());
+
 					category = organizationDataSet.getDataSetCategory();
 					if (null != category) {
 						payloadCategory = new DataSetCategoryPayload();
@@ -527,6 +530,9 @@ public class OrganizationController extends BaseController {
 				payload = new DataSetPayload();
 				dataSet = organizationDataSetService.createOrUpdateOrganizationDataSet(organizationDataSetPayLoad);
 				BeanUtils.copyProperties(dataSet, payload);
+
+				if (null != dataSet.getOrganization())
+					payload.setOrganizationId(dataSet.getOrganization().getId());
 
 				category = dataSet.getDataSetCategory();
 				if (null != category) {
@@ -600,7 +606,10 @@ public class OrganizationController extends BaseController {
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
 					payload.setDataSetCategory(payloadCategory);
-					payload.setOrganizationId(dataSet.getOrganizationId());
+
+					if (null != dataSet.getOrganization())
+						payload.setOrganizationId(dataSet.getOrganization().getId());
+
 					payload.setDescription(dataSet.getDescription());
 					payload.setType(dataSet.getType());
 					payload.setUrl(dataSet.getUrl());
@@ -676,7 +685,10 @@ public class OrganizationController extends BaseController {
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setOrganizationId(organizationResource.getOrganizationId());
+
+					if (null != organizationResource.getOrganization())
+						payload.setOrganizationId(organizationResource.getOrganization().getId());
+
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
 					payload.setIsActive(organizationResource.getIsActive());
@@ -724,7 +736,10 @@ public class OrganizationController extends BaseController {
 						payloadCategory.setCategoryName(category.getCategoryName());
 					}
 					payload.setResourceCategory(payloadCategory);
-					payload.setOrganizationId(organizationResource.getOrganizationId());
+
+					if (null != organizationResource.getOrganization())
+						payload.setOrganizationId(organizationResource.getOrganization().getId());
+
 					payload.setCount(organizationResource.getCount());
 					payload.setDescription(organizationResource.getDescription());
 					payload.setIsActive(organizationResource.getIsActive());
@@ -794,6 +809,10 @@ public class OrganizationController extends BaseController {
 						payloadCategory = new ResourceCategoryPayLoad();
 						BeanUtils.copyProperties(category, payloadCategory);
 					}
+
+					if (null != resource.getOrganization())
+						payload.setOrganizationId(resource.getOrganization().getId());
+
 					payload.setResourceCategory(payloadCategory);
 					payloadList.add(payload);
 				}

@@ -139,4 +139,10 @@ public class Organization extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
 	private List<OrganizationRegionServed> organizationRegionServed;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationResource> organizationResource;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationDataSet> organizationDataSet;
 }

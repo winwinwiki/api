@@ -507,6 +507,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				List<Organization> organizationsListToSaveIntoDB = new ArrayList<Organization>();
 				int batchInsertSize = 1000;
 				int numOfOrganizations = organizationPayloadList.size();
+				int numOfOrganizationsToSaveInBatches = numOfOrganizations / batchInsertSize;
 				int remainingNumOfOrganizations = numOfOrganizations % batchInsertSize;
 
 				int i = 1;
@@ -523,6 +524,19 @@ public class OrganizationServiceImpl implements OrganizationService {
 						// save the organizations in the batches of 1000 and
 						// save the remaining organizations
 						if (i % 1000 == 0 || organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
+							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+									organizationsListToSaveIntoDB, i);
+							if (!payload.getIsFailed()) {
+								successOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							} else {
+								failedOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							}
+						} else if (i == numOfOrganizationsToSaveInBatches
+								&& organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
 							if (!payload.getIsFailed()) {
@@ -570,7 +584,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 		List<Organization> organizationList = new ArrayList<Organization>();
 		Boolean isFailed = false;
 		try {
-			LOGGER.info("Saving organizations : " + organizations.size() + " Starting from: " + i);
+			LOGGER.info(
+					"Saving organizations : " + organizations.size() + " Starting from: " + (i - organizations.size()));
 			organizationList.addAll(organizationRepository.saveAll(organizations));
 
 			// Flush all pending changes to the database
@@ -578,7 +593,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 			LOGGER.info("Saved organizations: " + organizations.size());
 		} catch (Exception e) {
-			LOGGER.info("Failed to save organizations starting from : " + i);
+			LOGGER.info("Failed to save organizations starting from : " + (i - organizations.size()));
 			organizationList.addAll(organizations);
 			isFailed = true;
 		}

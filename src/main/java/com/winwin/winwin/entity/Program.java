@@ -131,4 +131,10 @@ public class Program extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
 	private List<ProgramRegionServed> programRegionServed;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
+	private List<ProgramResource> programResource;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "program")
+	private List<ProgramDataSet> programDataSet;
 }
