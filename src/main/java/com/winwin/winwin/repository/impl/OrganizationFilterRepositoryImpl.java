@@ -112,12 +112,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
-		
+
 		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
-			sb.append(" and o.created_by IN :createdBy ");
+			sb.append(" and o.created_by_email IN :createdByEmail ");
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			sb.append(" and o.updated_by IN :editedBy ");
+			sb.append(" and o.updated_by_email IN :editedByEmail ");
 
 		if (payload.getNteeCode() != null && payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
@@ -207,12 +207,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
-		
+
 		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
-			filterQuery.setParameter("createdBy", payload.getCreatedBy());
+			filterQuery.setParameter("createdByEmail", payload.getCreatedBy());
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			filterQuery.setParameter("editedBy", payload.getEditedBy());
+			filterQuery.setParameter("editedByEmail", payload.getEditedBy());
 
 		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)
 			filterQuery.setParameter("indicatorId", payload.getIndicatorId());
@@ -281,12 +281,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
-		
+
 		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
-			sb.append(" and o.created_by IN :createdBy ");
+			sb.append(" and o.created_by_email IN :createdByEmail ");
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			sb.append(" and o.updated_by IN :editedBy ");
+			sb.append(" and o.updated_by_email IN :editedByEmail ");
 
 		if (payload.getNteeCode() != null && payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
@@ -372,12 +372,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
-		
+
 		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
-			filterQuery.setParameter("createdBy", payload.getCreatedBy());
+			filterQuery.setParameter("createdByEmail", payload.getCreatedBy());
 
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			filterQuery.setParameter("editedBy", payload.getEditedBy());
+			filterQuery.setParameter("editedByEmail", payload.getEditedBy());
 
 		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)
 			filterQuery.setParameter("indicatorId", payload.getIndicatorId());
