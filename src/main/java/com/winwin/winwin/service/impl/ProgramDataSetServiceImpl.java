@@ -146,7 +146,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	@Override
 	@Cacheable("program_dataset_list")
 	public List<ProgramDataSet> getProgramDataSetList(Long id) {
-		return programDataSetRepository.findAllProgramDataSetListByProgramId(id);
+		return programDataSetRepository.findAllActiveProgramDataSets(id);
 	}
 
 	/**

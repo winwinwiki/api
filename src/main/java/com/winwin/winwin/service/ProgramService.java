@@ -9,6 +9,11 @@ import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ *
+ */
 public interface ProgramService {
 	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse);
 
@@ -22,6 +27,6 @@ public interface ProgramService {
 
 	ProgramResponsePayload getProgramResponseFromProgram(Program payload);
 
-	Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload,UserPayload user);
+	Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload, UserPayload user);
 
 }

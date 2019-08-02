@@ -25,8 +25,6 @@ public interface OrganizationService {
 	Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response);
 
-	List<Organization> getOrganizationList();
-
 	List<Organization> getProgramList(Long orgId);
 
 	OrganizationChartPayload getOrgCharts(Organization organization);

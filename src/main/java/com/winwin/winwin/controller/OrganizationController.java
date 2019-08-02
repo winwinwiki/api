@@ -1528,6 +1528,9 @@ public class OrganizationController extends BaseController {
 		if (null != organizationNote) {
 			payload = new OrganizationNotePayload();
 			BeanUtils.copyProperties(organizationNote, payload);
+
+			if (null != organizationNote.getOrganization())
+				payload.setOrganizationId(organizationNote.getOrganization().getId());
 		}
 		return payload;
 	}

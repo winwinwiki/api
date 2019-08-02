@@ -9,10 +9,18 @@ import org.springframework.stereotype.Repository;
 
 import com.winwin.winwin.entity.ProgramResource;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ *
+ */
 @Repository
 public interface ProgramResourceRepository extends JpaRepository<ProgramResource, Long> {
 	@Query(value = "select * from program_resource where program_id = :program_id and is_Active = true", nativeQuery = true)
-	List<ProgramResource> findAllProgramResourceByProgramId(@Param("program_id") Long programId);
+	List<ProgramResource> findAllActiveProgramResources(@Param("program_id") Long programId);
+
+	@Query(value = "select * from program_resource where program_id = :program_id", nativeQuery = true)
+	List<ProgramResource> findAllProgramResources(@Param("program_id") Long programId);
 
 	@Query(value = "select * from program_resource where id = :id", nativeQuery = true)
 	ProgramResource findProgramResourceById(@Param("id") Long id);

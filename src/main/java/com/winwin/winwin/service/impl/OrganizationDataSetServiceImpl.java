@@ -187,7 +187,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	@Override
 	@Cacheable("organization_dataset_list")
 	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
-		return organizationDataSetRepository.findAllOrgDataSetList(id);
+		return organizationDataSetRepository.findAllActiveOrgDataSets(id);
 	}// end of method getOrganizationDataSetList
 
 	/**

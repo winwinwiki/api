@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.winwin.winwin.entity.ProgramSpiData;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ *
+ */
 @Repository
 public interface ProgramSpiDataMapRepository extends JpaRepository<ProgramSpiData, Long> {
 
