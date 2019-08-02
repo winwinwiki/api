@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 public class CommonUtils {
@@ -23,6 +24,11 @@ public class CommonUtils {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Get Date in format as 'yyyy-MM-dd HH:mm:ss.SSS'
+	 * 
+	 * @return
+	 */
 	public static Date getFormattedDate() {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String formattedDte = sdf.format(new Date(System.currentTimeMillis()));

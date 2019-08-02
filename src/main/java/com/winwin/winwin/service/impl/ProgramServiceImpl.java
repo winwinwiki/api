@@ -51,9 +51,8 @@ public class ProgramServiceImpl implements ProgramService {
 	private UserService userService;
 	@Autowired
 	private OrganizationHistoryService orgHistoryService;
-
 	@Autowired
-	protected CustomMessageSource customMessageSource;
+	private CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 

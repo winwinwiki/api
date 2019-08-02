@@ -276,16 +276,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 	}
 
 	/**
-	 * returns Organization List
-	 * 
-	 * @return
-	 */
-	@Override
-	public List<Organization> getOrganizationList() {
-		return organizationRepository.findAllOrganizationList();
-	}// end of method getOrganizationList
-
-	/**
 	 * returns OrganizationFilterPayload based Organization List
 	 * 
 	 * @param payload

@@ -155,7 +155,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	@Override
 	@Cacheable("organization_resource_list")
 	public List<OrganizationResource> getOrganizationResourceList(Long id) {
-		return organizationResourceRepository.findAllOrgResourceById(id);
+		return organizationResourceRepository.findAllActiveOrgResources(id);
 	}// end of method getOrganizationResourceList
 
 	/**

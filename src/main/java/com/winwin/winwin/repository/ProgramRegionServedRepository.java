@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.winwin.winwin.entity.ProgramRegionServed;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ *
+ */
 @Repository
 public interface ProgramRegionServedRepository extends JpaRepository<ProgramRegionServed, Long> {
 
@@ -15,7 +20,10 @@ public interface ProgramRegionServedRepository extends JpaRepository<ProgramRegi
 	ProgramRegionServed findProgramRegionById(@Param("id") Long id);
 
 	@Query(value = "select * from program_region_served where program_id = :programId AND is_Active = true", nativeQuery = true)
-	List<ProgramRegionServed> findAllProgramRegionsList(@Param("programId") Long programId);
+	List<ProgramRegionServed> findAllActiveProgramRegions(@Param("programId") Long programId);
+
+	@Query(value = "select * from program_region_served where program_id = :programId", nativeQuery = true)
+	List<ProgramRegionServed> findAllProgramRegions(@Param("programId") Long programId);
 
 	@Query(value = "select * from program_region_served ORDER BY id DESC LIMIT 1", nativeQuery = true)
 	ProgramRegionServed findLastProgramRegion();

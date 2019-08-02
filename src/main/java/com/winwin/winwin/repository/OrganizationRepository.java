@@ -1,5 +1,6 @@
 package com.winwin.winwin.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import com.winwin.winwin.entity.Organization;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 
@@ -19,8 +21,15 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select * from organization where id = :id", nativeQuery = true)
 	Organization findOrgById(@Param("id") Long id);
 
-	@Query(value = "select * from organization where type = 'organization' AND is_Active = true ", nativeQuery = true)
-	List<Organization> findAllOrganizationList();
+	@Query(value = "select * from organization order by updated_at asc", nativeQuery = true)
+	List<Organization> findAllOrganizations(Pageable pageable);
+
+	@Query(value = "select count(id) from organization", nativeQuery = true)
+	Integer findAllOrganizationsCount();
+
+	@Query(value = "select * from organization where updated_at >= :lastUpdatedDate order by updated_at asc", nativeQuery = true)
+	List<Organization> findAllOrganizationsFromLastUpdatedDate(Pageable pageable,
+			@Param("lastUpdatedDate") Date lastUpdatedDate);
 
 	@Query(value = "select * from organization where parent_id = :orgId AND is_Active = true ", nativeQuery = true)
 	List<Organization> findAllChildren(@Param("orgId") Long id);

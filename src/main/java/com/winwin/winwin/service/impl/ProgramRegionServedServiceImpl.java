@@ -102,6 +102,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 									"");
 						}
 						programRegionList.add(programRegionServed);
+						//check for inactive regions
 					} else if (null != payload.getId() && !(payload.getIsActive())) {
 						ProgramRegionServed region = null;
 						region = programRegionServedRepository.findProgramRegionById(payload.getId());
@@ -141,7 +142,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	@Override
 	public List<ProgramRegionServed> getProgramRegionServedList(Long programId) {
 		// TODO Auto-generated method stub
-		return programRegionServedRepository.findAllProgramRegionsList(programId);
+		return programRegionServedRepository.findAllActiveProgramRegions(programId);
 	}
 
 	private void setProgramRegionMasterData(ProgramRegionServedPayload payload, ProgramRegionServed region,

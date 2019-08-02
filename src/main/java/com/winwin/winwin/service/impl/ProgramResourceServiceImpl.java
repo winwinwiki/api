@@ -156,7 +156,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	@Override
 	@Cacheable("program_resource__list")
 	public List<ProgramResource> getProgramResourceList(Long programId) {
-		return programResourceRepository.findAllProgramResourceByProgramId(programId);
+		return programResourceRepository.findAllActiveProgramResources(programId);
 	}
 
 	private ProgramResource constructProgramResource(ProgramResourcePayLoad programResourcePayLoad) {

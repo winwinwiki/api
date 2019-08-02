@@ -86,6 +86,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 					if (payload.getId() == null) {
 						OrganizationRegionServed orgRegionServed = null;
 						orgRegionServed = new OrganizationRegionServed();
+						// set organization region master
 						setOrgRegionMasterData(payload, orgRegionServed, user);
 
 						if (null != payload.getOrganizationId()) {
@@ -193,7 +194,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	 */
 	@Override
 	public List<OrganizationRegionServed> getOrgRegionServedList(Long orgId) {
-		return orgRegionServedRepository.findAllOrgRegionsList(orgId);
+		return orgRegionServedRepository.findAllActiveOrgRegions(orgId);
 	}
 
 	/**

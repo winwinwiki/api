@@ -19,6 +19,7 @@ import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.UserService;
@@ -30,6 +31,8 @@ import com.winwin.winwin.util.CommonUtils;
  */
 @Service
 public class OrganizationNoteServiceImpl implements OrganizationNoteService {
+	@Autowired
+	private OrganizationRepository organizationRepository;
 	@Autowired
 	private OrganizationNoteRepository organizationNoteRepository;
 	@Autowired
@@ -62,6 +65,10 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				note.setUpdatedBy(user.getUserDisplayName());
 				note.setCreatedByEmail(user.getEmail());
 				note.setUpdatedByEmail(user.getEmail());
+
+				if (null != organizationNotePayload.getOrganizationId())
+					note.setOrganization(organizationRepository.getOne(organizationNotePayload.getOrganizationId()));
+
 				note = organizationNoteRepository.saveAndFlush(note);
 
 				if (null != note && null != note.getOrganization()) {
