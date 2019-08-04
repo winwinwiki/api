@@ -18,6 +18,7 @@ import lombok.Setter;
 public class ProgramSpiElasticSearchPayload {
 	private Long id;
 	private String name;
+	private String adminUrl;
 	private Boolean isChecked;
 	private Date createdAt;
 	private Date updatedAt;

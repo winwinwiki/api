@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
+import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationNote;
@@ -37,6 +38,7 @@ import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.ProgramSpiData;
+import com.winwin.winwin.entity.WinWinRoutesMapping;
 import com.winwin.winwin.payload.AddressElasticSearchPayload;
 import com.winwin.winwin.payload.OrganizationDataSetElasticSearchPayload;
 import com.winwin.winwin.payload.OrganizationElasticSearchPayload;
@@ -64,6 +66,7 @@ import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
 import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
+import com.winwin.winwin.repository.WinWinRoutesMappingRepository;
 import com.winwin.winwin.service.WinWinElasticSearchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -74,6 +77,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,10 +116,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	ProgramSpiDataMapRepository programSpiDataMapRepository;
 	@Autowired
 	ProgramSdgDataMapRepository programSdgDataMapRepository;
+	@Autowired
+	WinWinRoutesMappingRepository winWinRoutesMappingRepository;
 
 	static final EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinElasticSearchServiceImpl.class);
+
+	private Map<String, String> winwinRoutesMap = null;
 
 	/**
 	 * send organization's data to Elastic Search
@@ -126,7 +134,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// send organization data to elastic
 		try {
 			LOGGER.info("process: sendPostRequestToElasticSearch has been started successfully");
-			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
+			Integer numOfOrganizations = 40;
+			// Integer numOfOrganizations =
+			// organizationRepository.findAllOrganizationsCount();
 			Integer pageSize = 1000;
 			Integer pageNumAvailable = numOfOrganizations / pageSize;
 			Integer totalPageNumAvailable = null;
@@ -213,124 +223,170 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
-			if (null != pageable) {
-				if (lastUpdatedDate == null) {
-					organizationList = organizationRepository.findAllOrganizations(pageable);
-				} else {
-					organizationList = organizationRepository.findAllOrganizationsFromLastUpdatedDate(pageable,
-							lastUpdatedDate);
-				}
-
-			}
 
 			/*
-			 * List<Long> ids = new ArrayList<Long>(); ids.add(37531L); for
-			 * (Long id : ids) { organizationList = new
-			 * ArrayList<Organization>(); Organization organization =
-			 * organizationRepository.findOrgById(id); if (null != organization)
-			 * organizationList.add(organization);
+			 * if (null != pageable) { if (lastUpdatedDate == null) { organizationList =
+			 * organizationRepository.findAllOrganizations(pageable); } else {
+			 * organizationList =
+			 * organizationRepository.findAllOrganizationsFromLastUpdatedDate(pageable,
+			 * lastUpdatedDate); }
+			 * 
+			 * }
 			 */
 
-			if (null != organizationList) {
-				// set Organization Map
-				Map<Long, Organization> organizationMap = organizationList.stream()
-						.collect(Collectors.toMap(Organization::getId, Organization -> Organization));
+			List<Long> ids = new ArrayList<Long>();
+			ids.add(37353L);
+			ids.add(37475L);
+			ids.add(41605L); 
+			ids.add(37481L); 
+			ids.add(37483L); 
+			ids.add(37485L); 
+			ids.add(37487L); 
+			ids.add(37489L); 
+			ids.add(37491L); 
+			ids.add(37493L); 
+			ids.add(39136L); 
+			ids.add(39139L); 
+			ids.add(39142L); 
+			ids.add(39521L);
+			ids.add(39525L);
+			ids.add(39528L); 
+			ids.add(39531L);  
+			ids.add(37497L); 
+			ids.add(37814L);
+			ids.add(37816L); 
+			ids.add(37499L); 
+			ids.add(37503L); 
+			ids.add(37525L); 
+			ids.add(37611L); 
+			ids.add(37578L); 
+			ids.add(37580L); 
+			ids.add(37613L); 
+			ids.add(37495L);
+			ids.add(37700L); 
+			ids.add(37702L); 
+			ids.add(37704L); 
+			ids.add(37706L); 
+			ids.add(37726L); 
+			ids.add(37708L); 
+			ids.add(37689L); 
+			ids.add(39126L); 
+			ids.add(39518L); 
+			ids.add(39543L); 
+			ids.add(41453L);   
+			 
+			for (Long id : ids) {
+				organizationList = new ArrayList<Organization>();
+				Organization organization = organizationRepository.findOrgById(id);
 
-				// using for-each loop for iteration over Map.entrySet()
-				for (Map.Entry<Long, Organization> organizationFromMap : organizationMap.entrySet()) {
-					currentUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+				if (null != organization)
+					organizationList.add(organization);
 
-					if (lastUpdatedDate == null) {
-						lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
-						if (file.createNewFile()) {
-						} else {
-							LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-							file.delete();
-							LOGGER.info(
-									" elastic search log File:  " + file.getName() + " has been successfully deleted");
+				if (null != organizationList) {
+					// set Organization Map
+					Map<Long, Organization> organizationMap = organizationList.stream()
+							.collect(Collectors.toMap(Organization::getId, Organization -> Organization));
 
-							LOGGER.info("creating again  elastic search log File: " + file.getName());
-							file.createNewFile();
-							LOGGER.info(
-									" elastic search log File: " + file.getName() + " is successfully created again!");
+					// using for-each loop for iteration over Map.entrySet()
+					for (Map.Entry<Long, Organization> organizationFromMap : organizationMap.entrySet()) {
+						currentUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+
+						/*
+						 * if (lastUpdatedDate == null) { lastUpdatedDate =
+						 * organizationFromMap.getValue().getUpdatedAt(); if (file.createNewFile()) { }
+						 * else { LOGGER.info("deleting existing  elastic search log File:: " +
+						 * file.getName()); file.delete(); LOGGER.info( " elastic search log File:  " +
+						 * file.getName() + " has been successfully deleted");
+						 * 
+						 * LOGGER.info("creating again  elastic search log File: " + file.getName());
+						 * file.createNewFile(); LOGGER.info( " elastic search log File: " +
+						 * file.getName() + " is successfully created again!"); }
+						 * txtWriter.write(lastUpdatedDate.toString()); }
+						 */
+
+						/*
+						 * if (null != currentUpdatedDate && null != lastUpdatedDate) { if
+						 * (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) { lastUpdatedDate =
+						 * organizationFromMap.getValue().getUpdatedAt(); if (file.createNewFile()) { }
+						 * else { LOGGER.info("deleting existing  elastic search log File:: " +
+						 * file.getName()); file.delete(); LOGGER.info(" elastic search log File:  " +
+						 * file.getName() + " has been successfully deleted");
+						 * 
+						 * LOGGER.info("creating again  elastic search log File: " + file.getName());
+						 * file.createNewFile(); LOGGER.info(" elastic search log File: " +
+						 * file.getName() + " is successfully created again!"); }
+						 * txtWriter.write(currentUpdatedDate.toString()); } }
+						 */
+
+						OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
+						// copy organization values to organizationPayload
+						BeanUtils.copyProperties(organizationFromMap.getValue(), organizationPayload);
+
+						// copy remaining organization values to
+						// organizationPayload
+						if (null != organizationFromMap.getValue().getNaicsCode())
+							organizationPayload.setNaics_code(organizationFromMap.getValue().getNaicsCode().getCode());
+
+						if (null != organizationFromMap.getValue().getNteeCode())
+							organizationPayload.setNtee_code(organizationFromMap.getValue().getNteeCode().getCode());
+
+						if (null != organizationFromMap.getValue().getParentId()) {
+							// find parentOrganization first in map if not found
+							// then make DB call
+							Organization parentOrganization = organizationMap
+									.get(organizationFromMap.getValue().getParentId());
+
+							if (parentOrganization == null)
+								parentOrganization = organizationRepository
+										.findOrgById(organizationFromMap.getValue().getParentId());
+
+							if (null != parentOrganization)
+								organizationPayload.setParentOrganizationName(parentOrganization.getName());
+
 						}
-						txtWriter.write(lastUpdatedDate.toString());
-					}
 
-					if (null != currentUpdatedDate && null != lastUpdatedDate) {
-						if (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) {
-							lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
-							if (file.createNewFile()) {
-							} else {
-								LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-								file.delete();
-								LOGGER.info(" elastic search log File:  " + file.getName()
-										+ " has been successfully deleted");
-
-								LOGGER.info("creating again  elastic search log File: " + file.getName());
-								file.createNewFile();
-								LOGGER.info(" elastic search log File: " + file.getName()
-										+ " is successfully created again!");
+						// set adminUrl for organization
+						if (winwinRoutesMap == null) {
+							// set winWin routes map
+							setWinWinRoutesMap();
+						}
+						if (null != winwinRoutesMap) {
+							if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+									&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
+								organizationPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+										+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+										+ organizationFromMap.getValue().getId());
 							}
-							txtWriter.write(currentUpdatedDate.toString());
+
 						}
+
+						setOrganizationAddress(organizationFromMap, organizationPayload);
+
+						setOrganizationNotes(organizationFromMap, organizationPayload);
+
+						setOrganizationDataSets(organizationFromMap, organizationPayload);
+
+						setOrganizationResources(organizationFromMap, organizationPayload);
+
+						setOrganizationRegionServed(organizationFromMap, organizationPayload);
+
+						setOrganizationSpiData(organizationFromMap, organizationPayload);
+
+						setOrganizationSdgData(organizationFromMap, organizationPayload);
+
+						// set all the programs of an organization
+						setOrganizationPrograms(organizationFromMap, organizationPayload);
+
+						// add organizationPayload to organizationPayloadList
+						organizationPayloadList.add(organizationPayload);
 					}
 
-					OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
-					// copy organization values to organizationPayload
-					BeanUtils.copyProperties(organizationFromMap.getValue(), organizationPayload);
+				} // end of if (null != organizationList) {
 
-					// copy remaining organization values to
-					// organizationPayload
-					if (null != organizationFromMap.getValue().getNaicsCode())
-						organizationPayload.setNaics_code(organizationFromMap.getValue().getNaicsCode().getCode());
-
-					if (null != organizationFromMap.getValue().getNteeCode())
-						organizationPayload.setNtee_code(organizationFromMap.getValue().getNteeCode().getCode());
-
-					if (null != organizationFromMap.getValue().getParentId()) {
-						// find parentOrganization first in map if not found
-						// then make DB call
-						Organization parentOrganization = organizationMap
-								.get(organizationFromMap.getValue().getParentId());
-
-						if (parentOrganization == null)
-							parentOrganization = organizationRepository
-									.findOrgById(organizationFromMap.getValue().getParentId());
-
-						if (null != parentOrganization)
-							organizationPayload.setParentOrganizationName(parentOrganization.getName());
-
-					}
-
-					setOrganizationAddress(organizationFromMap, organizationPayload);
-
-					setOrganizationNotes(organizationFromMap, organizationPayload);
-
-					setOrganizationDataSets(organizationFromMap, organizationPayload);
-
-					setOrganizationResources(organizationFromMap, organizationPayload);
-
-					setOrganizationRegionServed(organizationFromMap, organizationPayload);
-
-					setOrganizationSpiData(organizationFromMap, organizationPayload);
-
-					setOrganizationSdgData(organizationFromMap, organizationPayload);
-
-					// set all the programs of an organization
-					setOrganizationPrograms(organizationFromMap, organizationPayload);
-
-					// add organizationPayload to organizationPayloadList
-					organizationPayloadList.add(organizationPayload);
-				}
-
-			} // end of if (null != organizationList) {
-
-			// }
+			}
 
 			// flush the changes and close txtWriter
 			txtWriter.flush();
@@ -346,6 +402,17 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		return organizationPayloadList;
 
+	}
+
+	/**
+	 * set FrontEnd Routes for WINWIN
+	 */
+	private void setWinWinRoutesMap() {
+		winwinRoutesMap = new HashMap<String, String>();
+		List<WinWinRoutesMapping> activeRoutes = winWinRoutesMappingRepository.findAllActiveRoutes();
+		if (null != activeRoutes)
+			winwinRoutesMap = activeRoutes.stream()
+					.collect(Collectors.toMap(WinWinRoutesMapping::getKey, WinWinRoutesMapping::getValue));
 	}
 
 	/**
@@ -380,6 +447,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				setProgramSdgData(programFromMap, programPayload);
 
+				// set adminUrl for organization programs
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)) {
+						programPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId());
+					}
+				}
+
 				// set programPayload into programPayloadList
 				programPayloadList.add(programPayload);
 
@@ -413,6 +497,27 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				if (null != sdgDataMapping.getSdgData())
 					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getShortName());
 				sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getShortNameCode());
+
+				// set adminUrl for programs SDG TAGS
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.SDG_TAGS)
+							&& null != programFromMap.getValue().getOrganization()) {
+						sdgDataMappingPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ programFromMap.getValue().getOrganization().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.SDG_TAGS));
+					}
+				}
+
 				// set sdgDataMappingPayload to
 				// sdgDataMappingPayloadList
 				sdgDataMappingPayloadList.add(sdgDataMappingPayload);
@@ -443,6 +548,27 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// spiDataMappingPayload
 				if (null != spiDataMapping.getSpiData())
 					spiDataMappingPayload.setName(spiDataMapping.getSpiData().getIndicatorName());
+
+				// set adminUrl for programs SPI TAGS
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.SPI_TAGS)
+							&& null != programFromMap.getValue().getOrganization()) {
+						spiDataMappingPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ programFromMap.getValue().getOrganization().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.SPI_TAGS));
+					}
+				}
+
 				// set spiDataMappingPayload to
 				// spiDataMappingPayloadList
 				spiDataMappingPayloadList.add(spiDataMappingPayload);
@@ -473,6 +599,27 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// regionServedPayload
 				if (null != regionServed.getRegionMaster())
 					regionServedPayload.setName(regionServed.getRegionMaster().getRegionName());
+
+				// set adminUrl for programs regionServed
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.REGIONS_SERVED)
+							&& null != programFromMap.getValue().getOrganization()) {
+						regionServedPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ programFromMap.getValue().getOrganization().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.REGIONS_SERVED));
+					}
+				}
+
 				// set regionServedPayload to resourcePayloadList
 				regionServedPayloadList.add(regionServedPayload);
 			}
@@ -501,6 +648,27 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// copy remaining resource values to resourcePayload
 				if (null != resource.getResourceCategory())
 					resourcePayload.setName(resource.getResourceCategory().getCategoryName());
+
+				// set adminUrl for programs resources
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.RESOURCES)
+							&& null != programFromMap.getValue().getOrganization()) {
+						resourcePayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ programFromMap.getValue().getOrganization().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.RESOURCES));
+					}
+				}
+
 				// set resourcePayload to resourcePayloadList
 				resourcePayloadList.add(resourcePayload);
 			}
@@ -523,12 +691,33 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		if (null != programDataSetList) {
 			for (ProgramDataSet dataset : programDataSetList) {
 				ProgramDataSetElasticSearchPayload dataSetPayload = new ProgramDataSetElasticSearchPayload();
-				// copy dataset values to dataSetPayload
+				// copy dataSet values to dataSetPayload
 				BeanUtils.copyProperties(dataset, dataSetPayload);
 
-				// copy remaining dataset values to dataSetPayload
+				// copy remaining dataSet values to dataSetPayload
 				if (null != dataset.getDataSetCategory())
 					dataSetPayload.setName(dataset.getDataSetCategory().getCategoryName());
+
+				// set adminUrl for programs resources
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.PROGRAMS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.DATASETS)
+							&& null != programFromMap.getValue().getOrganization()) {
+						dataSetPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ programFromMap.getValue().getOrganization().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS)
+								+ programFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.DATASETS));
+					}
+				}
+
 				// set dataSetPayload to dataSetPayloadList
 				dataSetPayloadList.add(dataSetPayload);
 			}
@@ -559,6 +748,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				if (null != sdgDataMapping.getSdgData())
 					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getShortName());
 				sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getShortNameCode());
+
+				// set adminUrl for organization SDG TAGS
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.SDG_TAGS)) {
+						sdgDataMappingPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.SDG_TAGS));
+					}
+				}
+
 				// set sdgDataMappingPayload to
 				// sdgDataMappingPayloadList
 				sdgDataMappingPayloadList.add(sdgDataMappingPayload);
@@ -589,6 +795,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// spiDataMappingPayload
 				if (null != spiDataMapping.getSpiData())
 					spiDataMappingPayload.setName(spiDataMapping.getSpiData().getIndicatorName());
+
+				// set adminUrl for organization SPI TAGS
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.SPI_TAGS)) {
+						spiDataMappingPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.SPI_TAGS));
+					}
+				}
+
 				// set spiDataMappingPayload to
 				// spiDataMappingPayloadList
 				spiDataMappingPayloadList.add(spiDataMappingPayload);
@@ -615,10 +838,26 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// copy regionServed values to regionServedPayload
 				BeanUtils.copyProperties(regionServed, regionServedPayload);
 
-				// copy remaining regionServed values to
-				// regionServedPayload
+				// copy remaining regionServed values to regionServedPayload
 				if (null != regionServed.getRegionMaster())
 					regionServedPayload.setName(regionServed.getRegionMaster().getRegionName());
+
+				// set adminUrl for organization regionServed
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.REGIONS_SERVED)) {
+						regionServedPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.REGIONS_SERVED));
+					}
+				}
+
 				// set regionServedPayload to resourcePayloadList
 				regionServedPayloadList.add(regionServedPayload);
 			}
@@ -647,6 +886,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// copy remaining resource values to resourcePayload
 				if (null != resource.getResourceCategory())
 					resourcePayload.setName(resource.getResourceCategory().getCategoryName());
+
+				// set adminUrl for organization resources
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.RESOURCES)) {
+						resourcePayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.RESOURCES));
+					}
+				}
+
 				// set resourcePayload to resourcePayloadList
 				resourcePayloadList.add(resourcePayload);
 			}
@@ -661,7 +917,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 */
 	private void setOrganizationDataSets(Map.Entry<Long, Organization> organizationFromMap,
 			OrganizationElasticSearchPayload organizationPayload) {
-		// fetch all active datasets of an organization
+		// fetch all active dataSets of an organization
 		List<OrganizationDataSet> organizationDataSetList = organizationDataSetRepository
 				.findAllActiveOrgDataSets(organizationFromMap.getValue().getId());
 		List<OrganizationDataSetElasticSearchPayload> dataSetPayloadList = new ArrayList<OrganizationDataSetElasticSearchPayload>();
@@ -669,12 +925,29 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		if (null != organizationDataSetList) {
 			for (OrganizationDataSet dataset : organizationDataSetList) {
 				OrganizationDataSetElasticSearchPayload dataSetPayload = new OrganizationDataSetElasticSearchPayload();
-				// copy dataset values to dataSetPayload
+				// copy dataSet values to dataSetPayload
 				BeanUtils.copyProperties(dataset, dataSetPayload);
 
-				// copy remaining dataset values to dataSetPayload
+				// copy remaining dataSet values to dataSetPayload
 				if (null != dataset.getDataSetCategory())
 					dataSetPayload.setName(dataset.getDataSetCategory().getCategoryName());
+
+				// set adminUrl for organization dataSets
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.DATASETS)) {
+						dataSetPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.DATASETS));
+					}
+				}
+
 				// set dataSetPayload to dataSetPayloadList
 				dataSetPayloadList.add(dataSetPayload);
 			}
@@ -699,6 +972,22 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				OrganizationNoteElasticSearchPayload notePayload = new OrganizationNoteElasticSearchPayload();
 				// copy note values to notePayload
 				BeanUtils.copyProperties(note, notePayload);
+
+				// set adminUrl for organization notes
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.NOTES)) {
+						notePayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ organizationFromMap.getValue().getId()
+								+ winwinRoutesMap.get(OrganizationConstants.NOTES));
+					}
+				}
 
 				// set notePayload to notePayloadList
 				notePayloadList.add(notePayload);

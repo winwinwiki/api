@@ -92,19 +92,19 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "tag_status")
 	private String tagStatus;
 
-	@Column(name = "website_url")
+	@Column(name = "website_url", columnDefinition = "TEXT")
 	private String websiteUrl;
 
-	@Column(name = "facebook_url")
+	@Column(name = "facebook_url", columnDefinition = "TEXT")
 	private String facebookUrl;
 
-	@Column(name = "linkedin_url")
+	@Column(name = "linkedin_url", columnDefinition = "TEXT")
 	private String linkedinUrl;
 
-	@Column(name = "twitter_url")
+	@Column(name = "twitter_url", columnDefinition = "TEXT")
 	private String twitterUrl;
 
-	@Column(name = "instagram_url")
+	@Column(name = "instagram_url", columnDefinition = "TEXT")
 	private String instagramUrl;
 
 	@Column(name = "values", columnDefinition = "TEXT")

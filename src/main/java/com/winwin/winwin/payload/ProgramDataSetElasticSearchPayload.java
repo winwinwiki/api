@@ -21,6 +21,7 @@ public class ProgramDataSetElasticSearchPayload {
 	private String description;
 	private String type;
 	private String url;
+	private String adminUrl;
 	private Boolean isActive;
 	private Date createdAt;
 	private Date updatedAt;

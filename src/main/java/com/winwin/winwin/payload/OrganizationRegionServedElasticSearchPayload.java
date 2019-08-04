@@ -18,6 +18,7 @@ import lombok.Setter;
 public class OrganizationRegionServedElasticSearchPayload {
 	private Long id;
 	private String name;
+	private String adminUrl;
 	private Boolean isActive;
 	private Date createdAt;
 	private Date updatedAt;

@@ -20,6 +20,7 @@ public class OrganizationResourceElasticSearchPayload {
 	private String name;
 	private Long count;
 	private String description;
+	private String adminUrl;
 	private Boolean isActive;
 	private Date createdAt;
 	private Date updatedAt;

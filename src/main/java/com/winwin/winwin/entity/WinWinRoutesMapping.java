@@ -1,3 +1,6 @@
+/**
+ * 
+ */
 package com.winwin.winwin.entity;
 
 import javax.persistence.Column;
@@ -17,6 +20,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @AllArgsConstructor
@@ -25,36 +29,21 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-@Table(name = "address")
+@Table(name = "winwin_routes_mapping")
 @Entity
-public class Address extends AbstractAuditableEntity {
-
+public class WinWinRoutesMapping {
 	@Id
-	@SequenceGenerator(name = "address_generator", sequenceName = "address_seq", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "address_generator")
+	@SequenceGenerator(name = "route_generator", sequenceName = "winwin_routes_mapping_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "route_generator")
 	private Long id;
 
-	@Column(name = "country")
-	private String country;
+	@Column(name = "key")
+	private String key;
+
+	@Column(name = "value", columnDefinition = "TEXT")
+	private String value;
 
 	@Column(name = "is_active")
 	private Boolean isActive = true;
 
-	@Column(name = "state")
-	private String state;
-
-	@Column(name = "city")
-	private String city;
-
-	@Column(name = "county")
-	private String county;
-
-	@Column(name = "zip")
-	private String zip;
-
-	@Column(name = "street", columnDefinition = "TEXT")
-	private String street;
-
-	@Column(name = "place_id")
-	private String placeId;
 }

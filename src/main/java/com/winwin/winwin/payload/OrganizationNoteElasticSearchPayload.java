@@ -18,6 +18,7 @@ import lombok.Setter;
 public class OrganizationNoteElasticSearchPayload {
 	private Long id;
 	private String name;
+	private String adminUrl;
 	private Date createdAt;
 	private Date updatedAt;
 	private String createdBy;

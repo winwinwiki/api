@@ -513,7 +513,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 						// save the organizations in the batches of 1000 and
 						// save the remaining organizations
-						if (i % 1000 == 0 || organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
+						if (i % 1000 == 0) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
 							if (!payload.getIsFailed()) {
@@ -525,8 +525,23 @@ public class OrganizationServiceImpl implements OrganizationService {
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
 							}
+							// save the remaining organizations when total size is less than 1000
 						} else if (i == numOfOrganizationsToSaveInBatches
-								&& organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
+								&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+									organizationsListToSaveIntoDB, i);
+							if (!payload.getIsFailed()) {
+								successOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							} else {
+								failedOrganizationList.addAll(payload.getOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							}
+							// save the remaining organizations when total size is greater than 1000
+						} else if (i == numOfOrganizationsToSaveInBatches
+								&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
 							if (!payload.getIsFailed()) {
@@ -1105,9 +1120,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1185,9 +1199,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
