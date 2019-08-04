@@ -3,6 +3,8 @@ package com.winwin.winwin.service.impl;
 import java.util.Date;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +48,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	 * @param entityCode
 	 */
 	@Override
+	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, String actionPerformed, String entityType,
 			Long entityId, String entityName, String entityCode) {
 		try {
@@ -86,6 +89,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	 * @param entityCode
 	 */
 	@Override
+	@Transactional
 	public void createOrganizationHistory(UserPayload user, Long orgId, Long programId, String actionPerformed,
 			String entityType, Long entityId, String entityName, String entityCode) {
 		try {
@@ -130,6 +134,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 	 * @param orgHistoryList
 	 */
 	@Override
+	@Transactional
 	public void createOrganizationHistory(List<OrganizationHistory> orgHistoryList) {
 		try {
 			if (orgHistoryList != null)

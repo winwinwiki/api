@@ -286,14 +286,14 @@ public class WinWinServiceImpl implements WinWinService {
 		BeanUtils.copyProperties(csvPayload, organization);
 		organization.setAddress(saveAddressForBulkUpload(csvPayload, user));
 
-		if (null != csvPayload.getNaicsCode()) {
+		if (!StringUtils.isEmpty(csvPayload.getNaicsCode())) {
 			// set Naics-Ntee code map
 			if (naicsMap == null || nteeMap == null)
 				setNaicsNteeMap();
 			organization.setNaicsCode(naicsMap.get(csvPayload.getNaicsCode()));
 		}
 
-		if (null != csvPayload.getNteeCode()) {
+		if (!StringUtils.isEmpty(csvPayload.getNteeCode())) {
 			// set Naics-Ntee code map
 			if (naicsMap == null || nteeMap == null)
 				setNaicsNteeMap();
@@ -332,7 +332,7 @@ public class WinWinServiceImpl implements WinWinService {
 		if (!StringUtils.isEmpty(csvPayload.getDatasetIds()))
 			organization.setOrganizationDataSet(saveOrganizationDataSetsForBulkUpload(csvPayload, user, organization));
 
-		if (csvPayload.getNaicsCode() == null && csvPayload.getNteeCode() == null) {
+		if (StringUtils.isEmpty(csvPayload.getNaicsCode()) && StringUtils.isEmpty(csvPayload.getNteeCode())) {
 			List<Long> spiTagIds = new ArrayList<>();
 			List<Long> sdgTagIds = new ArrayList<>();
 
@@ -364,7 +364,8 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 		}
 
-		// To set spi and sdg tags by naics code and ntee code from s3
+		// To set spi and sdg tags by naics code and ntee code from AWS S3 Bucket
+		// AutoTags mapping
 		if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 				organization = setOrganizationSpiSdgMappingForBulkCreation(organization, user, naicsMapForS3,
@@ -823,7 +824,6 @@ public class WinWinServiceImpl implements WinWinService {
 
 		Program program = new Program();
 		BeanUtils.copyProperties(requestPayload, program);
-		program.setAddress(saveAddressForBulkUpload(requestPayload, user));
 
 		// set all the regionServed for program
 		if (!StringUtils.isEmpty(requestPayload.getRegionServedIds()))
@@ -837,22 +837,6 @@ public class WinWinServiceImpl implements WinWinService {
 		if (!StringUtils.isEmpty(requestPayload.getDatasetIds()))
 			program.setProgramDataSet(saveProgramDataSetsForBulkUpload(requestPayload, user, program));
 
-		if (null != requestPayload.getNaicsCode()) {
-			// set Naics-Ntee code map
-			if (naicsMap == null || nteeMap == null)
-				setNaicsNteeMap();
-			program.setNaicsCode(naicsMap.get(requestPayload.getNaicsCode()));
-		}
-
-		if (null != requestPayload.getNteeCode()) {
-			// set Naics-Ntee code map
-			if (naicsMap == null || nteeMap == null)
-				setNaicsNteeMap();
-			program.setNteeCode(nteeMap.get(requestPayload.getNteeCode()));
-
-		}
-
-		program.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 		program.setIsActive(true);
 
 		Date date = CommonUtils.getFormattedDate();
@@ -899,11 +883,13 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 		}
 
-		// To set spi and sdg tags by naics code and ntee code from s3
-		if (null != program.getNaicsCode() || null != program.getNteeCode()) {
+		// To set spi and sdg tags by naics code and ntee code from AWS S3 Bucket
+		// AutoTags mapping
+		if ((!StringUtils.isEmpty(requestPayload.getNaicsCode()))
+				|| (!StringUtils.isEmpty(requestPayload.getNteeCode()))) {
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-				program = setProgramSpiSdgMappingForBulkCreation(program, user, naicsMapForS3, nteeMapForS3, spiDataMap,
-						sdgDataMap);
+				program = setProgramSpiSdgMappingForBulkCreation(requestPayload, program, user, naicsMapForS3,
+						nteeMapForS3, spiDataMap, sdgDataMap);
 			}
 		}
 
@@ -1109,24 +1095,41 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @throws Exception
 	 * 
 	 */
-	private Program setProgramSpiSdgMappingForBulkCreation(Program program, UserPayload user,
-			Map<String, NaicsDataMappingPayload> naicsMapForS3, Map<String, NteeDataMappingPayload> nteeMapForS3,
-			Map<Long, SpiData> spiDataMap, Map<Long, SdgData> sdgDataMap) throws Exception {
+	private Program setProgramSpiSdgMappingForBulkCreation(DataMigrationCsvPayload requestPayload, Program program,
+			UserPayload user, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
+			Map<Long, SdgData> sdgDataMap) throws Exception {
 		List<Long> spiIdsByNaicsCode = new ArrayList<Long>();
 		List<Long> sdgIdsByNaicsCode = new ArrayList<Long>();
 		List<Long> spiIdsByNteeCode = new ArrayList<Long>();
 		List<Long> sdgIdsByNteeCode = new ArrayList<Long>();
 		List<Long> spiIds = new ArrayList<Long>();
 		List<Long> sdgIds = new ArrayList<Long>();
+		NaicsData naicsData = null;
+		NteeData nteeData = null;
 
-		if (null != program.getNaicsCode()) {
-			NaicsDataMappingPayload naicsMapPayload = naicsMapForS3.get(program.getNaicsCode().getCode());
+		if (null != requestPayload.getNaicsCode()) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			naicsData = naicsMap.get(requestPayload.getNaicsCode());
+		}
+
+		if (null != requestPayload.getNteeCode()) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			nteeData = nteeMap.get(requestPayload.getNteeCode());
+		}
+
+		if (null != naicsData && (!StringUtils.isEmpty(naicsData.getCode()))) {
+			NaicsDataMappingPayload naicsMapPayload = naicsMapForS3.get(naicsData.getCode());
 			spiIdsByNaicsCode = naicsMapPayload.getSpiTagIds();
 			sdgIdsByNaicsCode = naicsMapPayload.getSdgTagIds();
 		}
 
-		if (null != program.getNteeCode()) {
-			NteeDataMappingPayload nteeMapPayload = nteeMapForS3.get(program.getNteeCode().getCode());
+		if (null != nteeData && (!StringUtils.isEmpty(nteeData.getCode()))) {
+			NteeDataMappingPayload nteeMapPayload = nteeMapForS3.get(nteeData.getCode());
 			spiIdsByNteeCode = nteeMapPayload.getSpiTagIds();
 			sdgIdsByNteeCode = nteeMapPayload.getSdgTagIds();
 		}

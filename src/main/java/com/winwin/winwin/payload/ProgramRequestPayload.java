@@ -9,6 +9,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @NoArgsConstructor
@@ -18,38 +19,16 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ProgramRequestPayload {
-	Long id;
-	AddressPayload address;
-	String name;
-	Long revenue;
-	Long assets;
-	String sector;
-	String sectorLevel;
-	String sectorLevelName;
-	String description;
-	Long naicsCode;
-	Long nteeCode;
-	String priority = "Normal";
-	Long organizationId;
-	Boolean isActive = true;
-	String tagStatus;
-	String websiteUrl;
-	String facebookUrl;
-	String linkedinUrl;
-	String twitterUrl;
-	String instagramUrl;
-	String values;
-	String purpose;
-	String selfInterest;
-	String businessModel;
-	String populationServed;
-	String missionStatement;
-	String contactInfo;
-	String notes;
-	Long parentId;
-	String datasetType;
-	String spiTagIds;
-	String sdgTagIds;
-	String resourceIds;
-	String datasetIds;
+	private Long id;
+	private String name;
+	private String description;
+	private String websiteUrl;
+	private Long organizationId;
+	private Boolean isActive = true;
+	private Long parentId;
+	private String datasetType;
+	private String spiTagIds;
+	private String sdgTagIds;
+	private String resourceIds;
+	private String datasetIds;
 }
