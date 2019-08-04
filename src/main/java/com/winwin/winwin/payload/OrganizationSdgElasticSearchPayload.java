@@ -19,6 +19,7 @@ public class OrganizationSdgElasticSearchPayload {
 	private Long id;
 	private String name;
 	private String code;
+	private String adminUrl;
 	private Boolean isChecked;
 	private Date createdAt;
 	private Date updatedAt;

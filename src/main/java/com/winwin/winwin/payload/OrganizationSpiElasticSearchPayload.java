@@ -17,6 +17,7 @@ import lombok.Setter;
 public class OrganizationSpiElasticSearchPayload {
 	private Long id;
 	private String name;
+	private String adminUrl;
 	private Boolean isChecked;
 	private Date createdAt;
 	private Date updatedAt;

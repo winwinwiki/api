@@ -107,8 +107,8 @@ public class WinWinServiceImpl implements WinWinService {
 
 	/**
 	 * create organizations in bulk, call this method only when the organization
-	 * id's are already imported into organization table. This is the utility
-	 * method for data migration and can only be used for new environment setup
+	 * id's are already imported into organization table. This is the utility method
+	 * for data migration and can only be used for new environment setup
 	 * 
 	 * @param organizationPayloadList
 	 * @param response
@@ -117,6 +117,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 */
 	@Override
 	@Transactional
+	@Async
 	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
@@ -137,6 +138,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 */
 	@Override
 	@Transactional
+	@Async
 	public List<Program> createProgramsOffline(List<DataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Program> programList = saveProgramOfflineForBulkUpload(programPayloadList, response,
@@ -213,8 +215,23 @@ public class WinWinServiceImpl implements WinWinService {
 									// refresh the data after added into list
 									organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								}
+								// save the remaining organizations when total size is less than 1000
+							} else if (numOfOrganizationsToSaveInBatches == 0
+									&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+										organizationsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								} else {
+									failedOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								}
+								// save the remaining organizations when total size is greater than 1000
 							} else if (i == numOfOrganizationsToSaveInBatches
-									&& organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations) {
+									&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
 								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 										organizationsListToSaveIntoDB, i);
 								if (!payload.getIsFailed()) {

@@ -32,10 +32,19 @@ public class OrganizationConstants {
 	public static final String ROLE_VOLUNTEERS = "volunteers";
 	public static final String AWS_USER_STATUS_CONFIRMED = "CONFIRMED";
 	public static final String AWS_USER_STATUS_FORCE_CHANGE_PASSWORD = "FORCE_CHANGE_PASSWORD";
-	public static final String BASE_URL = "http://d3vudu8znrvs1z.cloudfront.net/";
-	public static final String ORGANIZATIONS = "organizations";
 	public static final String AUTOTAGGED = "Auto Tag";
 	public static final String PRIORITY_NORMAL = "Normal";
 	public static final String PRIORITY_HIGH = "High";
+
+	// set constants for FrontEnd routes
+	public static final String BASE_URL = "base_url";
+	public static final String ORGANIZATIONS = "organizations";
+	public static final String DATASETS = "datasets";
+	public static final String RESOURCES = "resources";
+	public static final String REGIONS_SERVED = "regions_served";
+	public static final String SPI_TAGS = "spi_tags";
+	public static final String SDG_TAGS = "sdg_tags";
+	public static final String PROGRAMS = "programs";
+	public static final String NOTES = "notes";
 
 }
