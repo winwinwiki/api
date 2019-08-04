@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -28,9 +29,8 @@ import com.winwin.winwin.payload.ProgramRegionServedPayload;
 import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.AddressRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramRegionServedRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramRegionServedService;
@@ -45,26 +45,24 @@ import com.winwin.winwin.util.CommonUtils;
 public class ProgramRegionServedServiceImpl implements ProgramRegionServedService {
 
 	@Autowired
-	AddressRepository addressRepository;
+	private ProgramRepository programRepository;
 	@Autowired
 	private RegionMasterRepository regionMasterRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
+	private UserService userService;
 	@Autowired
-	UserService userService;
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-	@Autowired
-	ProgramRegionServedRepository programRegionServedRepository;
+	private ProgramRegionServedRepository programRegionServedRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
 	private final Long REGION_ID = -1L;
 
 	/**
-	 * create or update multiple ProgramRegionServed for Program create new
-	 * entry in RegionMaster if value of REGION_ID is -1L
+	 * create or update multiple ProgramRegionServed for Program create new entry in
+	 * RegionMaster if value of REGION_ID is -1L
 	 * 
 	 * @param programRegionPayloadList
 	 * @return
@@ -84,8 +82,16 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 					if (payload.getId() == null) {
 						ProgramRegionServed programRegionServed = null;
 						programRegionServed = new ProgramRegionServed();
+						// set program region master data
 						setProgramRegionMasterData(payload, programRegionServed, user);
+
 						BeanUtils.copyProperties(payload, programRegionServed);
+
+						if (null != payload.getProgramId()) {
+							Program program = programRepository.findProgramById(payload.getProgramId());
+							programRegionServed.setProgram(program);
+						}
+
 						programRegionServed.setIsActive(true);
 						programRegionServed.setCreatedAt(date);
 						programRegionServed.setUpdatedAt(date);
@@ -102,7 +108,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 									"");
 						}
 						programRegionList.add(programRegionServed);
-						//check for inactive regions
+						// check for inactive regions
 					} else if (null != payload.getId() && !(payload.getIsActive())) {
 						ProgramRegionServed region = null;
 						region = programRegionServedRepository.findProgramRegionById(payload.getId());
@@ -115,11 +121,17 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 							region.setUpdatedAt(date);
 							region.setUpdatedBy(user.getUserDisplayName());
 							region.setUpdatedByEmail(user.getEmail());
+
+							if (region.getProgram() == null) {
+								Program program = programRepository.findProgramById(payload.getProgramId());
+								region.setProgram(program);
+							}
+
 							region = programRegionServedRepository.saveAndFlush(region);
 
 							if (null != region && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-										payload.getProgramId(), OrganizationConstants.UPDATE,
+										payload.getProgramId(), OrganizationConstants.DELETE,
 										OrganizationConstants.REGION, region.getId(),
 										region.getRegionMaster().getRegionName(), "");
 							}

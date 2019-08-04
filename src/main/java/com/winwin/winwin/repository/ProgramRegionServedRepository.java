@@ -19,7 +19,7 @@ public interface ProgramRegionServedRepository extends JpaRepository<ProgramRegi
 	@Query(value = "select * from program_region_served where id = :id", nativeQuery = true)
 	ProgramRegionServed findProgramRegionById(@Param("id") Long id);
 
-	@Query(value = "select * from program_region_served where program_id = :programId AND is_Active = true", nativeQuery = true)
+	@Query(value = "select * from program_region_served where program_id = :programId AND is_active = true", nativeQuery = true)
 	List<ProgramRegionServed> findAllActiveProgramRegions(@Param("programId") Long programId);
 
 	@Query(value = "select * from program_region_served where program_id = :programId", nativeQuery = true)
