@@ -16,7 +16,7 @@ import com.winwin.winwin.entity.OrganizationResource;
 
 @Repository
 public interface OrganizationResourceRepository extends JpaRepository<OrganizationResource, Long> {
-	@Query(value = "select * from org_resource where organization_id = :organization_id and is_Active = true", nativeQuery = true)
+	@Query(value = "select * from org_resource where organization_id = :organization_id and is_active = true", nativeQuery = true)
 	List<OrganizationResource> findAllActiveOrgResources(@Param("organization_id") Long organization_id);
 
 	@Query(value = "select * from org_resource where organization_id = :organization_id", nativeQuery = true)

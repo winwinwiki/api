@@ -15,7 +15,7 @@ import com.winwin.winwin.entity.ProgramDataSet;
  */
 @Repository
 public interface ProgramDataSetRepository extends JpaRepository<ProgramDataSet, Long> {
-	@Query(value = "select * from program_dataset where program_id = :program_id and is_Active = true", nativeQuery = true)
+	@Query(value = "select * from program_dataset where program_id = :program_id and is_active = true", nativeQuery = true)
 	List<ProgramDataSet> findAllActiveProgramDataSets(@Param("program_id") Long program_id);
 
 	@Query(value = "select * from program_dataset where program_id = :program_id", nativeQuery = true)

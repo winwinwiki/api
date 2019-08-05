@@ -72,7 +72,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 				programDataSet = constructProgramDataSet(programDataSetPayLoad, user);
 				programDataSet = programDataSetRepository.saveAndFlush(programDataSet);
 
-				if (null != programDataSet.getId()) {
+				if (null != programDataSet && null != programDataSet.getProgram()
+						&& null != programDataSet.getProgram().getId()) {
 					if (null != programDataSetPayLoad.getId()) {
 						organizationHistoryService.createOrganizationHistory(user,
 								programDataSetPayLoad.getOrganizationId(), programDataSetPayLoad.getProgramId(),
@@ -105,6 +106,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "program_dataset_list,program_dataset_category_list")
 	public void removeProgramDataSet(Long dataSetId, Long organizationId, Long programId) {
 		try {
 			ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(dataSetId);

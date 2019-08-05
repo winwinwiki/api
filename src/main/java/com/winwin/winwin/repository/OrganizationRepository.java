@@ -31,34 +31,34 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	List<Organization> findAllOrganizationsFromLastUpdatedDate(Pageable pageable,
 			@Param("lastUpdatedDate") Date lastUpdatedDate);
 
-	@Query(value = "select * from organization where parent_id = :orgId AND is_Active = true ", nativeQuery = true)
+	@Query(value = "select * from organization where parent_id = :orgId AND is_active = true ", nativeQuery = true)
 	List<Organization> findAllChildren(@Param("orgId") Long id);
 
-	@Query(value = "select * from organization where type = 'division' AND is_Active = true AND parent_id = :orgId", nativeQuery = true)
+	@Query(value = "select * from organization where type = 'division' AND is_active = true AND parent_id = :orgId", nativeQuery = true)
 	List<Organization> findAllDivisionList(@Param("orgId") Long orgId);
 
-	@Query(value = "select * from organization where type = 'department' AND is_Active = true ", nativeQuery = true)
+	@Query(value = "select * from organization where type = 'department' AND is_active = true ", nativeQuery = true)
 	List<Organization> findAllDepartmentList();
 
-	@Query(value = "select * from organization where type = 'program' AND parent_id = :orgId AND is_Active = true", nativeQuery = true)
+	@Query(value = "select * from organization where type = 'program' AND parent_id = :orgId AND is_active = true", nativeQuery = true)
 	List<Organization> findAllProgramList(@Param("orgId") Long orgId);
 
 	@Query(value = "select * from organization ORDER BY id DESC LIMIT 1", nativeQuery = true)
 	Organization findLastOrg();
 
-	@Query(value = "select * from organization where type = 'organization' AND is_Active = true "
+	@Query(value = "select * from organization where type = 'organization' AND is_active = true "
 			+ "  AND name ILIKE %:name% ORDER BY name", nativeQuery = true)
 	List<Organization> findByNameIgnoreCaseContaining(@Param("name") String name, Pageable pageable);
 
-	@Query(value = "select count(*) from organization where type = 'organization' AND is_Active = true "
+	@Query(value = "select count(*) from organization where type = 'organization' AND is_active = true "
 			+ "  AND name ILIKE %:name%", nativeQuery = true)
 	Integer findNumOfRecordsByNameIgnoreCaseContaining(@Param("name") String name);
 
-	@Query(value = "select * from organization where type = 'program' AND is_Active = true "
+	@Query(value = "select * from organization where type = 'program' AND is_active = true "
 			+ "AND name ILIKE :name and parent_id = :orgId", nativeQuery = true)
 	List<Organization> findProgramByNameIgnoreCaseContaining(@Param("name") String name, @Param("orgId") Long orgId);
 
 	@Query(value = "select * from organization where type = 'program' AND parent_id = :orgId "
-			+ " AND is_Active = true and name ILIKE :name", nativeQuery = true)
+			+ " AND is_active = true and name ILIKE :name", nativeQuery = true)
 	List<Organization> findProgramByNameIgnoreCaseContaining(@Param("orgId") Long orgId, @Param("name") String name);
 }

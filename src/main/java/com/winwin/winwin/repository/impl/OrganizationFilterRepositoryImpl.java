@@ -94,7 +94,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append("inner join address a on a.id = o.address_id");
 		}
 
-		sb.append(" where  o.is_Active = true and o.type = :type ");
+		sb.append(" where  o.is_active = true and o.type = :type ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -263,7 +263,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append("inner join address a on a.id = o.address_id");
 		}
 
-		sb.append(" where  o.is_Active = true and o.type = :type ");
+		sb.append(" where  o.is_active = true and o.type = :type ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");

@@ -71,11 +71,26 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			if (null != orgResourcePayLoad && null != user) {
 				orgResource = constructOrganizationResource(orgResourcePayLoad);
 				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
+				/*
+				 * if (null != orgResource && null !=
+				 * orgResource.getOrganization()) {
+				 * orgHistoryService.createOrganizationHistory(user,
+				 * orgResource.getOrganization().getId(),
+				 * OrganizationConstants.CREATE, OrganizationConstants.RESOURCE,
+				 * orgResource.getId(),
+				 * orgResource.getResourceCategory().getCategoryName(), ""); }
+				 */
 
-				if (null != orgResource && null != orgResource.getOrganization()) {
-					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
-							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getResourceCategory().getCategoryName(), "");
+				if (null != orgResource.getId() && null != orgResource.getOrganization()) {
+					if (null != orgResourcePayLoad.getId()) {
+						orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
+								OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+								orgResource.getResourceCategory().getCategoryName(), "");
+					} else {
+						orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
+								OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+								orgResource.getResourceCategory().getCategoryName(), "");
+					}
 				}
 			}
 		} catch (Exception e) {

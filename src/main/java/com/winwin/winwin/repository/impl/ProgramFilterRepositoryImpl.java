@@ -41,7 +41,7 @@ public class ProgramFilterRepositoryImpl implements ProgramFilterRepository {
 		boolean spi = false;
 		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
-		sb.append(" where  o.is_Active = true ");
+		sb.append(" where  o.is_active = true ");
 
 		// if (type.equals(OrganizationConstants.PROGRAM))
 		sb.append(" and o.org_id = :orgId ");

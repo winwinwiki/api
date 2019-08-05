@@ -16,7 +16,7 @@ import com.winwin.winwin.entity.ProgramResource;
  */
 @Repository
 public interface ProgramResourceRepository extends JpaRepository<ProgramResource, Long> {
-	@Query(value = "select * from program_resource where program_id = :program_id and is_Active = true", nativeQuery = true)
+	@Query(value = "select * from program_resource where program_id = :program_id and is_active = true", nativeQuery = true)
 	List<ProgramResource> findAllActiveProgramResources(@Param("program_id") Long programId);
 
 	@Query(value = "select * from program_resource where program_id = :program_id", nativeQuery = true)
