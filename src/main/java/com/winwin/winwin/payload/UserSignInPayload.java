@@ -9,6 +9,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @NoArgsConstructor
@@ -23,5 +24,6 @@ public class UserSignInPayload {
 	private String newPassword;
 	private Boolean isNewUser;
 	private String accessToken;
+	private String refreshToken;
 	private String confirmationCode;
 }
