@@ -148,6 +148,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 			try {
 				OrganizationNote note = organizationNoteRepository.getOne(noteId);
 				if (null != note) {
+					note.setOrganization(null);
+					organizationNoteRepository.saveAndFlush(note);
 					organizationNoteRepository.deleteById(noteId);
 					orgHistoryService.createOrganizationHistory(user, orgId, OrganizationConstants.DELETE,
 							OrganizationConstants.NOTE, note.getId(), note.getName(), "");

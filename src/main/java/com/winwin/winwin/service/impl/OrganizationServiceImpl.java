@@ -243,10 +243,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 					if (organizationPayload.getNaicsCode() != null) {
 						NaicsData naicsCode = naicsRepository.findById(organizationPayload.getNaicsCode()).orElse(null);
 						organization.setNaicsCode(naicsCode);
+					} else {
+						organization.setNaicsCode(null);
 					}
 					if (organizationPayload.getNteeCode() != null) {
 						NteeData nteeCode = nteeRepository.findById(organizationPayload.getNteeCode()).orElse(null);
 						organization.setNteeCode(nteeCode);
+					} else {
+						organization.setNteeCode(null);
 					}
 
 					Boolean isUpdated = updateAddress(organization, organizationPayload.getAddress(), user);
