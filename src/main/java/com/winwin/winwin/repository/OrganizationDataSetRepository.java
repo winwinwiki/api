@@ -16,7 +16,7 @@ import com.winwin.winwin.entity.OrganizationDataSet;
 
 @Repository
 public interface OrganizationDataSetRepository extends JpaRepository<OrganizationDataSet, Long> {
-	@Query(value = "select * from org_dataset where organization_id = :organization_id and is_Active = true", nativeQuery = true)
+	@Query(value = "select * from org_dataset where organization_id = :organization_id and is_active = true", nativeQuery = true)
 	List<OrganizationDataSet> findAllActiveOrgDataSets(@Param("organization_id") Long organization_id);
 
 	@Query(value = "select * from org_dataset where organization_id = :organization_id", nativeQuery = true)

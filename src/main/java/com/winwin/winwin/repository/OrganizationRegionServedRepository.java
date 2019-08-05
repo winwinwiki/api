@@ -19,7 +19,7 @@ public interface OrganizationRegionServedRepository extends JpaRepository<Organi
 	@Query(value = "select * from org_region_served where id = :id", nativeQuery = true)
 	OrganizationRegionServed findOrgRegionById(@Param("id") Long id);
 
-	@Query(value = "select * from org_region_served where org_id = :orgId AND is_Active = true", nativeQuery = true)
+	@Query(value = "select * from org_region_served where org_id = :orgId AND is_active = true", nativeQuery = true)
 	List<OrganizationRegionServed> findAllActiveOrgRegions(@Param("orgId") Long orgId);
 
 	@Query(value = "select * from org_region_served where org_id = :orgId", nativeQuery = true)

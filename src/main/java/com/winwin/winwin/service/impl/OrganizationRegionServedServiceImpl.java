@@ -127,7 +127,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 
 							if (null != region && null != region.getOrganization()) {
 								orgHistoryService.createOrganizationHistory(user, region.getOrganization().getId(),
-										OrganizationConstants.UPDATE, OrganizationConstants.REGION, region.getId(),
+										OrganizationConstants.DELETE, OrganizationConstants.REGION, region.getId(),
 										region.getRegionMaster().getRegionName(), "");
 							}
 							orgRegionList.add(region);

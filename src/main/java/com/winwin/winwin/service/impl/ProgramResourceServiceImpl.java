@@ -70,12 +70,32 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResource = constructProgramResource(programResourcePayLoad);
 				programResource = programResourceRepository.saveAndFlush(programResource);
 
+				/*
+				 * if (null != programResource && null !=
+				 * programResource.getProgram() && null !=
+				 * programResource.getProgram().getId()) {
+				 * organizationHistoryService.createOrganizationHistory(user,
+				 * programResourcePayLoad.getOrganizationId(),
+				 * programResourcePayLoad.getProgramId(),
+				 * OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE,
+				 * programResource.getId(),
+				 * programResource.getResourceCategory().getCategoryName(), "");
+				 * }
+				 */
+
 				if (null != programResource && null != programResource.getProgram()
 						&& null != programResource.getProgram().getId()) {
-					organizationHistoryService.createOrganizationHistory(user,
-							programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
-							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getResourceCategory().getCategoryName(), "");
+					if (null != programResourcePayLoad.getId()) {
+						organizationHistoryService.createOrganizationHistory(user,
+								programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
+								OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, programResource.getId(),
+								programResource.getResourceCategory().getCategoryName(), "");
+					} else {
+						organizationHistoryService.createOrganizationHistory(user,
+								programResourcePayLoad.getOrganizationId(), programResourcePayLoad.getProgramId(),
+								OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, programResource.getId(),
+								programResource.getResourceCategory().getCategoryName(), "");
+					}
 				}
 			}
 		} catch (Exception e) {
