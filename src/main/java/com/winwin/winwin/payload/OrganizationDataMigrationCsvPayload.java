@@ -15,6 +15,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @AllArgsConstructor
@@ -23,7 +24,7 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class DataMigrationCsvPayload {
+public class OrganizationDataMigrationCsvPayload {
 	private Long id;
 	private String name;
 	private BigDecimal revenue;

@@ -48,13 +48,14 @@ import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.DataMigrationCsvPayload;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
 import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
 import com.winwin.winwin.payload.OrganizationBulkResultPayload;
 import com.winwin.winwin.payload.ProgramBulkResultPayload;
+import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
@@ -107,8 +108,8 @@ public class WinWinServiceImpl implements WinWinService {
 
 	/**
 	 * create organizations in bulk, call this method only when the organization
-	 * id's are already imported into organization table. This is the utility method
-	 * for data migration and can only be used for new environment setup
+	 * id's are already imported into organization table. This is the utility
+	 * method for data migration and can only be used for new environment setup
 	 * 
 	 * @param organizationPayloadList
 	 * @param response
@@ -116,10 +117,10 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 */
 	@Override
-	@Transactional
 	@Async
-	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
-			ExceptionResponse response, UserPayload user) {
+	public List<Organization> createOrganizationsOffline(
+			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			UserPayload user) {
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.CREATE, "org.exception.created", user);
 
@@ -137,9 +138,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 */
 	@Override
-	@Transactional
 	@Async
-	public List<Program> createProgramsOffline(List<DataMigrationCsvPayload> programPayloadList,
+	public List<Program> createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		List<Program> programList = saveProgramOfflineForBulkUpload(programPayloadList, response,
 				OrganizationConstants.CREATE, "prg.exception.created", user);
@@ -158,7 +158,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 */
 	public List<Organization> saveOrganizationsOfflineForBulkUpload(
-			List<DataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			String operationPerformed, String customMessage, UserPayload user) {
 		List<Organization> organizationList = new ArrayList<Organization>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
@@ -189,12 +189,12 @@ public class WinWinServiceImpl implements WinWinService {
 			if (null != organizationPayloadList) {
 				List<Organization> organizationsListToSaveIntoDB = new ArrayList<Organization>();
 				int batchInsertSize = 1000;
-				int numOfOrganizations = organizationPayloadList.size();
-				int numOfOrganizationsToSaveInBatches = numOfOrganizations / batchInsertSize;
-				int remainingNumOfOrganizations = numOfOrganizations % batchInsertSize;
+				int totalOrganizationsToSave = organizationPayloadList.size();
+				int remainingOrganizationsToSave = totalOrganizationsToSave % batchInsertSize;
+				int numOfOrganizationsToSaveByBatchSize = (totalOrganizationsToSave - remainingOrganizationsToSave);
 
 				int i = 1;
-				for (DataMigrationCsvPayload organizationPayload : organizationPayloadList) {
+				for (OrganizationDataMigrationCsvPayload organizationPayload : organizationPayloadList) {
 					if (null != organizationPayload && null != organizationPayload.getId()) {
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
 							// set Organization Object into list to save into DB
@@ -215,9 +215,10 @@ public class WinWinServiceImpl implements WinWinService {
 									// refresh the data after added into list
 									organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								}
-								// save the remaining organizations when total size is less than 1000
-							} else if (numOfOrganizationsToSaveInBatches == 0
-									&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+								// save the remaining organizations when total
+								// size is less than 1000
+							} else if (numOfOrganizationsToSaveByBatchSize == 0
+									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 										organizationsListToSaveIntoDB, i);
 								if (!payload.getIsFailed()) {
@@ -229,9 +230,10 @@ public class WinWinServiceImpl implements WinWinService {
 									// refresh the data after added into list
 									organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								}
-								// save the remaining organizations when total size is greater than 1000
-							} else if (i == numOfOrganizationsToSaveInBatches
-									&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+								// save the remaining organizations when total
+								// size is greater than 1000
+							} else if (i > numOfOrganizationsToSaveByBatchSize
+									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 										organizationsListToSaveIntoDB, i);
 								if (!payload.getIsFailed()) {
@@ -277,8 +279,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationDataForBulkUpload(DataMigrationCsvPayload csvPayload, UserPayload user,
-			String operationPerformed, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+	private Organization setOrganizationDataForBulkUpload(OrganizationDataMigrationCsvPayload csvPayload,
+			UserPayload user, String operationPerformed, Map<String, NaicsDataMappingPayload> naicsMapForS3,
 			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
 			Map<Long, SdgData> sdgDataMap) throws Exception {
 
@@ -342,7 +344,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
 				for (int j = 0; j < spiIdsList.length; j++) {
-					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
+					if (!StringUtils.isEmpty(spiIdsList[j]))
+						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 				}
 			}
 			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
@@ -351,7 +354,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
 				for (int j = 0; j < sdgIdsList.length; j++) {
-					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+					if (!StringUtils.isEmpty(sdgIdsList[j]))
+						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
 				}
 			}
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -364,7 +368,8 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 		}
 
-		// To set spi and sdg tags by naics code and ntee code from AWS S3 Bucket
+		// To set spi and sdg tags by naics code and ntee code from AWS S3
+		// Bucket
 		// AutoTags mapping
 		if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -461,8 +466,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param organization
 	 * @return
 	 */
-	private List<OrganizationNote> saveOrganizationNotesForBulkUpload(DataMigrationCsvPayload payload, UserPayload user,
-			Organization organization) {
+	private List<OrganizationNote> saveOrganizationNotesForBulkUpload(OrganizationDataMigrationCsvPayload payload,
+			UserPayload user, Organization organization) {
 		List<OrganizationNote> notes = new ArrayList<OrganizationNote>();
 		OrganizationNote note = null;
 		try {
@@ -495,8 +500,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param organization
 	 * @return
 	 */
-	private List<OrganizationRegionServed> saveOrganizationRegionServedForBulkUpload(DataMigrationCsvPayload payload,
-			UserPayload user, Organization organization) {
+	private List<OrganizationRegionServed> saveOrganizationRegionServedForBulkUpload(
+			OrganizationDataMigrationCsvPayload payload, UserPayload user, Organization organization) {
 		List<Long> regionIds = new ArrayList<>();
 		List<OrganizationRegionServed> orgRegionServedList = new ArrayList<OrganizationRegionServed>();
 		try {
@@ -506,7 +511,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
 				for (int j = 0; j < regionMasterIdsList.length; j++) {
-					regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+					if (!StringUtils.isEmpty(regionMasterIdsList[j]))
+						regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -547,8 +553,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param organization
 	 * @return
 	 */
-	private List<OrganizationResource> saveOrganizationResourcesForBulkUpload(DataMigrationCsvPayload payload,
-			UserPayload user, Organization organization) {
+	private List<OrganizationResource> saveOrganizationResourcesForBulkUpload(
+			OrganizationDataMigrationCsvPayload payload, UserPayload user, Organization organization) {
 		List<Long> resourceIds = new ArrayList<>();
 		List<OrganizationResource> orgResourceList = new ArrayList<OrganizationResource>();
 		try {
@@ -558,7 +564,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] resourceCategoryIdsList = payload.getResourceIds().split(",");
 				for (int j = 0; j < resourceCategoryIdsList.length; j++) {
-					resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
+					if (!StringUtils.isEmpty(resourceCategoryIdsList[j]))
+						resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -601,7 +608,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param organization
 	 * @return
 	 */
-	private List<OrganizationDataSet> saveOrganizationDataSetsForBulkUpload(DataMigrationCsvPayload payload,
+	private List<OrganizationDataSet> saveOrganizationDataSetsForBulkUpload(OrganizationDataMigrationCsvPayload payload,
 			UserPayload user, Organization organization) {
 		List<Long> datasetIds = new ArrayList<>();
 		List<OrganizationDataSet> orgDatasetList = new ArrayList<OrganizationDataSet>();
@@ -612,7 +619,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] datasetCategoryIdsList = payload.getDatasetIds().split(",");
 				for (int j = 0; j < datasetCategoryIdsList.length; j++) {
-					datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
+					if (!StringUtils.isEmpty(datasetCategoryIdsList[j]))
+						datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -725,7 +733,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param customMessage
 	 * @return
 	 */
-	public List<Program> saveProgramOfflineForBulkUpload(List<DataMigrationCsvPayload> programPayloadList,
+	public List<Program> saveProgramOfflineForBulkUpload(List<ProgramDataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		List<Program> programList = new ArrayList<Program>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
@@ -756,21 +764,49 @@ public class WinWinServiceImpl implements WinWinService {
 			if (null != programPayloadList) {
 				List<Program> programsListToSaveIntoDB = new ArrayList<Program>();
 				int batchInsertSize = 1000;
-				int numOfPrograms = programPayloadList.size();
-				int remainingNumOfPrograms = numOfPrograms % batchInsertSize;
+				int totalProgramsToSave = programPayloadList.size();
+				int remainingProgramsToSave = totalProgramsToSave % batchInsertSize;
+				int numOfProgramsToSaveByBatchSize = (totalProgramsToSave - remainingProgramsToSave);
 
 				int i = 1;
-				for (DataMigrationCsvPayload programPayload : programPayloadList) {
+				for (ProgramDataMigrationCsvPayload programPayload : programPayloadList) {
 					if (null != programPayload && null != programPayload.getId()) {
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-							programPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 							// set Program Object into list to save into DB
-							programList.add(setProgramDataForBulkUpload(programPayload, user, operationPerformed,
-									naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap));
+							programsListToSaveIntoDB.add(setProgramDataForBulkUpload(programPayload, user,
+									operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap));
 
 							// save the programs in the batches of 1000 and
 							// save the remaining programs
-							if (i % 1000 == 0 || programsListToSaveIntoDB.size() == remainingNumOfPrograms) {
+							if (i % 1000 == 0) {
+								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								} else {
+									failedProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								}
+								// save the remaining programs when total
+								// size is less than 1000
+							} else if (numOfProgramsToSaveByBatchSize == 0
+									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
+								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								} else {
+									failedProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								}
+								// save the remaining programs when total
+								// size is greater than 1000
+							} else if (i > numOfProgramsToSaveByBatchSize
+									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
 								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
 								if (!payload.getIsFailed()) {
 									successProgramsList.addAll(payload.getProgramList());
@@ -782,7 +818,6 @@ public class WinWinServiceImpl implements WinWinService {
 									programsListToSaveIntoDB = new ArrayList<Program>();
 								}
 							}
-
 							i++;
 
 						} // end of if (operationPerformed.
@@ -817,7 +852,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @return
 	 * @throws Exception
 	 */
-	private Program setProgramDataForBulkUpload(DataMigrationCsvPayload requestPayload, UserPayload user,
+	private Program setProgramDataForBulkUpload(ProgramDataMigrationCsvPayload requestPayload, UserPayload user,
 			String operationPerformed, Map<String, NaicsDataMappingPayload> naicsMapForS3,
 			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
 			Map<Long, SdgData> sdgDataMap) throws Exception {
@@ -863,7 +898,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] spiIdsList = requestPayload.getSpiTagIds().split(",");
 				for (int j = 0; j < spiIdsList.length; j++) {
-					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
+					if (!StringUtils.isEmpty(spiIdsList[j]))
+						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 				}
 			}
 			if (!StringUtils.isEmpty(requestPayload.getSdgTagIds())) {
@@ -872,7 +908,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] sdgIdsList = requestPayload.getSdgTagIds().split(",");
 				for (int j = 0; j < sdgIdsList.length; j++) {
-					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+					if (!StringUtils.isEmpty(sdgIdsList[j]))
+						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
 				}
 			}
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -883,7 +920,8 @@ public class WinWinServiceImpl implements WinWinService {
 			}
 		}
 
-		// To set spi and sdg tags by naics code and ntee code from AWS S3 Bucket
+		// To set spi and sdg tags by naics code and ntee code from AWS S3
+		// Bucket
 		// AutoTags mapping
 		if ((!StringUtils.isEmpty(requestPayload.getNaicsCode()))
 				|| (!StringUtils.isEmpty(requestPayload.getNteeCode()))) {
@@ -917,7 +955,7 @@ public class WinWinServiceImpl implements WinWinService {
 			// Flush all pending changes to the database
 			programRepository.flush();
 
-			LOGGER.info("Saved organizations: " + programs.size());
+			LOGGER.info("Saved programs: " + programs.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save programs starting from : " + i);
 			programList.addAll(programs);
@@ -939,7 +977,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param program
 	 * @return
 	 */
-	private List<ProgramRegionServed> saveProgramRegionServedForBulkUpload(DataMigrationCsvPayload payload,
+	private List<ProgramRegionServed> saveProgramRegionServedForBulkUpload(ProgramDataMigrationCsvPayload payload,
 			UserPayload user, Program program) {
 		List<Long> regionIds = new ArrayList<>();
 		List<ProgramRegionServed> programRegionServedList = new ArrayList<ProgramRegionServed>();
@@ -950,7 +988,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
 				for (int j = 0; j < regionMasterIdsList.length; j++) {
-					regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+					if (!StringUtils.isEmpty(regionMasterIdsList[j]))
+						regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -991,8 +1030,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param Program
 	 * @return
 	 */
-	private List<ProgramResource> saveProgramResourcesForBulkUpload(DataMigrationCsvPayload payload, UserPayload user,
-			Program program) {
+	private List<ProgramResource> saveProgramResourcesForBulkUpload(ProgramDataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
 		List<Long> resourceIds = new ArrayList<>();
 		List<ProgramResource> programResourceList = new ArrayList<ProgramResource>();
 		try {
@@ -1002,7 +1041,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] resourceCategoryIdsList = payload.getResourceIds().split(",");
 				for (int j = 0; j < resourceCategoryIdsList.length; j++) {
-					resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
+					if (!StringUtils.isEmpty(resourceCategoryIdsList[j]))
+						resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -1045,8 +1085,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param program
 	 * @return
 	 */
-	private List<ProgramDataSet> saveProgramDataSetsForBulkUpload(DataMigrationCsvPayload payload, UserPayload user,
-			Program program) {
+	private List<ProgramDataSet> saveProgramDataSetsForBulkUpload(ProgramDataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
 		List<Long> datasetIds = new ArrayList<>();
 		List<ProgramDataSet> programDatasetList = new ArrayList<ProgramDataSet>();
 		try {
@@ -1056,7 +1096,8 @@ public class WinWinServiceImpl implements WinWinService {
 				// whitespace
 				String[] datasetCategoryIdsList = payload.getDatasetIds().split(",");
 				for (int j = 0; j < datasetCategoryIdsList.length; j++) {
-					datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
+					if (!StringUtils.isEmpty(datasetCategoryIdsList[j]))
+						datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
 				}
 				Date date = CommonUtils.getFormattedDate();
 
@@ -1095,8 +1136,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @throws Exception
 	 * 
 	 */
-	private Program setProgramSpiSdgMappingForBulkCreation(DataMigrationCsvPayload requestPayload, Program program,
-			UserPayload user, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+	private Program setProgramSpiSdgMappingForBulkCreation(ProgramDataMigrationCsvPayload requestPayload,
+			Program program, UserPayload user, Map<String, NaicsDataMappingPayload> naicsMapForS3,
 			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
 			Map<Long, SdgData> sdgDataMap) throws Exception {
 		List<Long> spiIdsByNaicsCode = new ArrayList<Long>();
@@ -1252,7 +1293,8 @@ public class WinWinServiceImpl implements WinWinService {
 							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -1264,7 +1306,8 @@ public class WinWinServiceImpl implements WinWinService {
 							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
@@ -1319,7 +1362,8 @@ public class WinWinServiceImpl implements WinWinService {
 							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -1331,7 +1375,8 @@ public class WinWinServiceImpl implements WinWinService {
 							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
@@ -1378,7 +1423,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 	}
 
-	private Address saveAddressForBulkUpload(DataMigrationCsvPayload payload, UserPayload user) {
+	private Address saveAddressForBulkUpload(OrganizationDataMigrationCsvPayload payload, UserPayload user) {
 		Address address = null;
 		try {
 			if (null != payload) {
