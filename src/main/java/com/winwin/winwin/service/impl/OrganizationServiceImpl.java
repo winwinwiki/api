@@ -500,9 +500,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != organizationPayloadList) {
 				List<Organization> organizationsListToSaveIntoDB = new ArrayList<Organization>();
 				int batchInsertSize = 1000;
-				int numOfOrganizations = organizationPayloadList.size();
-				int numOfOrganizationsToSaveInBatches = numOfOrganizations / batchInsertSize;
-				int remainingNumOfOrganizations = numOfOrganizations % batchInsertSize;
+				int totalOrganizationsToSave = organizationPayloadList.size();
+				int remainingOrganizationsToSave = totalOrganizationsToSave % batchInsertSize;
+				int numOfOrganizationsToSaveByBatchSize = (totalOrganizationsToSave - remainingOrganizationsToSave);
 
 				int i = 1;
 				for (OrganizationCsvPayload organizationPayload : organizationPayloadList) {
@@ -531,8 +531,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							}
 							// save the remaining organizations when total size
 							// is less than 1000
-						} else if (i == numOfOrganizationsToSaveInBatches
-								&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+						} else if (i == numOfOrganizationsToSaveByBatchSize
+								&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
 							if (!payload.getIsFailed()) {
@@ -546,8 +546,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							}
 							// save the remaining organizations when total size
 							// is greater than 1000
-						} else if (i == numOfOrganizationsToSaveInBatches
-								&& (organizationsListToSaveIntoDB.size() == remainingNumOfOrganizations)) {
+						} else if (i > numOfOrganizationsToSaveByBatchSize
+								&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
 							if (!payload.getIsFailed()) {
@@ -731,7 +731,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				// whitespace
 				String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
 				for (int j = 0; j < spiIdsList.length; j++) {
-					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
+					if (!StringUtils.isEmpty(spiIdsList[j]))
+						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 				}
 			}
 			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
@@ -740,7 +741,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 				// whitespace
 				String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
 				for (int j = 0; j < sdgIdsList.length; j++) {
-					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+					if (!StringUtils.isEmpty(sdgIdsList[j]))
+						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
 				}
 			}
 			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
@@ -888,7 +890,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -900,7 +903,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
@@ -954,7 +958,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							String[] spiIds = payloadData.getSpiTagIds().split(",");
 							List<Long> spiIdsList = new ArrayList<>();
 							for (int j = 0; j < spiIds.length; j++) {
-								spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
 							}
 							payload.setSpiTagIds(spiIdsList);
 						}
@@ -966,7 +971,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 							String[] sdgIds = payloadData.getSdgTagIds().split(",");
 							List<Long> sdgIdsList = new ArrayList<>();
 							for (int j = 0; j < sdgIds.length; j++) {
-								sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}

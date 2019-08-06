@@ -4,7 +4,6 @@
  */
 package com.winwin.winwin.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -19,9 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.winwin.winwin.constants.UserConstants;
-import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.DataMigrationCsvPayload;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.service.WinWinService;
@@ -61,8 +60,8 @@ public class WinWinController extends BaseController {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
-					exceptionResponse);
+			List<OrganizationDataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils
+					.read(OrganizationDataMigrationCsvPayload.class, file, exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
@@ -90,17 +89,16 @@ public class WinWinController extends BaseController {
 	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
-		List<Program> programList = new ArrayList<Program>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
-					exceptionResponse);
+			List<ProgramDataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils
+					.read(ProgramDataMigrationCsvPayload.class, file, exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			UserPayload user = userService.getCurrentUserDetails();
-			programList = winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
+			winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -108,7 +106,7 @@ public class WinWinController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(programList);
+		return sendSuccessResponse("org.file.upload.success");
 	}
 
 }
