@@ -20,10 +20,12 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrganizationChartPayload {
-	Long id;
-	Long parentId;
-	String name;
-	String parentName;
-	AddressPayload location;
-	List<OrganizationChartPayload> children;
+	private Long id;
+	private Long parentId;
+	private Long rootParentId;
+	private String name;
+	private String parentName;
+	private String rootParentName;
+	private AddressPayload location;
+	private List<OrganizationChartPayload> children;
 }

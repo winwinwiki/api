@@ -62,6 +62,7 @@ public class OrganizationDataMigrationCsvPayload {
 	private String ein;
 	private String tagStatus;
 	private Long parentId;
+	private Long rootParentId;
 	private Long addressId;
 	private String priority;
 	private Long organizationId;

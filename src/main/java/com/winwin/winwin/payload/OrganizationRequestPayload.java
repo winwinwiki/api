@@ -36,6 +36,7 @@ public class OrganizationRequestPayload {
 	String status;
 	String priority;
 	Long parentId;
+	Long rootParentId;
 	Boolean isActive;
 	Boolean isTaggingReady;
 	String tagStatus;

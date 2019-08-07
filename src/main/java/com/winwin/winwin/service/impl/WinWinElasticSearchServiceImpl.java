@@ -134,9 +134,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// send organization data to elastic
 		try {
 			LOGGER.info("process: sendPostRequestToElasticSearch has been started successfully");
-			Integer numOfOrganizations = 40;
-			// Integer numOfOrganizations =
-			// organizationRepository.findAllOrganizationsCount();
+			// Integer numOfOrganizations = 40;
+			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
 			Integer pageSize = 1000;
 			Integer pageNumAvailable = numOfOrganizations / pageSize;
 			Integer totalPageNumAvailable = null;
@@ -227,6 +226,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * lastUpdatedDate is not found else find all the organizations from
 			 * lastUpdatedDate
 			 */
+
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
 					organizationList = organizationRepository.findAllOrganizations(pageable);
@@ -238,13 +238,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			/*
-			 * List<Long> ids = new ArrayList<Long>(); ids.add(37353L);
-			 * 
-			 * for (Long id : ids) { organizationList = new
+			 * List<Long> ids = new ArrayList<Long>(); ids.add(39933L); for
+			 * (Long id : ids) { organizationList = new
 			 * ArrayList<Organization>(); Organization organization =
-			 * organizationRepository.findOrgById(id);
-			 * 
-			 * if (null != organization) organizationList.add(organization);
+			 * organizationRepository.findOrgById(id); if (null != organization)
+			 * organizationList.add(organization);
 			 */
 
 			if (null != organizationList) {
@@ -304,6 +302,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					if (null != organizationFromMap.getValue().getNteeCode())
 						organizationPayload.setNtee_code(organizationFromMap.getValue().getNteeCode().getCode());
 
+					// check for parent Organization
 					if (null != organizationFromMap.getValue().getParentId()) {
 						// find parentOrganization first in map if not found
 						// then make DB call
@@ -314,8 +313,29 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							parentOrganization = organizationRepository
 									.findOrgById(organizationFromMap.getValue().getParentId());
 
-						if (null != parentOrganization)
-							organizationPayload.setParentOrganizationName(parentOrganization.getName());
+						if (null != parentOrganization) {
+							organizationPayload.setParentId(parentOrganization.getId());
+							organizationPayload.setParentName(parentOrganization.getName());
+						}
+
+					}
+
+					// check for root parent Organization
+					if (null != organizationFromMap.getValue().getRootParentId()) {
+						// find rootParentOrganization first in map if not
+						// found
+						// then make DB call
+						Organization rootParentOrganization = organizationMap
+								.get(organizationFromMap.getValue().getRootParentId());
+
+						if (rootParentOrganization == null)
+							rootParentOrganization = organizationRepository
+									.findOrgById(organizationFromMap.getValue().getRootParentId());
+
+						if (null != rootParentOrganization) {
+							organizationPayload.setRootParentId(rootParentOrganization.getId());
+							organizationPayload.setRootParentName(rootParentOrganization.getName());
+						}
 
 					}
 
