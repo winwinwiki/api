@@ -51,7 +51,10 @@ public class OrganizationElasticSearchPayload {
 	private String values;
 	private String websiteUrl;
 	private String adminUrl;
-	private String parentOrganizationName;
+	private Long parentId;
+	private Long rootParentId;
+	private String parentName;
+	private String rootParentName;
 	private AddressElasticSearchPayload address;
 	private List<ProgramElasticSearchPayload> programs;
 	private List<OrganizationNoteElasticSearchPayload> notes;

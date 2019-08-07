@@ -176,9 +176,10 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			}
 		}
 
+		// keep the empty values always last
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
-			sb.append(" order by " + payload.getSortBy() + " "
-					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
+			sb.append(" order by " + payload.getSortBy() + " " + (!StringUtils.isNullOrEmpty(payload.getSortOrder())
+					? payload.getSortOrder() + " NULLS LAST" : "ASC NULLS LAST"));
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);

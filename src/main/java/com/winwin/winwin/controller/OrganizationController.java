@@ -457,6 +457,14 @@ public class OrganizationController extends BaseController {
 				if (null != parentOrganization)
 					payload.setParentName(parentOrganization.getName());
 			}
+			
+			if (null != organization.getRootParentId()) {
+				Organization rootParentOrganization = organizationRepository
+						.findOrgById(organization.getRootParentId());
+				if (null != rootParentOrganization) {
+					payload.setRootParentName(rootParentOrganization.getName());
+				}
+			}
 		}
 		return payload;
 	}
@@ -1299,6 +1307,15 @@ public class OrganizationController extends BaseController {
 					if (null != parentOrganization) {
 						payload.setParentId(parentOrganization.getId());
 						payload.setParentName(parentOrganization.getName());
+					}
+				}
+
+				if (null != organization.getRootParentId()) {
+					Organization rootParentOrganization = organizationRepository
+							.findOrgById(organization.getRootParentId());
+					if (null != rootParentOrganization) {
+						payload.setRootParentId(rootParentOrganization.getId());
+						payload.setRootParentName(rootParentOrganization.getName());
 					}
 				}
 

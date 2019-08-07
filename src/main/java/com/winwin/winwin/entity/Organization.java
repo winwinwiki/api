@@ -83,6 +83,9 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "parent_id")
 	private Long parentId;
 
+	@Column(name = "root_parent_id")
+	private Long rootParentId;
+
 	@Column(name = "type")
 	private String type;
 

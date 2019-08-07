@@ -11,7 +11,8 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
+ * 
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,6 +37,7 @@ public class OrganizationCsvPayload {
 	private String ein;
 	private String notes;
 	private Long parentId;
+	private Long rootParentId;
 	private Boolean isActive;
 	private Boolean isTaggingReady;
 	private String tagStatus;
