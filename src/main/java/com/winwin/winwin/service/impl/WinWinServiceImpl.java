@@ -949,7 +949,7 @@ public class WinWinServiceImpl implements WinWinService {
 		List<Program> programList = new ArrayList<Program>();
 		Boolean isFailed = false;
 		try {
-			LOGGER.info("Saving programs : " + programs.size() + " Starting from: " + i);
+			LOGGER.info("Saving programs : " + programs.size() + " Starting from: " + (i - programs.size()));
 			programList.addAll(programRepository.saveAll(programs));
 
 			// Flush all pending changes to the database
@@ -957,7 +957,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 			LOGGER.info("Saved programs: " + programs.size());
 		} catch (Exception e) {
-			LOGGER.info("Failed to save programs starting from : " + i);
+			LOGGER.info("Failed to save programs starting from: " + (i - programs.size()));
 			programList.addAll(programs);
 			isFailed = true;
 		}
