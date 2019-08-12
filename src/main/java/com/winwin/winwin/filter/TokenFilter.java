@@ -30,6 +30,7 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @Service
@@ -49,8 +50,8 @@ public class TokenFilter extends HttpFilter {
 	@Override
 	public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterchain)
 			throws IOException, ServletException {
-		final Set<String> requestEndpoint = new HashSet<String>(
-				Arrays.asList("/user/login", "/user/resetPassword", "/user/confirmResetPassword", "/user/resendCode"));
+		final Set<String> requestEndpoint = new HashSet<String>(Arrays.asList("/user/login", "/user/resetPassword",
+				"/user/confirmResetPassword", "/user/resendCode", "/user/createKibanaUser"));
 
 		if (requestEndpoint.contains(request.getRequestURI())) {
 			filterchain.doFilter(request, response);
@@ -65,7 +66,7 @@ public class TokenFilter extends HttpFilter {
 			user = userService.getLoggedInUser(accessToken, exceptionRes);
 
 			if (!(StringUtils.isEmpty(exceptionRes.getErrorMessage())) && exceptionRes.getStatusCode() != null)
-				response.sendError(400, exceptionRes.getErrorMessage());
+				response.sendError(401, "Unauthorized");
 
 			if (null != user) {
 				UserDetails userDetails = new ApplicationUser(user);
@@ -77,7 +78,7 @@ public class TokenFilter extends HttpFilter {
 			}
 
 		} else {
-			response.sendError(400, "Token Found as null");
+			response.sendError(401, "Unauthorized");
 		}
 	}
 

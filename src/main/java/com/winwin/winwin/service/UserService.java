@@ -10,10 +10,13 @@ import com.winwin.winwin.payload.UserSignInPayload;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 public interface UserService {
 	public void createUser(UserPayload payload, ExceptionResponse response) throws UserException;
+
+	public void createKibanaUser(UserPayload payload, ExceptionResponse response) throws UserException;
 
 	public UserPayload getUserInfo(String userName, ExceptionResponse response);
 

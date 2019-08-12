@@ -35,6 +35,7 @@ public class OrganizationConstants {
 	public static final String AUTOTAGGED = "Auto Tag";
 	public static final String PRIORITY_NORMAL = "Normal";
 	public static final String PRIORITY_HIGH = "High";
+	public static final String COMPLETE_TAG = "Complete";
 
 	// set constants for FrontEnd routes
 	public static final String BASE_URL = "base_url";

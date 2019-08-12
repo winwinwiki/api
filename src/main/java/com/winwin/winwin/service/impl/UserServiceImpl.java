@@ -69,6 +69,7 @@ import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.amazonaws.services.cognitoidp.model.UsernameExistsException;
 import com.winwin.winwin.Logger.CustomMessageSource;
+import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
@@ -106,7 +107,6 @@ public class UserServiceImpl implements UserService {
 	 * email with Temporary password (here for COGNITO the user status will be
 	 * FORCE_CHANGE_PASSWORD
 	 */
-	@SuppressWarnings("unused")
 	@Override
 	public void createUser(UserPayload payload, ExceptionResponse response) throws UserException {
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
@@ -122,6 +122,46 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		try {
+			@SuppressWarnings("unused")
+			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+		} catch (InternalErrorException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | UsernameExistsException
+				| InvalidPasswordException | NotAuthorizedException | TooManyRequestsException
+				| UnsupportedUserStateException e) {
+			response.setErrorMessage(e.getErrorMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.BAD_REQUEST);
+		}
+		cognitoClient.shutdown();
+
+	}
+
+	/**
+	 * The below method createKibanaUser creates new user with default role as
+	 * 'Reader' in AWS COGNITO with email_verified =true and custom attributes
+	 * and accepts a UserPayload and requires Environment Variables such as
+	 * AWS_COGNITO_USER_POOL_ID,AWS_REGION The new user will get an welcome
+	 * email with Temporary password (here for COGNITO the user status will be
+	 * FORCE_CHANGE_PASSWORD
+	 */
+	@Override
+	public void createKibanaUser(UserPayload payload, ExceptionResponse response) throws UserException {
+		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
+		AdminCreateUserRequest cognitoRequest = new AdminCreateUserRequest()
+				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail())
+				.withUserAttributes(new AttributeType().withName("custom:role").withValue(UserConstants.ROLE_READER),
+						new AttributeType().withName("custom:isActive").withValue(payload.getIsActive()),
+						new AttributeType().withName("name").withValue(payload.getUserDisplayName()),
+						new AttributeType().withName("email").withValue(payload.getEmail()),
+						new AttributeType().withName("email_verified").withValue("true"))
+				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
+
+		try {
+			@SuppressWarnings("unused")
 			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());

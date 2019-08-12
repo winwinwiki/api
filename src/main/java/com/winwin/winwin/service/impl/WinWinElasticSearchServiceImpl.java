@@ -214,7 +214,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			FileWriter txtWriter = new FileWriter(file, true);
 			String fileContent = FileUtils.readFileToString(file, "UTF-8");
 			Date lastUpdatedDate = null;
-			Date currentUpdatedDate = null;
 
 			if (!StringUtils.isEmpty(fileContent)) {
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -226,7 +225,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * lastUpdatedDate is not found else find all the organizations from
 			 * lastUpdatedDate
 			 */
-
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
 					organizationList = organizationRepository.findAllOrganizations(pageable);
@@ -252,71 +250,18 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				// using for-each loop for iteration over Map.entrySet()
 				for (Map.Entry<Long, Organization> organizationFromMap : organizationMap.entrySet()) {
-					currentUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
-
-					if (lastUpdatedDate == null) {
-						lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
-						if (file.createNewFile()) {
-						} else {
-							LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-							file.delete();
-							LOGGER.info(
-									" elastic search log File:  " + file.getName() + " has been successfully deleted");
-
-							LOGGER.info("creating again  elastic search log File: " + file.getName());
-							file.createNewFile();
-							LOGGER.info(
-									" elastic search log File: " + file.getName() + " is successfully created again!");
-						}
-						txtWriter.write(lastUpdatedDate.toString());
-					}
-
-					if (null != currentUpdatedDate && null != lastUpdatedDate) {
-						if (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) {
-							lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
-							if (file.createNewFile()) {
-							} else {
-								LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-								file.delete();
-								LOGGER.info(" elastic search log File:  " + file.getName()
-										+ " has been successfully deleted");
-
-								LOGGER.info("creating again  elastic search log File: " + file.getName());
-								file.createNewFile();
-								LOGGER.info(" elastic search log File: " + file.getName()
-										+ " is successfully created again!");
-							}
-							txtWriter.write(currentUpdatedDate.toString());
-						}
-					}
-
-					OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
-					// copy organization values to organizationPayload
-					BeanUtils.copyProperties(organizationFromMap.getValue(), organizationPayload);
-
-					// copy remaining organization values to
-					// organizationPayload
-					if (null != organizationFromMap.getValue().getNaicsCode())
-						organizationPayload.setNaics_code(organizationFromMap.getValue().getNaicsCode().getCode());
-
-					if (null != organizationFromMap.getValue().getNteeCode())
-						organizationPayload.setNtee_code(organizationFromMap.getValue().getNteeCode().getCode());
+					Organization parentOrganization = null;
+					Organization rootParentOrganization = null;
 
 					// check for parent Organization
 					if (null != organizationFromMap.getValue().getParentId()) {
 						// find parentOrganization first in map if not found
 						// then make DB call
-						Organization parentOrganization = organizationMap
-								.get(organizationFromMap.getValue().getParentId());
+						parentOrganization = organizationMap.get(organizationFromMap.getValue().getParentId());
 
 						if (parentOrganization == null)
 							parentOrganization = organizationRepository
 									.findOrgById(organizationFromMap.getValue().getParentId());
-
-						if (null != parentOrganization) {
-							organizationPayload.setParentId(parentOrganization.getId());
-							organizationPayload.setParentName(parentOrganization.getName());
-						}
 
 					}
 
@@ -325,55 +270,32 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// find rootParentOrganization first in map if not
 						// found
 						// then make DB call
-						Organization rootParentOrganization = organizationMap
-								.get(organizationFromMap.getValue().getRootParentId());
+						rootParentOrganization = organizationMap.get(organizationFromMap.getValue().getRootParentId());
 
 						if (rootParentOrganization == null)
 							rootParentOrganization = organizationRepository
 									.findOrgById(organizationFromMap.getValue().getRootParentId());
 
-						if (null != rootParentOrganization) {
-							organizationPayload.setRootParentId(rootParentOrganization.getId());
-							organizationPayload.setRootParentName(rootParentOrganization.getName());
+					}
+
+					// check for root organization to push the data into elastic
+					// search
+					if (parentOrganization == null && rootParentOrganization == null) {
+						String tagStatus = organizationFromMap.getValue().getTagStatus();
+
+						if (!StringUtils.isEmpty(tagStatus) && tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
+							prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate,
+									organizationMap, organizationFromMap, parentOrganization, rootParentOrganization);
 						}
-
+						// check for child organization to push the data into
+						// elastic search
+					} else if (null != parentOrganization && null != rootParentOrganization) {
+						prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate,
+								organizationMap, organizationFromMap, parentOrganization, rootParentOrganization);
 					}
 
-					// set adminUrl for organization
-					if (winwinRoutesMap == null) {
-						// set winWin routes map
-						setWinWinRoutesMap();
-					}
-					if (null != winwinRoutesMap) {
-						if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
-								&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
-							organizationPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
-									+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
-									+ organizationFromMap.getValue().getId());
-						}
-
-					}
-
-					setOrganizationAddress(organizationFromMap, organizationPayload);
-
-					setOrganizationNotes(organizationFromMap, organizationPayload);
-
-					setOrganizationDataSets(organizationFromMap, organizationPayload);
-
-					setOrganizationResources(organizationFromMap, organizationPayload);
-
-					setOrganizationRegionServed(organizationFromMap, organizationPayload);
-
-					setOrganizationSpiData(organizationFromMap, organizationPayload);
-
-					setOrganizationSdgData(organizationFromMap, organizationPayload);
-
-					// set all the programs of an organization
-					setOrganizationPrograms(organizationFromMap, organizationPayload);
-
-					// add organizationPayload to organizationPayloadList
-					organizationPayloadList.add(organizationPayload);
-				}
+				} // end of loop for (Map.Entry<Long, Organization>
+					// organizationFromMap
 
 			} // end of if (null != organizationList) {
 
@@ -393,6 +315,113 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		return organizationPayloadList;
 
+	}
+
+	/**
+	 * @param organizationPayloadList
+	 * @param file
+	 * @param txtWriter
+	 * @param lastUpdatedDate
+	 * @param organizationMap
+	 * @param organizationFromMap
+	 * @throws IOException
+	 */
+	private void prepareDataByTagStatus(List<OrganizationElasticSearchPayload> organizationPayloadList, File file,
+			FileWriter txtWriter, Date lastUpdatedDate, Map<Long, Organization> organizationMap,
+			Map.Entry<Long, Organization> organizationFromMap, Organization parentOrganization,
+			Organization rootParentOrganization) throws IOException {
+		Date currentUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+
+		if (lastUpdatedDate == null) {
+			lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+			if (file.createNewFile()) {
+			} else {
+				LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
+				file.delete();
+				LOGGER.info(" elastic search log File:  " + file.getName() + " has been successfully deleted");
+
+				LOGGER.info("creating again  elastic search log File: " + file.getName());
+				file.createNewFile();
+				LOGGER.info(" elastic search log File: " + file.getName() + " is successfully created again!");
+			}
+			txtWriter.write(lastUpdatedDate.toString());
+		}
+
+		if (null != currentUpdatedDate && null != lastUpdatedDate) {
+			if (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) {
+				lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+				if (file.createNewFile()) {
+				} else {
+					LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
+					file.delete();
+					LOGGER.info(" elastic search log File:  " + file.getName() + " has been successfully deleted");
+
+					LOGGER.info("creating again  elastic search log File: " + file.getName());
+					file.createNewFile();
+					LOGGER.info(" elastic search log File: " + file.getName() + " is successfully created again!");
+				}
+				txtWriter.write(currentUpdatedDate.toString());
+			}
+		}
+
+		OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
+		// copy organization values to organizationPayload
+		BeanUtils.copyProperties(organizationFromMap.getValue(), organizationPayload);
+
+		// copy remaining organization values to
+		// organizationPayload
+		if (null != organizationFromMap.getValue().getNaicsCode())
+			organizationPayload.setNaics_code(organizationFromMap.getValue().getNaicsCode().getCode());
+
+		if (null != organizationFromMap.getValue().getNteeCode())
+			organizationPayload.setNtee_code(organizationFromMap.getValue().getNteeCode().getCode());
+
+		// check for parent Organization
+		if (null != parentOrganization) {
+			organizationPayload.setParentId(parentOrganization.getId());
+			organizationPayload.setParentName(parentOrganization.getName());
+		}
+
+		// check for root parent Organization
+		if (null != rootParentOrganization) {
+			organizationPayload.setRootParentId(rootParentOrganization.getId());
+			organizationPayload.setRootParentName(rootParentOrganization.getName());
+		}
+
+		// set adminUrl for organization
+		if (winwinRoutesMap == null) {
+			// set winWin routes map
+			setWinWinRoutesMap();
+		}
+		if (null != winwinRoutesMap) {
+			if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
+				organizationPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+						+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+						+ organizationFromMap.getValue().getId());
+			}
+
+		}
+
+		setOrganizationAddress(organizationFromMap, organizationPayload);
+
+		setOrganizationNotes(organizationFromMap, organizationPayload);
+
+		setOrganizationDataSets(organizationFromMap, organizationPayload);
+
+		setOrganizationResources(organizationFromMap, organizationPayload);
+
+		setOrganizationRegionServed(organizationFromMap, organizationPayload);
+
+		setOrganizationSpiData(organizationFromMap, organizationPayload);
+
+		setOrganizationSdgData(organizationFromMap, organizationPayload);
+
+		// set all the programs of an organization
+		setOrganizationPrograms(organizationFromMap, organizationPayload);
+
+		// add organizationPayload to organizationPayloadList
+		organizationPayloadList.add(organizationPayload);
 	}
 
 	/**
