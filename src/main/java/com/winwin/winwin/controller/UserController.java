@@ -72,6 +72,33 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 	}
 
+	@RequestMapping(value = "createKibanaUser", method = RequestMethod.POST)
+	public ResponseEntity<?> createKibanaUser(@Valid @RequestBody UserPayload payload) throws UserException {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != payload) {
+			// Check user with status as FORCE_CHANGE_PASSWORD
+			if (isNewUser(payload.getEmail(), exceptionResponse)) {
+				userService.resendUserInvitation(payload, exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+			} else {
+				if (exceptionResponse.getException() != null
+						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+					userService.createKibanaUser(payload, exceptionResponse);
+					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
+				} else if (exceptionResponse.getException() != null
+						&& !(exceptionResponse.getException() instanceof UserNotFoundException)) {
+					return sendMsgResponse(exceptionResponse.getException().getMessage(),
+							exceptionResponse.getStatusCode());
+				}
+			}
+		}
+		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
+	}
+
 	@RequestMapping(value = "login", method = RequestMethod.POST)
 	public ResponseEntity<?> userSignInRequest(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
