@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService {
 		AdminCreateUserRequest cognitoRequest = new AdminCreateUserRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail())
 				.withUserAttributes(new AttributeType().withName("custom:role").withValue(UserConstants.ROLE_READER),
-						new AttributeType().withName("custom:isActive").withValue(payload.getIsActive()),
+						new AttributeType().withName("custom:isActive").withValue("true"),
 						new AttributeType().withName("name").withValue(payload.getUserDisplayName()),
 						new AttributeType().withName("email").withValue(payload.getEmail()),
 						new AttributeType().withName("email_verified").withValue("true"))
