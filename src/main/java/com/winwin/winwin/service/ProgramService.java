@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.OrganizationFilterPayload;
+import com.winwin.winwin.payload.ProgramFilterPayloadData;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -23,7 +23,7 @@ public interface ProgramService {
 
 	List<Program> getProgramList(Long orgId);
 
-	List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response);
+	List<Program> getProgramList(ProgramFilterPayloadData payload, Long orgId, ExceptionResponse response);
 
 	ProgramResponsePayload getProgramResponseFromProgram(Program payload);
 

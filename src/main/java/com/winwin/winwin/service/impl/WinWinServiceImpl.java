@@ -334,49 +334,50 @@ public class WinWinServiceImpl implements WinWinService {
 		if (!StringUtils.isEmpty(csvPayload.getDatasetIds()))
 			organization.setOrganizationDataSet(saveOrganizationDataSetsForBulkUpload(csvPayload, user, organization));
 
-		if (StringUtils.isEmpty(csvPayload.getNaicsCode()) && StringUtils.isEmpty(csvPayload.getNteeCode())) {
-			List<Long> spiTagIds = new ArrayList<>();
-			List<Long> sdgTagIds = new ArrayList<>();
+		// if (StringUtils.isEmpty(csvPayload.getNaicsCode()) &&
+		// StringUtils.isEmpty(csvPayload.getNteeCode())) {
+		List<Long> spiTagIds = new ArrayList<>();
+		List<Long> sdgTagIds = new ArrayList<>();
 
-			if (!StringUtils.isEmpty(csvPayload.getSpiTagIds())) {
-				// split string with comma separated values with removing
-				// leading and trailing
-				// whitespace
-				String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
-				for (int j = 0; j < spiIdsList.length; j++) {
-					if (!StringUtils.isEmpty(spiIdsList[j]))
-						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
-				}
-			}
-			if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
-				// split string with comma separated values with removing
-				// leading and trailing
-				// whitespace
-				String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
-				for (int j = 0; j < sdgIdsList.length; j++) {
-					if (!StringUtils.isEmpty(sdgIdsList[j]))
-						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
-				}
-			}
-			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-				// create organization's spi tags mapping for Bulk Creation
-				organization.setOrganizationSpiData(
-						saveOrgSpiMappingForBulkCreation(organization, user, spiTagIds, spiDataMap));
-				// create organization's sdg tags mapping for Bulk Creation
-				organization.setOrganizationSdgData(
-						saveOrgSdgMappingForBulkCreation(organization, user, sdgTagIds, sdgDataMap));
+		if (!StringUtils.isEmpty(csvPayload.getSpiTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
+			for (int j = 0; j < spiIdsList.length; j++) {
+				if (!StringUtils.isEmpty(spiIdsList[j]))
+					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 			}
 		}
-
-		// To set spi and sdg tags by naics code and ntee code from AWS S3
-		// Bucket
-		// AutoTags mapping
-		if (null != organization.getNaicsCode() || null != organization.getNteeCode()) {
-			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-				organization = setOrganizationSpiSdgMappingForBulkCreation(organization, user, naicsMapForS3,
-						nteeMapForS3, spiDataMap, sdgDataMap);
+		if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
+			for (int j = 0; j < sdgIdsList.length; j++) {
+				if (!StringUtils.isEmpty(sdgIdsList[j]))
+					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
 			}
 		}
+		if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+			// create organization's spi tags mapping for Bulk Creation
+			organization.setOrganizationSpiData(
+					saveOrgSpiMappingForBulkCreation(organization, user, spiTagIds, spiDataMap));
+			// create organization's sdg tags mapping for Bulk Creation
+			organization.setOrganizationSdgData(
+					saveOrgSdgMappingForBulkCreation(organization, user, sdgTagIds, sdgDataMap));
+		}
+		// }
+
+		/*
+		 * // To set spi and sdg tags by naics code and ntee code from AWS S3 //
+		 * Bucket // AutoTags mapping if (null != organization.getNaicsCode() ||
+		 * null != organization.getNteeCode()) { if
+		 * (operationPerformed.equals(OrganizationConstants.CREATE)) {
+		 * organization =
+		 * setOrganizationSpiSdgMappingForBulkCreation(organization, user,
+		 * naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap); } }
+		 */
 
 		return organization;
 	}// end of method
