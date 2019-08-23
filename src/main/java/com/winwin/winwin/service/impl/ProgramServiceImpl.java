@@ -17,6 +17,7 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
+import com.winwin.winwin.payload.ProgramFilterPayloadData;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -195,7 +196,7 @@ public class ProgramServiceImpl implements ProgramService {
 	 * @return
 	 */
 	@Override
-	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
+	public List<Program> getProgramList(ProgramFilterPayloadData payload, Long orgId, ExceptionResponse response) {
 		List<Program> programList = new ArrayList<Program>();
 		try {
 			if (payload.getNameSearch() != null)

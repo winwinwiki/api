@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.winwin.winwin.entity.Program;
-import com.winwin.winwin.payload.OrganizationFilterPayload;
+import com.winwin.winwin.payload.ProgramFilterPayloadData;
 
 /**
  * @author ArvindKhatik
@@ -14,5 +14,5 @@ import com.winwin.winwin.payload.OrganizationFilterPayload;
  */
 @Repository
 public interface ProgramFilterRepository {
-	List<Program> filterProgram(OrganizationFilterPayload payload, String type, Long orgId);
+	List<Program> filterProgram(ProgramFilterPayloadData payload, String type, Long orgId);
 }

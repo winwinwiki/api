@@ -44,7 +44,6 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -60,7 +59,7 @@
 			<artifactId>bom</artifactId>
 			<version>2.0.0</version>
 			<type>pom</type>
-			<scope>import</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -71,11 +70,8 @@
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.11.163</version>
-		</dependency>
+		<!-- <dependency> <groupId>com.amazonaws</groupId> <artifactId>aws-java-sdk-core</artifactId> 
+			<version>1.11.163</version> </dependency> -->
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-cognitoidp</artifactId>
@@ -109,11 +105,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>aws-java-sdk</groupId>
-			<artifactId>core</artifactId>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
 			<version>1.11.365</version>
-			<systemPath>${project.basedir}/lib/aws-java-sdk-core-1.11.365.jar</systemPath>
-			<scope>system</scope>
+			<!-- <systemPath>${project.basedir}/lib/aws-java-sdk-custom-core-1.11.365.jar</systemPath> 
+				<scope>system</scope> -->
 		</dependency>
 
 	</dependencies>
@@ -131,6 +127,29 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>install-external</id>
+						<phase>clean</phase>
+						<configuration>
+							<file>${basedir}/lib/aws-java-sdk-custom-core-1.11.365.jar</file>
+							<repositoryLayout>default</repositoryLayout>
+							<groupId>aws-java-sdk-custom</groupId>
+							<artifactId>aws-java-sdk-custom-core</artifactId>
+							<version>1.11.365</version>
+							<packaging>jar</packaging>
+							<generatePom>true</generatePom>
+						</configuration>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

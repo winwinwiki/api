@@ -4,8 +4,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -141,15 +142,18 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			Integer totalPageNumAvailable = null;
 			if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
 				totalPageNumAvailable = pageNumAvailable + 1;
+			else
+				totalPageNumAvailable = pageNumAvailable;
 
 			for (int pageNum = 0; pageNum < totalPageNumAvailable; pageNum++) {
 				// set page number and page size for organization
 				Pageable pageable = PageRequest.of(pageNum, pageSize);
-				LOGGER.info(
-						"sending data to Elastic Search from " + (pageNum + 1) + " to " + ((pageNum + 1) * pageSize));
+				LOGGER.info("sending data to Elastic Search Index: " + System.getenv("AWS_ES_INDEX") + " from "
+						+ ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize));
 				sendDataToElasticSearch(pageable);
-				LOGGER.info("data has been sent successfully to Elastic Search from " + (pageNum + 1) + " to "
-						+ ((pageNum + 1) * pageSize) + " ");
+				LOGGER.info("data has been sent successfully to Elastic Search Index: " + System.getenv("AWS_ES_INDEX")
+						+ " from " + ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize) + " ");
+
 			} // end of loop
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
 		} catch (Exception e) {
@@ -173,6 +177,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable);
 		RestHighLevelClient esClient = esClient(serviceName, region);
 
+		// Send bulk index data
+		BulkRequest bulkRequest = new BulkRequest();
+
 		for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 			final String id = "organization_" + payload.getId().toString();
 			// Creating Object of ObjectMapper define in JACKSON API
@@ -187,16 +194,34 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 			// Form the indexing request, send it, and print the response
 			IndexRequest request = new IndexRequest(index, type, id).source(document);
-			try {
-				LOGGER.info("sending data of organization id : " + payload.getId() + " to ElasticSearch");
-				IndexResponse response = esClient.index(request, RequestOptions.DEFAULT);
-				LOGGER.info("data of organization id : " + payload.getId()
-						+ " has been successfully sent to ElasticSearch index with id as: " + response.getId());
+			// Add individual bulk request to bulk request
+			bulkRequest.add(request);
 
-			} catch (ElasticsearchException e) {
-				if (e.status() == RestStatus.CONFLICT) {
-					LOGGER.error("exception occoured due to conflict while sending post request to ElasticSearch", e);
-				}
+			// commented the below code to use bulk request
+			/*
+			 * try { LOGGER.info("sending data of organization id : " +
+			 * payload.getId() + " to ElasticSearch"); IndexResponse response =
+			 * esClient.index(request, RequestOptions.DEFAULT); LOGGER.info(
+			 * "data of organization id : " + payload.getId() +
+			 * " has been successfully sent to ElasticSearch index with id as: "
+			 * + response.getId());
+			 * 
+			 * } catch (ElasticsearchException e) { if (e.status() ==
+			 * RestStatus.CONFLICT) { LOGGER.error(
+			 * "exception occoured due to conflict while sending post request to ElasticSearch"
+			 * , e); } }
+			 */
+
+		} // end of loop for (OrganizationElasticSearchPayload payload :
+
+		try {
+			// send bulk request to es
+			@SuppressWarnings("unused")
+			BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+		} catch (ElasticsearchException e) {
+			if (e.status() == RestStatus.CONFLICT) {
+				LOGGER.error("exception occoured due to conflict while sending post request to ElasticSearch", e);
 			}
 		}
 
@@ -225,15 +250,16 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * lastUpdatedDate is not found else find all the organizations from
 			 * lastUpdatedDate
 			 */
-			if (null != pageable) {
-				if (lastUpdatedDate == null) {
-					organizationList = organizationRepository.findAllOrganizations(pageable);
-				} else {
-					organizationList = organizationRepository.findAllOrganizationsFromLastUpdatedDate(pageable,
-							lastUpdatedDate);
-				}
-
-			}
+			/*
+			 * if (null != pageable) { if (lastUpdatedDate == null) {
+			 * organizationList =
+			 * organizationRepository.findAllOrganizations(pageable); } else {
+			 * organizationList =
+			 * organizationRepository.findAllOrganizationsFromLastUpdatedDate(
+			 * pageable, lastUpdatedDate); }
+			 * 
+			 * }
+			 */
 
 			/*
 			 * List<Long> ids = new ArrayList<Long>(); ids.add(39933L); for
@@ -242,6 +268,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * organizationRepository.findOrgById(id); if (null != organization)
 			 * organizationList.add(organization);
 			 */
+
+			organizationList = organizationRepository.findAllOrganizations(pageable);
 
 			if (null != organizationList) {
 				// set Organization Map
@@ -1039,8 +1067,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
 				envCredentialsProvider);
-		return new RestHighLevelClient(RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT")))
-				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
+		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
+		// exception
+		return new RestHighLevelClient(
+				RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT"))).setMaxRetryTimeoutMillis(6000000)
+						.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
 	}
 
 }

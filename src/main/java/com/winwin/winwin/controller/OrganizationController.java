@@ -65,6 +65,7 @@ import com.winwin.winwin.payload.OrganizationResourcePayload;
 import com.winwin.winwin.payload.OrganizationResponsePayload;
 import com.winwin.winwin.payload.OrganizationSdgDataMapPayload;
 import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
+import com.winwin.winwin.payload.ProgramFilterPayloadData;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.RegionMasterFilterPayload;
@@ -457,7 +458,7 @@ public class OrganizationController extends BaseController {
 				if (null != parentOrganization)
 					payload.setParentName(parentOrganization.getName());
 			}
-			
+
 			if (null != organization.getRootParentId()) {
 				Organization rootParentOrganization = organizationRepository
 						.findOrgById(organization.getRootParentId());
@@ -1181,7 +1182,7 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/program", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId, OrganizationFilterPayload filterPayload)
+	public ResponseEntity<?> getProgramList(@PathVariable("id") Long orgId, ProgramFilterPayloadData filterPayload)
 			throws OrganizationException {
 		List<Program> prgList = null;
 		List<ProgramResponsePayload> payloadList = new ArrayList<>();
