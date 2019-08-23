@@ -114,13 +114,13 @@
 
 	</dependencies>
 
-	<repositories>
+	<!-- <repositories>
 		<repository>
 			<id>in-project</id>
 			<name>In Project Repo</name>
 			<url>file://${project.basedir}/lib</url>
 		</repository>
-	</repositories>
+	</repositories> -->
 
 	<build>
 		<plugins>
@@ -129,7 +129,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-install-plugin</artifactId>
 				<executions>
@@ -150,7 +150,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 		</plugins>
 	</build>
 

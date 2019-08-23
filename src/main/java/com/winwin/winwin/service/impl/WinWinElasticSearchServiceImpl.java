@@ -1069,8 +1069,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				envCredentialsProvider);
 		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
 		// exception
+		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
+		// socket and connection timeout exception
 		return new RestHighLevelClient(
 				RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT"))).setMaxRetryTimeoutMillis(6000000)
+						.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+								.setConnectTimeout(6000000).setSocketTimeout(6000000))
 						.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
 	}
 
