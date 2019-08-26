@@ -112,6 +112,12 @@
 			<scope>system</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
+			<version>1.11.365</version>
+		</dependency>
+
 	</dependencies>
 
 	<repositories>
