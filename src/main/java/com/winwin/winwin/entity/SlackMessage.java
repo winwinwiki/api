@@ -30,5 +30,8 @@ public class SlackMessage implements Serializable {
 	private String content;
 	private String initial_comment;
 	private String channels;
+	private String text;
+	private String as_user;
+	private String channel;
 
 }

@@ -20,14 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +28,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.SlackNotificationSenderService;
 
+import io.micrometer.core.instrument.util.StringUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -153,24 +146,37 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 					+ " created by: " + user.getUserDisplayName());
 
 		} catch (Exception e) {
-			LOGGER.error("exception occured while sending notifications", e);
+			LOGGER.error("exception occured while sending notification", e);
 		}
 
 	}
 
 	/**
-	 * Sends File Notifications to Slack on defined channel
+	 * Sends File Notifications to Slack on the channel specified in
+	 * SlackMessage
 	 * 
 	 * @param message
 	 */
 	private void sendPostRequest(SlackMessage message) {
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
-		params.add(new BasicNameValuePair("filetype", message.getFiletype()));
-		params.add(new BasicNameValuePair("filename", message.getFilename()));
-		params.add(new BasicNameValuePair("username", message.getUsername()));
-		params.add(new BasicNameValuePair("content", message.getContent()));
-		params.add(new BasicNameValuePair("initial_comment", message.getInitial_comment()));
-		params.add(new BasicNameValuePair("channels", message.getChannels()));
+
+		if (!StringUtils.isEmpty(message.getFiletype()))
+			params.add(new BasicNameValuePair("filetype", message.getFiletype()));
+
+		if (!StringUtils.isEmpty(message.getFilename()))
+			params.add(new BasicNameValuePair("filename", message.getFilename()));
+
+		if (!StringUtils.isEmpty(message.getUsername()))
+			params.add(new BasicNameValuePair("username", message.getUsername()));
+
+		if (!StringUtils.isEmpty(message.getContent()))
+			params.add(new BasicNameValuePair("content", message.getContent()));
+
+		if (!StringUtils.isEmpty(message.getInitial_comment()))
+			params.add(new BasicNameValuePair("initial_comment", message.getInitial_comment()));
+
+		if (!StringUtils.isEmpty(message.getChannels()))
+			params.add(new BasicNameValuePair("channels", message.getChannels()));
 
 		try {
 			URL obj = new URL(System.getenv("SLACK_UPLOAD_FILE_API_URL"));
@@ -205,11 +211,11 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			LOGGER.info("SLACK_CHANNEL_NAME " + message.getChannels());
 
 		} catch (MalformedURLException e) {
-			LOGGER.error("exception occured while sending notifications", e);
+			LOGGER.error("exception occured while sending notification", e);
 		} catch (ProtocolException e) {
-			LOGGER.error("exception occured while sending notifications", e);
+			LOGGER.error("exception occured while sending notification", e);
 		} catch (IOException e) {
-			LOGGER.error("exception occured while sending notifications", e);
+			LOGGER.error("exception occured while sending notification", e);
 		}
 	}
 
@@ -231,34 +237,66 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 		return result.toString();
 	}
 
-	@SuppressWarnings("unused")
-	private void sendMessage(SlackMessage message) {
-		CloseableHttpClient client = HttpClients.createDefault();
-		HttpPost httpPost = new HttpPost(System.getenv("SLACK_UPLOAD_FILE_API_URL"));
+	/**
+	 * Sends Message Notifications to Slack on the channel specified in
+	 * SlackMessage
+	 * 
+	 * @param message
+	 */
+	@Override
+	public void sendSlackMessageNotification(SlackMessage message) {
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+
+		if (!StringUtils.isEmpty(message.getUsername()))
+			params.add(new BasicNameValuePair("username", message.getUsername()));
+
+		if (!StringUtils.isEmpty(message.getText()))
+			params.add(new BasicNameValuePair("text", message.getText()));
+
+		if (!StringUtils.isEmpty(message.getChannel()))
+			params.add(new BasicNameValuePair("channel", message.getChannel()));
+
+		if (!StringUtils.isEmpty(message.getAs_user()))
+			params.add(new BasicNameValuePair("as_user", message.getAs_user()));
 
 		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			String json = objectMapper.writeValueAsString(message);
-			StringEntity reqEntity1 = new StringEntity(json);
+			URL obj = new URL(System.getenv("SLACK_CHAT_POST_MESSAGE_API_URL"));
+			HttpURLConnection postConnection = (HttpURLConnection) obj.openConnection();
+			postConnection.setRequestProperty("Authorization", "Bearer " + System.getenv("SLACK_AUTH_TOKEN"));
+			postConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			postConnection.setReadTimeout(10000);
+			postConnection.setConnectTimeout(15000);
+			postConnection.setRequestMethod("POST");
+			postConnection.setDoInput(true);
+			postConnection.setDoOutput(true);
 
-			MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-			builder.addTextBody("filetype", message.getFiletype());
-			builder.addTextBody("filename", message.getFilename());
-			builder.addTextBody("username", message.getUsername());
-			builder.addTextBody("content", message.getContent());
-			builder.addTextBody("initial_comment", message.getInitial_comment());
-			builder.addTextBody("channels", message.getChannels());
+			OutputStream os = postConnection.getOutputStream();
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+			writer.write(getQuery(params));
+			writer.flush();
+			writer.close();
+			os.close();
+			postConnection.connect();
 
-			HttpEntity reqEntity = builder.build();
+			// read the InputStream and print it
+			String result;
+			BufferedInputStream bis = new BufferedInputStream(postConnection.getInputStream());
+			ByteArrayOutputStream buf = new ByteArrayOutputStream();
+			int result2 = bis.read();
+			while (result2 != -1) {
+				buf.write((byte) result2);
+				result2 = bis.read();
+			}
+			result = buf.toString();
+			LOGGER.info(result);
+			LOGGER.info("SLACK_CHANNEL_NAME " + message.getChannels());
 
-			httpPost.setEntity(reqEntity);
-			httpPost.setHeader("Authorization", "Bearer " + System.getenv("SLACK_AUTH_TOKEN"));
-			httpPost.setHeader("Content-type", "application/x-www-form-urlencoded");
-
-			CloseableHttpResponse response = client.execute(httpPost);
-			client.close();
+		} catch (MalformedURLException e) {
+			LOGGER.error("exception occured while sending notification", e);
+		} catch (ProtocolException e) {
+			LOGGER.error("exception occured while sending notification", e);
 		} catch (IOException e) {
-			LOGGER.error("exception occured while sending notifications", e);
+			LOGGER.error("exception occured while sending notification", e);
 		}
 	}
 

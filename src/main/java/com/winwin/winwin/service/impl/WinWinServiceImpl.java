@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ import com.winwin.winwin.entity.ProgramSpiData;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.entity.SdgData;
+import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
@@ -66,6 +68,7 @@ import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
+import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CommonUtils;
 import com.winwin.winwin.util.CsvUtils;
@@ -100,11 +103,16 @@ public class WinWinServiceImpl implements WinWinService {
 	private NteeDataRepository nteeDataRepository;
 	@Autowired
 	private NaicsDataRepository naicsDataRepository;
+	@Autowired
+	private SlackNotificationSenderService slackNotificationSenderService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
 
 	private Map<String, NaicsData> naicsMap = null;
 	private Map<String, NteeData> nteeMap = null;
+
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
 
 	/**
 	 * create organizations in bulk, call this method only when the organization
@@ -121,8 +129,19 @@ public class WinWinServiceImpl implements WinWinService {
 	public List<Organization> createOrganizationsOffline(
 			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			UserPayload user) {
+		// for Slack Notification
+		Date date = CommonUtils.getFormattedDate();
+		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+				.text("WinWinWiki Organization Data Migration Process has been started successfully at " + date)
+				.channel(SLACK_CHANNEL).as_user("true").build();
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
 				OrganizationConstants.CREATE, "org.exception.created", user);
+
+		date = CommonUtils.getFormattedDate();
+		slackMessage.setText(("WinWinWiki Organization Data Migration Process has been ended successfully at " + date));
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		return organizationList;
 	}
@@ -141,8 +160,19 @@ public class WinWinServiceImpl implements WinWinService {
 	@Async
 	public List<Program> createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, UserPayload user) {
+		// for Slack Notification
+		Date date = CommonUtils.getFormattedDate();
+		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+				.text("WinWinWiki Program Data Migration Process has been started successfully at " + date)
+				.channel(SLACK_CHANNEL).as_user("true").build();
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		List<Program> programList = saveProgramOfflineForBulkUpload(programPayloadList, response,
 				OrganizationConstants.CREATE, "prg.exception.created", user);
+
+		date = CommonUtils.getFormattedDate();
+		slackMessage.setText(("WinWinWiki Program Data Migration Process has been ended successfully at " + date));
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		return programList;
 	}
@@ -422,6 +452,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @throws Exception
 	 * 
 	 */
+	@SuppressWarnings("unused")
 	private Organization setOrganizationSpiSdgMappingForBulkCreation(Organization organization, UserPayload user,
 			Map<String, NaicsDataMappingPayload> naicsMapForS3, Map<String, NteeDataMappingPayload> nteeMapForS3,
 			Map<Long, SpiData> spiDataMap, Map<Long, SdgData> sdgDataMap) throws Exception {
