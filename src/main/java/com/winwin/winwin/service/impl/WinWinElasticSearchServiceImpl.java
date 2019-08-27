@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -39,6 +40,7 @@ import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.ProgramSpiData;
+import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.entity.WinWinRoutesMapping;
 import com.winwin.winwin.payload.AddressElasticSearchPayload;
 import com.winwin.winwin.payload.OrganizationDataSetElasticSearchPayload;
@@ -68,12 +70,15 @@ import com.winwin.winwin.repository.ProgramResourceRepository;
 import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
 import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
 import com.winwin.winwin.repository.WinWinRoutesMappingRepository;
+import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.WinWinElasticSearchService;
+import com.winwin.winwin.util.CommonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -92,39 +97,44 @@ import java.util.stream.Collectors;
 public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchService {
 
 	@Autowired
-	OrganizationRepository organizationRepository;
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	ProgramRepository programRepository;
+	private ProgramRepository programRepository;
 	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
+	private OrganizationNoteRepository organizationNoteRepository;
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
+	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
+	private OrganizationResourceRepository organizationResourceRepository;
 	@Autowired
-	OrganizationRegionServedRepository organizationRegionServedRepository;
+	private OrganizationRegionServedRepository organizationRegionServedRepository;
 	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
+	private OrgSpiDataMapRepository orgSpiDataMapRepository;
 	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
+	private OrgSdgDataMapRepository orgSdgDataMapRepository;
 	@Autowired
-	ProgramDataSetRepository programDataSetRepository;
+	private ProgramDataSetRepository programDataSetRepository;
 	@Autowired
-	ProgramResourceRepository programResourceRepository;
+	private ProgramResourceRepository programResourceRepository;
 	@Autowired
-	ProgramRegionServedRepository programRegionServedRepository;
+	private ProgramRegionServedRepository programRegionServedRepository;
 	@Autowired
-	ProgramSpiDataMapRepository programSpiDataMapRepository;
+	private ProgramSpiDataMapRepository programSpiDataMapRepository;
 	@Autowired
-	ProgramSdgDataMapRepository programSdgDataMapRepository;
+	private ProgramSdgDataMapRepository programSdgDataMapRepository;
 	@Autowired
-	WinWinRoutesMappingRepository winWinRoutesMappingRepository;
+	private WinWinRoutesMappingRepository winWinRoutesMappingRepository;
+	@Autowired
+	private SlackNotificationSenderService slackNotificationSenderService;
 
 	static final EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinElasticSearchServiceImpl.class);
 
 	private Map<String, String> winwinRoutesMap = null;
+
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
 
 	/**
 	 * send organization's data to Elastic Search
@@ -135,6 +145,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// send organization data to elastic
 		try {
 			LOGGER.info("process: sendPostRequestToElasticSearch has been started successfully");
+
+			// for Slack Notification
+			Date date = CommonUtils.getFormattedDate();
+			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+					.text("WinWinWiki Publish To Kibana Process has been started successfully at " + date)
+					.channel(SLACK_CHANNEL).as_user("true").build();
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 			// Integer numOfOrganizations = 40;
 			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
 			Integer pageSize = 1000;
@@ -156,6 +174,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 			} // end of loop
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
+			date = CommonUtils.getFormattedDate();
+			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully at " + date));
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		} catch (Exception e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 		}
@@ -215,9 +237,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		} // end of loop for (OrganizationElasticSearchPayload payload :
 
 		try {
-			// send bulk request to es
-			@SuppressWarnings("unused")
-			BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+			if (!organizationPayloadList.isEmpty()) {
+				// send bulk request to es
+				@SuppressWarnings("unused")
+				BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+			}
 
 		} catch (ElasticsearchException e) {
 			if (e.status() == RestStatus.CONFLICT) {
@@ -250,16 +275,16 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * lastUpdatedDate is not found else find all the organizations from
 			 * lastUpdatedDate
 			 */
-			/*
-			 * if (null != pageable) { if (lastUpdatedDate == null) {
-			 * organizationList =
-			 * organizationRepository.findAllOrganizations(pageable); } else {
-			 * organizationList =
-			 * organizationRepository.findAllOrganizationsFromLastUpdatedDate(
-			 * pageable, lastUpdatedDate); }
-			 * 
-			 * }
-			 */
+
+			if (null != pageable) {
+				if (lastUpdatedDate == null) {
+					organizationList = organizationRepository.findAllOrganizations(pageable);
+				} else {
+					organizationList = organizationRepository.findAllOrganizationsFromLastUpdatedDate(pageable,
+							lastUpdatedDate);
+				}
+
+			}
 
 			/*
 			 * List<Long> ids = new ArrayList<Long>(); ids.add(39933L); for
@@ -268,8 +293,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * organizationRepository.findOrgById(id); if (null != organization)
 			 * organizationList.add(organization);
 			 */
-
-			organizationList = organizationRepository.findAllOrganizations(pageable);
 
 			if (null != organizationList) {
 				// set Organization Map
@@ -364,15 +387,16 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
 			if (file.createNewFile()) {
 			} else {
-				LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-				file.delete();
-				LOGGER.info(" elastic search log File:  " + file.getName() + " has been successfully deleted");
-
-				LOGGER.info("creating again  elastic search log File: " + file.getName());
-				file.createNewFile();
-				LOGGER.info(" elastic search log File: " + file.getName() + " is successfully created again!");
+				LOGGER.info("clearing content from existing  elastic search log File:: " + file.getName());
+				PrintWriter writer = new PrintWriter(file);
+				writer.print("");
+				writer.close();
 			}
+			// write last Updated Date
 			txtWriter.write(lastUpdatedDate.toString());
+
+			// flush the changes into txtWriter
+			txtWriter.flush();
 		}
 
 		if (null != currentUpdatedDate && null != lastUpdatedDate) {
@@ -380,15 +404,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
 				if (file.createNewFile()) {
 				} else {
-					LOGGER.info("deleting existing  elastic search log File:: " + file.getName());
-					file.delete();
-					LOGGER.info(" elastic search log File:  " + file.getName() + " has been successfully deleted");
-
-					LOGGER.info("creating again  elastic search log File: " + file.getName());
-					file.createNewFile();
-					LOGGER.info(" elastic search log File: " + file.getName() + " is successfully created again!");
+					LOGGER.info("clearing content from existing  elastic search log File:: " + file.getName());
+					PrintWriter writer = new PrintWriter(file);
+					writer.print("");
+					writer.close();
 				}
-				txtWriter.write(currentUpdatedDate.toString());
+				// write last Updated Date
+				txtWriter.write(lastUpdatedDate.toString());
+				// flush the changes into txtWriter
+				txtWriter.flush();
 			}
 		}
 
