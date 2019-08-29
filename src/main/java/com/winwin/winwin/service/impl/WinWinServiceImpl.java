@@ -397,17 +397,6 @@ public class WinWinServiceImpl implements WinWinService {
 			organization.setOrganizationSdgData(
 					saveOrgSdgMappingForBulkCreation(organization, user, sdgTagIds, sdgDataMap));
 		}
-		// }
-
-		/*
-		 * // To set spi and sdg tags by naics code and ntee code from AWS S3 //
-		 * Bucket // AutoTags mapping if (null != organization.getNaicsCode() ||
-		 * null != organization.getNteeCode()) { if
-		 * (operationPerformed.equals(OrganizationConstants.CREATE)) {
-		 * organization =
-		 * setOrganizationSpiSdgMappingForBulkCreation(organization, user,
-		 * naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap); } }
-		 */
 
 		return organization;
 	}// end of method
@@ -920,47 +909,40 @@ public class WinWinServiceImpl implements WinWinService {
 			program.setOrganization(organization);
 		}
 
-		if (requestPayload.getNaicsCode() == null && requestPayload.getNteeCode() == null) {
-			List<Long> spiTagIds = new ArrayList<>();
-			List<Long> sdgTagIds = new ArrayList<>();
+		List<Long> spiTagIds = new ArrayList<>();
+		List<Long> sdgTagIds = new ArrayList<>();
 
-			if (!StringUtils.isEmpty(requestPayload.getSpiTagIds())) {
-				// split string with comma separated values with removing
-				// leading and trailing
-				// whitespace
-				String[] spiIdsList = requestPayload.getSpiTagIds().split(",");
-				for (int j = 0; j < spiIdsList.length; j++) {
-					if (!StringUtils.isEmpty(spiIdsList[j]))
+		if (!StringUtils.isEmpty(requestPayload.getSpiTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] spiIdsList = requestPayload.getSpiTagIds().split(",");
+			for (int j = 0; j < spiIdsList.length; j++) {
+				if (!StringUtils.isEmpty(spiIdsList[j])) {
+					if (!StringUtils.isEmpty(spiIdsList[j].trim()))
 						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
 				}
-			}
-			if (!StringUtils.isEmpty(requestPayload.getSdgTagIds())) {
-				// split string with comma separated values with removing
-				// leading and trailing
-				// whitespace
-				String[] sdgIdsList = requestPayload.getSdgTagIds().split(",");
-				for (int j = 0; j < sdgIdsList.length; j++) {
-					if (!StringUtils.isEmpty(sdgIdsList[j]))
-						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
-				}
-			}
-			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-				// create program's spi tags mapping for Bulk Creation
-				program.setProgramSpiData(saveProgramSpiMappingForBulkCreation(program, user, spiTagIds, spiDataMap));
-				// create program's sdg tags mapping for Bulk Creation
-				program.setProgramSdgData(saveProgramSdgMappingForBulkCreation(program, user, sdgTagIds, sdgDataMap));
+
 			}
 		}
+		if (!StringUtils.isEmpty(requestPayload.getSdgTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] sdgIdsList = requestPayload.getSdgTagIds().split(",");
+			for (int j = 0; j < sdgIdsList.length; j++) {
+				if (!StringUtils.isEmpty(sdgIdsList[j])) {
+					if (!StringUtils.isEmpty(sdgIdsList[j].trim()))
+						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+				}
 
-		// To set spi and sdg tags by naics code and ntee code from AWS S3
-		// Bucket
-		// AutoTags mapping
-		if ((!StringUtils.isEmpty(requestPayload.getNaicsCode()))
-				|| (!StringUtils.isEmpty(requestPayload.getNteeCode()))) {
-			if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-				program = setProgramSpiSdgMappingForBulkCreation(requestPayload, program, user, naicsMapForS3,
-						nteeMapForS3, spiDataMap, sdgDataMap);
 			}
+		}
+		if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+			// create program's spi tags mapping for Bulk Creation
+			program.setProgramSpiData(saveProgramSpiMappingForBulkCreation(program, user, spiTagIds, spiDataMap));
+			// create program's sdg tags mapping for Bulk Creation
+			program.setProgramSdgData(saveProgramSdgMappingForBulkCreation(program, user, sdgTagIds, sdgDataMap));
 		}
 
 		return program;

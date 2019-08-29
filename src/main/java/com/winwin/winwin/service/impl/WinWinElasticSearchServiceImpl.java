@@ -142,19 +142,45 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	@Override
 	@Async
 	public void sendPostRequestToElasticSearch() {
+		SlackMessage slackMessage = null;
 		// send organization data to elastic
 		try {
 			LOGGER.info("process: sendPostRequestToElasticSearch has been started successfully");
 
 			// for Slack Notification
 			Date date = CommonUtils.getFormattedDate();
-			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text("WinWinWiki Publish To Kibana Process has been started successfully at " + date)
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
+			File file = new File("winwin_elasticSearch_log.txt");
+			// Create the file
+			LOGGER.info("fetching details from elastic search log File: " + file.getName());
+			FileWriter txtWriter = new FileWriter(file, true);
+			String fileContent = FileUtils.readFileToString(file, "UTF-8");
+			Date lastUpdatedDate = null;
+
+			if (!StringUtils.isEmpty(fileContent)) {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+				lastUpdatedDate = sdf.parse(fileContent);
+			}
+
+			/*
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
+			 */
 			// Integer numOfOrganizations = 40;
 			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
+
+			if (lastUpdatedDate == null) {
+				numOfOrganizations = organizationRepository.findAllOrganizationsCount();
+			} else {
+				numOfOrganizations = organizationRepository
+						.findAllOrganizationsCountFromLastUpdatedDate(lastUpdatedDate);
+			}
+
 			Integer pageSize = 1000;
 			Integer pageNumAvailable = numOfOrganizations / pageSize;
 			Integer totalPageNumAvailable = null;
@@ -180,6 +206,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		} catch (Exception e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			Date date = CommonUtils.getFormattedDate();
+			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run due to error:"
+					+ e.getMessage() + "at " + date));
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		}
 
 	}
@@ -188,55 +219,53 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @throws IOException
 	 * @param pageable
 	 */
-	@Async
-	private void sendDataToElasticSearch(Pageable pageable) throws IOException {
+	private void sendDataToElasticSearch(Pageable pageable) throws Exception {
 		final String serviceName = "es";
 		final String region = System.getenv("AWS_REGION2");
 		final String index = System.getenv("AWS_ES_INDEX");
 		final String type = System.getenv("AWS_ES_INDEX_TYPE");
 
-		// fetch all the data of organization by pageNum and pageSize
-		List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable);
-		RestHighLevelClient esClient = esClient(serviceName, region);
-
-		// Send bulk index data
-		BulkRequest bulkRequest = new BulkRequest();
-
-		for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
-			final String id = "organization_" + payload.getId().toString();
-			// Creating Object of ObjectMapper define in JACKSON API
-			ObjectMapper objectMapper = new ObjectMapper();
-
-			// get Organization object as a JSON string
-			String jsonStr = objectMapper.writeValueAsString(payload);
-
-			// Create the document as a hash map from JSON string
-			@SuppressWarnings("unchecked")
-			Map<String, String> document = objectMapper.readValue(jsonStr, Map.class);
-
-			// Form the indexing request, send it, and print the response
-			IndexRequest request = new IndexRequest(index, type, id).source(document);
-			// Add individual bulk request to bulk request
-			bulkRequest.add(request);
-
-			// commented the below code to use bulk request
-			/*
-			 * try { LOGGER.info("sending data of organization id : " +
-			 * payload.getId() + " to ElasticSearch"); IndexResponse response =
-			 * esClient.index(request, RequestOptions.DEFAULT); LOGGER.info(
-			 * "data of organization id : " + payload.getId() +
-			 * " has been successfully sent to ElasticSearch index with id as: "
-			 * + response.getId());
-			 * 
-			 * } catch (ElasticsearchException e) { if (e.status() ==
-			 * RestStatus.CONFLICT) { LOGGER.error(
-			 * "exception occoured due to conflict while sending post request to ElasticSearch"
-			 * , e); } }
-			 */
-
-		} // end of loop for (OrganizationElasticSearchPayload payload :
-
 		try {
+			// fetch all the data of organization by pageNum and pageSize
+			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable);
+			RestHighLevelClient esClient = esClient(serviceName, region);
+
+			// Send bulk index data
+			BulkRequest bulkRequest = new BulkRequest();
+
+			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
+				final String id = "organization_" + payload.getId().toString();
+				// Creating Object of ObjectMapper define in JACKSON API
+				ObjectMapper objectMapper = new ObjectMapper();
+
+				// get Organization object as a JSON string
+				String jsonStr = objectMapper.writeValueAsString(payload);
+
+				// Create the document as a hash map from JSON string
+				@SuppressWarnings("unchecked")
+				Map<String, String> document = objectMapper.readValue(jsonStr, Map.class);
+
+				// Form the indexing request, send it, and print the response
+				IndexRequest request = new IndexRequest(index, type, id).source(document);
+				// Add individual bulk request to bulk request
+				bulkRequest.add(request);
+
+				// commented the below code to use bulk request
+				/*
+				 * try { LOGGER.info("sending data of organization id : " +
+				 * payload.getId() + " to ElasticSearch"); IndexResponse
+				 * response = esClient.index(request, RequestOptions.DEFAULT);
+				 * LOGGER.info( "data of organization id : " + payload.getId() +
+				 * " has been successfully sent to ElasticSearch index with id as: "
+				 * + response.getId());
+				 * 
+				 * } catch (ElasticsearchException e) { if (e.status() ==
+				 * RestStatus.CONFLICT) { LOGGER.error(
+				 * "exception occoured due to conflict while sending post request to ElasticSearch"
+				 * , e); } }
+				 */
+
+			} // end of loop for (OrganizationElasticSearchPayload payload :
 
 			if (!organizationPayloadList.isEmpty()) {
 				// send bulk request to es
@@ -248,11 +277,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			if (e.status() == RestStatus.CONFLICT) {
 				LOGGER.error("exception occoured due to conflict while sending post request to ElasticSearch", e);
 			}
+			// throw exception to main method
+			throw e;
 		}
 
 	}
 
-	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable) {
+	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable) throws Exception {
 		List<OrganizationElasticSearchPayload> organizationPayloadList = new ArrayList<OrganizationElasticSearchPayload>();
 		List<Organization> organizationList = new ArrayList<Organization>();
 
@@ -329,21 +360,31 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 					}
 
-					// check for root organization to push the data into elastic
-					// search
-					if (parentOrganization == null && rootParentOrganization == null) {
-						String tagStatus = organizationFromMap.getValue().getTagStatus();
+					// check for all organization to push the data into elastic
+					prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate, organizationMap,
+							organizationFromMap, parentOrganization, rootParentOrganization);
 
-						if (!StringUtils.isEmpty(tagStatus) && tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-							prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate,
-									organizationMap, organizationFromMap, parentOrganization, rootParentOrganization);
-						}
-						// check for child organization to push the data into
-						// elastic search
-					} else if (null != parentOrganization && null != rootParentOrganization) {
-						prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate,
-								organizationMap, organizationFromMap, parentOrganization, rootParentOrganization);
-					}
+					/*
+					 * Commented due to new requirement by jens // check for
+					 * root organization to push the data into elastic // search
+					 * if (parentOrganization == null && rootParentOrganization
+					 * == null) { String tagStatus =
+					 * organizationFromMap.getValue().getTagStatus();
+					 * 
+					 * if (!StringUtils.isEmpty(tagStatus) &&
+					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child
+					 * organization to push the data into // elastic search }
+					 * else if (null != parentOrganization && null !=
+					 * rootParentOrganization) {
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); }
+					 */
 
 				} // end of loop for (Map.Entry<Long, Organization>
 					// organizationFromMap
@@ -358,10 +399,16 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		} catch (BeansException e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			throw e;
 		} catch (IOException e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			throw e;
 		} catch (ParseException e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			throw e;
+		} catch (Exception e) {
+			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			throw e;
 		}
 
 		return organizationPayloadList;
@@ -380,7 +427,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	private void prepareDataByTagStatus(List<OrganizationElasticSearchPayload> organizationPayloadList, File file,
 			FileWriter txtWriter, Date lastUpdatedDate, Map<Long, Organization> organizationMap,
 			Map.Entry<Long, Organization> organizationFromMap, Organization parentOrganization,
-			Organization rootParentOrganization) throws IOException {
+			Organization rootParentOrganization) throws Exception {
 		Date currentUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
 
 		if (lastUpdatedDate == null) {
@@ -401,7 +448,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		if (null != currentUpdatedDate && null != lastUpdatedDate) {
 			if (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) {
-				lastUpdatedDate = organizationFromMap.getValue().getUpdatedAt();
+				lastUpdatedDate = currentUpdatedDate;
 				if (file.createNewFile()) {
 				} else {
 					LOGGER.info("clearing content from existing  elastic search log File:: " + file.getName());
@@ -479,7 +526,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	/**
 	 * set FrontEnd Routes for WINWIN
 	 */
-	private void setWinWinRoutesMap() {
+	private void setWinWinRoutesMap() throws Exception {
 		winwinRoutesMap = new HashMap<String, String>();
 		List<WinWinRoutesMapping> activeRoutes = winWinRoutesMappingRepository.findAllActiveRoutes();
 		if (null != activeRoutes)
@@ -492,7 +539,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationPrograms(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all programs of an organization
 		List<Program> programList = programRepository.findAllProgramList(organizationFromMap.getValue().getId());
 		List<ProgramElasticSearchPayload> programPayloadList = new ArrayList<ProgramElasticSearchPayload>();
@@ -551,8 +598,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param programFromMap
 	 * @param programPayload
 	 */
-	private void setProgramSdgData(Map.Entry<Long, Program> programFromMap,
-			ProgramElasticSearchPayload programPayload) {
+	private void setProgramSdgData(Map.Entry<Long, Program> programFromMap, ProgramElasticSearchPayload programPayload)
+			throws Exception {
 		// fetch all sdgDataMapping of an program
 		List<ProgramSdgData> programSdgDataMappingList = programSdgDataMapRepository
 				.getProgramSdgMapDataByOrgId(programFromMap.getValue().getId());
@@ -603,8 +650,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param programFromMap
 	 * @param programPayload
 	 */
-	private void setProgramSpiData(Map.Entry<Long, Program> programFromMap,
-			ProgramElasticSearchPayload programPayload) {
+	private void setProgramSpiData(Map.Entry<Long, Program> programFromMap, ProgramElasticSearchPayload programPayload)
+			throws Exception {
 		// fetch all spiDataMapping of an program
 		List<ProgramSpiData> programSpiDataMappingList = programSpiDataMapRepository
 				.getProgramSpiMapDataByOrgId(programFromMap.getValue().getId());
@@ -655,7 +702,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param programPayload
 	 */
 	private void setProgramRegionServed(Map.Entry<Long, Program> programFromMap,
-			ProgramElasticSearchPayload programPayload) {
+			ProgramElasticSearchPayload programPayload) throws Exception {
 		// fetch all regionServed of an program
 		List<ProgramRegionServed> programRegionServedList = programRegionServedRepository
 				.findAllActiveProgramRegions(programFromMap.getValue().getId());
@@ -705,7 +752,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param programPayload
 	 */
 	private void setProgramResources(Map.Entry<Long, Program> programFromMap,
-			ProgramElasticSearchPayload programPayload) {
+			ProgramElasticSearchPayload programPayload) throws Exception {
 		// fetch all active resources of an program
 		List<ProgramResource> programResourceList = programResourceRepository
 				.findAllActiveProgramResources(programFromMap.getValue().getId());
@@ -753,8 +800,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param programFromMap
 	 * @param programPayload
 	 */
-	private void setProgramDataSets(Map.Entry<Long, Program> programFromMap,
-			ProgramElasticSearchPayload programPayload) {
+	private void setProgramDataSets(Map.Entry<Long, Program> programFromMap, ProgramElasticSearchPayload programPayload)
+			throws Exception {
 		// fetch all active datasets of an program
 		List<ProgramDataSet> programDataSetList = programDataSetRepository
 				.findAllActiveProgramDataSets(programFromMap.getValue().getId());
@@ -803,7 +850,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationSdgData(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all sdgDataMapping of an organization
 		List<OrganizationSdgData> organizationSdgDataMappingList = orgSdgDataMapRepository
 				.getOrgSdgMapDataByOrgId(organizationFromMap.getValue().getId());
@@ -851,7 +898,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationSpiData(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all spiDataMapping of an organization
 		List<OrganizationSpiData> organizationSpiDataMappingList = orgSpiDataMapRepository
 				.getOrgSpiMapDataByOrgId(organizationFromMap.getValue().getId());
@@ -898,7 +945,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationRegionServed(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all regionServed of an organization
 		List<OrganizationRegionServed> organizationRegionServedList = organizationRegionServedRepository
 				.findAllActiveOrgRegions(organizationFromMap.getValue().getId());
@@ -943,7 +990,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationResources(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all active resources of an organization
 		List<OrganizationResource> organizationResourceList = organizationResourceRepository
 				.findAllActiveOrgResources(organizationFromMap.getValue().getId());
@@ -988,7 +1035,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationDataSets(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all active dataSets of an organization
 		List<OrganizationDataSet> organizationDataSetList = organizationDataSetRepository
 				.findAllActiveOrgDataSets(organizationFromMap.getValue().getId());
@@ -1033,7 +1080,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @param organizationPayload
 	 */
 	private void setOrganizationNotes(Map.Entry<Long, Organization> organizationFromMap,
-			OrganizationElasticSearchPayload organizationPayload) {
+			OrganizationElasticSearchPayload organizationPayload) throws Exception {
 		// fetch all notes of an organization
 		List<OrganizationNote> organizationNoteList = organizationNoteRepository
 				.findAllOrgNotesList(organizationFromMap.getValue().getId());
@@ -1085,7 +1132,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	// Adds the interceptor to the ES REST client
-	public static RestHighLevelClient esClient(String serviceName, String region) {
+	public static RestHighLevelClient esClient(String serviceName, String region) throws Exception {
 		AWS4Signer signer = new AWS4Signer();
 		signer.setServiceName(serviceName);
 		signer.setRegionName(region);

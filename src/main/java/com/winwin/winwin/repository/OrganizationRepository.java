@@ -27,7 +27,10 @@ public interface OrganizationRepository extends JpaRepository<Organization, Long
 	@Query(value = "select count(id) from organization", nativeQuery = true)
 	Integer findAllOrganizationsCount();
 
-	@Query(value = "select * from organization where updated_at >= :lastUpdatedDate order by updated_at asc", nativeQuery = true)
+	@Query(value = "select count(id) from organization where updated_at > :lastUpdatedDate", nativeQuery = true)
+	Integer findAllOrganizationsCountFromLastUpdatedDate(@Param("lastUpdatedDate") Date lastUpdatedDate);
+
+	@Query(value = "select * from organization where updated_at > :lastUpdatedDate order by updated_at asc", nativeQuery = true)
 	List<Organization> findAllOrganizationsFromLastUpdatedDate(Pageable pageable,
 			@Param("lastUpdatedDate") Date lastUpdatedDate);
 
