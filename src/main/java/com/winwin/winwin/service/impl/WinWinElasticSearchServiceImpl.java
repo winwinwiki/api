@@ -194,7 +194,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				Pageable pageable = PageRequest.of(pageNum, pageSize);
 				LOGGER.info("sending data to Elastic Search Index: " + System.getenv("AWS_ES_INDEX") + " from "
 						+ ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize));
-				sendDataToElasticSearch(pageable);
+				sendDataToElasticSearch(pageable, file, txtWriter, lastUpdatedDate);
 				LOGGER.info("data has been sent successfully to Elastic Search Index: " + System.getenv("AWS_ES_INDEX")
 						+ " from " + ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize) + " ");
 
@@ -204,11 +204,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully at " + date));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
+			// flush the changes and close txtWriter
+			txtWriter.flush();
+			txtWriter.close();
+
 		} catch (Exception e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 			Date date = CommonUtils.getFormattedDate();
-			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run due to error:"
-					+ e.getMessage() + "at " + date));
+			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run at " + date
+					+ " due to error: \n" + e.getMessage()));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		}
@@ -219,7 +223,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @throws IOException
 	 * @param pageable
 	 */
-	private void sendDataToElasticSearch(Pageable pageable) throws Exception {
+	private void sendDataToElasticSearch(Pageable pageable, File file, FileWriter txtWriter, Date lastUpdatedDate)
+			throws Exception {
 		final String serviceName = "es";
 		final String region = System.getenv("AWS_REGION2");
 		final String index = System.getenv("AWS_ES_INDEX");
@@ -227,7 +232,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			// fetch all the data of organization by pageNum and pageSize
-			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable);
+			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable, file,
+					txtWriter, lastUpdatedDate);
 			RestHighLevelClient esClient = esClient(serviceName, region);
 
 			// Send bulk index data
@@ -283,24 +289,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 	}
 
-	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable) throws Exception {
+	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable, File file,
+			FileWriter txtWriter, Date lastUpdatedDate) throws Exception {
 		List<OrganizationElasticSearchPayload> organizationPayloadList = new ArrayList<OrganizationElasticSearchPayload>();
 		List<Organization> organizationList = new ArrayList<Organization>();
 
 		try {
-			File file = new File("winwin_elasticSearch_log.txt");
-			// Create the file
-			LOGGER.info("fetching details from elastic search log File: " + file.getName());
-
-			FileWriter txtWriter = new FileWriter(file, true);
-			String fileContent = FileUtils.readFileToString(file, "UTF-8");
-			Date lastUpdatedDate = null;
-
-			if (!StringUtils.isEmpty(fileContent)) {
-				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-				lastUpdatedDate = sdf.parse(fileContent);
-			}
-
 			/*
 			 * find all the organizations to send into ElasticSearch if
 			 * lastUpdatedDate is not found else find all the organizations from
@@ -392,10 +386,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			} // end of if (null != organizationList) {
 
 			// }
-
-			// flush the changes and close txtWriter
-			txtWriter.flush();
-			txtWriter.close();
 
 		} catch (BeansException e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
