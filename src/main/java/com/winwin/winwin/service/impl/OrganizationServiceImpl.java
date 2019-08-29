@@ -125,7 +125,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
 		try {
@@ -157,7 +157,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Async
-	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
 	public void createOrganizations(List<OrganizationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			UserPayload user) {
 		saveOrganizationsForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
@@ -188,7 +188,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -234,7 +234,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		if (null != organizationPayload) {
@@ -292,7 +292,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional(readOnly = true)
-	@Cacheable("organization_filter_list")
+	//@Cacheable("organization_filter_list")
 	public List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {
@@ -322,7 +322,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @return
 	 */
 	@Override
-	@Cacheable("organization_filter_count")
+	//@Cacheable("organization_filter_count")
 	public BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
 		BigInteger noOfRecords = null;
 		try {
@@ -379,7 +379,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		Organization organization = null;
 		try {

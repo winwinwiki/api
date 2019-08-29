@@ -35,6 +35,7 @@ public class OrganizationElasticSearchPayload {
 	private String missionStatement;
 	private String naics_code;
 	private String name;
+	private String description;
 	private String ntee_code;
 	private String populationServed;
 	private String priority;
