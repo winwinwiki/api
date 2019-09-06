@@ -74,6 +74,7 @@ import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
+import com.winwin.winwin.service.KibanaUserService;
 import com.winwin.winwin.service.UserService;
 
 /**
@@ -85,6 +86,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	protected CustomMessageSource customMessageSource;
+	
+	@Autowired
+	private KibanaUserService kibanaUserService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -497,6 +501,12 @@ public class UserServiceImpl implements UserService {
 						AdminRespondToAuthChallengeResult resultChallenge = cognitoClient
 								.adminRespondToAuthChallenge(request);
 						authenticationResult = resultChallenge.getAuthenticationResult();
+						
+						//Create internal user in KIBANA  when the new user is confirmed in COGNITO
+						//if ( null != authenticationResult)
+						//kibanaUserService.createInternalKibanaUser(payload, response);
+						
+						
 					}
 				}
 			} else {
