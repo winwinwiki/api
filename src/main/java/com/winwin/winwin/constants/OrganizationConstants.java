@@ -47,5 +47,14 @@ public class OrganizationConstants {
 	public static final String SDG_TAGS = "sdg_tags";
 	public static final String PROGRAMS = "programs";
 	public static final String NOTES = "notes";
+	
+	// set constants for KIBANA BACKEND routes
+	public static final String KIBANA_BACKEND_BASE_URL = "kibana_backend_base_url";
+	public static final String KIBANA_USER_API_URL = "kibana_user_api_url";
+	public static final String KIBANA_ADMIN_USER_NAME = "kibana_admin_user_name";
+	public static final String KIBANA_ADMIN_USER_PASSWORD = "kibana_admin_user_password";
+	public static final String KIBANA_ADMIN_BACKEND_ROLES = "kibana_admin_backend_roles";
+	public static final String KIBANA_DATASEEDER_BACKEND_ROLES = "kibana_dataseeder_backend_roles";
+	public static final String KIBANA_READER_BACKEND_ROLES = "kibana_reader_backend_roles";
 
 }
