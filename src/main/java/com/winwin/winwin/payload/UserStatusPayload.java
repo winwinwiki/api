@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,7 +12,6 @@ import lombok.ToString;
 /**
  * @author ArvindKhatik
  * @version 1.0
- *
  */
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,13 +19,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UserSignInPayload {
-	private String userName;
-	private String password;
-	private String newPassword;
-	private Boolean isNewUser;
-	private String accessToken;
-	private String refreshToken;
-	private String confirmationCode;
-	private String role;
+public class UserStatusPayload {
+	private List<String> userNames;
+	private Boolean isActive;
 }

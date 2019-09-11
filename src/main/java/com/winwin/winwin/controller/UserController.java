@@ -25,6 +25,7 @@ import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.payload.UserSignInResponsePayload;
+import com.winwin.winwin.payload.UserStatusPayload;
 import com.winwin.winwin.service.impl.UserServiceImpl;
 import com.winwin.winwin.util.UserComparator;
 
@@ -358,6 +359,34 @@ public class UserController extends BaseController {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
 		return sendSuccessResponse("org.user.delete.success", HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "changeUserStatus", method = RequestMethod.PUT)
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	public ResponseEntity<?> changeUserStatus(@Valid @RequestBody UserStatusPayload userStatuspayload)
+			throws UserException {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != userStatuspayload && null != userStatuspayload.getUserNames()) {
+			for (String userName : userStatuspayload.getUserNames()) {
+				if (StringUtils.isEmpty(userName)) {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+
+			if (userStatuspayload.getIsActive()) {
+				userService.enableUser(userStatuspayload.getUserNames(), exceptionResponse);
+			} else {
+				userService.disableUser(userStatuspayload.getUserNames(), exceptionResponse);
+			}
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
+		} else {
+			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
+		}
+		return sendSuccessResponse("org.user.enable.success", HttpStatus.OK);
 	}
 
 }

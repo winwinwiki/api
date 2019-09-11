@@ -19,7 +19,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class KibanaUserPayload {
-	//private String userName;
 	private String password;
-	private String backend_roles;
+	private String[] search_guard_roles;
+	private String[] backend_roles;
 }
