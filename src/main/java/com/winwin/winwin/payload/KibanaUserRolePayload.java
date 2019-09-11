@@ -18,13 +18,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class UserSignInPayload {
-	private String userName;
-	private String password;
-	private String newPassword;
-	private Boolean isNewUser;
-	private String accessToken;
-	private String refreshToken;
-	private String confirmationCode;
-	private String role;
+public class KibanaUserRolePayload {
+	private String[] search_guard_roles;
+	private String[] backend_roles;
 }

@@ -1,49 +1,43 @@
 package com.winwin.winwin.service.impl;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.entity.WinWinRoutesMapping;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.KibanaUserPayload;
-import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.payload.KibanaUserRolePayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.repository.WinWinRoutesMappingRepository;
 import com.winwin.winwin.service.KibanaUserService;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ */
 @Service
 public class KibanaUserServiceImpl implements KibanaUserService {
 
@@ -54,95 +48,127 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 
 	private Map<String, String> winwinRoutesMap = null;
 
+	/**
+	 * Create internal user in elastic search
+	 * 
+	 * @param payload
+	 * @param response
+	 */
 	@Override
 	public void createInternalKibanaUser(UserSignInPayload payload, ExceptionResponse response) throws Exception {
-
+		// send post request to elastic search for internal user creation
 		sendPostRequestToKibana(payload);
 
 	}
 
 	@Override
-	public UserPayload getUserInfo(String userName, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void updateUserInfo(UserPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public List<UserPayload> getUserList(ExceptionResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getUserStatus(String userName, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void resetUserPassword(UserPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void resendConfirmationCode(UserPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void confirmResetPassword(UserSignInPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void changePassword(UserSignInPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public AuthenticationResultType userSignIn(UserSignInPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void deleteUser(UserPayload payload, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public UserPayload getLoggedInUser(String accessToken, ExceptionResponse response) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public UserPayload getCurrentUserDetails() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void resendUserInvitation(UserPayload payload, ExceptionResponse response) throws UserException {
-		// TODO Auto-generated method stub
+	public void deleteInternalKibanaUser(UserSignInPayload payload, ExceptionResponse response) throws Exception {
+		// send delete request to elastic search for internal user deletion
+		sendDeleteRequestToKibana(payload);
 
 	}
 
 	/**
-	 * Send Post Request to KIBANA
+	 * get internal user role from elastic search
 	 * 
-	 * @param message
+	 * @param userName
+	 */
+	@Override
+	public String getInternalKibanaUserRole(String userName) throws Exception {
+		Boolean isAdmin = false;
+		Boolean isDataSeeder = false;
+		Boolean isReader = false;
+		String winwinUserRole = "";
+
+		// set post request for KIBANA
+		if (winwinRoutesMap == null) {
+			// set winWin routes map
+			setWinWinRoutesMap();
+		}
+
+		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+
+			CloseableHttpClient client = HttpClients.createDefault();
+			String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+					+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + userName;
+
+			String encoding = Base64.getEncoder()
+					.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
+							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+
+			// Prepare HttpGet Request
+			HttpGet httpGet = new HttpGet(url);
+			httpGet.setHeader("Accept", "application/json");
+			httpGet.setHeader("Content-type", "application/json");
+			httpGet.setHeader("Authorization", "Basic " + encoding);
+
+			LOGGER.info(" Sending Internal User Request to elastic search to get user details of : " + userName);
+			HttpResponse response = client.execute(httpGet);
+			String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
+			LOGGER.info(" Internal User Request has been successfully sent to elastic search to get user details of : "
+					+ userName);
+			LOGGER.info(" Response: " + responseJSON);
+
+			// Parse JSON and FETCH user's search_guard_roles and backend_roles
+			final JSONObject jsonObj = new JSONObject(responseJSON);
+			final JSONArray searchGuardRoles = jsonObj.getJSONObject(userName).getJSONArray("search_guard_roles");
+			final JSONArray backendRoles = jsonObj.getJSONObject(userName).getJSONArray("backend_roles");
+
+			// Convert JSON Array to List
+			for (int i = 0; i < searchGuardRoles.length(); i++) {
+				if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_SEARCH_GUARD_ROLE))) {
+					isAdmin = true;
+				} else if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_SEARCH_GUARD_ROLE))) {
+					isDataSeeder = true;
+				} else if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_SEARCH_GUARD_ROLE))) {
+					isReader = true;
+				}
+			}
+
+			// Convert JSON Array to List
+			for (int i = 0; i < backendRoles.length(); i++) {
+				if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE))) {
+					isAdmin = true;
+				} else if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE))) {
+					isDataSeeder = true;
+				} else if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE1))) {
+					isReader = true;
+				} else if (searchGuardRoles.getString(i)
+						.equals(winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE2))) {
+					isReader = true;
+				}
+			}
+
+			// close the CloseableHttpClient
+			client.close();
+
+		}
+
+		// return WINWIN user role mapped to search guard roles
+		if (isAdmin)
+			winwinUserRole = UserConstants.ROLE_ADMIN;
+		else if (isDataSeeder)
+			winwinUserRole = UserConstants.ROLE_DATASEEDER;
+		else if (isReader)
+			winwinUserRole = UserConstants.ROLE_READER;
+
+		return winwinUserRole;
+
+	}
+
+	/**
+	 * Send Post Request to elastic search for internal user creation
+	 * 
+	 * @param payload
 	 */
 
 	private void sendPostRequestToKibana(UserSignInPayload payload) throws Exception {
@@ -154,106 +180,150 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 
 		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLES)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
 
 			KibanaUserPayload kibanaUserPayload = new KibanaUserPayload();
-			// kibanaUserPayload.setUserName(payload.getUserName());
-			kibanaUserPayload.setPassword(payload.getNewPassword());
-			kibanaUserPayload.setBackend_roles(winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLES));
 
-			CloseableHttpClient client = HttpClients.createDefault();
-			String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-					+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
+			// check for ADMIN user
+			if (payload.getRole().equals(UserConstants.ROLE_ADMIN)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_SEARCH_GUARD_ROLE)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE)) {
+				String searchGuardRoles[] = {
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_SEARCH_GUARD_ROLE) };
+				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE) };
 
-			HttpPut httpPut = new HttpPut(url);
-			// Creating Object of ObjectMapper define in JACKSON API
-			ObjectMapper objectMapper = new ObjectMapper();
-			// get KibanaUserPayload object as a JSON string
-			String jsonStr = objectMapper.writeValueAsString(kibanaUserPayload);
+				// set KibanaUserPayload
+				setKibanaUserPayload(payload, kibanaUserPayload, searchGuardRoles, backendRoles);
 
-			String encoding = Base64.getEncoder()
-					.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+				// check for DATASEEDER user
+			} else if (payload.getRole().equals(UserConstants.ROLE_DATASEEDER)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_DATASEEDER_SEARCH_GUARD_ROLE)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE)) {
+				String searchGuardRoles[] = {
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_SEARCH_GUARD_ROLE) };
+				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE) };
 
-			StringEntity entity = new StringEntity(jsonStr);
-			httpPut.setEntity(entity);
-			httpPut.setHeader("Accept", "application/json");
-			httpPut.setHeader("Content-type", "application/json");
-			httpPut.setHeader("Authorization", "Basic " + encoding);
+				// set KibanaUserPayload
+				setKibanaUserPayload(payload, kibanaUserPayload, searchGuardRoles, backendRoles);
 
-			client.execute(httpPut);
+				// check for READER user
+			} else if (payload.getRole().equals(UserConstants.ROLE_READER)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_READER_SEARCH_GUARD_ROLE)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_READER_BACKEND_ROLE1)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_READER_BACKEND_ROLE2)) {
+				String searchGuardRoles[] = {
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_SEARCH_GUARD_ROLE) };
+				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE1),
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE2) };
 
-			HttpResponse response = client.execute(httpPut);
-			HttpEntity httpEntity = response.getEntity();
-			if (entity != null) {
-				try (InputStream instream = httpEntity.getContent()) {
-					System.out.println(instream);
+				// set KibanaUserPayload
+				setKibanaUserPayload(payload, kibanaUserPayload, searchGuardRoles, backendRoles);
+
+			}
+
+			if (!StringUtils.isEmpty(payload.getUserName())) {
+				CloseableHttpClient client = HttpClients.createDefault();
+				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
+				// Creating Object of ObjectMapper define in JACKSON API
+				ObjectMapper objectMapper = new ObjectMapper();
+				// get KibanaUserPayload object as a JSON string
+				String jsonStr = null;
+				// created KibanaUserRolePayload to only update the roles in
+				// Elastic
+				// Search Internal User DB
+				if (!StringUtils.isEmpty(kibanaUserPayload.getPassword())) {
+					// get KibanaUserPayload object as a JSON string
+					jsonStr = objectMapper.writeValueAsString(kibanaUserPayload);
+				} else {
+					KibanaUserRolePayload kibanaUserRolePayload = new KibanaUserRolePayload();
+					kibanaUserRolePayload.setBackend_roles(kibanaUserPayload.getBackend_roles());
+					kibanaUserRolePayload.setSearch_guard_roles(kibanaUserPayload.getSearch_guard_roles());
+					// get KibanaUserPayload object as a JSON string
+					jsonStr = objectMapper.writeValueAsString(kibanaUserRolePayload);
 				}
+				String encoding = Base64.getEncoder()
+						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+				StringEntity entity = new StringEntity(jsonStr);
+				HttpPut httpPut = new HttpPut(url);
+				httpPut.setEntity(entity);
+				httpPut.setHeader("Accept", "application/json");
+				httpPut.setHeader("Content-type", "application/json");
+				httpPut.setHeader("Authorization", "Basic " + encoding);
+				LOGGER.info(
+						" Sending Internal User Creation Request to elastic search for user: " + payload.getUserName());
+				HttpResponse response = client.execute(httpPut);
+				String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
+				LOGGER.info(" Internal User Creation Request has been successfully sent to elastic search for user: "
+						+ payload.getUserName());
+				LOGGER.info(" Response: " + responseJSON);
+				// close the CloseableHttpClient
+				client.close();
 			}
 
-			client.close();
-
-			List<NameValuePair> params = new ArrayList<NameValuePair>();
-
-			if (!StringUtils.isEmpty(kibanaUserPayload.getPassword()))
-				params.add(new BasicNameValuePair("password", kibanaUserPayload.getPassword()));
-
-			if (!StringUtils.isEmpty(kibanaUserPayload.getBackend_roles()))
-				params.add(new BasicNameValuePair("backend_roles", kibanaUserPayload.getBackend_roles()));
-
-			URL obj = new URL(winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-					+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName());
-
-			HttpURLConnection postConnection = (HttpURLConnection) obj.openConnection();
-			postConnection.setRequestProperty("Authorization", "Basic " + encoding);
-			postConnection.setRequestProperty("Content-Type", "application/json");
-			postConnection.setReadTimeout(10000);
-			postConnection.setConnectTimeout(15000);
-			postConnection.setRequestMethod("PUT");
-			postConnection.setDoInput(true);
-			postConnection.setDoOutput(true);
-
-			OutputStream os = postConnection.getOutputStream();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-			writer.write(getQuery(params));
-			writer.flush();
-			writer.close();
-			os.close();
-			postConnection.connect();
-
-			// read the InputStream and print it
-			String result;
-			BufferedInputStream bis = new BufferedInputStream(postConnection.getInputStream());
-			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			int result2 = bis.read();
-			while (result2 != -1) {
-				buf.write((byte) result2);
-				result2 = bis.read();
-			}
-			result = buf.toString();
-			LOGGER.info(result);
-		}
+		} // end of if (!winwinRoutesMap.isEmpty()
 
 	}
 
-	private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException {
-		StringBuilder result = new StringBuilder();
-		boolean first = true;
+	/**
+	 * Send Delete Request to elastic search for internal user deletion
+	 * 
+	 * @param payload
+	 */
 
-		for (NameValuePair pair : params) {
-			if (first)
-				first = false;
-			else
-				result.append(",");
-
-			result.append("\"" + pair.getName() + "\"");
-			result.append(":");
-			result.append("\"" + pair.getValue() + "\"");
+	private void sendDeleteRequestToKibana(UserSignInPayload payload) throws Exception {
+		// set post request for KIBANA
+		if (winwinRoutesMap == null) {
+			// set winWin routes map
+			setWinWinRoutesMap();
 		}
 
-		return result.toString();
+		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+
+			if (!StringUtils.isEmpty(payload.getUserName())) {
+				CloseableHttpClient client = HttpClients.createDefault();
+				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
+				String encoding = Base64.getEncoder()
+						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+				HttpDelete httpDelete = new HttpDelete(url);
+				httpDelete.setHeader("Accept", "application/json");
+				httpDelete.setHeader("Content-type", "application/json");
+				httpDelete.setHeader("Authorization", "Basic " + encoding);
+				LOGGER.info(
+						" Sending Internal User Deletion Request to elastic search for user: " + payload.getUserName());
+				HttpResponse response = client.execute(httpDelete);
+				String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
+				LOGGER.info(" Internal User Deletion Request has been successfully sent to elastic search for user: "
+						+ payload.getUserName());
+				LOGGER.info(" Response: " + responseJSON);
+				// close the CloseableHttpClient
+				client.close();
+			}
+
+		} // end of if (!winwinRoutesMap.isEmpty()
+
+	}
+
+	/**
+	 * @param payload
+	 * @param kibanaUserPayload
+	 * @param searchGuardRoles
+	 * @param backendRoles
+	 */
+	private void setKibanaUserPayload(UserSignInPayload payload, KibanaUserPayload kibanaUserPayload,
+			String[] searchGuardRoles, String[] backendRoles) {
+		if (null != payload)
+			kibanaUserPayload.setPassword(payload.getNewPassword());
+
+		kibanaUserPayload.setSearch_guard_roles(searchGuardRoles);
+		kibanaUserPayload.setBackend_roles(backendRoles);
 	}
 
 	/**

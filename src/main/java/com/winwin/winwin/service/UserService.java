@@ -44,4 +44,8 @@ public interface UserService {
 
 	void resendUserInvitation(UserPayload payload, ExceptionResponse response) throws UserException;
 
+	public void enableUser(List<String> userNames, ExceptionResponse response);
+
+	public void disableUser(List<String> userNames, ExceptionResponse response);
+
 }
