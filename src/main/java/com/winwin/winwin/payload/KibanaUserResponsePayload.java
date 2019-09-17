@@ -18,8 +18,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class KibanaUserRolePayload {
+public class KibanaUserResponsePayload {
+	private String username;
+	private String[] roles;
 	private String full_name;
 	private String email;
-	private String[] roles;
+	private Boolean enabled;
 }

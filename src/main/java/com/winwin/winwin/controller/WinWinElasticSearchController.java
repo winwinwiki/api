@@ -22,8 +22,7 @@ public class WinWinElasticSearchController extends BaseController {
 	private WinWinElasticSearchService winWinElasticSearchService;
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> send() {
 		winWinElasticSearchService.sendPostRequestToElasticSearch();
 		return sendSuccessResponse("org.success.created");

@@ -26,5 +26,8 @@ public class UserSignInPayload {
 	private String accessToken;
 	private String refreshToken;
 	private String confirmationCode;
+	
+	//Added for Elastic Search Users
 	private String role;
+	private String fullName;
 }
