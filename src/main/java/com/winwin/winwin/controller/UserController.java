@@ -57,7 +57,7 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+				return sendSuccessResponse("org.user.success.resend_invitation");
 			} else {
 				if (exceptionResponse.getException() != null
 						&& exceptionResponse.getException() instanceof UserNotFoundException) {
@@ -84,7 +84,7 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+				return sendSuccessResponse("org.user.success.resend_invitation");
 			} else {
 				if (exceptionResponse.getException() != null
 						&& exceptionResponse.getException() instanceof UserNotFoundException) {
@@ -118,7 +118,7 @@ public class UserController extends BaseController {
 							&& exceptionResponse.getStatusCode() != null)
 						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-					return sendSuccessResponse(userSignInPayload, HttpStatus.OK);
+					return sendSuccessResponse(userSignInPayload);
 				}
 
 				if (exceptionResponse.getException() != null
@@ -148,7 +148,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(userSignInResPayload, HttpStatus.OK);
+		return sendSuccessResponse(userSignInResPayload);
 	}
 
 	@RequestMapping(value = "info", method = RequestMethod.GET)
@@ -171,7 +171,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payload, HttpStatus.OK);
+		return sendSuccessResponse(payload);
 	}
 
 	@RequestMapping(value = "update", method = RequestMethod.PUT)
@@ -195,7 +195,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payload, HttpStatus.OK);
+		return sendSuccessResponse(payload);
 	}
 
 	@RequestMapping(value = "updateAll", method = RequestMethod.PUT)
@@ -222,7 +222,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payloadList, HttpStatus.OK);
+		return sendSuccessResponse(payloadList);
 	}
 
 	public Boolean isNewUser(String userName, ExceptionResponse exceptionResponse) throws UserException {
@@ -251,7 +251,7 @@ public class UserController extends BaseController {
 		if (!payloadList.isEmpty())
 			Collections.sort(payloadList, new UserComparator());
 
-		return sendSuccessResponse(payloadList, HttpStatus.OK);
+		return sendSuccessResponse(payloadList);
 	}
 
 	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
@@ -271,7 +271,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
 	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
@@ -294,7 +294,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
 	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
@@ -314,7 +314,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.code.success", HttpStatus.OK);
+		return sendSuccessResponse("org.user.code.success");
 	}
 
 	@RequestMapping(value = "changePassword", method = RequestMethod.PUT)
@@ -337,7 +337,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.changed", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.changed");
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
@@ -358,7 +358,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.delete.success", HttpStatus.OK);
+		return sendSuccessResponse("org.user.delete.success");
 	}
 
 	@RequestMapping(value = "changeUserStatus", method = RequestMethod.PUT)
@@ -386,7 +386,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.enable.success", HttpStatus.OK);
+		return sendSuccessResponse("org.user.enable.success");
 	}
 
 }

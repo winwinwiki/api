@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -126,6 +128,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Transactional
 	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@CachePut(value="organization_filter_list")
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
 		try {
@@ -158,6 +161,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Override
 	@Async
 	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@CachePut(value="organization_filter_list")
 	public void createOrganizations(List<OrganizationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			UserPayload user) {
 		saveOrganizationsForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
@@ -188,7 +192,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	//@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@Caching(evict = { 
+			  @CacheEvict(value = "organization_chart_list"),//,organization_filter_list,organization_filter_count") 
+			  @CacheEvict(value="organization_filter_list", key="#id") })
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -234,7 +241,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@Caching(evict = { 
+			  @CacheEvict(value = "organization_chart_list"),//,organization_filter_list,organization_filter_count") 
+			  @CacheEvict(value="organization_filter_list", key="#organization.getId()") })
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		if (null != organizationPayload) {
@@ -292,7 +301,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional(readOnly = true)
-	//@Cacheable("organization_filter_list")
+	@Cacheable("organization_filter_list")
 	public List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {

@@ -29,3 +29,7 @@ package-lock.json
 /nbdist/
 /.nb-gradle/
 /build/
+
+.vs/
+
+.gradle/

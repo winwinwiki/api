@@ -3,11 +3,15 @@
  */
 package com.winwin.winwin.controller;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.stereotype.Component;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
@@ -26,6 +30,12 @@ public class BaseController {
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 
+	private BodyBuilder buildSuccessBody() {
+		return ResponseEntity
+				.ok();
+				//.cacheControl(CacheControl.maxAge(300, TimeUnit.SECONDS).mustRevalidate());
+	}
+	
 	/**
 	 * send success response with Object
 	 * 
@@ -33,44 +43,7 @@ public class BaseController {
 	 * @return
 	 */
 	protected ResponseEntity<ResponseWrapper<Object>> sendSuccessResponse(Object dto) {
-		return new ResponseEntity<ResponseWrapper<Object>>(new ResponseWrapper<Object>(dto), HttpStatus.OK);
-	}
-
-	/**
-	 * send success response with custom successMsg and Object
-	 * 
-	 * @param dto
-	 * @param successMsg
-	 * @return
-	 */
-	protected ResponseEntity<ResponseWrapper<Object>> sendSuccessResponse(Object dto, String successMsg) {
-		LOGGER.info(customMessageSource.getMessage(successMsg));
-		return new ResponseEntity<ResponseWrapper<Object>>(new ResponseWrapper<Object>(dto), HttpStatus.OK);
-	}
-
-	/**
-	 * send success response with custom successMsg and Array of Object[]
-	 * 
-	 * @param dto
-	 * @param successMsg
-	 * @param args
-	 * @return
-	 */
-	protected ResponseEntity<ResponseWrapper<Object>> sendSuccessResponse(Object dto, String successMsg,
-			Object[] args) {
-		LOGGER.info(customMessageSource.getMessage(successMsg, args));
-		return new ResponseEntity<ResponseWrapper<Object>>(new ResponseWrapper<Object>(dto), HttpStatus.OK);
-	}
-
-	/**
-	 * send success response with HttpStatus and Object
-	 * 
-	 * @param dto
-	 * @param status
-	 * @return
-	 */
-	protected ResponseEntity<ResponseWrapper<Object>> sendSuccessResponse(Object dto, HttpStatus status) {
-		return new ResponseEntity<ResponseWrapper<Object>>(new ResponseWrapper<Object>(dto), status);
+		return buildSuccessBody().body(new ResponseWrapper<Object>(dto));
 	}
 
 	/**
@@ -80,7 +53,7 @@ public class BaseController {
 	 * @return
 	 */
 	protected ResponseEntity<ResponseWrapper<String>> sendSuccessResponse(String successMsg) {
-		return sendSuccessResponse(successMsg, HttpStatus.OK);
+		return buildSuccessBody().body(new ResponseWrapper<String>(customMessageSource.getMessage(successMsg)));
 	}
 
 	/**
