@@ -72,6 +72,7 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
+import com.winwin.winwin.payload.KibanaUserRequestPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.service.KibanaUserService;
@@ -330,7 +331,7 @@ public class UserServiceImpl implements UserService {
 		try {
 			AdminUpdateUserAttributesResult userResult = cognitoClient
 					.adminUpdateUserAttributes(cognitoUpdateUserRequest);
-/*
+
 			// Update internal user in Elastic Search when user's role is
 			// updated in COGNITO User Pool: AWS_COGNITO_USER_POOL_ID
 			if (null != userResult) {
@@ -339,17 +340,16 @@ public class UserServiceImpl implements UserService {
 					UserSignInPayload userSignInPayload = new UserSignInPayload();
 					userSignInPayload.setUserName(payload.getEmail());
 					userSignInPayload.setRole(payload.getRole());
-					// userSignInPayload.setRole(kibanaUserService.getInternalKibanaUserRole(payload.getEmail()));
+					userSignInPayload.setFullName(payload.getUserDisplayName());
 					if (!(StringUtils.isEmpty(userSignInPayload.getUserName()))
 							&& !(StringUtils.isEmpty(userSignInPayload.getRole()))) {
 						// call KIBANA service method to update password of
-						// internal
-						// user
+						// internal user
 						kibanaUserService.createInternalKibanaUser(userSignInPayload, response);
 					}
 				}
 			} // end of if
-*/		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
 				| TooManyRequestsException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.BAD_REQUEST);
@@ -516,19 +516,21 @@ public class UserServiceImpl implements UserService {
 								.adminRespondToAuthChallenge(request);
 						authenticationResult = resultChallenge.getAuthenticationResult();
 
-						/*// Create internal user in KIBANA when the new user is
+						// Create internal user in Elastic Search when the new
+						// user is
 						// confirmed in COGNITO
 						if (null != authenticationResult) {
 							// call getLoggedInUser to get user role
 							UserPayload userPayload = getLoggedInUser(authenticationResult.getAccessToken(), response);
 							if (null != userPayload && !(StringUtils.isEmpty(userPayload.getRole()))) {
 								payload.setRole(userPayload.getRole());
+								payload.setFullName(userPayload.getUserDisplayName());
 								// call kibana service method to create new
 								// internal user
 								kibanaUserService.createInternalKibanaUser(payload, response);
 							}
 						} // end of if
-*/					}
+					}
 				}
 			} else {
 				authenticationResult = result.getAuthenticationResult();
@@ -614,22 +616,15 @@ public class UserServiceImpl implements UserService {
 
 		try {
 			ConfirmForgotPasswordResult conForgotUserPassResult = cognitoClient.confirmForgotPassword(cognitoRequest);
-/*
+
 			// Create internal user in KIBANA after user is confirmed in COGNITO
 			// with new password
 			if (null != conForgotUserPassResult) {
-				// call getInternalKibanaUserRole to get user role
-				UserPayload userPayload = new UserPayload();
-				userPayload.setRole(kibanaUserService.getInternalKibanaUserRole(payload.getUserName()));
-
-				if (null != userPayload && !(StringUtils.isEmpty(userPayload.getRole()))) {
-					payload.setRole(userPayload.getRole());
-					// call KIBANA service method to update password of internal
-					// user
-					kibanaUserService.createInternalKibanaUser(payload, response);
-				}
+				// call KIBANA service method to update password of internal
+				// user
+				kibanaUserService.changePasswordForInternalKibanaUser(payload, response);
 			} // end of if
-*/
+
 		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
 				| TooManyFailedAttemptsException | InvalidPasswordException | NotAuthorizedException
 				| TooManyRequestsException | UserNotConfirmedException | LimitExceededException | CodeMismatchException
@@ -689,22 +684,23 @@ public class UserServiceImpl implements UserService {
 
 		try {
 			ChangePasswordResult changePassResult = cognitoClient.changePassword(cognitoRequest);
-			/*// Create internal user in KIBANA user's password updated with
+			// Create internal user in Elastic Search user's password updated
+			// with
 			// Proposed Password
 			if (null != changePassResult) {
+
 				// Get Logged In User details to set userName and role
 				UserPayload userPayload = getLoggedInUser(payload.getAccessToken(), response);
 
-				if (null != userPayload && !(StringUtils.isEmpty(userPayload.getEmail()))
-						&& !(StringUtils.isEmpty(userPayload.getRole()))) {
+				if (null != userPayload && !(StringUtils.isEmpty(userPayload.getEmail()))) {
 					payload.setUserName(userPayload.getEmail());
-					payload.setRole(userPayload.getRole());
+
 					// call KIBANA service method to update password of internal
 					// user
-					kibanaUserService.createInternalKibanaUser(payload, response);
+					kibanaUserService.changePasswordForInternalKibanaUser(payload, response);
 				}
 			} // end of if
-*/		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
 				| InvalidPasswordException | NotAuthorizedException | TooManyRequestsException
 				| UserNotConfirmedException | LimitExceededException | PasswordResetRequiredException e) {
 			response.setErrorMessage(e.getErrorMessage());
@@ -733,7 +729,7 @@ public class UserServiceImpl implements UserService {
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
 		try {
 			AdminDeleteUserResult delPassResult = cognitoClient.adminDeleteUser(cognitoRequest);
-		/*	// Delete internal user from Elastic Search DB when user is deleted
+			// Delete internal user from Elastic Search DB when user is deleted
 			// from AWS_COGNITO_USER_POOL_ID
 			if (null != delPassResult) {
 				// call getInternalKibanaUserRole to get user role
@@ -744,7 +740,7 @@ public class UserServiceImpl implements UserService {
 				// user from Elastic Search DB
 				kibanaUserService.deleteInternalKibanaUser(userSignInPayload, response);
 			} // end of if
-*/			cognitoClient.shutdown();
+			cognitoClient.shutdown();
 		} catch (ResourceNotFoundException | InvalidParameterException | TooManyRequestsException
 				| NotAuthorizedException | UserNotFoundException e) {
 			response.setErrorMessage(e.getErrorMessage());
@@ -864,7 +860,7 @@ public class UserServiceImpl implements UserService {
 					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(userName);
 			try {
 				AdminDisableUserResult adminDisableUserResult = cognitoClient.adminDisableUser(adminDisableUserRequest);
-				/*// Delete internal user from Elastic Search DB when user is
+				// Delete internal user from Elastic Search DB when user is
 				// disabled
 				// in AWS_COGNITO_USER_POOL_ID
 				// with Proposed Password
@@ -877,7 +873,7 @@ public class UserServiceImpl implements UserService {
 					// user from Elastic Search DB
 					kibanaUserService.deleteInternalKibanaUser(userSignInPayload, response);
 				} // end of if
-*/			} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
+			} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
 					| NotAuthorizedException | TooManyRequestsException e) {
 				response.setErrorMessage(e.getErrorMessage());
 				response.setStatusCode(HttpStatus.BAD_REQUEST);

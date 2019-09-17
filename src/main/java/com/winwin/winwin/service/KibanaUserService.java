@@ -1,6 +1,7 @@
 package com.winwin.winwin.service;
 
 import com.winwin.winwin.exception.ExceptionResponse;
+import com.winwin.winwin.payload.KibanaUserResponsePayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 
 /**
@@ -14,6 +15,11 @@ public interface KibanaUserService {
 
 	public void deleteInternalKibanaUser(UserSignInPayload payload, ExceptionResponse response) throws Exception;
 
-	public String getInternalKibanaUserRole(String userName) throws Exception;
+	public void changePasswordForInternalKibanaUser(UserSignInPayload payload, ExceptionResponse response)
+			throws Exception;
+
+	public KibanaUserResponsePayload getInternalKibanaUserDetails(String userName) throws Exception;
+
+	public String getKibanaUserCognitoRole(String userName) throws Exception;
 
 }

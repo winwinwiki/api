@@ -1,8 +1,13 @@
 package com.winwin.winwin.service.impl;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -82,6 +87,7 @@ import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,6 +134,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	private SlackNotificationSenderService slackNotificationSenderService;
 
 	static final EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
+
+	static final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinElasticSearchServiceImpl.class);
 
@@ -234,7 +242,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			// fetch all the data of organization by pageNum and pageSize
 			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable, file,
 					txtWriter, lastUpdatedDate);
-			RestHighLevelClient esClient = esClient(serviceName, region);
 
 			// Send bulk index data
 			BulkRequest bulkRequest = new BulkRequest();
@@ -274,9 +281,26 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			} // end of loop for (OrganizationElasticSearchPayload payload :
 
 			if (!organizationPayloadList.isEmpty()) {
-				// send bulk request to es
-				@SuppressWarnings("unused")
-				BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+				// set post request for KIBANA
+				if (winwinRoutesMap == null) {
+					// set winWin routes map
+					setWinWinRoutesMap();
+				}
+
+				if (!winwinRoutesMap.isEmpty()
+						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+
+					RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
+							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD));
+
+					// send bulk request to es
+					@SuppressWarnings("unused")
+					BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+
+				}
+
 			}
 
 		} catch (ElasticsearchException e) {
@@ -1122,12 +1146,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	// Adds the interceptor to the ES REST client
-	public static RestHighLevelClient esClient(String serviceName, String region) throws Exception {
+	public static RestHighLevelClient esClientForAWSHostedElasticSearch(String serviceName, String region)
+			throws Exception {
 		AWS4Signer signer = new AWS4Signer();
 		signer.setServiceName(serviceName);
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
 				envCredentialsProvider);
+
 		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
 		// exception
 		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
@@ -1137,6 +1163,25 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
 								.setConnectTimeout(6000000).setSocketTimeout(6000000))
 						.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
+	}
+
+	// Adds the interceptor to the ES REST client
+	public static RestHighLevelClient esClientForEC2HostedElasticSearch(String userName, String password)
+			throws Exception {
+		String encodedBytes = Base64.getEncoder().encodeToString((userName + ":" + password).getBytes());
+		Integer port = new Integer(System.getenv("AWS_ES_ENDPOINT_PORT"));
+
+		Header[] headers = { new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
+				new BasicHeader("Authorization", "Basic " + encodedBytes) };
+
+		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
+		// exception
+		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
+		// socket and connection timeout exception
+		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, "http"))
+				.setDefaultHeaders(headers).setMaxRetryTimeoutMillis(6000000)
+				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000)
+						.setSocketTimeout(6000000)));
 	}
 
 }
