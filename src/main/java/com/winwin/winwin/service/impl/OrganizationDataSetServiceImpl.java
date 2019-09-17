@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.DataSetCategory;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
@@ -22,7 +24,7 @@ import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationDataSetService;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.UserService;
@@ -32,34 +34,36 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationDataSetServiceImpl implements OrganizationDataSetService {
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	DataSetCategoryRepository dataSetCategoryRepository;
-
+	private OrganizationDataSetRepository organizationDataSetRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private DataSetCategoryRepository dataSetCategoryRepository;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
-
+	private UserService userService;
 	@Autowired
-	UserService userService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
 	private final Long CATEGORY_ID = -1L;
 
+	/**
+	 * create or update OrganizationDataSet and DataSetCategory, create new
+	 * entry in DataSetCategory if the value of CATEGORY_ID is -1L;
+	 * 
+	 * @param orgDataSetPayLoad
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		OrganizationDataSet organizationDataSet = null;
 		try {
@@ -68,14 +72,14 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				organizationDataSet = constructOrganizationDataSet(orgDataSetPayLoad, user);
 				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
 
-				if (null != organizationDataSet.getId()) {
+				if (null != organizationDataSet.getId() && null != organizationDataSet.getOrganization()) {
 					if (null != orgDataSetPayLoad.getId()) {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganization().getId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
 								"");
 					} else {
-						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
+						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganization().getId(),
 								OrganizationConstants.CREATE, OrganizationConstants.DATASET,
 								organizationDataSet.getId(), organizationDataSet.getDataSetCategory().getCategoryName(),
 								"");
@@ -95,8 +99,14 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 
 	}// end of method createOrUpdateOrganizationDataSet
 
+	/**
+	 * delete OrganizationDataSet by Id
+	 * 
+	 * @param dataSetId
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
 	public void removeOrganizationDataSet(Long dataSetId) {
 		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
 		UserPayload user = userService.getCurrentUserDetails();
@@ -105,12 +115,13 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			try {
 				Date date = CommonUtils.getFormattedDate();
 				dataSet.setUpdatedAt(date);
-				dataSet.setUpdatedBy(user.getEmail());
+				dataSet.setUpdatedBy(user.getUserDisplayName());
+				dataSet.setUpdatedByEmail(user.getEmail());
 				dataSet.setIsActive(false);
 				dataSet = organizationDataSetRepository.saveAndFlush(dataSet);
 
-				if (null != dataSet) {
-					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganizationId(),
+				if (null != dataSet && null != dataSet.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganization().getId(),
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
 							dataSet.getDataSetCategory().getCategoryName(), "");
 				}
@@ -136,24 +147,59 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			} else {
 				organizationDataSet = new OrganizationDataSet();
 				organizationDataSet.setCreatedAt(date);
-				organizationDataSet.setCreatedBy(user.getEmail());
+				organizationDataSet.setCreatedBy(user.getUserDisplayName());
+				organizationDataSet.setCreatedByEmail(user.getEmail());
 			}
+			// set Organization DataSetCategory
 			setOrganizationDataSetCategory(orgDataSetPayLoad, organizationDataSet, user);
 			BeanUtils.copyProperties(orgDataSetPayLoad, organizationDataSet);
 			organizationDataSet.setIsActive(true);
 			organizationDataSet.setUpdatedAt(date);
-			organizationDataSet.setUpdatedBy(user.getEmail());
+			organizationDataSet.setUpdatedBy(user.getUserDisplayName());
+			organizationDataSet.setUpdatedByEmail(user.getEmail());
+
+			if (null != orgDataSetPayLoad.getOrganizationId()) {
+				Organization organization = organizationRepository.findOrgById(orgDataSetPayLoad.getOrganizationId());
+				organizationDataSet.setOrganization(organization);
+			}
+
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.exception.construct"), e);
 		}
 		return organizationDataSet;
 	}
 
+	/**
+	 * returns DataSetCategory by Id
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	public DataSetCategory getDataSetCategoryById(Long categoryId) {
+		return dataSetCategoryRepository.getOne(categoryId);
+	}// end of method getOrganizationDataSetCategoryById
+
+	/**
+	 * returns OrganizationDataSet List by OrgId
+	 * 
+	 * @param id
+	 */
 	@Override
 	@Cacheable("organization_dataset_list")
 	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
-		return organizationDataSetRepository.findAllOrgDataSetList(id);
+		return organizationDataSetRepository.findAllActiveOrgDataSets(id);
 	}// end of method getOrganizationDataSetList
+
+	/**
+	 * returns DataSetCategory List
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	@Cacheable("organization_dataset_category_list")
+	public List<DataSetCategory> getDataSetCategoryList() {
+		return dataSetCategoryRepository.findAll();
+	}// end of method getOrganizationDataSetCategoryList
 
 	/**
 	 * @param organizationDataSetPayLoad
@@ -188,7 +234,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	}
 
 	@Transactional
-	public DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
+	private DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();
 		try {
@@ -198,24 +244,15 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			Date date = CommonUtils.getFormattedDate();
 			category.setCreatedAt(date);
 			category.setUpdatedAt(date);
-			category.setCreatedBy(user.getEmail());
-			category.setUpdatedBy(user.getEmail());
+			category.setCreatedBy(user.getUserDisplayName());
+			category.setUpdatedBy(user.getUserDisplayName());
+			category.setCreatedByEmail(user.getEmail());
+			category.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.category.error.updated"), e);
 		}
 
 		return dataSetCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationDataSetCategory
-
-	@Override
-	public DataSetCategory getDataSetCategoryById(Long categoryId) {
-		return dataSetCategoryRepository.getOne(categoryId);
-	}// end of method getOrganizationDataSetCategoryById
-
-	@Override
-	@Cacheable("organization_dataset_category_list")
-	public List<DataSetCategory> getDataSetCategoryList() {
-		return dataSetCategoryRepository.findAll();
-	}// end of method getOrganizationDataSetCategoryList
 
 }

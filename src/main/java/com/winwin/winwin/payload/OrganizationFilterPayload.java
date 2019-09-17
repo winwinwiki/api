@@ -7,6 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,7 +19,8 @@ public class OrganizationFilterPayload {
 	private List<String> sectorLevel;
 	private List<String> tagStatus;
 	private String priority;
-	private List<String> editedBy;
+	public List<String> createdBy;
+	public List<String> editedBy;
 	private Long nteeCode;
 	private Long naicsCode;
 	private long revenueMin = 0;
@@ -26,13 +31,17 @@ public class OrganizationFilterPayload {
 	private String indicatorId;
 	private long dimensionId;
 	private String componentId;
-	private String nameSearch;
+	public String nameSearch;
 	private String shortNameCode;
 	private long goalCode;
-	private Integer pageNo;
-	private Integer pageSize;
+	public Integer pageNo;
+	public Integer pageSize;
 	private BigInteger orgCount;
-	private String sortBy;
-	private String sortOrder;
+	public String sortBy;
+	public String sortOrder;
 	private String address;
+	private String country;
+	private String state;
+	private String city;
+	private String county;
 }

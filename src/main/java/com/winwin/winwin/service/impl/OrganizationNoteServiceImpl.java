@@ -18,8 +18,8 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.OrganizationNote;
 import com.winwin.winwin.payload.OrganizationNotePayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationNoteRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.OrganizationNoteService;
 import com.winwin.winwin.service.UserService;
@@ -27,27 +27,28 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
-
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private OrganizationNoteRepository organizationNoteRepository;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
-
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationNoteServiceImpl.class);
 
+	/**
+	 * create OrganizationNote
+	 * 
+	 * @param organizationNotePayload
+	 */
 	@Override
 	@Transactional
 	public OrganizationNote createOrganizationNote(OrganizationNotePayload organizationNotePayload) {
@@ -60,8 +61,14 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 				BeanUtils.copyProperties(organizationNotePayload, note);
 				note.setCreatedAt(date);
 				note.setUpdatedAt(date);
-				note.setCreatedBy(user.getEmail());
-				note.setUpdatedBy(user.getEmail());
+				note.setCreatedBy(user.getUserDisplayName());
+				note.setUpdatedBy(user.getUserDisplayName());
+				note.setCreatedByEmail(user.getEmail());
+				note.setUpdatedByEmail(user.getEmail());
+
+				if (null != organizationNotePayload.getOrganizationId())
+					note.setOrganization(organizationRepository.getOne(organizationNotePayload.getOrganizationId()));
+
 				note = organizationNoteRepository.saveAndFlush(note);
 
 				if (null != note && null != note.getOrganization()) {
@@ -75,6 +82,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return note;
 	}
 
+	/**
+	 * create OrganizationNote from List
+	 * 
+	 * @param organizationNoteList
+	 */
 	@Override
 	@Transactional
 	public List<OrganizationNote> createOrganizationsNotes(List<OrganizationNote> organizationNoteList) {
@@ -88,6 +100,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return organizationNoteList;
 	}
 
+	/**
+	 * update OrganizationNote
+	 * 
+	 * @param organizationNotePayload
+	 */
 	@Override
 	@Transactional
 	public OrganizationNote updateOrganizationNote(OrganizationNotePayload organizationNotePayload) {
@@ -100,7 +117,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 					BeanUtils.copyProperties(organizationNotePayload, note);
 					Date date = CommonUtils.getFormattedDate();
 					note.setUpdatedAt(date);
-					note.setUpdatedBy(user.getEmail());
+					note.setUpdatedBy(user.getUserDisplayName());
+					note.setUpdatedByEmail(user.getEmail());
 					note = organizationNoteRepository.saveAndFlush(note);
 
 					if (null != note && null != note.getOrganization()) {
@@ -116,6 +134,12 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		return note;
 	}
 
+	/**
+	 * delete OrganizationNote
+	 * 
+	 * @param noteId
+	 * @param orgId
+	 */
 	@Override
 	@Transactional
 	public void removeOrganizationNote(Long noteId, Long orgId) {
@@ -124,6 +148,8 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 			try {
 				OrganizationNote note = organizationNoteRepository.getOne(noteId);
 				if (null != note) {
+					note.setOrganization(null);
+					organizationNoteRepository.saveAndFlush(note);
 					organizationNoteRepository.deleteById(noteId);
 					orgHistoryService.createOrganizationHistory(user, orgId, OrganizationConstants.DELETE,
 							OrganizationConstants.NOTE, note.getId(), note.getName(), "");
@@ -134,6 +160,11 @@ public class OrganizationNoteServiceImpl implements OrganizationNoteService {
 		}
 	}
 
+	/**
+	 * returns OrganizationNote List by orgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationNote> getOrganizationNoteList(Long orgId) {
 		return organizationNoteRepository.findAllOrgNotesList(orgId);

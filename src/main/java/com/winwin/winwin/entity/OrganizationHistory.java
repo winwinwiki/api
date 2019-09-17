@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.springframework.data.annotation.LastModifiedBy;
@@ -35,7 +36,8 @@ import lombok.ToString;
 public class OrganizationHistory {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_history_seq")
+	@SequenceGenerator(name = "org_history_generator", sequenceName = "org_history_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_history_generator")
 	private Long id;
 
 	@JoinColumn(name = "organization_id")
@@ -46,11 +48,14 @@ public class OrganizationHistory {
 
 	@LastModifiedDate
 	@Column(name = "updated_at")
-	protected Date updatedAt;
+	private Date updatedAt;
 
 	@LastModifiedBy
 	@Column(name = "updated_by")
-	protected String updatedBy;
+	private String updatedBy;
+
+	@Column(name = "updated_by_email")
+	private String updatedByEmail;
 
 	@Column(name = "action_performed")
 	private String actionPerformed;

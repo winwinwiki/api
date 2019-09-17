@@ -4,6 +4,8 @@
 
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,6 +15,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @AllArgsConstructor
@@ -21,11 +24,11 @@ import lombok.ToString;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class DataMigrationCsvPayload {
+public class OrganizationDataMigrationCsvPayload {
 	private Long id;
 	private String name;
-	private Long revenue;
-	private Long assets;
+	private BigDecimal revenue;
+	private BigDecimal assets;
 	private String sector;
 	private String sectorLevel;
 	private String sectorLevelName;
@@ -41,7 +44,8 @@ public class DataMigrationCsvPayload {
 	private String purpose;
 	private String selfInterest;
 	private String businessModel;
-	private Long populationServed;
+	private String populationServed;
+	private String regionServedIds;
 	private String missionStatement;
 	private String country;
 	private String state;
@@ -58,5 +62,10 @@ public class DataMigrationCsvPayload {
 	private String ein;
 	private String tagStatus;
 	private Long parentId;
+	private Long rootParentId;
 	private Long addressId;
+	private String priority;
+	private Long organizationId;
+	private Boolean isActive;
+	private String contactInfo;
 }

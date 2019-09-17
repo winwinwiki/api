@@ -23,7 +23,6 @@ import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.OrganizationSdgDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.service.OrgSdgDataService;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -32,28 +31,29 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 	@Autowired
-	SdgDataRepository orgSdgDataRepository;
-
+	private SdgDataRepository orgSdgDataRepository;
 	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private OrgSdgDataMapRepository orgSdgDataMapRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgSdgDataServiceImpl.class);
 
+	/**
+	 * create or update OrganizationSdgData
+	 * 
+	 * @param payloadList
+	 * @param organization
+	 */
 	@Override
 	@Transactional
 	public void createSdgDataMapping(List<OrganizationSdgDataMapPayload> payloadList, Organization organization)
@@ -61,7 +61,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 		UserPayload user = userService.getCurrentUserDetails();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<SdgData> sdgList = orgSdgDataRepository.findAllSdgData();
+			List<SdgData> sdgList = orgSdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
 				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
@@ -86,8 +86,10 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
 									sdgDataMapObj.setUpdatedAt(date);
-									sdgDataMapObj.setCreatedBy(user.getEmail());
-									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setCreatedByEmail(user.getEmail());
+									sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 								}
 							}
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
@@ -146,7 +148,8 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 						} else {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(date);
-							sdgDataMapObj.setUpdatedBy(user.getEmail());
+							sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+							sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
 							if (null != sdgDataMapObj && null != sdgDataMapObj.getOrganization()) {
@@ -171,14 +174,17 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 		}
 	}// end of method createSdgDataMapping
 
+	/**
+	 * returns OrganizationSdgData List by OrgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationSdgDataMapPayload> getSelectedSdgData(Long orgId) {
-		List<OrganizationSdgDataMapPayload> payloadList = null;
+		List<OrganizationSdgDataMapPayload> payloadList = new ArrayList<OrganizationSdgDataMapPayload>();
 		List<OrganizationSdgData> sdgDataMapList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(orgId);
 
 		if (null != sdgDataMapList) {
-			payloadList = new ArrayList<OrganizationSdgDataMapPayload>();
-
 			for (OrganizationSdgData sdgMapData : sdgDataMapList) {
 				OrganizationSdgDataMapPayload payload = new OrganizationSdgDataMapPayload();
 				BeanUtils.copyProperties(sdgMapData, payload);

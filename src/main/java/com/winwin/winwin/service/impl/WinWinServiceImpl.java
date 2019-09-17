@@ -3,21 +3,28 @@
  */
 package com.winwin.winwin.service.impl;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.util.IOUtils;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Address;
@@ -27,226 +34,254 @@ import com.winwin.winwin.entity.NteeData;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
 import com.winwin.winwin.entity.OrganizationNote;
+import com.winwin.winwin.entity.OrganizationRegionServed;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramDataSet;
+import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.ProgramSpiData;
+import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.entity.SdgData;
+import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.DataMigrationCsvPayload;
-import com.winwin.winwin.payload.ProgramRequestPayload;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.NaicsDataMappingPayload;
+import com.winwin.winwin.payload.NaicsMappingCsvPayload;
+import com.winwin.winwin.payload.NteeDataMappingPayload;
+import com.winwin.winwin.payload.NteeMappingCsvPayload;
+import com.winwin.winwin.payload.OrganizationBulkResultPayload;
+import com.winwin.winwin.payload.ProgramBulkResultPayload;
+import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.AddressRepository;
-import com.winwin.winwin.repository.ClassificationRepository;
 import com.winwin.winwin.repository.DataSetCategoryRepository;
 import com.winwin.winwin.repository.NaicsDataRepository;
 import com.winwin.winwin.repository.NteeDataRepository;
-import com.winwin.winwin.repository.OrgClassificationMapRepository;
-import com.winwin.winwin.repository.OrgSdgDataMapRepository;
-import com.winwin.winwin.repository.OrgSpiDataMapRepository;
-import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
-import com.winwin.winwin.repository.OrganizationResourceRepository;
-import com.winwin.winwin.repository.ProgramDataSetRepository;
 import com.winwin.winwin.repository.ProgramRepository;
-import com.winwin.winwin.repository.ProgramResourceRepository;
-import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
-import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
+import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
-import com.winwin.winwin.service.OrganizationHistoryService;
-import com.winwin.winwin.service.OrganizationNoteService;
-import com.winwin.winwin.service.UserService;
+import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CommonUtils;
+import com.winwin.winwin.util.CsvUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class WinWinServiceImpl implements WinWinService {
 	@Autowired
-	AddressRepository addressRepository;
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	OrganizationRepository organizationRepository;
+	private ProgramRepository programRepository;
 	@Autowired
-	ProgramRepository programRepository;
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	OrgClassificationMapRepository orgClassificationMapRepository;
+	private AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
 	@Autowired
-	ClassificationRepository classificationRepository;
+	private CsvUtils csvUtils;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
+	private SpiDataRepository spiDataRepository;
 	@Autowired
-	NaicsDataRepository naicsRepository;
+	private SdgDataRepository sdgDataRepository;
 	@Autowired
-	NteeDataRepository nteeRepository;
+	private ResourceCategoryRepository resourceCategoryRepository;
 	@Autowired
-	UserService userService;
+	private DataSetCategoryRepository dataSetCategoryRepository;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private RegionMasterRepository regionMasterRepository;
 	@Autowired
-	OrganizationNoteService organizationNoteService;
+	private NteeDataRepository nteeDataRepository;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
+	private NaicsDataRepository naicsDataRepository;
 	@Autowired
-	GetAwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
-	@Autowired
-	SpiDataRepository spiDataRepository;
-	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
-	@Autowired
-	ProgramSpiDataMapRepository programSpiDataMapRepository;
-	@Autowired
-	SdgDataRepository sdgDataRepository;
-	@Autowired
-	OrgSdgDataMapRepository orgSdgDataMapRepository;
-	@Autowired
-	ProgramSdgDataMapRepository programSdgDataMapRepository;
-	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
-	@Autowired
-	ProgramResourceRepository programResourceRepository;
-	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-	@Autowired
-	ProgramDataSetRepository programDataSetRepository;
-	@Autowired
-	ResourceCategoryRepository resourceCategoryRepository;
-	@Autowired
-	DataSetCategoryRepository dataSetCategoryRepository;
-	@Autowired
-	NteeDataRepository nteeDataRepository;
-	@Autowired
-	NaicsDataRepository naicsDataRepository;
+	private SlackNotificationSenderService slackNotificationSenderService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinServiceImpl.class);
 
-	Map<Long, NaicsData> naicsMap = null;
-	Map<Long, NteeData> nteeMap = null;
+	private Map<String, NaicsData> naicsMap = null;
+	private Map<String, NteeData> nteeMap = null;
 
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
+
+	/**
+	 * create organizations in bulk, call this method only when the organization
+	 * id's are already imported into organization table. This is the utility
+	 * method for data migration and can only be used for new environment setup
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 * @param user
+	 * @return
+	 */
 	@Override
-	@Transactional
-	public List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
-			ExceptionResponse response) {
+	@Async
+	public List<Organization> createOrganizationsOffline(
+			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			UserPayload user) {
+		// for Slack Notification
+		Date date = CommonUtils.getFormattedDate();
+		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+				.text("WinWinWiki Organization Data Migration Process has been started successfully at " + date)
+				.channel(SLACK_CHANNEL).as_user("true").build();
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
-				OrganizationConstants.CREATE, "org.exception.created");
+				OrganizationConstants.CREATE, "org.exception.created", user);
+
+		date = CommonUtils.getFormattedDate();
+		slackMessage.setText(("WinWinWiki Organization Data Migration Process has been ended successfully at " + date));
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		return organizationList;
 	}
 
+	/**
+	 * create programs in bulk, call this method only when the program id's are
+	 * already imported into program table. This is the utility method for data
+	 * migration and can only be used for new environment setup
+	 * 
+	 * @param programPayloadList
+	 * @param response
+	 * @param user
+	 * @return
+	 */
 	@Override
-	@Transactional
-	public List<Program> createProgramsOffline(List<ProgramRequestPayload> programPayloadList,
-			ExceptionResponse response) {
+	@Async
+	public List<Program> createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
+			ExceptionResponse response, UserPayload user) {
+		// for Slack Notification
+		Date date = CommonUtils.getFormattedDate();
+		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+				.text("WinWinWiki Program Data Migration Process has been started successfully at " + date)
+				.channel(SLACK_CHANNEL).as_user("true").build();
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+
 		List<Program> programList = saveProgramOfflineForBulkUpload(programPayloadList, response,
-				OrganizationConstants.CREATE, "prg.exception.created");
+				OrganizationConstants.CREATE, "prg.exception.created", user);
+
+		date = CommonUtils.getFormattedDate();
+		slackMessage.setText(("WinWinWiki Program Data Migration Process has been ended successfully at " + date));
+		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		return programList;
 	}
 
+	/**
+	 * save organizations in bulk
+	 * 
+	 * @param organizationPayloadList
+	 * @param response
+	 * @param operationPerformed
+	 * @param customMessage
+	 * @param user
+	 * @return
+	 */
 	public List<Organization> saveOrganizationsOfflineForBulkUpload(
-			List<DataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
-			String operationPerformed, String customMessage) {
-		OrganizationSpiData spiDataMapObj = null;
-		OrganizationSdgData sdgDataMapObj = null;
+			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
+			String operationPerformed, String customMessage, UserPayload user) {
 		List<Organization> organizationList = new ArrayList<Organization>();
-		List<Long> spiTagIds = new ArrayList<Long>();
-		List<Long> sdgTagIds = new ArrayList<Long>();
-		List<Long> resourceIds = new ArrayList<Long>();
-		List<Long> datasetIds = new ArrayList<Long>();
-		Map<Long, String> notesMap = new HashMap<Long, String>();
-		Map<Long, String> datasetsTypeMap = new HashMap<Long, String>();
-		// create notes for multiple organizations
-		List<OrganizationNote> organizationsNoteList = null;
+		ExceptionResponse errorResForNaics = new ExceptionResponse();
+		ExceptionResponse errorResForNtee = new ExceptionResponse();
+		List<Organization> successOrganizationList = new ArrayList<Organization>();
+		List<Organization> failedOrganizationList = new ArrayList<Organization>();
 
 		try {
-			UserPayload user = userService.getCurrentUserDetails();
-			Date date = CommonUtils.getFormattedDate();
+			// get NaicsCode AutoTag SpiSdgMapping
+			Map<String, NaicsDataMappingPayload> naicsMapForS3 = getNaicsSpiSdgMap(errorResForNaics);
+			if (!StringUtils.isEmpty(errorResForNaics.getErrorMessage())) {
+				throw new Exception(errorResForNaics.getErrorMessage());
+			}
+			// get NteeCode AutoTag SpiSdgMapping
+			Map<String, NteeDataMappingPayload> nteeMapForS3 = getNteeSpiSdgMap(errorResForNtee);
+			if (!StringUtils.isEmpty(errorResForNtee.getErrorMessage())) {
+				throw new Exception(errorResForNtee.getErrorMessage());
+			}
+
+			List<SpiData> spiDataList = spiDataRepository.findAllActiveSpiData();
+			Map<Long, SpiData> spiDataMap = spiDataList.stream()
+					.collect(Collectors.toMap(SpiData::getId, SpiData -> SpiData));
+
+			List<SdgData> sdgDataList = sdgDataRepository.findAllActiveSdgData();
+			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
+					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
 
 			if (null != organizationPayloadList) {
-				// set Naics-Ntee code map
-				setNaicsNteeMap();
+				List<Organization> organizationsListToSaveIntoDB = new ArrayList<Organization>();
+				int batchInsertSize = 1000;
+				int totalOrganizationsToSave = organizationPayloadList.size();
+				int remainingOrganizationsToSave = totalOrganizationsToSave % batchInsertSize;
+				int numOfOrganizationsToSaveByBatchSize = (totalOrganizationsToSave - remainingOrganizationsToSave);
 
-				for (DataMigrationCsvPayload organizationPayload : organizationPayloadList) {
-					if (null != organizationPayload && null != user) {
-						if (!StringUtils.isEmpty(organizationPayload.getNotes())) {
-							if (null != organizationPayload.getId())
-								notesMap.put(organizationPayload.getId(), organizationPayload.getNotes());
-						}
-						if (!StringUtils.isEmpty(organizationPayload.getSpiTagIds())) {
-							String[] spiIdsList = organizationPayload.getSpiTagIds().split(",");
-							for (int j = 0; j < spiIdsList.length; j++) {
-								spiTagIds.add(Long.parseLong(spiIdsList[j]));
-							}
-						}
-						if (!StringUtils.isEmpty(organizationPayload.getSdgTagIds())) {
-							String[] sdgIdsList = organizationPayload.getSdgTagIds().split(",");
-							for (int j = 0; j < sdgIdsList.length; j++) {
-								sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
-							}
-						}
-						if (!StringUtils.isEmpty(organizationPayload.getResourceIds())) {
-							String[] resourceIdsList = organizationPayload.getResourceIds().split(",");
-							for (int j = 0; j < resourceIdsList.length; j++) {
-								resourceIds.add(Long.parseLong(resourceIdsList[j]));
-							}
-						}
-						if (!StringUtils.isEmpty(organizationPayload.getDatasetIds())) {
-							String[] datasetIdsList = organizationPayload.getDatasetIds().split(",");
-							for (int j = 0; j < datasetIdsList.length; j++) {
-								datasetIds.add(Long.parseLong(datasetIdsList[j]));
-							}
-						}
-						if (!StringUtils.isEmpty(organizationPayload.getDatasetType())) {
-							if (null != organizationPayload.getId())
-								datasetsTypeMap.put(organizationPayload.getId(), organizationPayload.getDatasetType());
-						}
+				int i = 1;
+				for (OrganizationDataMigrationCsvPayload organizationPayload : organizationPayloadList) {
+					if (null != organizationPayload && null != organizationPayload.getId()) {
 						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-							organizationList.add(setOrganizationDataForBulkUpload(organizationPayload, user, date));
-						}
+							// set Organization Object into list to save into DB
+							organizationsListToSaveIntoDB.add(setOrganizationDataForBulkUpload(organizationPayload,
+									user, operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap));
+
+							// save the organizations in the batches of 1000 and
+							// save the remaining organizations
+							if (i % 1000 == 0) {
+								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+										organizationsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								} else {
+									failedOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								}
+								// save the remaining organizations when total
+								// size is less than 1000
+							} else if (numOfOrganizationsToSaveByBatchSize == 0
+									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
+								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+										organizationsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								} else {
+									failedOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								}
+								// save the remaining organizations when total
+								// size is greater than 1000
+							} else if (i > numOfOrganizationsToSaveByBatchSize
+									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
+								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
+										organizationsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								} else {
+									failedOrganizationList.addAll(payload.getOrganizationList());
+									// refresh the data after added into list
+									organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								}
+							}
+
+							i++;
+
+						} // end of if (operationPerformed.
 					}
 				}
-			}
-			organizationList = organizationRepository.saveAll(organizationList);
-
-			if (null != organizationList) {
-				organizationsNoteList = new ArrayList<OrganizationNote>();
-				for (Organization organization : organizationList) {
-					// set notes list for multiple organization's
-					OrganizationNote note = new OrganizationNote();
-					note.setName(notesMap.get(organization.getId()));
-					note.setOrganization(organization);
-					note.setCreatedAt(date);
-					note.setUpdatedAt(date);
-					note.setCreatedBy(user.getEmail());
-					note.setUpdatedBy(user.getEmail());
-					organizationsNoteList.add(note);
-
-					// To save list of resourceIds and datasetIds fetched
-					// from
-					// .csv file
-
-					saveOrgDatasetAndResources(organization, user, resourceIds, datasetIds,
-							datasetsTypeMap.get(organization.getId()));
-					// To save list of spiTagIds and sdgTagIds fetched from .csv
-					// file
-					saveOrgSpiSdgMappingOffline(organization, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
-				}
-
-				// create notes for multiple organization's
-				if (null != organizationsNoteList)
-					organizationsNoteList = organizationNoteService.createOrganizationsNotes(organizationsNoteList);
 			}
 
 		} catch (Exception e) {
@@ -254,41 +289,1155 @@ public class WinWinServiceImpl implements WinWinService {
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+		// set failed and success organizations for migration response
+		organizationList.addAll(successOrganizationList);
+		organizationList.addAll(failedOrganizationList);
+
 		return organizationList;
 	}
 
 	/**
-	 * @param organizationPayload
+	 * prepare data for Organization to save into DB
+	 * 
+	 * @param csvPayload
 	 * @param user
+	 * @param operationPerformed
+	 * @param naicsMapForS3
+	 * @param nteeMapForS3
+	 * @param spiDataMap
+	 * @param sdgDataMap
 	 * @return
 	 * @throws Exception
 	 */
-	private Organization setOrganizationDataForBulkUpload(DataMigrationCsvPayload organizationPayload, UserPayload user,
-			Date date) throws Exception {
+	private Organization setOrganizationDataForBulkUpload(OrganizationDataMigrationCsvPayload csvPayload,
+			UserPayload user, String operationPerformed, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
+			Map<Long, SdgData> sdgDataMap) throws Exception {
+
 		Organization organization = new Organization();
-		BeanUtils.copyProperties(organizationPayload, organization);
+		BeanUtils.copyProperties(csvPayload, organization);
+		organization.setAddress(saveAddressForBulkUpload(csvPayload, user));
 
-		organization.setAddress(saveAddressForBulkUpload(organizationPayload, user));
+		if (!StringUtils.isEmpty(csvPayload.getNaicsCode())) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			organization.setNaicsCode(naicsMap.get(csvPayload.getNaicsCode()));
+		}
 
-		if (!naicsMap.isEmpty())
-			organization.setNaicsCode(naicsMap.get(organizationPayload.getNaicsCode()));
+		if (!StringUtils.isEmpty(csvPayload.getNteeCode())) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			organization.setNteeCode(nteeMap.get(csvPayload.getNteeCode()));
 
-		if (!nteeMap.isEmpty())
-			organization.setNteeCode(nteeMap.get(organizationPayload.getNteeCode()));
+		}
 
 		organization.setType(OrganizationConstants.ORGANIZATION);
 		organization.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-
-		organization.setCreatedAt(date);
-		organization.setCreatedBy(user.getEmail());
 		organization.setIsActive(true);
-		organization.setUpdatedAt(date);
-		organization.setUpdatedBy(user.getEmail());
 
+		Date date = CommonUtils.getFormattedDate();
+		organization.setCreatedAt(date);
+		organization.setCreatedBy(user.getUserDisplayName());
+		organization.setCreatedByEmail(user.getEmail());
+		organization.setUpdatedAt(date);
+		organization.setUpdatedBy(user.getUserDisplayName());
+		organization.setUpdatedByEmail(user.getEmail());
+		organization.setIsActive(true);
+
+		// set note for organization
+		if (!StringUtils.isEmpty(csvPayload.getNotes()))
+			organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
+
+		// set all the regionServed for organization
+		if (!StringUtils.isEmpty(csvPayload.getRegionServedIds()))
+			organization.setOrganizationRegionServed(
+					saveOrganizationRegionServedForBulkUpload(csvPayload, user, organization));
+
+		// set all the resources for organization
+		if (!StringUtils.isEmpty(csvPayload.getResourceIds()))
+			organization
+					.setOrganizationResource(saveOrganizationResourcesForBulkUpload(csvPayload, user, organization));
+
+		// set all the dataset for organization
+		if (!StringUtils.isEmpty(csvPayload.getDatasetIds()))
+			organization.setOrganizationDataSet(saveOrganizationDataSetsForBulkUpload(csvPayload, user, organization));
+
+		// if (StringUtils.isEmpty(csvPayload.getNaicsCode()) &&
+		// StringUtils.isEmpty(csvPayload.getNteeCode())) {
+		List<Long> spiTagIds = new ArrayList<>();
+		List<Long> sdgTagIds = new ArrayList<>();
+
+		if (!StringUtils.isEmpty(csvPayload.getSpiTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] spiIdsList = csvPayload.getSpiTagIds().split(",");
+			for (int j = 0; j < spiIdsList.length; j++) {
+				if (!StringUtils.isEmpty(spiIdsList[j]))
+					spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
+			}
+		}
+		if (!StringUtils.isEmpty(csvPayload.getSdgTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] sdgIdsList = csvPayload.getSdgTagIds().split(",");
+			for (int j = 0; j < sdgIdsList.length; j++) {
+				if (!StringUtils.isEmpty(sdgIdsList[j]))
+					sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+			}
+		}
+		if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+			// create organization's spi tags mapping for Bulk Creation
+			organization.setOrganizationSpiData(
+					saveOrgSpiMappingForBulkCreation(organization, user, spiTagIds, spiDataMap));
+			// create organization's sdg tags mapping for Bulk Creation
+			organization.setOrganizationSdgData(
+					saveOrgSdgMappingForBulkCreation(organization, user, sdgTagIds, sdgDataMap));
+		}
+
+		return organization;
+	}// end of method
+
+	/**
+	 * save and Flush Organizations into DB
+	 * 
+	 * @param organizations
+	 * @param i
+	 * @return
+	 */
+	@Transactional
+	@Async
+	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
+		// Implemented below logic to log failed and success
+		// organizations for bulk upload
+		List<Organization> organizationList = new ArrayList<Organization>();
+		Boolean isFailed = false;
+		try {
+			LOGGER.info(
+					"Saving organizations : " + organizations.size() + " Starting from: " + (i - organizations.size()));
+			organizationList.addAll(organizationRepository.saveAll(organizations));
+
+			// Flush all pending changes to the database
+			organizationRepository.flush();
+
+			LOGGER.info("Saved organizations: " + organizations.size());
+		} catch (Exception e) {
+			LOGGER.info("Failed to save organizations starting from : " + (i - organizations.size()));
+			organizationList = new ArrayList<Organization>();
+			organizationList.addAll(organizations);
+			isFailed = true;
+		}
+		OrganizationBulkResultPayload payload = new OrganizationBulkResultPayload();
+		payload.setOrganizationList(organizationList);
+		payload.setIsFailed(isFailed);
+		return payload;
+
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	@SuppressWarnings("unused")
+	private Organization setOrganizationSpiSdgMappingForBulkCreation(Organization organization, UserPayload user,
+			Map<String, NaicsDataMappingPayload> naicsMapForS3, Map<String, NteeDataMappingPayload> nteeMapForS3,
+			Map<Long, SpiData> spiDataMap, Map<Long, SdgData> sdgDataMap) throws Exception {
+		List<Long> spiIdsByNaicsCode = new ArrayList<Long>();
+		List<Long> sdgIdsByNaicsCode = new ArrayList<Long>();
+		List<Long> spiIdsByNteeCode = new ArrayList<Long>();
+		List<Long> sdgIdsByNteeCode = new ArrayList<Long>();
+		List<Long> spiIds = new ArrayList<Long>();
+		List<Long> sdgIds = new ArrayList<Long>();
+
+		if (null != organization.getNaicsCode()) {
+			NaicsDataMappingPayload naicsMapPayload = naicsMapForS3.get(organization.getNaicsCode().getCode());
+			spiIdsByNaicsCode = naicsMapPayload.getSpiTagIds();
+			sdgIdsByNaicsCode = naicsMapPayload.getSdgTagIds();
+		}
+
+		if (null != organization.getNteeCode()) {
+			NteeDataMappingPayload nteeMapPayload = nteeMapForS3.get(organization.getNteeCode().getCode());
+			spiIdsByNteeCode = nteeMapPayload.getSpiTagIds();
+			sdgIdsByNteeCode = nteeMapPayload.getSdgTagIds();
+		}
+
+		if (null != spiIdsByNaicsCode && null != spiIdsByNteeCode)
+			spiIds = Stream.of(spiIdsByNaicsCode, spiIdsByNteeCode).flatMap(x -> x.stream())
+					.collect(Collectors.toList());
+
+		if (null != sdgIdsByNaicsCode && null != sdgIdsByNteeCode)
+			sdgIds = Stream.of(sdgIdsByNaicsCode, sdgIdsByNteeCode).flatMap(x -> x.stream())
+					.collect(Collectors.toList());
+
+		// create organization's spi tags mapping
+		organization.setOrganizationSpiData(saveOrgSpiMappingForBulkCreation(organization, user, spiIds, spiDataMap));
+		// create organization's sdg tags mapping
+		organization.setOrganizationSdgData(saveOrgSdgMappingForBulkCreation(organization, user, sdgIds, sdgDataMap));
 		return organization;
 	}
 
-	public Address saveAddressForBulkUpload(DataMigrationCsvPayload payload, UserPayload user) {
+	/**
+	 * prepare OrganizationNote for Organization
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param organization
+	 * @return
+	 */
+	private List<OrganizationNote> saveOrganizationNotesForBulkUpload(OrganizationDataMigrationCsvPayload payload,
+			UserPayload user, Organization organization) {
+		List<OrganizationNote> notes = new ArrayList<OrganizationNote>();
+		OrganizationNote note = null;
+		try {
+			if (null != payload) {
+				Date date = CommonUtils.getFormattedDate();
+				// for organization notes creation
+				note = new OrganizationNote();
+				note.setName(payload.getNotes());
+				note.setOrganization(organization);
+				note.setCreatedAt(date);
+				note.setUpdatedAt(date);
+				note.setCreatedBy(user.getUserDisplayName());
+				note.setUpdatedBy(user.getUserDisplayName());
+				note.setCreatedByEmail(user.getEmail());
+				note.setUpdatedByEmail(user.getEmail());
+				notes.add(note);
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
+		}
+		return notes;
+
+	}
+
+	/**
+	 * prepare OrganizationRegionServed for Organization
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param organization
+	 * @return
+	 */
+	private List<OrganizationRegionServed> saveOrganizationRegionServedForBulkUpload(
+			OrganizationDataMigrationCsvPayload payload, UserPayload user, Organization organization) {
+		List<Long> regionIds = new ArrayList<>();
+		List<OrganizationRegionServed> orgRegionServedList = new ArrayList<OrganizationRegionServed>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
+				for (int j = 0; j < regionMasterIdsList.length; j++) {
+					if (!StringUtils.isEmpty(regionMasterIdsList[j]))
+						regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != regionIds) {
+					for (Long regionId : regionIds) {
+						// for organization regionServed creation
+						OrganizationRegionServed orgRegionServed = new OrganizationRegionServed();
+						// find regionMaster object by id
+						RegionMaster regionMaster = regionMasterRepository.findRegionById(regionId);
+						orgRegionServed.setCreatedAt(date);
+						orgRegionServed.setUpdatedAt(date);
+						orgRegionServed.setCreatedBy(user.getUserDisplayName());
+						orgRegionServed.setCreatedByEmail(user.getEmail());
+						orgRegionServed.setUpdatedBy(user.getUserDisplayName());
+						orgRegionServed.setUpdatedByEmail(user.getEmail());
+						orgRegionServed.setIsActive(true);
+						orgRegionServed.setOrganization(organization);
+						orgRegionServed.setRegionMaster(regionMaster);
+
+						orgRegionServedList.add(orgRegionServed);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.region.error.created"), e);
+		}
+		return orgRegionServedList;
+
+	}
+
+	/**
+	 * prepare OrganizationResource for Organization
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param organization
+	 * @return
+	 */
+	private List<OrganizationResource> saveOrganizationResourcesForBulkUpload(
+			OrganizationDataMigrationCsvPayload payload, UserPayload user, Organization organization) {
+		List<Long> resourceIds = new ArrayList<>();
+		List<OrganizationResource> orgResourceList = new ArrayList<OrganizationResource>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] resourceCategoryIdsList = payload.getResourceIds().split(",");
+				for (int j = 0; j < resourceCategoryIdsList.length; j++) {
+					if (!StringUtils.isEmpty(resourceCategoryIdsList[j]))
+						resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != resourceIds) {
+					for (Long resourceId : resourceIds) {
+						// for organization resource creation
+						OrganizationResource organizationResource = new OrganizationResource();
+						// find resourceCategory object by id
+						ResourceCategory resourceCategory = resourceCategoryRepository
+								.findResourceCategoryById(resourceId);
+
+						organizationResource.setCreatedAt(date);
+						organizationResource.setUpdatedAt(date);
+						organizationResource.setCreatedBy(user.getUserDisplayName());
+						organizationResource.setCreatedByEmail(user.getEmail());
+						organizationResource.setUpdatedBy(user.getUserDisplayName());
+						organizationResource.setUpdatedByEmail(user.getEmail());
+						organizationResource.setIsActive(true);
+						organizationResource.setOrganization(organization);
+						organizationResource.setResourceCategory(resourceCategory);
+
+						orgResourceList.add(organizationResource);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.resource.error.created"), e);
+		}
+		return orgResourceList;
+
+	}
+
+	/**
+	 * prepare OrganizationDataSet for Organization
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param organization
+	 * @return
+	 */
+	private List<OrganizationDataSet> saveOrganizationDataSetsForBulkUpload(OrganizationDataMigrationCsvPayload payload,
+			UserPayload user, Organization organization) {
+		List<Long> datasetIds = new ArrayList<>();
+		List<OrganizationDataSet> orgDatasetList = new ArrayList<OrganizationDataSet>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] datasetCategoryIdsList = payload.getDatasetIds().split(",");
+				for (int j = 0; j < datasetCategoryIdsList.length; j++) {
+					if (!StringUtils.isEmpty(datasetCategoryIdsList[j]))
+						datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != datasetIds) {
+					for (Long datasetId : datasetIds) {
+						// for organization dataset creation
+						OrganizationDataSet organizationDataSet = new OrganizationDataSet();
+						// find regionMaster object by id
+						DataSetCategory dataSetCategory = dataSetCategoryRepository.findDataSetCategoryById(datasetId);
+						organizationDataSet.setCreatedAt(date);
+						organizationDataSet.setUpdatedAt(date);
+						organizationDataSet.setCreatedBy(user.getUserDisplayName());
+						organizationDataSet.setCreatedByEmail(user.getEmail());
+						organizationDataSet.setUpdatedBy(user.getUserDisplayName());
+						organizationDataSet.setUpdatedByEmail(user.getEmail());
+						organizationDataSet.setIsActive(true);
+						organizationDataSet.setOrganization(organization);
+						organizationDataSet.setDataSetCategory(dataSetCategory);
+						organizationDataSet.setType(payload.getDatasetType());
+
+						orgDatasetList.add(organizationDataSet);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("org.dataset.error.created"), e);
+		}
+		return orgDatasetList;
+
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param sdgDataMapObj
+	 * @param sdgIdsList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<OrganizationSdgData> saveOrgSdgMappingForBulkCreation(Organization organization, UserPayload user,
+			List<Long> sdgIdsList, Map<Long, SdgData> sdgDataMap) throws Exception {
+		OrganizationSdgData sdgDataMapObj = null;
+		Date date = CommonUtils.getFormattedDate();
+		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
+
+		if (null != sdgIdsList) {
+			for (Long sdgId : sdgIdsList) {
+				SdgData sdgData = sdgDataMap.get(sdgId);
+				if (null != sdgData) {
+					sdgDataMapObj = new OrganizationSdgData();
+					sdgDataMapObj.setSdgData(sdgData);
+					sdgDataMapObj.setOrganization(organization);
+					sdgDataMapObj.setIsChecked(true);
+					sdgDataMapObj.setCreatedAt(date);
+					sdgDataMapObj.setUpdatedAt(date);
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
+					sdgDataMapList.add(sdgDataMapObj);
+				}
+			}
+		}
+		return sdgDataMapList;
+	}
+
+	/**
+	 * @param organization
+	 * @param user
+	 * @param spiDataMapObj
+	 * @param spiIdsList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<OrganizationSpiData> saveOrgSpiMappingForBulkCreation(Organization organization, UserPayload user,
+			List<Long> spiIdsList, Map<Long, SpiData> spiDataMap) throws Exception {
+		OrganizationSpiData spiDataMapObj = null;
+		Date date = CommonUtils.getFormattedDate();
+		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
+		if (null != spiIdsList) {
+			for (Long spiId : spiIdsList) {
+				SpiData spiData = spiDataMap.get(spiId);
+				if (null != spiData) {
+					spiDataMapObj = new OrganizationSpiData();
+					spiDataMapObj.setSpiData(spiData);
+					spiDataMapObj.setOrganization(organization);
+					spiDataMapObj.setIsChecked(true);
+					spiDataMapObj.setCreatedAt(date);
+					spiDataMapObj.setUpdatedAt(date);
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
+					spiDataMapList.add(spiDataMapObj);
+				}
+			}
+		}
+
+		return spiDataMapList;
+	}
+
+	/**
+	 * save programs in bulk
+	 * 
+	 * @param programPayloadList
+	 * @param response
+	 * @param operationPerformed
+	 * @param customMessage
+	 * @return
+	 */
+	public List<Program> saveProgramOfflineForBulkUpload(List<ProgramDataMigrationCsvPayload> programPayloadList,
+			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
+		List<Program> programList = new ArrayList<Program>();
+		ExceptionResponse errorResForNaics = new ExceptionResponse();
+		ExceptionResponse errorResForNtee = new ExceptionResponse();
+		List<Program> successProgramsList = new ArrayList<Program>();
+		List<Program> failedProgramsList = new ArrayList<Program>();
+
+		try {
+			// get NaicsCode AutoTag SpiSdgMapping
+			Map<String, NaicsDataMappingPayload> naicsMapForS3 = getNaicsSpiSdgMap(errorResForNaics);
+			if (!StringUtils.isEmpty(errorResForNaics.getErrorMessage())) {
+				throw new Exception(errorResForNaics.getErrorMessage());
+			}
+			// get NteeCode AutoTag SpiSdgMapping
+			Map<String, NteeDataMappingPayload> nteeMapForS3 = getNteeSpiSdgMap(errorResForNtee);
+			if (!StringUtils.isEmpty(errorResForNtee.getErrorMessage())) {
+				throw new Exception(errorResForNtee.getErrorMessage());
+			}
+
+			List<SpiData> spiDataList = spiDataRepository.findAllActiveSpiData();
+			Map<Long, SpiData> spiDataMap = spiDataList.stream()
+					.collect(Collectors.toMap(SpiData::getId, SpiData -> SpiData));
+
+			List<SdgData> sdgDataList = sdgDataRepository.findAllActiveSdgData();
+			Map<Long, SdgData> sdgDataMap = sdgDataList.stream()
+					.collect(Collectors.toMap(SdgData::getId, SdgData -> SdgData));
+
+			if (null != programPayloadList) {
+				List<Program> programsListToSaveIntoDB = new ArrayList<Program>();
+				int batchInsertSize = 1000;
+				int totalProgramsToSave = programPayloadList.size();
+				int remainingProgramsToSave = totalProgramsToSave % batchInsertSize;
+				int numOfProgramsToSaveByBatchSize = (totalProgramsToSave - remainingProgramsToSave);
+
+				int i = 1;
+				for (ProgramDataMigrationCsvPayload programPayload : programPayloadList) {
+					if (null != programPayload && null != programPayload.getId()) {
+						if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+							// set Program Object into list to save into DB
+							programsListToSaveIntoDB.add(setProgramDataForBulkUpload(programPayload, user,
+									operationPerformed, naicsMapForS3, nteeMapForS3, spiDataMap, sdgDataMap));
+
+							// save the programs in the batches of 1000 and
+							// save the remaining programs
+							if (i % 1000 == 0) {
+								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								} else {
+									failedProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								}
+								// save the remaining programs when total
+								// size is less than 1000
+							} else if (numOfProgramsToSaveByBatchSize == 0
+									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
+								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								} else {
+									failedProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								}
+								// save the remaining programs when total
+								// size is greater than 1000
+							} else if (i > numOfProgramsToSaveByBatchSize
+									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
+								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								if (!payload.getIsFailed()) {
+									successProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								} else {
+									failedProgramsList.addAll(payload.getProgramList());
+									// refresh the data after added into list
+									programsListToSaveIntoDB = new ArrayList<Program>();
+								}
+							}
+							i++;
+
+						} // end of if (operationPerformed.
+					}
+				}
+
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage(customMessage), e);
+			response.setErrorMessage(e.getMessage());
+			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		// set failed and success programs for migration response
+		programList.addAll(successProgramsList);
+		programList.addAll(failedProgramsList);
+
+		return programList;
+	}
+
+	/**
+	 * prepare data for Program to save into DB
+	 * 
+	 * @param requestPayload
+	 * @param user
+	 * @param operationPerformed
+	 * @param naicsMapForS3
+	 * @param nteeMapForS3
+	 * @param spiDataMap
+	 * @param sdgDataMap
+	 * @return
+	 * @throws Exception
+	 */
+	private Program setProgramDataForBulkUpload(ProgramDataMigrationCsvPayload requestPayload, UserPayload user,
+			String operationPerformed, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
+			Map<Long, SdgData> sdgDataMap) throws Exception {
+
+		Program program = new Program();
+		BeanUtils.copyProperties(requestPayload, program);
+
+		// set all the regionServed for program
+		if (!StringUtils.isEmpty(requestPayload.getRegionServedIds()))
+			program.setProgramRegionServed(saveProgramRegionServedForBulkUpload(requestPayload, user, program));
+
+		// set all the resources for program
+		if (!StringUtils.isEmpty(requestPayload.getResourceIds()))
+			program.setProgramResource(saveProgramResourcesForBulkUpload(requestPayload, user, program));
+
+		// set all the dataset for program
+		if (!StringUtils.isEmpty(requestPayload.getDatasetIds()))
+			program.setProgramDataSet(saveProgramDataSetsForBulkUpload(requestPayload, user, program));
+
+		program.setIsActive(true);
+
+		Date date = CommonUtils.getFormattedDate();
+		program.setCreatedAt(date);
+		program.setUpdatedAt(date);
+		program.setCreatedBy(user.getUserDisplayName());
+		program.setUpdatedBy(user.getUserDisplayName());
+		program.setCreatedByEmail(user.getEmail());
+		program.setUpdatedByEmail(user.getEmail());
+		program.setIsActive(true);
+
+		if (requestPayload.getParentId() != null) {
+			Organization organization = organizationRepository.findOrgById(requestPayload.getParentId());
+			program.setOrganization(organization);
+		}
+
+		List<Long> spiTagIds = new ArrayList<>();
+		List<Long> sdgTagIds = new ArrayList<>();
+
+		if (!StringUtils.isEmpty(requestPayload.getSpiTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] spiIdsList = requestPayload.getSpiTagIds().split(",");
+			for (int j = 0; j < spiIdsList.length; j++) {
+				if (!StringUtils.isEmpty(spiIdsList[j])) {
+					if (!StringUtils.isEmpty(spiIdsList[j].trim()))
+						spiTagIds.add(Long.parseLong(spiIdsList[j].trim()));
+				}
+
+			}
+		}
+		if (!StringUtils.isEmpty(requestPayload.getSdgTagIds())) {
+			// split string with comma separated values with removing
+			// leading and trailing
+			// whitespace
+			String[] sdgIdsList = requestPayload.getSdgTagIds().split(",");
+			for (int j = 0; j < sdgIdsList.length; j++) {
+				if (!StringUtils.isEmpty(sdgIdsList[j])) {
+					if (!StringUtils.isEmpty(sdgIdsList[j].trim()))
+						sdgTagIds.add(Long.parseLong(sdgIdsList[j].trim()));
+				}
+
+			}
+		}
+		if (operationPerformed.equals(OrganizationConstants.CREATE)) {
+			// create program's spi tags mapping for Bulk Creation
+			program.setProgramSpiData(saveProgramSpiMappingForBulkCreation(program, user, spiTagIds, spiDataMap));
+			// create program's sdg tags mapping for Bulk Creation
+			program.setProgramSdgData(saveProgramSdgMappingForBulkCreation(program, user, sdgTagIds, sdgDataMap));
+		}
+
+		return program;
+	}// end of method
+
+	/**
+	 * save and Flush Programs into DB
+	 * 
+	 * @param programs
+	 * @param i
+	 * @return
+	 */
+	@Transactional
+	@Async
+	ProgramBulkResultPayload saveProgramsIntoDB(List<Program> programs, int i) {
+		// Implemented below logic to log failed and success
+		// programs for bulk upload
+		List<Program> programList = new ArrayList<Program>();
+		Boolean isFailed = false;
+		try {
+			LOGGER.info("Saving programs : " + programs.size() + " Starting from: " + (i - programs.size()));
+			programList.addAll(programRepository.saveAll(programs));
+
+			// Flush all pending changes to the database
+			programRepository.flush();
+
+			LOGGER.info("Saved programs: " + programs.size());
+		} catch (Exception e) {
+			LOGGER.info("Failed to save programs starting from: " + (i - programs.size()));
+			programList.addAll(programs);
+			isFailed = true;
+		}
+		ProgramBulkResultPayload payload = new ProgramBulkResultPayload();
+		payload.setProgramList(programList);
+		payload.setIsFailed(isFailed);
+
+		return payload;
+
+	}
+
+	/**
+	 * prepare ProgramRegionServed for Program
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param program
+	 * @return
+	 */
+	private List<ProgramRegionServed> saveProgramRegionServedForBulkUpload(ProgramDataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
+		List<Long> regionIds = new ArrayList<>();
+		List<ProgramRegionServed> programRegionServedList = new ArrayList<ProgramRegionServed>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] regionMasterIdsList = payload.getRegionServedIds().split(",");
+				for (int j = 0; j < regionMasterIdsList.length; j++) {
+					if (!StringUtils.isEmpty(regionMasterIdsList[j]))
+						regionIds.add(Long.parseLong(regionMasterIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != regionIds) {
+					for (Long regionId : regionIds) {
+						// for program regionServed creation
+						ProgramRegionServed programRegionServed = new ProgramRegionServed();
+						// find regionMaster obj by id
+						RegionMaster regionMaster = regionMasterRepository.findRegionById(regionId);
+						programRegionServed.setCreatedAt(date);
+						programRegionServed.setUpdatedAt(date);
+						programRegionServed.setCreatedBy(user.getUserDisplayName());
+						programRegionServed.setCreatedByEmail(user.getEmail());
+						programRegionServed.setUpdatedBy(user.getUserDisplayName());
+						programRegionServed.setUpdatedByEmail(user.getEmail());
+						programRegionServed.setIsActive(true);
+						programRegionServed.setProgram(program);
+						programRegionServed.setRegionMaster(regionMaster);
+
+						programRegionServedList.add(programRegionServed);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("prog.region.error.created"), e);
+		}
+		return programRegionServedList;
+
+	}
+
+	/**
+	 * prepare ProgramResource for Program
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param Program
+	 * @return
+	 */
+	private List<ProgramResource> saveProgramResourcesForBulkUpload(ProgramDataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
+		List<Long> resourceIds = new ArrayList<>();
+		List<ProgramResource> programResourceList = new ArrayList<ProgramResource>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] resourceCategoryIdsList = payload.getResourceIds().split(",");
+				for (int j = 0; j < resourceCategoryIdsList.length; j++) {
+					if (!StringUtils.isEmpty(resourceCategoryIdsList[j]))
+						resourceIds.add(Long.parseLong(resourceCategoryIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != resourceIds) {
+					for (Long resourceId : resourceIds) {
+						// for program resource creation
+						ProgramResource programResource = new ProgramResource();
+						// find ResourceCategory object by id
+						ResourceCategory resourceCategory = resourceCategoryRepository
+								.findResourceCategoryById(resourceId);
+
+						programResource.setCreatedAt(date);
+						programResource.setUpdatedAt(date);
+						programResource.setCreatedBy(user.getUserDisplayName());
+						programResource.setCreatedByEmail(user.getEmail());
+						programResource.setUpdatedBy(user.getUserDisplayName());
+						programResource.setUpdatedByEmail(user.getEmail());
+						programResource.setIsActive(true);
+						programResource.setProgram(program);
+						programResource.setResourceCategory(resourceCategory);
+
+						programResourceList.add(programResource);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("prog.resource.error.created"), e);
+		}
+		return programResourceList;
+
+	}// end of method
+
+	/**
+	 * prepare ProgramDataSet for Program
+	 * 
+	 * @param payload
+	 * @param user
+	 * @param program
+	 * @return
+	 */
+	private List<ProgramDataSet> saveProgramDataSetsForBulkUpload(ProgramDataMigrationCsvPayload payload,
+			UserPayload user, Program program) {
+		List<Long> datasetIds = new ArrayList<>();
+		List<ProgramDataSet> programDatasetList = new ArrayList<ProgramDataSet>();
+		try {
+			if (null != payload) {
+				// split string with comma separated values with removing
+				// leading and trailing
+				// whitespace
+				String[] datasetCategoryIdsList = payload.getDatasetIds().split(",");
+				for (int j = 0; j < datasetCategoryIdsList.length; j++) {
+					if (!StringUtils.isEmpty(datasetCategoryIdsList[j]))
+						datasetIds.add(Long.parseLong(datasetCategoryIdsList[j].trim()));
+				}
+				Date date = CommonUtils.getFormattedDate();
+
+				if (null != datasetIds) {
+					for (Long datasetId : datasetIds) {
+						// for ProgramDataSet creation
+						ProgramDataSet programDataSet = new ProgramDataSet();
+						// find DataSetCategory object by id
+						DataSetCategory dataSetCategory = dataSetCategoryRepository.findDataSetCategoryById(datasetId);
+
+						programDataSet.setCreatedAt(date);
+						programDataSet.setUpdatedAt(date);
+						programDataSet.setCreatedBy(user.getUserDisplayName());
+						programDataSet.setCreatedByEmail(user.getEmail());
+						programDataSet.setUpdatedBy(user.getUserDisplayName());
+						programDataSet.setUpdatedByEmail(user.getEmail());
+						programDataSet.setIsActive(true);
+						programDataSet.setProgram(program);
+						programDataSet.setDataSetCategory(dataSetCategory);
+						programDataSet.setType(payload.getDatasetType());
+
+						programDatasetList.add(programDataSet);
+
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOGGER.error(customMessageSource.getMessage("prog.dataset.error.created"), e);
+		}
+		return programDatasetList;
+
+	}// end of method
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private Program setProgramSpiSdgMappingForBulkCreation(ProgramDataMigrationCsvPayload requestPayload,
+			Program program, UserPayload user, Map<String, NaicsDataMappingPayload> naicsMapForS3,
+			Map<String, NteeDataMappingPayload> nteeMapForS3, Map<Long, SpiData> spiDataMap,
+			Map<Long, SdgData> sdgDataMap) throws Exception {
+		List<Long> spiIdsByNaicsCode = new ArrayList<Long>();
+		List<Long> sdgIdsByNaicsCode = new ArrayList<Long>();
+		List<Long> spiIdsByNteeCode = new ArrayList<Long>();
+		List<Long> sdgIdsByNteeCode = new ArrayList<Long>();
+		List<Long> spiIds = new ArrayList<Long>();
+		List<Long> sdgIds = new ArrayList<Long>();
+		NaicsData naicsData = null;
+		NteeData nteeData = null;
+
+		if (null != requestPayload.getNaicsCode()) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			naicsData = naicsMap.get(requestPayload.getNaicsCode());
+		}
+
+		if (null != requestPayload.getNteeCode()) {
+			// set Naics-Ntee code map
+			if (naicsMap == null || nteeMap == null)
+				setNaicsNteeMap();
+			nteeData = nteeMap.get(requestPayload.getNteeCode());
+		}
+
+		if (null != naicsData && (!StringUtils.isEmpty(naicsData.getCode()))) {
+			NaicsDataMappingPayload naicsMapPayload = naicsMapForS3.get(naicsData.getCode());
+			spiIdsByNaicsCode = naicsMapPayload.getSpiTagIds();
+			sdgIdsByNaicsCode = naicsMapPayload.getSdgTagIds();
+		}
+
+		if (null != nteeData && (!StringUtils.isEmpty(nteeData.getCode()))) {
+			NteeDataMappingPayload nteeMapPayload = nteeMapForS3.get(nteeData.getCode());
+			spiIdsByNteeCode = nteeMapPayload.getSpiTagIds();
+			sdgIdsByNteeCode = nteeMapPayload.getSdgTagIds();
+		}
+
+		if (null != spiIdsByNaicsCode && null != spiIdsByNteeCode)
+			spiIds = Stream.of(spiIdsByNaicsCode, spiIdsByNteeCode).flatMap(x -> x.stream())
+					.collect(Collectors.toList());
+
+		if (null != sdgIdsByNaicsCode && null != sdgIdsByNteeCode)
+			sdgIds = Stream.of(sdgIdsByNaicsCode, sdgIdsByNteeCode).flatMap(x -> x.stream())
+					.collect(Collectors.toList());
+
+		// create program's spi tags mapping
+		program.setProgramSpiData(saveProgramSpiMappingForBulkCreation(program, user, spiIds, spiDataMap));
+		// create program's sdg tags mapping
+		program.setProgramSdgData(saveProgramSdgMappingForBulkCreation(program, user, sdgIds, sdgDataMap));
+		return program;
+	}
+
+	/**
+	 * @param program
+	 * @param user
+	 * @param sdgDataMapObj
+	 * @param sdgIdsList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<ProgramSdgData> saveProgramSdgMappingForBulkCreation(Program program, UserPayload user,
+			List<Long> sdgIdsList, Map<Long, SdgData> sdgDataMap) throws Exception {
+		ProgramSdgData sdgDataMapObj = null;
+		Date date = CommonUtils.getFormattedDate();
+		List<ProgramSdgData> sdgDataMapList = new ArrayList<ProgramSdgData>();
+
+		if (null != sdgIdsList) {
+			for (Long sdgId : sdgIdsList) {
+				SdgData sdgData = sdgDataMap.get(sdgId);
+				if (null != sdgData) {
+					sdgDataMapObj = new ProgramSdgData();
+					sdgDataMapObj.setSdgData(sdgData);
+					sdgDataMapObj.setProgram(program);
+					sdgDataMapObj.setIsChecked(true);
+					sdgDataMapObj.setCreatedAt(date);
+					sdgDataMapObj.setUpdatedAt(date);
+					sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					sdgDataMapObj.setCreatedByEmail(user.getEmail());
+					sdgDataMapObj.setUpdatedByEmail(user.getEmail());
+					sdgDataMapList.add(sdgDataMapObj);
+				}
+			}
+		}
+		return sdgDataMapList;
+	}
+
+	/**
+	 * @param program
+	 * @param user
+	 * @param spiDataMapObj
+	 * @param spiIdsList
+	 * @return
+	 * @throws Exception
+	 */
+	private List<ProgramSpiData> saveProgramSpiMappingForBulkCreation(Program program, UserPayload user,
+			List<Long> spiIdsList, Map<Long, SpiData> spiDataMap) throws Exception {
+		ProgramSpiData spiDataMapObj = null;
+		Date date = CommonUtils.getFormattedDate();
+		List<ProgramSpiData> spiDataMapList = new ArrayList<ProgramSpiData>();
+		if (null != spiIdsList) {
+			for (Long spiId : spiIdsList) {
+				SpiData spiData = spiDataMap.get(spiId);
+				if (null != spiData) {
+					spiDataMapObj = new ProgramSpiData();
+					spiDataMapObj.setSpiData(spiData);
+					spiDataMapObj.setProgram(program);
+					spiDataMapObj.setIsChecked(true);
+					spiDataMapObj.setCreatedAt(date);
+					spiDataMapObj.setUpdatedAt(date);
+					spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+					spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+					spiDataMapObj.setCreatedByEmail(user.getEmail());
+					spiDataMapObj.setUpdatedByEmail(user.getEmail());
+					spiDataMapList.add(spiDataMapObj);
+				}
+			}
+		}
+
+		return spiDataMapList;
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private Map<String, NaicsDataMappingPayload> getNaicsSpiSdgMap(ExceptionResponse errorResForNaics)
+			throws Exception {
+		S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNaicsAwsKey());
+		Map<String, NaicsDataMappingPayload> naicsMapForS3 = new HashMap<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		InputStream input = s3Object.getObjectContent();
+		String csv = IOUtils.toString(input);
+		Integer rowNumber = null;
+		try {
+			if (null != s3Object) {
+				List<NaicsMappingCsvPayload> naicsMappingCsvPayloadList = csvUtils.read(NaicsMappingCsvPayload.class,
+						csv, exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					throw new Exception(exceptionResponse.getErrorMessage());
+
+				if (null != naicsMappingCsvPayloadList) {
+					for (int i = 0; i < naicsMappingCsvPayloadList.size(); i++) {
+						rowNumber = i + 2;
+						NaicsMappingCsvPayload payloadData = naicsMappingCsvPayloadList.get(i);
+						NaicsDataMappingPayload payload = new NaicsDataMappingPayload();
+
+						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
+							// split string with comma separated values with
+							// removing leading and trailing
+							// whitespace
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							List<Long> spiIdsList = new ArrayList<>();
+							for (int j = 0; j < spiIds.length; j++) {
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+							}
+							payload.setSpiTagIds(spiIdsList);
+						}
+
+						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
+							// split string with comma separated values with
+							// removing leading and trailing
+							// whitespace
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							List<Long> sdgIdsList = new ArrayList<>();
+							for (int j = 0; j < sdgIds.length; j++) {
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+							}
+							payload.setSdgTagIds(sdgIdsList);
+						}
+						payload.setNaicsCode(payloadData.getNaicsCode());
+						naicsMapForS3.put(payloadData.getNaicsCode(), payload);
+					}
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("", e.toString());
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null) {
+				BeanUtils.copyProperties(exceptionResponse, errorResForNaics);
+			} else {
+				errorResForNaics.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+						+ " from the file " + awsS3ObjectServiceImpl.getNaicsAwsKey() + ", error: " + e.toString());
+				errorResForNaics.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
+		return naicsMapForS3;
+	}
+
+	/**
+	 * @throws Exception
+	 * 
+	 */
+	private Map<String, NteeDataMappingPayload> getNteeSpiSdgMap(ExceptionResponse errorResForNtee) throws Exception {
+		Map<String, NteeDataMappingPayload> nteeMapForS3 = new HashMap<>();
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		Integer rowNumber = null;
+		try {
+
+			S3Object s3Object = awsS3ObjectServiceImpl.getS3Object(awsS3ObjectServiceImpl.getNteeAwsKey());
+			if (null != s3Object) {
+				InputStream input = s3Object.getObjectContent();
+				String csv = IOUtils.toString(input);
+				List<NteeMappingCsvPayload> nteeMappingCsvPayloadList = csvUtils.read(NteeMappingCsvPayload.class, csv,
+						exceptionResponse);
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					throw new Exception(exceptionResponse.getErrorMessage());
+
+				if (null != nteeMappingCsvPayloadList) {
+					for (int i = 0; i < nteeMappingCsvPayloadList.size(); i++) {
+						NteeMappingCsvPayload payloadData = nteeMappingCsvPayloadList.get(i);
+						NteeDataMappingPayload payload = new NteeDataMappingPayload();
+
+						if (!StringUtils.isEmpty(payloadData.getSpiTagIds())) {
+							// split string with comma separated values with
+							// removing leading and trailing
+							// whitespace
+							String[] spiIds = payloadData.getSpiTagIds().split(",");
+							List<Long> spiIdsList = new ArrayList<>();
+							for (int j = 0; j < spiIds.length; j++) {
+								if (!StringUtils.isEmpty(spiIds[j]))
+									spiIdsList.add(Long.parseLong(spiIds[j].trim()));
+							}
+							payload.setSpiTagIds(spiIdsList);
+						}
+
+						if (!StringUtils.isEmpty(payloadData.getSdgTagIds())) {
+							// split string with comma separated values with
+							// removing leading and trailing
+							// whitespace
+							String[] sdgIds = payloadData.getSdgTagIds().split(",");
+							List<Long> sdgIdsList = new ArrayList<>();
+							for (int j = 0; j < sdgIds.length; j++) {
+								if (!StringUtils.isEmpty(sdgIds[j]))
+									sdgIdsList.add(Long.parseLong(sdgIds[j].trim()));
+							}
+							payload.setSdgTagIds(sdgIdsList);
+						}
+
+						payload.setNteeCode(payloadData.getNteeCode());
+						nteeMapForS3.put(payloadData.getNteeCode(), payload);
+					}
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("", e.toString());
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null) {
+				BeanUtils.copyProperties(exceptionResponse, errorResForNtee);
+			} else {
+				errorResForNtee.setErrorMessage("error occurred while fetching details of row: " + rowNumber
+						+ " from the file " + awsS3ObjectServiceImpl.getNteeAwsKey() + ", error: " + e.toString());
+				errorResForNtee.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+		}
+		return nteeMapForS3;
+	}
+
+	/**
+	 * 
+	 */
+	private void setNaicsNteeMap() {
+		if (naicsMap == null) {
+			List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
+			if (null != naicsCodeList) {
+				naicsMap = new HashMap<String, NaicsData>();
+				for (NaicsData naicsData : naicsCodeList)
+					naicsMap.put(naicsData.getCode(), naicsData);
+			}
+		}
+		if (nteeMap == null) {
+			List<NteeData> nteeCodeList = nteeDataRepository.findAll();
+			if (null != nteeCodeList) {
+				nteeMap = new HashMap<String, NteeData>();
+				for (NteeData nteeData : nteeCodeList)
+					nteeMap.put(nteeData.getCode(), nteeData);
+			}
+		}
+
+	}
+
+	private Address saveAddressForBulkUpload(OrganizationDataMigrationCsvPayload payload, UserPayload user) {
 		Address address = null;
 		try {
 			if (null != payload) {
@@ -298,768 +1447,17 @@ public class WinWinServiceImpl implements WinWinService {
 				if (payload.getAddressId() == null) {
 					address.setId(null);
 					address.setCreatedAt(date);
-					address.setCreatedBy(user.getEmail());
+					address.setCreatedBy(user.getUserDisplayName());
+					address.setCreatedByEmail(user.getEmail());
 				}
 				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
+				address.setUpdatedBy(user.getUserDisplayName());
+				address.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
 		}
-		return addressRepository.saveAndFlush(address);
-	}
-
-	public Address saveAddress(AddressPayload addressPayload, UserPayload user) {
-		Address address = new Address();
-		try {
-			if (null != addressPayload) {
-				Date date = CommonUtils.getFormattedDate();
-				BeanUtils.copyProperties(addressPayload, address);
-				if (addressPayload.getId() == null) {
-					address.setCreatedAt(date);
-					address.setCreatedBy(user.getEmail());
-				}
-				address.setUpdatedAt(date);
-				address.setUpdatedBy(user.getEmail());
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
-		}
-		return addressRepository.saveAndFlush(address);
-	}
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param spiDataMapObj
-	 * @param sdgDataMapObj
-	 * @param spiIdsList
-	 * @param sdgIdsList
-	 * @throws Exception
-	 *             Method saveOrgSpiSdgMappingOffline fetches list of spiTagIds
-	 *             and sdgTagIds from .csv file and create entries for
-	 *             particular organization
-	 */
-	private void saveOrgSpiSdgMappingOffline(Organization organization, UserPayload user,
-			OrganizationSpiData spiDataMapObj, OrganizationSdgData sdgDataMapObj, List<Long> spiIdsList,
-			List<Long> sdgIdsList) throws Exception {
-		@SuppressWarnings("unused")
-		List<OrganizationSpiData> spiDataMapList = saveOrgSpiMappingForDataMigration(organization, user, spiDataMapObj,
-				spiIdsList);
-
-		@SuppressWarnings("unused")
-		List<OrganizationSdgData> sdgDataMapList = saveOrgSdgMappingForDataMigration(organization, user, sdgDataMapObj,
-				sdgIdsList);
-	}
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param sdgDataMapObj
-	 * @param sdgIdsList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<OrganizationSdgData> saveOrgSdgMappingForDataMigration(Organization organization, UserPayload user,
-			OrganizationSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
-		List<OrganizationSdgData> sdgDataMapList = new ArrayList<OrganizationSdgData>();
-		List<OrganizationSdgData> organizationSdgDataMappingList = null;
-		Date date = CommonUtils.getFormattedDate();
-
-		if (null != sdgIdsList) {
-			for (Long sdgId : sdgIdsList) {
-				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
-
-				if (null != orgSdgDataObj) {
-					sdgDataMapObj = new OrganizationSdgData();
-					sdgDataMapObj.setOrganization(organization);
-					sdgDataMapObj.setIsChecked(true);
-					sdgDataMapObj.setCreatedAt(date);
-					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
-					organizationSdgDataMappingList = orgSdgDataMapRepository
-							.getAllOrgSdgMapDataByOrgId(organization.getId());
-
-					if (!organizationSdgDataMappingList.isEmpty()) {
-						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
-						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
-							if (null != organizationSdgData.getSdgData()) {
-								sdgIdsMap.put(organizationSdgData.getSdgData().getId(),
-										organizationSdgData.getSdgData().getId());
-							}
-						}
-						Boolean isSdgMapFound = false;
-						for (OrganizationSdgData organizationSdgData : organizationSdgDataMappingList) {
-							if (null != organizationSdgData.getSdgData()) {
-								if (orgSdgDataObj.getId()
-										.equals(sdgIdsMap.get(organizationSdgData.getSdgData().getId()))) {
-									organizationSdgData.setIsChecked(true);
-									organizationSdgData.setUpdatedAt(date);
-									organizationSdgData.setUpdatedBy(user.getEmail());
-									organizationSdgData = orgSdgDataMapRepository.saveAndFlush(organizationSdgData);
-									sdgDataMapList.add(organizationSdgData);
-									isSdgMapFound = true;
-									break;
-								}
-							}
-						}
-						if (!isSdgMapFound) {
-							sdgDataMapObj.setSdgData(orgSdgDataObj);
-							sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-							sdgDataMapList.add(sdgDataMapObj);
-						}
-
-					} else {
-						sdgDataMapObj.setSdgData(orgSdgDataObj);
-						sdgDataMapObj = orgSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-						sdgDataMapList.add(sdgDataMapObj);
-					}
-					orgHistoryService.createOrganizationHistory(user, sdgDataMapObj.getOrganization().getId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
-				}
-			}
-		}
-		return sdgDataMapList;
-	}
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param spiDataMapObj
-	 * @param spiIdsList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<OrganizationSpiData> saveOrgSpiMappingForDataMigration(Organization organization, UserPayload user,
-			OrganizationSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
-		List<OrganizationSpiData> spiDataMapList = new ArrayList<OrganizationSpiData>();
-		List<OrganizationSpiData> organizationSpiDataMappingList = null;
-		Date date = CommonUtils.getFormattedDate();
-
-		if (null != spiIdsList) {
-			for (Long spiId : spiIdsList) {
-				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
-
-				if (null != orgSpiDataObj) {
-					spiDataMapObj = new OrganizationSpiData();
-					spiDataMapObj.setOrganization(organization);
-					spiDataMapObj.setIsChecked(true);
-					spiDataMapObj.setCreatedAt(date);
-					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
-					organizationSpiDataMappingList = orgSpiDataMapRepository
-							.getAllOrgSpiMapDataByOrgId(organization.getId());
-
-					if (!organizationSpiDataMappingList.isEmpty()) {
-						Map<Long, Long> spiIdsMap = new HashMap<Long, Long>();
-						for (OrganizationSpiData organizationSpiData : organizationSpiDataMappingList) {
-							if (null != organizationSpiData.getSpiData()) {
-								spiIdsMap.put(organizationSpiData.getSpiData().getId(),
-										organizationSpiData.getSpiData().getId());
-							}
-						}
-
-						Boolean isSpiMapFound = false;
-						for (OrganizationSpiData organizationSpiData : organizationSpiDataMappingList) {
-							if (null != organizationSpiData.getSpiData()) {
-								if (orgSpiDataObj.getId()
-										.equals(spiIdsMap.get(organizationSpiData.getSpiData().getId()))) {
-									organizationSpiData.setIsChecked(true);
-									organizationSpiData.setUpdatedAt(date);
-									organizationSpiData.setUpdatedBy(user.getEmail());
-									organizationSpiData = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-									spiDataMapList.add(organizationSpiData);
-									isSpiMapFound = true;
-									break;
-								}
-							}
-						}
-						if (!isSpiMapFound) {
-							spiDataMapObj.setSpiData(orgSpiDataObj);
-							spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-							spiDataMapList.add(spiDataMapObj);
-						}
-					} else {
-						spiDataMapObj.setSpiData(orgSpiDataObj);
-						spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-						spiDataMapList.add(spiDataMapObj);
-					}
-
-					orgHistoryService.createOrganizationHistory(user, spiDataMapObj.getOrganization().getId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
-				}
-			}
-		}
-		return spiDataMapList;
-	}
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param resourceIdsList
-	 * @param datasetIdsList
-	 * @throws Exception
-	 *             method saveOrgDatasetAndResources fetches list of
-	 *             resourceIdsList and datasetIdsList from .csv file and create
-	 *             entries for particular organization
-	 */
-	private void saveOrgDatasetAndResources(Organization organization, UserPayload user, List<Long> resourceIdsList,
-			List<Long> datasetIdsList, String datasetType) throws Exception {
-		@SuppressWarnings("unused")
-		List<OrganizationResource> resourceList = createOrgResourcesByResourceCategory(organization, user,
-				resourceIdsList);
-
-		@SuppressWarnings("unused")
-		List<OrganizationDataSet> datasetList = createOrgDataSetByDataSetCategory(organization, user, datasetIdsList,
-				datasetType);
-	}
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param resourceCategoryList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<OrganizationResource> createOrgResourcesByResourceCategory(Organization organization, UserPayload user,
-			List<Long> resourceCategoryList) throws Exception {
-		List<OrganizationResource> resourceList = new ArrayList<OrganizationResource>();
-		Date date = CommonUtils.getFormattedDate();
-		if (null != resourceCategoryList) {
-			for (Long categoryId : resourceCategoryList) {
-				ResourceCategory resourceCategory = resourceCategoryRepository.findResourceCategoryById(categoryId);
-				if (null != resourceCategory) {
-					OrganizationResource resource = null;
-					List<OrganizationResource> resources = organizationResourceRepository
-							.findAllOrgResourceById(organization.getId());
-					if (null != resources) {
-						for (OrganizationResource organizationResource : resources) {
-							resource = organizationResource;
-							if (null != organizationResource.getResourceCategory() && organizationResource
-									.getResourceCategory().getId().equals(resourceCategory.getId())) {
-								resource.setResourceCategory(organizationResource.getResourceCategory());
-							} else {
-								resource.setResourceCategory(resourceCategory);
-							}
-						}
-					} else {
-						resource = new OrganizationResource();
-						resource.setResourceCategory(resourceCategory);
-					}
-					resource.setOrganizationId(organization.getId());
-					resource.setCreatedAt(date);
-					resource.setUpdatedAt(date);
-					resource.setCreatedBy(user.getEmail());
-					resource.setUpdatedBy(user.getEmail());
-					resourceList.add(resource);
-				}
-			}
-
-			if (!resourceList.isEmpty()) {
-				resourceList = organizationResourceRepository.saveAll(resourceList);
-
-				for (OrganizationResource orgResource : resourceList) {
-					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
-							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getResourceCategory().getCategoryName(), "");
-				}
-			}
-
-		}
-		return resourceList;
-	}// end of method
-
-	/**
-	 * @param organization
-	 * @param user
-	 * @param datasetCategoryList
-	 * @param datasetType
-	 * @return
-	 * @throws Exception
-	 */
-	private List<OrganizationDataSet> createOrgDataSetByDataSetCategory(Organization organization, UserPayload user,
-			List<Long> datasetCategoryList, String datasetType) throws Exception {
-		List<OrganizationDataSet> datasetList = new ArrayList<OrganizationDataSet>();
-		Date date = CommonUtils.getFormattedDate();
-		if (null != datasetCategoryList) {
-			for (Long categoryId : datasetCategoryList) {
-				DataSetCategory datasetCategory = dataSetCategoryRepository.findDataSetCategoryById(categoryId);
-				if (null != datasetCategory) {
-					OrganizationDataSet dataset = null;
-					List<OrganizationDataSet> datasets = organizationDataSetRepository
-							.findAllOrgDataSetList(organization.getId());
-					if (null != datasets) {
-						for (OrganizationDataSet organizationDataset : datasets) {
-							dataset = organizationDataset;
-							if (null != organizationDataset.getDataSetCategory() && organizationDataset
-									.getDataSetCategory().getId().equals(datasetCategory.getId())) {
-								dataset.setDataSetCategory(organizationDataset.getDataSetCategory());
-							} else {
-								dataset.setDataSetCategory(datasetCategory);
-							}
-						}
-					} else {
-						dataset = new OrganizationDataSet();
-						dataset.setDataSetCategory(datasetCategory);
-					}
-					dataset.setOrganizationId(organization.getId());
-					if (!StringUtils.isEmpty(datasetType)) {
-						dataset.setType(datasetType);
-					}
-					dataset.setCreatedAt(date);
-					dataset.setUpdatedAt(date);
-					dataset.setCreatedBy(user.getEmail());
-					dataset.setUpdatedBy(user.getEmail());
-					datasetList.add(dataset);
-				}
-			}
-			if (!datasetList.isEmpty()) {
-				datasetList = organizationDataSetRepository.saveAll(datasetList);
-				for (OrganizationDataSet organizationDataSet : datasetList) {
-					orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganizationId(),
-							OrganizationConstants.CREATE, OrganizationConstants.DATASET, organizationDataSet.getId(),
-							organizationDataSet.getDataSetCategory().getCategoryName(), "");
-				}
-			}
-		}
-		return datasetList;
-	}// end of method
-
-	/**
-	 * @param programPayloadList
-	 * @param response
-	 * @param operationPerformed
-	 * @param customMessage
-	 * @return
-	 */
-	public List<Program> saveProgramOfflineForBulkUpload(List<ProgramRequestPayload> programPayloadList,
-			ExceptionResponse response, String operationPerformed, String customMessage) {
-		ProgramSpiData spiDataMapObj = null;
-		ProgramSdgData sdgDataMapObj = null;
-		List<Program> programList = new ArrayList<Program>();
-		List<Long> spiTagIds = new ArrayList<Long>();
-		List<Long> sdgTagIds = new ArrayList<Long>();
-		List<Long> resourceIds = new ArrayList<Long>();
-		List<Long> datasetIds = new ArrayList<Long>();
-		Map<String, String> datasetsTypeMap = new HashMap<String, String>();
-
-		try {
-			UserPayload user = userService.getCurrentUserDetails();
-			for (ProgramRequestPayload programPayload : programPayloadList) {
-				if (null != programPayload && null != user) {
-					if (!StringUtils.isEmpty(programPayload.getSpiTagIds())) {
-						String[] spiIdsList = programPayload.getSpiTagIds().split(",");
-						for (int j = 0; j < spiIdsList.length; j++) {
-							spiTagIds.add(Long.parseLong(spiIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(programPayload.getSdgTagIds())) {
-						String[] sdgIdsList = programPayload.getSdgTagIds().split(",");
-						for (int j = 0; j < sdgIdsList.length; j++) {
-							sdgTagIds.add(Long.parseLong(sdgIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(programPayload.getResourceIds())) {
-						String[] resourceIdsList = programPayload.getResourceIds().split(",");
-						for (int j = 0; j < resourceIdsList.length; j++) {
-							resourceIds.add(Long.parseLong(resourceIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(programPayload.getDatasetIds())) {
-						String[] datasetIdsList = programPayload.getDatasetIds().split(",");
-						for (int j = 0; j < datasetIdsList.length; j++) {
-							datasetIds.add(Long.parseLong(datasetIdsList[j]));
-						}
-					}
-					if (!StringUtils.isEmpty(programPayload.getDatasetType())) {
-						if (null != programPayload.getName())
-							datasetsTypeMap.put(programPayload.getName(), programPayload.getDatasetType());
-					}
-					if (operationPerformed.equals(OrganizationConstants.CREATE)) {
-						programPayload.setPriority(OrganizationConstants.PRIORITY_NORMAL);
-						programList.add(setProgramData(programPayload, user));
-					}
-				}
-			}
-			programList = programRepository.saveAll(programList);
-
-			for (Program program : programList) {
-				if (null != program.getName()) {
-					// To save list of resourceIds and datasetIds fetched from
-					// .csv file
-					String datasetType = datasetsTypeMap.get(program.getName());
-					saveProgramDatasetAndResources(program, user, resourceIds, datasetIds, datasetType);
-				}
-				// To save list of spiTagIds and sdgTagIds fetched from .csv
-				// file
-				saveProgramSpiSdgMappingOffline(program, user, spiDataMapObj, sdgDataMapObj, spiTagIds, sdgTagIds);
-
-				orgHistoryService.createOrganizationHistory(user, null, program.getId(), operationPerformed,
-						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
-			}
-		} catch (Exception e) {
-			LOGGER.error(customMessageSource.getMessage(customMessage), e);
-			response.setErrorMessage(e.getMessage());
-			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-		return programList;
-	}
-
-	/**
-	 * @param programPayload
-	 * @param user
-	 * @return
-	 * @throws Exception
-	 */
-	private Program setProgramData(ProgramRequestPayload programPayload, UserPayload user) throws Exception {
-		Program program = new Program();
-		Address address = new Address();
-
-		BeanUtils.copyProperties(programPayload, program);
-
-		if (programPayload.getAddress() != null) {
-			address = saveAddress(programPayload.getAddress(), user);
-			program.setAddress(address);
-		}
-		if (programPayload.getNaicsCode() != null) {
-			NaicsData naicsCode = naicsRepository.findById(programPayload.getNaicsCode()).orElse(null);
-			program.setNaicsCode(naicsCode);
-		}
-		if (programPayload.getNteeCode() != null) {
-			NteeData naicsCode = nteeRepository.findById(programPayload.getNteeCode()).orElse(null);
-			program.setNteeCode(naicsCode);
-		}
-		if (programPayload.getParentId() != null) {
-			Organization organization = organizationRepository.findOrgById(programPayload.getParentId());
-			program.setOrganization(organization);
-		}
-		Date date = CommonUtils.getFormattedDate();
-		program.setCreatedAt(date);
-		program.setCreatedBy(user.getEmail());
-		program.setIsActive(true);
-		program.setUpdatedAt(date);
-		program.setUpdatedBy(user.getEmail());
-
-		return program;
-	}
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param spiDataMapObj
-	 * @param sdgDataMapObj
-	 * @param spiIdsList
-	 * @param sdgIdsList
-	 * @throws Exception
-	 *             Method saveProgramSpiSdgMappingOffline fetches list of
-	 *             spiTagIds and sdgTagIds from .csv file and create entries for
-	 *             particular program
-	 */
-	private void saveProgramSpiSdgMappingOffline(Program program, UserPayload user, ProgramSpiData spiDataMapObj,
-			ProgramSdgData sdgDataMapObj, List<Long> spiIdsList, List<Long> sdgIdsList) throws Exception {
-		@SuppressWarnings("unused")
-		List<ProgramSpiData> spiDataMapList = saveProgramSpiMappingForDataMigration(program, user, spiDataMapObj,
-				spiIdsList);
-
-		@SuppressWarnings("unused")
-		List<ProgramSdgData> sdgDataMapList = saveProgramSdgMappingForDataMigration(program, user, sdgDataMapObj,
-				sdgIdsList);
-	}
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param sdgDataMapObj
-	 * @param sdgIdsList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<ProgramSdgData> saveProgramSdgMappingForDataMigration(Program program, UserPayload user,
-			ProgramSdgData sdgDataMapObj, List<Long> sdgIdsList) throws Exception {
-		List<ProgramSdgData> sdgDataMapList = new ArrayList<ProgramSdgData>();
-		List<ProgramSdgData> programSdgDataMappingList = null;
-		Date date = CommonUtils.getFormattedDate();
-
-		if (null != sdgIdsList) {
-			for (Long sdgId : sdgIdsList) {
-				SdgData orgSdgDataObj = sdgDataRepository.findSdgObjById(sdgId);
-
-				if (null != orgSdgDataObj) {
-					sdgDataMapObj = new ProgramSdgData();
-					sdgDataMapObj.setProgramId(program.getId());
-					sdgDataMapObj.setIsChecked(true);
-					sdgDataMapObj.setCreatedAt(date);
-					sdgDataMapObj.setUpdatedAt(date);
-					sdgDataMapObj.setCreatedBy(user.getEmail());
-					sdgDataMapObj.setUpdatedBy(user.getEmail());
-					programSdgDataMappingList = programSdgDataMapRepository
-							.getAllProgramSdgMapDataByOrgId(program.getId());
-
-					if (!programSdgDataMappingList.isEmpty()) {
-						Map<Long, Long> sdgIdsMap = new HashMap<Long, Long>();
-						for (ProgramSdgData programSdgData : programSdgDataMappingList) {
-							if (null != programSdgData.getSdgData()) {
-								sdgIdsMap.put(programSdgData.getSdgData().getId(), programSdgData.getSdgData().getId());
-							}
-						}
-
-						Boolean isSdgMapFound = false;
-						for (ProgramSdgData programSdgData : programSdgDataMappingList) {
-							if (null != programSdgData.getSdgData()) {
-								if (orgSdgDataObj.getId().equals(sdgIdsMap.get(programSdgData.getSdgData().getId()))) {
-									programSdgData.setIsChecked(true);
-									programSdgData.setUpdatedAt(date);
-									programSdgData.setUpdatedBy(user.getEmail());
-									programSdgData = programSdgDataMapRepository.saveAndFlush(programSdgData);
-									sdgDataMapList.add(programSdgData);
-									isSdgMapFound = true;
-									break;
-								}
-							}
-						}
-						if (!isSdgMapFound) {
-							sdgDataMapObj.setSdgData(orgSdgDataObj);
-							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-							sdgDataMapList.add(sdgDataMapObj);
-						}
-
-					} else {
-						sdgDataMapObj.setSdgData(orgSdgDataObj);
-						sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
-						sdgDataMapList.add(sdgDataMapObj);
-					}
-
-					orgHistoryService.createOrganizationHistory(user, null, sdgDataMapObj.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SDG, sdgDataMapObj.getId(),
-							sdgDataMapObj.getSdgData().getShortName(), sdgDataMapObj.getSdgData().getShortNameCode());
-				}
-			}
-		}
-		return sdgDataMapList;
-	}
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param spiDataMapObj
-	 * @param spiIdsList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<ProgramSpiData> saveProgramSpiMappingForDataMigration(Program program, UserPayload user,
-			ProgramSpiData spiDataMapObj, List<Long> spiIdsList) throws Exception {
-		List<ProgramSpiData> spiDataMapList = new ArrayList<ProgramSpiData>();
-		List<ProgramSpiData> programSpiDataMappingList = null;
-		Date date = CommonUtils.getFormattedDate();
-
-		if (null != spiIdsList) {
-			for (Long spiId : spiIdsList) {
-				SpiData orgSpiDataObj = spiDataRepository.findSpiObjById(spiId);
-
-				if (null != orgSpiDataObj) {
-					spiDataMapObj = new ProgramSpiData();
-					spiDataMapObj.setProgramId(program.getId());
-					spiDataMapObj.setIsChecked(true);
-					spiDataMapObj.setCreatedAt(date);
-					spiDataMapObj.setUpdatedAt(date);
-					spiDataMapObj.setCreatedBy(user.getEmail());
-					spiDataMapObj.setUpdatedBy(user.getEmail());
-					programSpiDataMappingList = programSpiDataMapRepository
-							.getProgramSpiMapDataByOrgId(program.getId());
-
-					if (!programSpiDataMappingList.isEmpty()) {
-						Map<Long, Long> spiIdsMap = new HashMap<Long, Long>();
-						for (ProgramSpiData programSpiData : programSpiDataMappingList) {
-							if (null != programSpiData.getSpiData()) {
-								spiIdsMap.put(programSpiData.getSpiData().getId(), programSpiData.getSpiData().getId());
-							}
-						}
-
-						Boolean isSpiMapFound = false;
-						for (ProgramSpiData programSpiData : programSpiDataMappingList) {
-							if (null != programSpiData.getSpiData()) {
-								if (orgSpiDataObj.getId().equals(spiIdsMap.get(programSpiData.getSpiData().getId()))) {
-									programSpiData.setIsChecked(true);
-									programSpiData.setUpdatedAt(date);
-									programSpiData.setUpdatedBy(user.getEmail());
-									programSpiData = programSpiDataMapRepository.saveAndFlush(programSpiData);
-									spiDataMapList.add(programSpiData);
-									isSpiMapFound = true;
-									break;
-								}
-							}
-						}
-						if (!isSpiMapFound) {
-							spiDataMapObj.setSpiData(orgSpiDataObj);
-							spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-							spiDataMapList.add(spiDataMapObj);
-						}
-					} else {
-						spiDataMapObj.setSpiData(orgSpiDataObj);
-						spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
-						spiDataMapList.add(spiDataMapObj);
-					}
-
-					orgHistoryService.createOrganizationHistory(user, null, spiDataMapObj.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.SPI, spiDataMapObj.getId(),
-							spiDataMapObj.getSpiData().getIndicatorName(), spiDataMapObj.getSpiData().getIndicatorId());
-				}
-			}
-		}
-		return spiDataMapList;
-	}
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param resourceIdsList
-	 * @param datasetIdsList
-	 * @throws Exception
-	 *             method saveProgramDatasetAndResources fetches list of
-	 *             resourceIdsList and datasetIdsList from .csv file and create
-	 *             entries for particular program
-	 */
-	private void saveProgramDatasetAndResources(Program program, UserPayload user, List<Long> resourceIdsList,
-			List<Long> datasetIdsList, String datasetType) throws Exception {
-		@SuppressWarnings("unused")
-		List<ProgramResource> resourceList = createProgramResourcesByResourceCategory(program, user, resourceIdsList);
-
-		@SuppressWarnings("unused")
-		List<ProgramDataSet> datasetList = createProgramDataSetByDataSetCategory(program, user, datasetIdsList,
-				datasetType);
-	}
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param resourceCategoryList
-	 * @return
-	 * @throws Exception
-	 */
-	private List<ProgramResource> createProgramResourcesByResourceCategory(Program program, UserPayload user,
-			List<Long> resourceCategoryList) throws Exception {
-		List<ProgramResource> resourceList = new ArrayList<ProgramResource>();
-		Date date = CommonUtils.getFormattedDate();
-		if (null != resourceCategoryList) {
-			for (Long categoryId : resourceCategoryList) {
-				ResourceCategory resourceCategory = resourceCategoryRepository.findResourceCategoryById(categoryId);
-				if (null != resourceCategory) {
-					ProgramResource resource = null;
-					List<ProgramResource> resources = programResourceRepository
-							.findAllProgramResourceByProgramId(program.getId());
-					if (null != resources) {
-						for (ProgramResource programResource : resources) {
-							resource = programResource;
-							if (null != programResource.getResourceCategory()
-									&& programResource.getResourceCategory().getId().equals(resourceCategory.getId())) {
-								resource.setResourceCategory(programResource.getResourceCategory());
-							} else {
-								resource.setResourceCategory(resourceCategory);
-							}
-						}
-					} else {
-						resource = new ProgramResource();
-						resource.setResourceCategory(resourceCategory);
-					}
-					resource.setProgramId(program.getId());
-					resource.setCreatedAt(date);
-					resource.setUpdatedAt(date);
-					resource.setCreatedBy(user.getEmail());
-					resource.setUpdatedBy(user.getEmail());
-					resourceList.add(resource);
-				}
-			}
-
-			if (!resourceList.isEmpty()) {
-				resourceList = programResourceRepository.saveAll(resourceList);
-
-				for (ProgramResource programResource : resourceList) {
-					orgHistoryService.createOrganizationHistory(user, null, programResource.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, programResource.getId(),
-							programResource.getResourceCategory().getCategoryName(), "");
-				}
-			}
-
-		}
-		return resourceList;
-	}// end of method
-
-	/**
-	 * @param program
-	 * @param user
-	 * @param datasetCategoryList
-	 * @param datasetType
-	 * @return
-	 * @throws Exception
-	 */
-	private List<ProgramDataSet> createProgramDataSetByDataSetCategory(Program program, UserPayload user,
-			List<Long> datasetCategoryList, String datasetType) throws Exception {
-		List<ProgramDataSet> datasetList = new ArrayList<ProgramDataSet>();
-		Date date = CommonUtils.getFormattedDate();
-		if (null != datasetCategoryList) {
-			for (Long categoryId : datasetCategoryList) {
-				DataSetCategory datasetCategory = dataSetCategoryRepository.findDataSetCategoryById(categoryId);
-				if (null != datasetCategory) {
-					ProgramDataSet dataset = null;
-					List<ProgramDataSet> datasets = programDataSetRepository
-							.findAllProgramDataSetListByProgramId(program.getId());
-					if (null != datasets) {
-						for (ProgramDataSet programDataset : datasets) {
-							dataset = programDataset;
-							if (null != programDataset.getDataSetCategory()
-									&& programDataset.getDataSetCategory().getId().equals(datasetCategory.getId())) {
-								dataset.setDataSetCategory(programDataset.getDataSetCategory());
-							} else {
-								dataset.setDataSetCategory(datasetCategory);
-							}
-						}
-					} else {
-						dataset = new ProgramDataSet();
-						dataset.setDataSetCategory(datasetCategory);
-					}
-					dataset.setProgramId(program.getId());
-					if (!StringUtils.isEmpty(datasetType)) {
-						dataset.setType(datasetType);
-					}
-					dataset.setCreatedAt(date);
-					dataset.setUpdatedAt(date);
-					dataset.setCreatedBy(user.getEmail());
-					dataset.setUpdatedBy(user.getEmail());
-					datasetList.add(dataset);
-				}
-			}
-			if (!datasetList.isEmpty()) {
-				datasetList = programDataSetRepository.saveAll(datasetList);
-				for (ProgramDataSet programDataSet : datasetList) {
-					orgHistoryService.createOrganizationHistory(user, null, programDataSet.getProgramId(),
-							OrganizationConstants.CREATE, OrganizationConstants.DATASET, programDataSet.getId(),
-							programDataSet.getDataSetCategory().getCategoryName(), "");
-				}
-			}
-		}
-		return datasetList;
-	}// end of method
-
-	/**
-	 * 
-	 */
-	private void setNaicsNteeMap() {
-		List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
-		if (null != naicsCodeList) {
-			naicsMap = new HashMap<Long, NaicsData>();
-			for (NaicsData naicsData : naicsCodeList)
-				naicsMap.put(naicsData.getId(), naicsData);
-		}
-		List<NteeData> nteeCodeList = nteeDataRepository.findAll();
-		if (null != nteeCodeList) {
-			nteeMap = new HashMap<Long, NteeData>();
-			for (NteeData nteeData : nteeCodeList)
-				nteeMap.put(nteeData.getId(), nteeData);
-		}
+		return address;
 	}
 
 }

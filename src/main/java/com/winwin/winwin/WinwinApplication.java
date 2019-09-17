@@ -1,3 +1,6 @@
+/**
+ * The Class WinwinApplication is a SpringApplication Class for Project WinWin
+ */
 package com.winwin.winwin;
 
 import org.springframework.boot.SpringApplication;
@@ -7,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @SpringBootApplication

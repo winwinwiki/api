@@ -8,14 +8,12 @@ import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 public interface ProgramDataSetService {
 	ProgramDataSet createOrUpdateProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad);
 
 	List<ProgramDataSet> getProgramDataSetList(Long id);
-
-	ProgramDataSet getProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad);
 
 	void removeProgramDataSet(Long dataSetId, Long organizationId, Long programId);
 

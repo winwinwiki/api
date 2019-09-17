@@ -7,12 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.ResourceCategory;
 import com.winwin.winwin.exception.ResourceCategoryException;
@@ -20,7 +22,7 @@ import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.OrganizationResourcePayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
+import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.OrganizationResourceRepository;
 import com.winwin.winwin.repository.ResourceCategoryRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -32,34 +34,36 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrganizationResourceServiceImpl implements OrganizationResourceService {
 	@Autowired
-	OrganizationResourceRepository organizationResourceRepository;
-
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	ResourceCategoryRepository resourceCategoryRepository;
-
+	private OrganizationResourceRepository organizationResourceRepository;
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private ResourceCategoryRepository resourceCategoryRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
 
 	private final Long CATEGORY_ID = -1L;
 
+	/**
+	 * create or update OrganizationResource and ResourceCategory, create new
+	 * entry in ResourceCategory if the value of CATEGORY_ID is -1L;
+	 * 
+	 * @param orgResourcePayLoad
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
 		OrganizationResource orgResource = null;
 		try {
@@ -67,11 +71,26 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			if (null != orgResourcePayLoad && null != user) {
 				orgResource = constructOrganizationResource(orgResourcePayLoad);
 				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
+				/*
+				 * if (null != orgResource && null !=
+				 * orgResource.getOrganization()) {
+				 * orgHistoryService.createOrganizationHistory(user,
+				 * orgResource.getOrganization().getId(),
+				 * OrganizationConstants.CREATE, OrganizationConstants.RESOURCE,
+				 * orgResource.getId(),
+				 * orgResource.getResourceCategory().getCategoryName(), ""); }
+				 */
 
-				if (null != orgResource && null != orgResource.getOrganizationId()) {
-					orgHistoryService.createOrganizationHistory(user, orgResource.getOrganizationId(),
-							OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
-							orgResource.getResourceCategory().getCategoryName(), "");
+				if (null != orgResource.getId() && null != orgResource.getOrganization()) {
+					if (null != orgResourcePayLoad.getId()) {
+						orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
+								OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+								orgResource.getResourceCategory().getCategoryName(), "");
+					} else {
+						orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
+								OrganizationConstants.CREATE, OrganizationConstants.RESOURCE, orgResource.getId(),
+								orgResource.getResourceCategory().getCategoryName(), "");
+					}
 				}
 			}
 		} catch (Exception e) {
@@ -84,8 +103,14 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		return orgResource;
 	}// end of method createOrUpdateOrganizationResource
 
+	/**
+	 * delete OrganizationResource by Id
+	 * 
+	 * @param resourceId
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
 	public void removeOrganizationResource(Long resourceId) {
 		try {
 			OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
@@ -93,13 +118,14 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			Date date = CommonUtils.getFormattedDate();
 			if (null != resource && null != user) {
 				resource.setUpdatedAt(date);
-				resource.setUpdatedBy(user.getEmail());
+				resource.setUpdatedBy(user.getUserDisplayName());
+				resource.setUpdatedByEmail(user.getEmail());
 				resource.setIsActive(false);
 
 				organizationResourceRepository.saveAndFlush(resource);
 
-				if (null != resource) {
-					orgHistoryService.createOrganizationHistory(user, resource.getOrganizationId(),
+				if (null != resource && null != resource.getOrganization()) {
+					orgHistoryService.createOrganizationHistory(user, resource.getOrganization().getId(),
 							OrganizationConstants.DELETE, "", resource.getId(),
 							resource.getResourceCategory().getCategoryName(), "");
 				}
@@ -109,6 +135,43 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 
 	}// end of method removeOrganizationResource
+
+	@Override
+	public OrganizationResource getOrgResourceById(Long id) {
+		return organizationResourceRepository.findOrgResourceById(id);
+	}
+
+	/**
+	 * returns ResourceCategory by Id
+	 * 
+	 * @param categoryId
+	 */
+	@Override
+	public ResourceCategory getResourceCategoryById(Long categoryId) {
+		return resourceCategoryRepository.getOne(categoryId);
+	}
+
+	/**
+	 * returns ResourceCategory List
+	 * 
+	 * @param id
+	 */
+	@Override
+	@Cacheable("organization_resource_category_list")
+	public List<ResourceCategory> getResourceCategoryList() {
+		return resourceCategoryRepository.findAll();
+	}
+
+	/**
+	 * returns OrganizationResource List by OrgId
+	 * 
+	 * @param id
+	 */
+	@Override
+	@Cacheable("organization_resource_list")
+	public List<OrganizationResource> getOrganizationResourceList(Long id) {
+		return organizationResourceRepository.findAllActiveOrgResources(id);
+	}// end of method getOrganizationResourceList
 
 	/**
 	 * @param orgResourcePayLoad
@@ -126,7 +189,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					organizationResource = new OrganizationResource();
 					organizationResource.setIsActive(true);
 					organizationResource.setCreatedAt(date);
-					organizationResource.setCreatedBy(user.getEmail());
+					organizationResource.setCreatedBy(user.getUserDisplayName());
+					organizationResource.setCreatedByEmail(user.getEmail());
 				}
 				if (organizationResource == null) {
 					throw new ResourceException("Org resource record not found for Id: " + orgResourcePayLoad.getId()
@@ -136,7 +200,14 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
 					organizationResource.setIsActive(true);
 					organizationResource.setUpdatedAt(date);
-					organizationResource.setUpdatedBy(user.getEmail());
+					organizationResource.setUpdatedBy(user.getUserDisplayName());
+					organizationResource.setUpdatedByEmail(user.getEmail());
+
+					if (null != orgResourcePayLoad.getOrganizationId()) {
+						Organization organization = organizationRepository
+								.findOrgById(orgResourcePayLoad.getOrganizationId());
+						organizationResource.setOrganization(organization);
+					}
 				}
 			}
 		} catch (Exception e) {
@@ -144,12 +215,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 		return organizationResource;
 	}
-
-	@Override
-	@Cacheable("organization_resource_list")
-	public List<OrganizationResource> getOrganizationResourceList(Long id) {
-		return organizationResourceRepository.findAllOrgResourceById(id);
-	}// end of method getOrganizationResourceList
 
 	/**
 	 * @param organizationResourcePayLoad
@@ -183,7 +248,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		}
 	}
 
-	public ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
+	private ResourceCategory saveOrganizationResourceCategory(ResourceCategoryPayLoad categoryFromPayLoad) {
 		ResourceCategory category = null;
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -197,29 +262,15 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				}
 				category.setCreatedAt(date);
 				category.setUpdatedAt(date);
-				category.setCreatedBy(user.getEmail());
-				category.setUpdatedBy(user.getEmail());
+				category.setCreatedBy(user.getUserDisplayName());
+				category.setUpdatedBy(user.getUserDisplayName());
+				category.setCreatedByEmail(user.getEmail());
+				category.setUpdatedByEmail(user.getEmail());
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
 		return resourceCategoryRepository.saveAndFlush(category);
 	}// end of method saveOrganizationResourceCategory
-
-	@Override
-	public OrganizationResource getOrgResourceById(Long id) {
-		return organizationResourceRepository.findOrgResourceById(id);
-	}
-
-	@Override
-	public ResourceCategory getResourceCategoryById(Long categoryId) {
-		return resourceCategoryRepository.getOne(categoryId);
-	}
-
-	@Override
-	@Cacheable("organization_resource_category_list")
-	public List<ResourceCategory> getResourceCategoryList() {
-		return resourceCategoryRepository.findAll();
-	}
 
 }

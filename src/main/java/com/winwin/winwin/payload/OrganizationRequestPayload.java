@@ -1,5 +1,7 @@
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -23,8 +25,8 @@ public class OrganizationRequestPayload {
 	String name;
 	String ein;
 	String notes;
-	Long revenue;
-	Long assets;
+	BigDecimal revenue;
+	BigDecimal assets;
 	String sector;
 	String sectorLevel;
 	String sectorLevelName;
@@ -34,10 +36,11 @@ public class OrganizationRequestPayload {
 	String status;
 	String priority;
 	Long parentId;
+	Long rootParentId;
 	Boolean isActive;
 	Boolean isTaggingReady;
 	String tagStatus;
-	Long totalAssets;
+	BigDecimal totalAssets;
 	String websiteUrl;
 	String facebookUrl;
 	String linkedinUrl;
@@ -48,7 +51,7 @@ public class OrganizationRequestPayload {
 	String purpose;
 	String selfInterest;
 	String businessModel;
-	Long populationServed;
+	String populationServed;
 	String missionStatement;
 	String contactInfo;
 	String datasetType;

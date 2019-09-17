@@ -1,6 +1,7 @@
 package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -24,13 +25,15 @@ import com.winwin.winwin.exception.UserException;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.payload.UserSignInResponsePayload;
+import com.winwin.winwin.payload.UserStatusPayload;
 import com.winwin.winwin.service.impl.UserServiceImpl;
+import com.winwin.winwin.util.UserComparator;
 
 import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @RestController
 @RequestMapping(value = "/user")
@@ -54,11 +57,38 @@ public class UserController extends BaseController {
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 						&& exceptionResponse.getStatusCode() != null)
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-				return sendSuccessResponse("org.user.success.resend_invitation", HttpStatus.OK);
+				return sendSuccessResponse("org.user.success.resend_invitation");
 			} else {
 				if (exceptionResponse.getException() != null
 						&& exceptionResponse.getException() instanceof UserNotFoundException) {
 					userService.createUser(payload, exceptionResponse);
+					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
+				} else if (exceptionResponse.getException() != null
+						&& !(exceptionResponse.getException() instanceof UserNotFoundException)) {
+					return sendMsgResponse(exceptionResponse.getException().getMessage(),
+							exceptionResponse.getStatusCode());
+				}
+			}
+		}
+		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
+	}
+
+	@RequestMapping(value = "createKibanaUser", method = RequestMethod.POST)
+	public ResponseEntity<?> createKibanaUser(@Valid @RequestBody UserPayload payload) throws UserException {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != payload) {
+			// Check user with status as FORCE_CHANGE_PASSWORD
+			if (isNewUser(payload.getEmail(), exceptionResponse)) {
+				userService.resendUserInvitation(payload, exceptionResponse);
+
+				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+						&& exceptionResponse.getStatusCode() != null)
+					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+				return sendSuccessResponse("org.user.success.resend_invitation");
+			} else {
+				if (exceptionResponse.getException() != null
+						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+					userService.createKibanaUser(payload, exceptionResponse);
 					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 				} else if (exceptionResponse.getException() != null
 						&& !(exceptionResponse.getException() instanceof UserNotFoundException)) {
@@ -88,7 +118,7 @@ public class UserController extends BaseController {
 							&& exceptionResponse.getStatusCode() != null)
 						return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-					return sendSuccessResponse(userSignInPayload, HttpStatus.OK);
+					return sendSuccessResponse(userSignInPayload);
 				}
 
 				if (exceptionResponse.getException() != null
@@ -118,7 +148,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(userSignInResPayload, HttpStatus.OK);
+		return sendSuccessResponse(userSignInResPayload);
 	}
 
 	@RequestMapping(value = "info", method = RequestMethod.GET)
@@ -141,7 +171,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payload, HttpStatus.OK);
+		return sendSuccessResponse(payload);
 	}
 
 	@RequestMapping(value = "update", method = RequestMethod.PUT)
@@ -165,7 +195,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payload, HttpStatus.OK);
+		return sendSuccessResponse(payload);
 	}
 
 	@RequestMapping(value = "updateAll", method = RequestMethod.PUT)
@@ -192,7 +222,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse(payloadList, HttpStatus.OK);
+		return sendSuccessResponse(payloadList);
 	}
 
 	public Boolean isNewUser(String userName, ExceptionResponse exceptionResponse) throws UserException {
@@ -206,17 +236,22 @@ public class UserController extends BaseController {
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
+			+ "')")
 	public ResponseEntity<?> getUserList() {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
-		List<UserPayload> payloadList = null;
+		List<UserPayload> payloadList = new ArrayList<UserPayload>();
 
 		payloadList = userService.getUserList(exceptionResponse);
 
 		if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage())) && exceptionResponse.getStatusCode() != null)
 			return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 
-		return sendSuccessResponse(payloadList, HttpStatus.OK);
+		// Sort user list by name in ascending order
+		if (!payloadList.isEmpty())
+			Collections.sort(payloadList, new UserComparator());
+
+		return sendSuccessResponse(payloadList);
 	}
 
 	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
@@ -236,7 +271,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
 	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
@@ -259,7 +294,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.reset", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
 	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
@@ -279,7 +314,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.code.success", HttpStatus.OK);
+		return sendSuccessResponse("org.user.code.success");
 	}
 
 	@RequestMapping(value = "changePassword", method = RequestMethod.PUT)
@@ -302,7 +337,7 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.password.success.changed", HttpStatus.OK);
+		return sendSuccessResponse("org.user.password.success.changed");
 	}
 
 	@RequestMapping(value = "", method = RequestMethod.DELETE)
@@ -323,7 +358,35 @@ public class UserController extends BaseController {
 		} else {
 			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
 		}
-		return sendSuccessResponse("org.user.delete.success", HttpStatus.OK);
+		return sendSuccessResponse("org.user.delete.success");
+	}
+
+	@RequestMapping(value = "changeUserStatus", method = RequestMethod.PUT)
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
+	public ResponseEntity<?> changeUserStatus(@Valid @RequestBody UserStatusPayload userStatuspayload)
+			throws UserException {
+		ExceptionResponse exceptionResponse = new ExceptionResponse();
+		if (null != userStatuspayload && null != userStatuspayload.getUserNames()) {
+			for (String userName : userStatuspayload.getUserNames()) {
+				if (StringUtils.isEmpty(userName)) {
+					return sendErrorResponse("org.user.error.name.null", HttpStatus.BAD_REQUEST);
+				}
+			}
+
+			if (userStatuspayload.getIsActive()) {
+				userService.enableUser(userStatuspayload.getUserNames(), exceptionResponse);
+			} else {
+				userService.disableUser(userStatuspayload.getUserNames(), exceptionResponse);
+			}
+
+			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
+					&& exceptionResponse.getStatusCode() != null)
+				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
+
+		} else {
+			return sendErrorResponse("org.user.error.payload_null", HttpStatus.BAD_REQUEST);
+		}
+		return sendSuccessResponse("org.user.enable.success");
 	}
 
 }

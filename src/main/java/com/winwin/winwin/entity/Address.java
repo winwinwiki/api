@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -29,7 +30,8 @@ import lombok.ToString;
 public class Address extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "address_seq")
+	@SequenceGenerator(name = "address_generator", sequenceName = "address_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "address_generator")
 	private Long id;
 
 	@Column(name = "country")
@@ -50,7 +52,7 @@ public class Address extends AbstractAuditableEntity {
 	@Column(name = "zip")
 	private String zip;
 
-	@Column(name = "street")
+	@Column(name = "street", columnDefinition = "TEXT")
 	private String street;
 
 	@Column(name = "place_id")

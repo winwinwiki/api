@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,7 +32,8 @@ import lombok.ToString;
 @Table(name = "org_sdg_mapping")
 public class OrganizationSdgData extends AbstractAuditableEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_sdg_mapping_seq")
+	@SequenceGenerator(name = "org_sdg_mapping_generator", sequenceName = "org_sdg_mapping_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_sdg_mapping_generator")
 	@Column(name = "id")
 	private Long id;
 

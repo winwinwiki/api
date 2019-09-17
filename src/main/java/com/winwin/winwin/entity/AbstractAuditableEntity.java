@@ -11,7 +11,6 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +22,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @NoArgsConstructor
 @AllArgsConstructor
@@ -33,7 +32,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @MappedSuperclass
 @EntityListeners({ AuditingEntityListener.class })
-public class AbstractAuditableEntity extends AbstractPersistable<Long> {
+public class AbstractAuditableEntity {
 	/**
 	 * 
 	 */
@@ -58,4 +57,10 @@ public class AbstractAuditableEntity extends AbstractPersistable<Long> {
 	@Column(name = "updated_by")
 	@JoinColumn(name = "updated_by")
 	protected String updatedBy;
+
+	@Column(name = "created_by_email")
+	protected String createdByEmail;
+
+	@Column(name = "updated_by_email")
+	protected String updatedByEmail;
 }

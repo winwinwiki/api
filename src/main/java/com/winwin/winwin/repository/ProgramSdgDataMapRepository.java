@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.winwin.winwin.entity.ProgramSdgData;
 
+/**
+ * @author ArvindKhatik
+ * @version 1.0
+ *
+ */
 @Repository
 public interface ProgramSdgDataMapRepository extends JpaRepository<ProgramSdgData, Long> {
 

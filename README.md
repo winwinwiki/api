@@ -23,6 +23,28 @@ $ export WINWIN_DB_HOST=localhost
 $ export WINWIN_DB_NAME=winwindb
 $ export WINWIN_DB_USER=winwindbuser
 $ export WINWIN_DB_PASSWORD=winwindbpassword
+$ export WINWIN_DB_PORT=5432
+
+$ export AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+$ export AWS_SECRET_KEY=<AWS_SECRET_KEY>
+$ export AWS_REGION=<AWS_REGION>
+$ export AWS_REGION2=<AWS_REGION2>
+
+$ export AWS_COGNITO_CLIENT_ID=<AWS_COGNITO_CLIENT_ID>
+$ export AWS_COGNITO_USER_POOL_ID=<AWS_COGNITO_USER_POOL_ID>
+$ export AWS_COGNITO_ENDPOINT=<AWS_COGNITO_ENDPOINT>
+$ export AWS_COGNITO_IDENTITY_POOL_ID=<AWS_COGNITO_IDENTITY_POOL_ID>
+
+$ export AWS_S3_BUCKET=<AWS_S3_BUCKET>
+
+$ export AWS_ES_ENDPOINT=<AWS_ES_ENDPOINT>
+$ export AWS_ES_INDEX=<AWS_ES_INDEX>
+$ export AWS_ES_INDEX_TYPE=<AWS_ES_INDEX_TYPE>
+
+$ export SLACK_UPLOAD_FILE_API_URL=https://slack.com/api/files.upload
+$ export SLACK_AUTH_TOKEN=<SLACK_AUTH_TOKEN>
+$ export SLACK_CHAT_POST_MESSAGE_API_URL=https://slack.com/api/chat.postMessage
+
 $ ./mvnw spring-boot:run
 ```
 

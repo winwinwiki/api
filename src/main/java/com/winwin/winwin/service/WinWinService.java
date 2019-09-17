@@ -8,17 +8,20 @@ import java.util.List;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.DataMigrationCsvPayload;
-import com.winwin.winwin.payload.ProgramRequestPayload;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
+import com.winwin.winwin.payload.UserPayload;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 public interface WinWinService {
-	List<Organization> createOrganizationsOffline(List<DataMigrationCsvPayload> organizationPayloadList,
-			ExceptionResponse response);
+	List<Organization> createOrganizationsOffline(List<OrganizationDataMigrationCsvPayload> organizationPayloadList,
+			ExceptionResponse response, UserPayload user);
 
-	List<Program> createProgramsOffline(List<ProgramRequestPayload> programPayloadList, ExceptionResponse response);
+	List<Program> createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
+			ExceptionResponse response, UserPayload user);
 
 }

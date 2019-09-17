@@ -11,12 +11,18 @@ import com.winwin.winwin.entity.RegionMaster;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 
 @Repository
 public interface RegionMasterRepository extends JpaRepository<RegionMaster, Long> {
-	@Query(value = "select * from region_master where name ILIKE %:name%", nativeQuery = true)
-	List<RegionMaster> findRegionsByNameIgnoreCaseContaining(@Param("name") String name, Pageable pageable);
+	// The below query returns all the regions contains the specified
+	// pattern,populates records starting with the pattern first.
+	@Query(value = "SELECT * FROM region_master WHERE name ILIKE %:name% ORDER BY CASE WHEN name ILIKE :nameWithOrderBy% THEN 0 ELSE 1 END,name", nativeQuery = true)
+	List<RegionMaster> findRegionsByNameIgnoreCaseContaining(@Param("name") String name,
+			@Param("nameWithOrderBy") String nameWithOrderBy, Pageable pageable);
+
+	@Query(value = "SELECT * from region_master where id = :id", nativeQuery = true)
+	RegionMaster findRegionById(@Param("id") Long id);
 
 }

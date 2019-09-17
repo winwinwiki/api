@@ -15,13 +15,13 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramSdgData;
 import com.winwin.winwin.entity.SdgData;
 import com.winwin.winwin.exception.SdgDataException;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.ProgramSdgDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramSdgDataMapRepository;
 import com.winwin.winwin.repository.SdgDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -31,38 +31,39 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 	@Autowired
-	SdgDataRepository sdgDataRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private SdgDataRepository sdgDataRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	ProgramSdgDataMapRepository programSdgDataMapRepository;
+	private ProgramSdgDataMapRepository programSdgDataMapRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramSdgDataServiceImpl.class);
 
+	/**
+	 * create or update ProgramSdgData
+	 * 
+	 * @param payloadList
+	 * @param program
+	 */
 	@Override
 	@Transactional
-	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Long progId) throws SdgDataException {
+	public void createSdgDataMapping(List<ProgramSdgDataMapPayload> payloadList, Program program)
+			throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
 		Date date = CommonUtils.getFormattedDate();
 		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
 		if (null != payloadList && null != user) {
-			List<SdgData> sdgList = sdgDataRepository.findAllSdgData();
+			List<SdgData> sdgList = sdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
 				for (SdgData sdgDataObj : sdgList) {
 					subGoalCodesMap.put(sdgDataObj.getShortNameCode(), sdgDataObj);
@@ -77,17 +78,19 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 
 							if (null != sdgData) {
 								sdgDataMapObj = programSdgDataMapRepository
-										.findSdgSelectedTagsByProgramIdAndBySdgId(progId, sdgData.getId());
+										.findSdgSelectedTagsByProgramIdAndBySdgId(program.getId(), sdgData.getId());
 
 								if (sdgDataMapObj == null) {
 									sdgDataMapObj = new ProgramSdgData();
-									sdgDataMapObj.setProgramId(progId);
+									sdgDataMapObj.setProgram(program);
 									sdgDataMapObj.setSdgData(sdgData);
 									sdgDataMapObj.setIsChecked(payload.getIsChecked());
 									sdgDataMapObj.setCreatedAt(date);
 									sdgDataMapObj.setUpdatedAt(date);
-									sdgDataMapObj.setCreatedBy(user.getEmail());
-									sdgDataMapObj.setUpdatedBy(user.getEmail());
+									sdgDataMapObj.setCreatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+									sdgDataMapObj.setCreatedByEmail(user.getEmail());
+									sdgDataMapObj.setUpdatedByEmail(user.getEmail());
 								}
 							}
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
@@ -139,8 +142,9 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 						} else {
 							sdgDataMapObj.setIsChecked(payload.getIsChecked());
 							sdgDataMapObj.setUpdatedAt(date);
-							sdgDataMapObj.setUpdatedBy(user.getEmail());
-							sdgDataMapObj.setProgramId(payload.getProgramId());
+							sdgDataMapObj.setUpdatedBy(user.getUserDisplayName());
+							sdgDataMapObj.setUpdatedByEmail(user.getEmail());
+							sdgDataMapObj.setProgram(program);
 
 							sdgDataMapObj = programSdgDataMapRepository.saveAndFlush(sdgDataMapObj);
 
@@ -165,6 +169,11 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 		}
 	}
 
+	/**
+	 * returns ProgramSdgData List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
 	public List<ProgramSdgDataMapPayload> getSelectedSdgData(Long programId) {
 		// TODO Auto-generated method stub

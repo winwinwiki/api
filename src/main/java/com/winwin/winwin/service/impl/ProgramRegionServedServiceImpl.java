@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -27,9 +29,8 @@ import com.winwin.winwin.payload.ProgramRegionServedPayload;
 import com.winwin.winwin.payload.RegionMasterFilterPayload;
 import com.winwin.winwin.payload.RegionMasterPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.AddressRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramRegionServedRepository;
+import com.winwin.winwin.repository.ProgramRepository;
 import com.winwin.winwin.repository.RegionMasterRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramRegionServedService;
@@ -38,38 +39,37 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramRegionServedServiceImpl implements ProgramRegionServedService {
 
 	@Autowired
-	AddressRepository addressRepository;
-
+	private ProgramRepository programRepository;
 	@Autowired
 	private RegionMasterRepository regionMasterRepository;
-
 	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private CustomMessageSource customMessageSource;
 	@Autowired
-	protected CustomMessageSource customMessageSource;
-
+	private UserService userService;
 	@Autowired
-	UserService userService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private ProgramRegionServedRepository programRegionServedRepository;
 
-	@Autowired
-	ProgramRegionServedRepository programRegionServedRepository;
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRegionServedServiceImpl.class);
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
 	private final Long REGION_ID = -1L;
 
+	/**
+	 * create or update multiple ProgramRegionServed for Program create new entry in
+	 * RegionMaster if value of REGION_ID is -1L
+	 * 
+	 * @param programRegionPayloadList
+	 * @return
+	 */
 	@Override
 	@Transactional
+	@CacheEvict(value = "program_region_master")
 	public List<ProgramRegionServed> createProgramRegionServed(
 			List<ProgramRegionServedPayload> programRegionPayloadList) {
 		List<ProgramRegionServed> programRegionList = null;
@@ -82,14 +82,23 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 					if (payload.getId() == null) {
 						ProgramRegionServed programRegionServed = null;
 						programRegionServed = new ProgramRegionServed();
+						// set program region master data
 						setProgramRegionMasterData(payload, programRegionServed, user);
+
 						BeanUtils.copyProperties(payload, programRegionServed);
+
+						if (null != payload.getProgramId()) {
+							Program program = programRepository.findProgramById(payload.getProgramId());
+							programRegionServed.setProgram(program);
+						}
+
 						programRegionServed.setIsActive(true);
-						;
 						programRegionServed.setCreatedAt(date);
 						programRegionServed.setUpdatedAt(date);
-						programRegionServed.setCreatedBy(user.getEmail());
-						programRegionServed.setUpdatedBy(user.getEmail());
+						programRegionServed.setCreatedBy(user.getUserDisplayName());
+						programRegionServed.setUpdatedBy(user.getUserDisplayName());
+						programRegionServed.setCreatedByEmail(user.getEmail());
+						programRegionServed.setUpdatedByEmail(user.getEmail());
 						programRegionServed = programRegionServedRepository.saveAndFlush(programRegionServed);
 
 						if (null != programRegionServed && null != payload.getOrganizationId()) {
@@ -99,6 +108,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 									"");
 						}
 						programRegionList.add(programRegionServed);
+						// check for inactive regions
 					} else if (null != payload.getId() && !(payload.getIsActive())) {
 						ProgramRegionServed region = null;
 						region = programRegionServedRepository.findProgramRegionById(payload.getId());
@@ -109,12 +119,19 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						} else {
 							region.setIsActive(payload.getIsActive());
 							region.setUpdatedAt(date);
-							region.setUpdatedBy(user.getEmail());
+							region.setUpdatedBy(user.getUserDisplayName());
+							region.setUpdatedByEmail(user.getEmail());
+
+							if (region.getProgram() == null) {
+								Program program = programRepository.findProgramById(payload.getProgramId());
+								region.setProgram(program);
+							}
+
 							region = programRegionServedRepository.saveAndFlush(region);
 
 							if (null != region && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
-										payload.getProgramId(), OrganizationConstants.UPDATE,
+										payload.getProgramId(), OrganizationConstants.DELETE,
 										OrganizationConstants.REGION, region.getId(),
 										region.getRegionMaster().getRegionName(), "");
 							}
@@ -129,10 +146,15 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		return programRegionList;
 	}
 
+	/**
+	 * returns ProgramRegionServed List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
 	public List<ProgramRegionServed> getProgramRegionServedList(Long programId) {
 		// TODO Auto-generated method stub
-		return programRegionServedRepository.findAllProgramRegionsList(programId);
+		return programRegionServedRepository.findAllActiveProgramRegions(programId);
 	}
 
 	private void setProgramRegionMasterData(ProgramRegionServedPayload payload, ProgramRegionServed region,
@@ -160,7 +182,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 		}
 	}
 
-	public RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
+	private RegionMaster saveOrganizationRegionMaster(RegionMasterPayload payload, UserPayload user) {
 		RegionMaster region = new RegionMaster();
 		try {
 			Date date = CommonUtils.getFormattedDate();
@@ -169,14 +191,22 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 			}
 			region.setCreatedAt(date);
 			region.setUpdatedAt(date);
-			region.setCreatedBy(user.getEmail());
-			region.setUpdatedBy(user.getEmail());
+			region.setCreatedBy(user.getUserDisplayName());
+			region.setUpdatedBy(user.getUserDisplayName());
+			region.setCreatedByEmail(user.getEmail());
+			region.setUpdatedByEmail(user.getEmail());
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.region.master.error.created"), e);
 		}
 		return regionMasterRepository.saveAndFlush(region);
 	}// end of method saveOrganizationRegionMaster
 
+	/**
+	 * returns RegionMaster List
+	 * 
+	 * @param payload
+	 * @param response
+	 */
 	@Override
 	@Cacheable("program_region_master")
 	public List<RegionMaster> getProgramRegionMasterList(RegionMasterFilterPayload filterPayload,
@@ -190,7 +220,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 
 				Pageable pageable = PageRequest.of(filterPayload.getPageNo(), filterPayload.getPageSize(),
 						Sort.by("name"));
-				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, pageable);
+				return regionMasterRepository.findRegionsByNameIgnoreCaseContaining(regionName, regionName, pageable);
 			} else if (filterPayload.getPageNo() == null) {
 				throw new Exception("Page No found as null");
 			} else if (filterPayload.getPageSize() == null) {

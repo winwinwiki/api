@@ -11,7 +11,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,8 +20,12 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 public class OrganizationChartPayload {
-	Long id;
-	String name;
-	AddressPayload location;
-	List<OrganizationChartPayload> children;
+	private Long id;
+	private Long parentId;
+	private Long rootParentId;
+	private String name;
+	private String parentName;
+	private String rootParentName;
+	private AddressPayload location;
+	private List<OrganizationChartPayload> children;
 }

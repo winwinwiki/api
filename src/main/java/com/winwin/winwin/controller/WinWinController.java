@@ -1,15 +1,13 @@
 /**
- * Created for Data Migration 
+ * Controller to upload Data of Organization and Program via respective endpoint's
+ * This is an Data Migration one time activity for fresh DB Setup 
  */
 package com.winwin.winwin.controller;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,30 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.winwin.winwin.constants.UserConstants;
-import com.winwin.winwin.entity.NaicsData;
-import com.winwin.winwin.entity.NteeData;
-import com.winwin.winwin.entity.Organization;
-import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
-import com.winwin.winwin.payload.AddressPayload;
-import com.winwin.winwin.payload.DataMigrationCsvPayload;
-import com.winwin.winwin.payload.OrganizationRequestPayload;
-import com.winwin.winwin.payload.OrganizationResponsePayload;
-import com.winwin.winwin.payload.ProgramRequestPayload;
-import com.winwin.winwin.payload.ProgramResponsePayload;
-import com.winwin.winwin.repository.NaicsDataRepository;
-import com.winwin.winwin.repository.NteeDataRepository;
-import com.winwin.winwin.repository.OrganizationDataSetRepository;
-import com.winwin.winwin.repository.OrganizationNoteRepository;
-import com.winwin.winwin.repository.ProgramRepository;
-import com.winwin.winwin.service.OrgNaicsDataService;
-import com.winwin.winwin.service.OrgNteeDataService;
-import com.winwin.winwin.service.OrgSdgDataService;
-import com.winwin.winwin.service.OrgSpiDataService;
-import com.winwin.winwin.service.OrganizationNoteService;
-import com.winwin.winwin.service.ProgramService;
-import com.winwin.winwin.service.SdgDataService;
-import com.winwin.winwin.service.SpiDataService;
+import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
+import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.service.WinWinService;
 import com.winwin.winwin.util.CsvUtils;
@@ -52,7 +30,7 @@ import io.micrometer.core.instrument.util.StringUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 
 @RestController
@@ -60,70 +38,35 @@ import io.micrometer.core.instrument.util.StringUtils;
 public class WinWinController extends BaseController {
 	@Autowired
 	private WinWinService winWinService;
-
 	@Autowired
-	OrganizationDataSetRepository organizationDataSetRepository;
-
+	private UserService userService;
 	@Autowired
-	OrgSpiDataService orgSpiDataService;
-
-	@Autowired
-	OrgSdgDataService orgSdgDataService;
-
-	@Autowired
-	UserService userService;
-
-	@Autowired
-	OrganizationNoteService organizationNoteService;
-
-	@Autowired
-	OrganizationNoteRepository organizationNoteRepository;
-
-	@Autowired
-	OrgNaicsDataService naicsDataService;
-	@Autowired
-	OrgNteeDataService nteeDataService;
-
-	@Autowired
-	ProgramService programService;
-	@Autowired
-	ProgramRepository programRepository;
-
-	@Autowired
-	SpiDataService spiDataService;
-	@Autowired
-	SdgDataService sdgDataService;
-
-	@Autowired
-	NteeDataRepository nteeDataRepository;
-
-	@Autowired
-	NaicsDataRepository naicsDataRepository;
-
-	@Autowired
-	CsvUtils csvUtils;
+	private CsvUtils csvUtils;
 
 	@SuppressWarnings("unused")
 	private static final Logger LOGGER = LoggerFactory.getLogger(WinWinController.class);
 
 	/**
+	 * end point to create organizations in bulk, call this method only when the
+	 * organization id's are already imported into organization table. end point
+	 * method for data migration and can only be used for new environment setup
 	 * 
+	 * @param file
+	 * @return
 	 */
-	// for offline bulk organization creation
 	@RequestMapping(value = "/organization/addAll", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
-		List<Organization> organizationList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
-					exceptionResponse);
+			List<OrganizationDataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils
+					.read(OrganizationDataMigrationCsvPayload.class, file, exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-			organizationList = winWinService.createOrganizationsOffline(dataMigrationCsvPayload, exceptionResponse);
+			UserPayload user = userService.getCurrentUserDetails();
+			winWinService.createOrganizationsOffline(dataMigrationCsvPayload, exceptionResponse, user);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -131,32 +74,31 @@ public class WinWinController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(organizationList);
+		return sendSuccessResponse("org.file.upload.success");
 	}
 
 	/**
 	 * 
+	 * end point to create organizations in bulk, call this method only when the
+	 * organization id's are already imported into organization table. end point
+	 * method for data migration and can only be used for new environment setup
+	 * 
+	 * @param file
+	 * @return
 	 */
-	// for offline bulk program creation
 	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
-	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
-			+ "')")
+	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
-		List<ProgramRequestPayload> programPayloadList = new ArrayList<>();
-		List<Program> programList = null;
-		List<ProgramResponsePayload> payloadList = null;
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
 		if (null != file) {
-			List<DataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils.read(DataMigrationCsvPayload.class, file,
-					exceptionResponse);
+			List<ProgramDataMigrationCsvPayload> dataMigrationCsvPayload = csvUtils
+					.read(ProgramDataMigrationCsvPayload.class, file, exceptionResponse);
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
-			programPayloadList = dataMigrationCsvPayload.stream().map(this::setProgramPayload)
-					.collect(Collectors.toList());
-			programList = winWinService.createProgramsOffline(programPayloadList, exceptionResponse);
-			payloadList = setProgramPayload(programList);
+			UserPayload user = userService.getCurrentUserDetails();
+			winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -164,105 +106,7 @@ public class WinWinController extends BaseController {
 		} else {
 			return sendErrorResponse("org.file.null");
 		}
-		return sendSuccessResponse(payloadList);
-	}
-
-	/**
-	 * @param organizationList
-	 * @return
-	 */
-	private List<OrganizationResponsePayload> setOrganizationPayload(List<Organization> organizationList) {
-		List<OrganizationResponsePayload> payload = new ArrayList<>();
-		for (int i = 0; i < organizationList.size(); i++)
-			payload.add(setOrganizationPayload(organizationList.get(i)));
-		return payload;
-	}
-
-	private OrganizationResponsePayload setOrganizationPayload(Organization organization) {
-		AddressPayload addressPayload;
-		OrganizationResponsePayload payload = null;
-		if (null != organization) {
-			payload = new OrganizationResponsePayload();
-			BeanUtils.copyProperties(organization, payload);
-			if (null != organization.getAddress()) {
-				addressPayload = new AddressPayload();
-				BeanUtils.copyProperties(organization.getAddress(), addressPayload);
-				payload.setAddress(addressPayload);
-			}
-		}
-		return payload;
-	}
-
-	private OrganizationRequestPayload setOrganizationPayload(DataMigrationCsvPayload csv) {
-		OrganizationRequestPayload payload = new OrganizationRequestPayload();
-		AddressPayload address = new AddressPayload();
-		BeanUtils.copyProperties(csv, address);
-		address.setId(csv.getAddressId());
-		payload.setAddress(address);
-		BeanUtils.copyProperties(csv, payload);
-
-		// Get Id from naics_code master data table and assign the id of it
-		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
-		if (null != naicsData)
-			payload.setNaicsCode(naicsData.getId());
-
-		// Get Id from ntee_code master data table and assign the id of it
-		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
-		if (null != nteeData)
-			payload.setNteeCode(nteeData.getId());
-
-		return payload;
-	}
-
-	/**
-	 * @param programList
-	 * @return
-	 */
-	private List<ProgramResponsePayload> setProgramPayload(List<Program> programList) {
-		List<ProgramResponsePayload> payload = new ArrayList<>();
-		for (int i = 0; i < programList.size(); i++)
-			payload.add(setProgramPayload(programList.get(i)));
-		return payload;
-	}
-
-	private ProgramResponsePayload setProgramPayload(Program program) {
-		AddressPayload addressPayload;
-		ProgramResponsePayload payload = null;
-		if (null != program) {
-			payload = new ProgramResponsePayload();
-			BeanUtils.copyProperties(program, payload);
-			if (null != program.getAddress()) {
-				addressPayload = new AddressPayload();
-				BeanUtils.copyProperties(program.getAddress(), addressPayload);
-				payload.setAddress(addressPayload);
-			}
-			if (null != program.getOrganization()) {
-				payload.setOrganizationId(program.getOrganization().getId());
-				payload.setParentId(program.getOrganization().getId());
-			}
-		}
-		return payload;
-	}
-
-	private ProgramRequestPayload setProgramPayload(DataMigrationCsvPayload csv) {
-		ProgramRequestPayload payload = new ProgramRequestPayload();
-		AddressPayload address = new AddressPayload();
-		BeanUtils.copyProperties(csv, address);
-		address.setId(csv.getAddressId());
-		payload.setAddress(address);
-		BeanUtils.copyProperties(csv, payload);
-
-		// Get Id from naics_code master data table and assign the id of it
-		NaicsData naicsData = naicsDataRepository.findByCode(csv.getNaicsCode());
-		if (null != naicsData)
-			payload.setNaicsCode(naicsData.getId());
-
-		// Get Id from ntee_code master data table and assign the id of it
-		NteeData nteeData = nteeDataRepository.findByCode(csv.getNteeCode());
-		if (null != nteeData)
-			payload.setNteeCode(nteeData.getId());
-
-		return payload;
+		return sendSuccessResponse("org.file.upload.success");
 	}
 
 }

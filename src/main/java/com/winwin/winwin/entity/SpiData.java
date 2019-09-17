@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -31,7 +32,8 @@ import lombok.ToString;
 @Table(name = "spi_data")
 public class SpiData {
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "spi_data_seq")
+	@SequenceGenerator(name = "spi_data_generator", sequenceName = "spi_data_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "spi_data_generator")
 	private Long id;
 
 	@Column(name = "dimension_id")

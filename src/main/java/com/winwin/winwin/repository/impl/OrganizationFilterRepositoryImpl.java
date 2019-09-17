@@ -1,3 +1,6 @@
+/**
+ * Class OrganizationFilterRepositoryImpl returns the Total Organizations based on filter criteria
+ */
 package com.winwin.winwin.repository.impl;
 
 import java.math.BigInteger;
@@ -8,7 +11,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +21,7 @@ import com.winwin.winwin.repository.OrganizationFilterRepository;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Repository
 @Transactional(readOnly = true)
@@ -28,8 +30,16 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	@PersistenceContext
 	EntityManager entityManager;
 
+	/**
+	 * Get Organization List by OrganizationFilterPayload
+	 * 
+	 * @param payload
+	 * @param type
+	 * @param orgId
+	 * @param pageNo
+	 * @param pageSize
+	 */
 	@Override
-	@Cacheable("organization_filter_result")
 	public List<Organization> filterOrganization(OrganizationFilterPayload payload, String type, Long orgId,
 			Integer pageNo, Integer pageSize) {
 		Query filterQuery = setFilterQuery(payload, type);
@@ -46,6 +56,13 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 	}
 
+	/**
+	 * Get Organization Total Count by OrganizationFilterPayload
+	 * 
+	 * @param payload
+	 * @param type
+	 * @param orgId
+	 */
 	@Override
 	public BigInteger getFilterOrganizationCount(OrganizationFilterPayload payload, String type, Long orgId) {
 		Query filterQuery = setFilterQueryForOrgCounts(payload, type);
@@ -72,9 +89,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append("inner join address a on a.id = o.address_id");
+		} else if (!StringUtils.isNullOrEmpty(payload.getCountry()) || !StringUtils.isNullOrEmpty(payload.getState())
+				|| !StringUtils.isNullOrEmpty(payload.getCity()) || !StringUtils.isNullOrEmpty(payload.getCounty())) {
+			sb.append("inner join address a on a.id = o.address_id");
 		}
 
-		sb.append(" where  o.is_Active = true and o.type = :type ");
+		sb.append(" where  o.is_active = true and o.type = :type ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -93,8 +113,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
 
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			sb.append(" and o.created_by_email IN :createdByEmail ");
+
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			sb.append(" and o.updated_by IN :editedBy ");
+			sb.append(" and o.updated_by_email IN :editedByEmail ");
 
 		if (payload.getNteeCode() != null && payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
@@ -138,11 +161,25 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append(
 					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
+		} else {
+			if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
+				sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getState())) {
+				sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCity())) {
+				sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
+				sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+			}
 		}
 
+		// keep the empty values always last
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
-			sb.append(" order by " + payload.getSortBy() + " "
-					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
+			sb.append(" order by " + payload.getSortBy() + " " + (!StringUtils.isNullOrEmpty(payload.getSortOrder())
+					? payload.getSortOrder() + " NULLS LAST" : "ASC NULLS LAST"));
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
@@ -172,8 +209,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
 
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			filterQuery.setParameter("createdByEmail", payload.getCreatedBy());
+
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			filterQuery.setParameter("editedBy", payload.getEditedBy());
+			filterQuery.setParameter("editedByEmail", payload.getEditedBy());
 
 		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)
 			filterQuery.setParameter("indicatorId", payload.getIndicatorId());
@@ -193,7 +233,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getNameSearch()))
 			filterQuery.setParameter("name", "%" + payload.getNameSearch() + "%");
 
-		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
+		if (!StringUtils.isNullOrEmpty(payload.getAddress()) && StringUtils.isNullOrEmpty(payload.getCountry())
+				&& StringUtils.isNullOrEmpty(payload.getState()) && StringUtils.isNullOrEmpty(payload.getCity())
+				&& StringUtils.isNullOrEmpty(payload.getCounty())) {
 			filterQuery.setParameter("country", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("state", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("city", "%" + payload.getAddress() + "%");
@@ -204,6 +246,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		return filterQuery;
 	}
 
+	/**
+	 * @param payload
+	 * @param type
+	 * @return
+	 */
 	private Query setFilterQueryForOrgCounts(OrganizationFilterPayload payload, String type) {
 		StringBuilder query = new StringBuilder("select count(distinct o.id) from organization o ");
 		boolean spi = false;
@@ -212,9 +259,12 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append("inner join address a on a.id = o.address_id");
+		} else if (!StringUtils.isNullOrEmpty(payload.getCountry()) || !StringUtils.isNullOrEmpty(payload.getState())
+				|| !StringUtils.isNullOrEmpty(payload.getCity()) || !StringUtils.isNullOrEmpty(payload.getCounty())) {
+			sb.append("inner join address a on a.id = o.address_id");
 		}
 
-		sb.append(" where  o.is_Active = true and o.type = :type ");
+		sb.append(" where  o.is_active = true and o.type = :type ");
 
 		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
 		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
@@ -233,8 +283,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getPriority()))
 			sb.append(" and o.priority IS NOT DISTINCT FROM :priority ");
 
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			sb.append(" and o.created_by_email IN :createdByEmail ");
+
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			sb.append(" and o.updated_by IN :editedBy ");
+			sb.append(" and o.updated_by_email IN :editedByEmail ");
 
 		if (payload.getNteeCode() != null && payload.getNteeCode() != 0)
 			sb.append(" and o.ntee_code IS NOT DISTINCT FROM :nteeCode ");
@@ -278,11 +331,20 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
 			sb.append(
 					"  AND (a.country ILIKE :country or a.state ILIKE :state or a.county ILIKE :county or a.city ILIKE :city)");
+		} else {
+			if (!StringUtils.isNullOrEmpty(payload.getCountry())) {
+				sb.append("  AND (a.country ILIKE '%" + payload.getCountry() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getState())) {
+				sb.append("  AND (a.state ILIKE '%" + payload.getState() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCity())) {
+				sb.append("  AND (a.city ILIKE '%" + payload.getCity() + "%' )");
+			}
+			if (!StringUtils.isNullOrEmpty(payload.getCounty())) {
+				sb.append("  AND (a.county ILIKE '%" + payload.getCounty() + "%' )");
+			}
 		}
-
-		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
-			sb.append(" order by " + payload.getSortBy() + " "
-					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() : ""));
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString());
@@ -312,8 +374,11 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (payload.getNaicsCode() != null && payload.getNaicsCode() != 0)
 			filterQuery.setParameter("naicsCode", payload.getNaicsCode());
 
+		if (payload.getCreatedBy() != null && payload.getCreatedBy().size() != 0)
+			filterQuery.setParameter("createdByEmail", payload.getCreatedBy());
+
 		if (payload.getEditedBy() != null && payload.getEditedBy().size() != 0)
-			filterQuery.setParameter("editedBy", payload.getEditedBy());
+			filterQuery.setParameter("editedByEmail", payload.getEditedBy());
 
 		if (!StringUtils.isNullOrEmpty(payload.getIndicatorId()) && spi)
 			filterQuery.setParameter("indicatorId", payload.getIndicatorId());
@@ -333,7 +398,9 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getNameSearch()))
 			filterQuery.setParameter("name", "%" + payload.getNameSearch() + "%");
 
-		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
+		if (!StringUtils.isNullOrEmpty(payload.getAddress()) && StringUtils.isNullOrEmpty(payload.getCountry())
+				&& StringUtils.isNullOrEmpty(payload.getState()) && StringUtils.isNullOrEmpty(payload.getCity())
+				&& StringUtils.isNullOrEmpty(payload.getCounty())) {
 			filterQuery.setParameter("country", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("state", "%" + payload.getAddress() + "%");
 			filterQuery.setParameter("city", "%" + payload.getAddress() + "%");

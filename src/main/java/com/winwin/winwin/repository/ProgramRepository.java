@@ -14,17 +14,17 @@ public interface ProgramRepository extends JpaRepository<Program, Long>, Program
 	@Query(value = "select * from program where id = :id", nativeQuery = true)
 	Program findProgramById(@Param("id") Long id);
 
-	@Query(value = "select * from program where  org_id = :orgId AND is_Active = true", nativeQuery = true)
+	@Query(value = "select * from program where  org_id = :orgId AND is_active = true", nativeQuery = true)
 	List<Program> findAllProgramList(@Param("orgId") Long orgId);
 
 	@Query(value = "select * from program ORDER BY id DESC LIMIT 1", nativeQuery = true)
 	Program findLastProgram();
 
-	@Query(value = "select * from program where is_Active = true " + "  AND name ILIKE %:name%", nativeQuery = true)
+	@Query(value = "select * from program where is_active = true " + "  AND name ILIKE %:name%", nativeQuery = true)
 	List<Program> findByNameIgnoreCaseContaining(@Param("name") String name);
 
 	@Query(value = "select * from program where  org_id = :orgId "
-			+ " AND is_Active = true AND name ILIKE %:name% ORDER BY name", nativeQuery = true)
+			+ " AND is_active = true AND name ILIKE %:name% ORDER BY name", nativeQuery = true)
 	List<Program> findProgramByNameIgnoreCaseContaining(@Param("orgId") Long orgId, @Param("name") String name);
 
 }

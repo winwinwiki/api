@@ -20,8 +20,8 @@ jobs: # a collection of steps
       only: 
         - dev
         #- qa
-        #- staging
-        #- master
+        - staging
+        - master
 
     environment:
       # Customize the JVM maximum heap limit
@@ -107,20 +107,29 @@ jobs: # a collection of steps
       - run:
           name: Deploy to S3
           command: |
-            #if [ "$CIRCLE_BRANCH" = "dev" ]; then 
-            export S3_BUCKET="s3://winwin-backend-bucket-dev/"
-            #el
-            # if [ "$CIRCLE_BRANCH" = "qa" ]; then
-            #   export S3_BUCKET="s3://frontend-qa-server/"
-            # elif [ "$CIRCLE_BRANCH" = "staging" ]; then
-            #   export S3_BUCKET="s3://frontend-staging-server/"
-            # elif [ "$CIRCLE_BRANCH" = "master" ]; then
-            #   export S3_BUCKET="s3://frontend-production-server/"
-            # fi
-            echo "S3_BUCKET - $S3_BUCKET"
-            aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             if [ "$CIRCLE_BRANCH" = "dev" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-dev/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             elif [ "$CIRCLE_BRANCH" = "staging" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-stag/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             elif [ "$CIRCLE_BRANCH" = "master" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-prod/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             fi
+            
             
       - run:
           name: Run CodeDeploy to deploy on EC2
           command: |
-            aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+             if [ "$CIRCLE_BRANCH" = "dev" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+             elif [ "$CIRCLE_BRANCH" = "staging" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Stag --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Stag-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-stag,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+             elif [ "$CIRCLE_BRANCH" = "master" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Prod --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Prod-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-prod,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+             fi
+            

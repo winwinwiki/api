@@ -24,7 +24,6 @@ import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.OrganizationSpiDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrgSpiDataService;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -33,31 +32,30 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
-
+	private SpiDataRepository spiDataRepository;
 	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private OrgSpiDataMapRepository orgSpiDataMapRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
+	private OrganizationHistoryService orgHistoryService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrgSpiDataServiceImpl.class);
 
+	/**
+	 * create or update OrganizationSpiData
+	 * 
+	 * @param payloadList
+	 * @param organization
+	 */
 	@Override
 	@Transactional
 	public void createSpiDataMapping(List<OrganizationSpiDataMapPayload> payloadList, Organization organization)
@@ -88,8 +86,10 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 										spiDataMapObj.setIsChecked(payload.getIsChecked());
 										spiDataMapObj.setCreatedAt(date);
 										spiDataMapObj.setUpdatedAt(date);
-										spiDataMapObj.setCreatedBy(user.getEmail());
-										spiDataMapObj.setUpdatedBy(user.getEmail());
+										spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+										spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+										spiDataMapObj.setCreatedByEmail(user.getEmail());
+										spiDataMapObj.setUpdatedByEmail(user.getEmail());
 									}
 								}
 								spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
@@ -99,8 +99,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								orgHistoryService.createOrganizationHistory(user,
 										spiDataMapObj.getOrganization().getId(), OrganizationConstants.CREATE,
 										OrganizationConstants.SPI, spiDataMapObj.getId(),
-										spiDataMapObj.getSpiData().getIndicatorName(),
-										spiDataMapObj.getSpiData().getIndicatorId());
+										spiDataMapObj.getSpiData().getIndicatorName(), "");
 							}
 						} else {
 							Boolean isValidSpiData = true;
@@ -151,7 +150,8 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 							} else {
 								spiDataMapObj.setIsChecked(payload.getIsChecked());
 								spiDataMapObj.setUpdatedAt(date);
-								spiDataMapObj.setUpdatedBy(user.getEmail());
+								spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+								spiDataMapObj.setUpdatedByEmail(user.getEmail());
 								spiDataMapObj = orgSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 								if (null != spiDataMapObj && null != spiDataMapObj.getOrganization()) {
@@ -180,12 +180,16 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 
 	}// end of method public void createSpiDataMapping(
 
+	/**
+	 * returns OrganizationSpiData List by OrgId
+	 * 
+	 * @param orgId
+	 */
 	@Override
 	public List<OrganizationSpiDataMapPayload> getSelectedSpiData(Long orgId) {
-		List<OrganizationSpiDataMapPayload> payloadList = null;
+		List<OrganizationSpiDataMapPayload> payloadList = new ArrayList<OrganizationSpiDataMapPayload>();
 		List<OrganizationSpiData> spiDataMapList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(orgId);
 		if (null != spiDataMapList) {
-			payloadList = new ArrayList<OrganizationSpiDataMapPayload>();
 			for (OrganizationSpiData spiMapData : spiDataMapList) {
 				OrganizationSpiDataMapPayload payload = new OrganizationSpiDataMapPayload();
 				BeanUtils.copyProperties(spiMapData, payload);

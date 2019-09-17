@@ -18,25 +18,29 @@ import com.winwin.winwin.service.SpiDataService;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class SpiDataServiceImpl implements SpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
+	private SpiDataRepository spiDataRepository;
 
+	/**
+	 * returns SpiData List
+	 * 
+	 * @return
+	 */
 	@Override
 	@Cacheable("spi_data_list")
 	public List<SpiDataDimensionsPayload> getSpiDataForResponse() {
-		List<SpiDataDimensionsPayload> dimensionPayloadList = null;
-		List<SpiData> spiList = spiDataRepository.findAllSpiData();
+		List<SpiDataDimensionsPayload> dimensionPayloadList = new ArrayList<SpiDataDimensionsPayload>();
+		List<SpiData> spiList = spiDataRepository.findAllActiveSpiData();
 		if (null != spiList) {
 			HashMap<Long, List<SpiData>> spiDimensionsMap = new HashMap<Long, List<SpiData>>();
 			setSpiDimensionsMap(spiList, spiDimensionsMap);
 
 			if ((!spiDimensionsMap.isEmpty())) {
-				dimensionPayloadList = new ArrayList<SpiDataDimensionsPayload>();
 				for (List<SpiData> spiComponentsList : spiDimensionsMap.values()) {
 					SpiDataDimensionsPayload dimensionPayloadObj = new SpiDataDimensionsPayload();
 					dimensionPayloadObj.setDimensionId(spiComponentsList.get(0).getDimensionId());

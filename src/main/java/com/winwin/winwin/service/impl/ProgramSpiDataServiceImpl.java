@@ -14,13 +14,12 @@ import org.springframework.util.StringUtils;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
+import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramSpiData;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.ProgramSpiDataMapPayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.OrgSpiDataMapRepository;
-import com.winwin.winwin.repository.OrganizationHistoryRepository;
 import com.winwin.winwin.repository.ProgramSpiDataMapRepository;
 import com.winwin.winwin.repository.SpiDataRepository;
 import com.winwin.winwin.service.OrganizationHistoryService;
@@ -30,37 +29,34 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 	@Autowired
-	SpiDataRepository spiDataRepository;
-
-	@Autowired
-	OrgSpiDataMapRepository orgSpiDataMapRepository;
-
-	@Autowired
-	OrganizationHistoryRepository orgHistoryRepository;
-
+	private SpiDataRepository spiDataRepository;
 	@Autowired
 	protected CustomMessageSource customMessageSource;
-
 	@Autowired
-	UserService userService;
-
+	private UserService userService;
 	@Autowired
-	OrganizationHistoryService orgHistoryService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	ProgramSpiDataMapRepository programSpiDataMapRepository;
+	private ProgramSpiDataMapRepository programSpiDataMapRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramSpiDataServiceImpl.class);
 
+	/**
+	 * create or update ProgramSpiData
+	 * 
+	 * @param payloadList
+	 * @param program
+	 */
 	@Override
 	@Transactional
-	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Long progId) throws SpiDataException {
+	public void createSpiDataMapping(List<ProgramSpiDataMapPayload> payloadList, Program program)
+			throws SpiDataException {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
@@ -81,17 +77,20 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 
 								if (null != spiDataObj) {
 									spiDataMapObj = programSpiDataMapRepository
-											.findSpiSelectedTagsByProgramIdAndBySpiId(progId, spiDataObj.getId());
+											.findSpiSelectedTagsByProgramIdAndBySpiId(program.getId(),
+													spiDataObj.getId());
 
 									if (spiDataMapObj == null) {
 										spiDataMapObj = new ProgramSpiData();
-										spiDataMapObj.setProgramId(progId);
+										spiDataMapObj.setProgram(program);
 										spiDataMapObj.setSpiData(spiDataObj);
 										spiDataMapObj.setIsChecked(payload.getIsChecked());
 										spiDataMapObj.setCreatedAt(date);
 										spiDataMapObj.setUpdatedAt(date);
-										spiDataMapObj.setCreatedBy(user.getEmail());
-										spiDataMapObj.setUpdatedBy(user.getEmail());
+										spiDataMapObj.setCreatedBy(user.getUserDisplayName());
+										spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+										spiDataMapObj.setCreatedByEmail(user.getEmail());
+										spiDataMapObj.setUpdatedByEmail(user.getEmail());
 									}
 								}
 								spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
@@ -100,8 +99,7 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							if (null != spiDataMapObj && null != payload.getOrganizationId()) {
 								orgHistoryService.createOrganizationHistory(user, payload.getOrganizationId(),
 										payload.getProgramId(), OrganizationConstants.CREATE, OrganizationConstants.SPI,
-										spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(),
-										spiDataMapObj.getSpiData().getIndicatorId());
+										spiDataMapObj.getId(), spiDataMapObj.getSpiData().getIndicatorName(), "");
 							}
 						} else {
 							Boolean isValidSpiData = true;
@@ -150,7 +148,9 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 							} else {
 								BeanUtils.copyProperties(payload, spiDataMapObj);
 								spiDataMapObj.setUpdatedAt(date);
-								spiDataMapObj.setUpdatedBy(user.getEmail());
+								spiDataMapObj.setUpdatedBy(user.getUserDisplayName());
+								spiDataMapObj.setUpdatedByEmail(user.getEmail());
+								spiDataMapObj.setProgram(program);
 								spiDataMapObj = programSpiDataMapRepository.saveAndFlush(spiDataMapObj);
 
 								if (null != spiDataMapObj && null != payload.getOrganizationId()) {
@@ -178,10 +178,15 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 		}
 	}
 
+	/**
+	 * returns ProgramSpiData List by programId
+	 * 
+	 * @param programId
+	 */
 	@Override
-	public List<ProgramSpiDataMapPayload> getSelectedSpiData(Long orgId) {
+	public List<ProgramSpiDataMapPayload> getSelectedSpiData(Long programId) {
 		List<ProgramSpiDataMapPayload> payloadList = null;
-		List<ProgramSpiData> spiDataMapList = programSpiDataMapRepository.getProgramSpiMapDataByOrgId(orgId);
+		List<ProgramSpiData> spiDataMapList = programSpiDataMapRepository.getProgramSpiMapDataByOrgId(programId);
 		if (null != spiDataMapList) {
 			payloadList = new ArrayList<>();
 

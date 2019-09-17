@@ -9,7 +9,8 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
+ * 
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,4 +22,5 @@ public class SubOrganizationPayload {
 	String childOrgType;
 	String childOrgName;
 	Long parentId;
+	Long rootParentId;
 }

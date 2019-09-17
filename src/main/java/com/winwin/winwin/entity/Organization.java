@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +24,7 @@ import lombok.ToString;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,7 +37,8 @@ import lombok.ToString;
 public class Organization extends AbstractAuditableEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_seq")
+	@SequenceGenerator(name = "organization_generator", sequenceName = "organization_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_generator")
 	private Long id;
 
 	@ManyToOne(cascade = CascadeType.ALL)
@@ -81,6 +83,9 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "parent_id")
 	private Long parentId;
 
+	@Column(name = "root_parent_id")
+	private Long rootParentId;
+
 	@Column(name = "type")
 	private String type;
 
@@ -90,19 +95,19 @@ public class Organization extends AbstractAuditableEntity {
 	@Column(name = "tag_status")
 	private String tagStatus;
 
-	@Column(name = "website_url")
+	@Column(name = "website_url", columnDefinition = "TEXT")
 	private String websiteUrl;
 
-	@Column(name = "facebook_url")
+	@Column(name = "facebook_url", columnDefinition = "TEXT")
 	private String facebookUrl;
 
-	@Column(name = "linkedin_url")
+	@Column(name = "linkedin_url", columnDefinition = "TEXT")
 	private String linkedinUrl;
 
-	@Column(name = "twitter_url")
+	@Column(name = "twitter_url", columnDefinition = "TEXT")
 	private String twitterUrl;
 
-	@Column(name = "instagram_url")
+	@Column(name = "instagram_url", columnDefinition = "TEXT")
 	private String instagramUrl;
 
 	@Column(name = "values", columnDefinition = "TEXT")
@@ -118,7 +123,7 @@ public class Organization extends AbstractAuditableEntity {
 	String businessModel;
 
 	@Column(name = "population_served")
-	Long populationServed;
+	String populationServed;
 
 	@Column(name = "mission_statement", columnDefinition = "TEXT")
 	String missionStatement;
@@ -134,4 +139,13 @@ public class Organization extends AbstractAuditableEntity {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
 	private List<OrganizationSdgData> organizationSdgData;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationRegionServed> organizationRegionServed;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationResource> organizationResource;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "organization")
+	private List<OrganizationDataSet> organizationDataSet;
 }

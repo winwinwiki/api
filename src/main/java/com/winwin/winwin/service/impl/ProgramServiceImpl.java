@@ -14,18 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.entity.Address;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationFilterPayload;
+import com.winwin.winwin.payload.ProgramFilterPayloadData;
 import com.winwin.winwin.payload.ProgramRequestPayload;
 import com.winwin.winwin.payload.ProgramResponsePayload;
 import com.winwin.winwin.payload.UserPayload;
-import com.winwin.winwin.repository.NaicsDataRepository;
-import com.winwin.winwin.repository.NteeDataRepository;
 import com.winwin.winwin.repository.OrganizationRepository;
 import com.winwin.winwin.repository.ProgramRepository;
-import com.winwin.winwin.service.AddressService;
 import com.winwin.winwin.service.OrganizationHistoryService;
 import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.UserService;
@@ -33,36 +30,29 @@ import com.winwin.winwin.util.CommonUtils;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Service
 public class ProgramServiceImpl implements ProgramService {
 	@Autowired
-	ProgramRepository programRepository;
-
+	private ProgramRepository programRepository;
 	@Autowired
-	NaicsDataRepository naicsRepository;
-
+	private OrganizationRepository organizationRepository;
 	@Autowired
-	NteeDataRepository nteeRepository;
-
+	private UserService userService;
 	@Autowired
-	AddressService addressService;
-
+	private OrganizationHistoryService orgHistoryService;
 	@Autowired
-	OrganizationRepository organizationRepository;
-
-	@Autowired
-	UserService userService;
-
-	@Autowired
-	OrganizationHistoryService orgHistoryService;
-
-	@Autowired
-	protected CustomMessageSource customMessageSource;
+	private CustomMessageSource customMessageSource;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramServiceImpl.class);
 
+	/**
+	 * create new Program for Organization
+	 * 
+	 * @param programPayload
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public Program createProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
@@ -86,16 +76,25 @@ public class ProgramServiceImpl implements ProgramService {
 		return program;
 	}
 
+	/**
+	 * delete Program by Id
+	 * 
+	 * @param program
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public void deleteProgram(Program program, ExceptionResponse exceptionResponse) {
 		try {
-			programRepository.deleteById(program.getId());
 			UserPayload user = userService.getCurrentUserDetails();
-			if (program.getOrganization() != null)
-				orgHistoryService.createOrganizationHistory(user, program.getOrganization().getId(),
-						OrganizationConstants.DELETE, OrganizationConstants.PROGRAM, program.getId(), program.getName(),
-						"");
+			if (program.getOrganization() != null) {
+				Long orgId = program.getOrganization().getId();
+				program.setIsActive(false);
+				programRepository.saveAndFlush(program);
+				orgHistoryService.createOrganizationHistory(user, orgId, OrganizationConstants.DELETE,
+						OrganizationConstants.PROGRAM, program.getId(), program.getName(), "");
+			}
+
 		} catch (Exception e) {
 			exceptionResponse.setErrorMessage(e.getMessage());
 			exceptionResponse.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -104,6 +103,12 @@ public class ProgramServiceImpl implements ProgramService {
 		}
 	}
 
+	/**
+	 * update Program by Id
+	 * 
+	 * @param programPayload
+	 * @param exceptionResponse
+	 */
 	@Override
 	@Transactional
 	public Program updateProgram(ProgramRequestPayload programPayload, ExceptionResponse exceptionResponse) {
@@ -127,6 +132,12 @@ public class ProgramServiceImpl implements ProgramService {
 		return program;
 	}
 
+	/**
+	 * returns Program List by orgId
+	 * 
+	 * @param orgId
+	 * @return
+	 */
 	@Override
 	public List<Program> getProgramList(Long orgId) {
 		return programRepository.findAllProgramList(orgId);
@@ -136,12 +147,18 @@ public class ProgramServiceImpl implements ProgramService {
 	public ProgramResponsePayload getProgramResponseFromProgram(Program payload) {
 		ProgramResponsePayload responsePayload = new ProgramResponsePayload();
 		BeanUtils.copyProperties(payload, responsePayload);
-		responsePayload.setAddress(addressService.getAddressPayloadFromAddress(payload.getAddress()));
 		if (payload.getOrganization() != null)
 			responsePayload.setOrganizationId(payload.getOrganization().getId());
 		return responsePayload;
 	}
 
+	/**
+	 * return Program from ProgramRequestPayload
+	 * 
+	 * @param payload
+	 * @param user
+	 * @return
+	 */
 	@Override
 	public Program getProgramFromProgramRequestPayload(ProgramRequestPayload payload, UserPayload user) {
 		Program program = null;
@@ -151,16 +168,8 @@ public class ProgramServiceImpl implements ProgramService {
 				program = programRepository.findProgramById(payload.getId());
 			if (program == null)
 				program = new Program();
-			Address address = addressService.saveAddress(payload.getAddress(), user);
-			program.setAddress(address);
 
 			BeanUtils.copyProperties(payload, program);
-
-			if (payload.getNaicsCode() != null)
-				program.setNaicsCode(naicsRepository.findById(payload.getNaicsCode()).orElse(null));
-
-			if (payload.getNteeCode() != null)
-				program.setNteeCode(nteeRepository.findById(payload.getNteeCode()).orElse(null));
 
 			if (payload.getOrganizationId() != null)
 				program.setOrganization(organizationRepository.findOrgById(payload.getOrganizationId()));
@@ -168,16 +177,26 @@ public class ProgramServiceImpl implements ProgramService {
 			program.setIsActive(true);
 			program.setCreatedAt(date);
 			program.setUpdatedAt(date);
-			program.setCreatedBy(user.getEmail());
-			program.setUpdatedBy(user.getEmail());
+			program.setCreatedBy(user.getUserDisplayName());
+			program.setUpdatedBy(user.getUserDisplayName());
+			program.setCreatedByEmail(user.getEmail());
+			program.setUpdatedByEmail(user.getEmail());
 			return program;
 		} catch (Exception e) {
 			return null;
 		}
 	}
 
+	/**
+	 * returns OrganizationFilterPayload based Program List by orgId
+	 * 
+	 * @param payload
+	 * @param orgId
+	 * @param response
+	 * @return
+	 */
 	@Override
-	public List<Program> getProgramList(OrganizationFilterPayload payload, Long orgId, ExceptionResponse response) {
+	public List<Program> getProgramList(ProgramFilterPayloadData payload, Long orgId, ExceptionResponse response) {
 		List<Program> programList = new ArrayList<Program>();
 		try {
 			if (payload.getNameSearch() != null)
