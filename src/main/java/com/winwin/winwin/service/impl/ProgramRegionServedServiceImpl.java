@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -61,8 +61,8 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	private final Long REGION_ID = -1L;
 
 	/**
-	 * create or update multiple ProgramRegionServed for Program create new entry in
-	 * RegionMaster if value of REGION_ID is -1L
+	 * create or update multiple ProgramRegionServed for Program create new
+	 * entry in RegionMaster if value of REGION_ID is -1L
 	 * 
 	 * @param programRegionPayloadList
 	 * @return
@@ -208,7 +208,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	 * @param response
 	 */
 	@Override
-	@Cacheable("program_region_master")
+	@CachePut(value = "program_region_master")
 	public List<RegionMaster> getProgramRegionMasterList(RegionMasterFilterPayload filterPayload,
 			ExceptionResponse response) {
 		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();

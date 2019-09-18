@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
+	@Caching(evict = { @CacheEvict(value = "organization_resource_category_list"),
+			@CacheEvict(value = "organization_resource_list") })
 	public OrganizationResource createOrUpdateOrganizationResource(OrganizationResourcePayload orgResourcePayLoad) {
 		OrganizationResource orgResource = null;
 		try {
@@ -110,7 +112,8 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_resource_list,organization_resource_category_list")
+	@Caching(evict = { @CacheEvict(value = "organization_resource_category_list"),
+			@CacheEvict(value = "organization_resource_list") })
 	public void removeOrganizationResource(Long resourceId) {
 		try {
 			OrganizationResource resource = organizationResourceRepository.findOrgResourceById(resourceId);
@@ -157,7 +160,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	 * @param id
 	 */
 	@Override
-	@Cacheable("organization_resource_category_list")
+	@CachePut(value = "organization_resource_category_list")
 	public List<ResourceCategory> getResourceCategoryList() {
 		return resourceCategoryRepository.findAll();
 	}
@@ -168,7 +171,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 	 * @param id
 	 */
 	@Override
-	@Cacheable("organization_resource_list")
+	@CachePut(value = "organization_resource_list")
 	public List<OrganizationResource> getOrganizationResourceList(Long id) {
 		return organizationResourceRepository.findAllActiveOrgResources(id);
 	}// end of method getOrganizationResourceList

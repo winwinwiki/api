@@ -72,7 +72,6 @@ import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.UserException;
-import com.winwin.winwin.payload.KibanaUserRequestPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.payload.UserSignInPayload;
 import com.winwin.winwin.service.KibanaUserService;
@@ -99,9 +98,6 @@ public class UserServiceImpl implements UserService {
 	private static final String NEW_PASS_WORD_REQUIRED = "NEW_PASSWORD_REQUIRED";
 	private static final String NEW_PASS_WORD = "NEW_PASSWORD";
 
-	// private ClasspathPropertiesFileCredentialsProvider
-	// propertiesFileCredentialsProvider = new
-	// ClasspathPropertiesFileCredentialsProvider();
 	private EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 
 	/**
