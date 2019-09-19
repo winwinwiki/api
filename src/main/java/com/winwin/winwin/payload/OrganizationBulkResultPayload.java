@@ -18,6 +18,8 @@ import lombok.Setter;
 @Setter
 public class OrganizationBulkResultPayload {
 	private List<Organization> organizationList;
-	Boolean isFailed;
+	private List<Organization> successOrganizationList;
+	private List<OrganizationBulkFailedPayload> failedOrganizationList;
+	private Boolean isFailed;
 
 }
