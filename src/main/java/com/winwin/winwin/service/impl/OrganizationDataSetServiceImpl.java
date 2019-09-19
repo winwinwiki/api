@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
+	@Caching(evict = { @CacheEvict(value = "organization_dataset_category_list"),
+			@CacheEvict(value = "organization_dataset_list") })
 	public OrganizationDataSet createOrUpdateOrganizationDataSet(DataSetPayload orgDataSetPayLoad) {
 		OrganizationDataSet organizationDataSet = null;
 		try {
@@ -106,7 +108,8 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_dataset_list,organization_dataset_category_list")
+	@Caching(evict = { @CacheEvict(value = "organization_dataset_category_list"),
+			@CacheEvict(value = "organization_dataset_list") })
 	public void removeOrganizationDataSet(Long dataSetId) {
 		OrganizationDataSet dataSet = organizationDataSetRepository.findOrgDataSetById(dataSetId);
 		UserPayload user = userService.getCurrentUserDetails();
@@ -185,7 +188,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 * @param id
 	 */
 	@Override
-	@Cacheable("organization_dataset_list")
+	@CachePut(value = "organization_dataset_list")
 	public List<OrganizationDataSet> getOrganizationDataSetList(Long id) {
 		return organizationDataSetRepository.findAllActiveOrgDataSets(id);
 	}// end of method getOrganizationDataSetList
@@ -196,7 +199,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 	 * @param categoryId
 	 */
 	@Override
-	@Cacheable("organization_dataset_category_list")
+	@CachePut(value = "organization_dataset_category_list")
 	public List<DataSetCategory> getDataSetCategoryList() {
 		return dataSetCategoryRepository.findAll();
 	}// end of method getOrganizationDataSetCategoryList

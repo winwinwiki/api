@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "program_dataset_list,program_dataset_category_list")
+	@Caching(evict = { @CacheEvict(value = "program_dataset_category_list"),
+			@CacheEvict(value = "program_dataset_list") })
 	public ProgramDataSet createOrUpdateProgramDataSet(ProgramDataSetPayLoad programDataSetPayLoad) {
 		ProgramDataSet programDataSet = null;
 		try {
@@ -106,7 +108,8 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "program_dataset_list,program_dataset_category_list")
+	@Caching(evict = { @CacheEvict(value = "program_dataset_category_list"),
+			@CacheEvict(value = "program_dataset_list") })
 	public void removeProgramDataSet(Long dataSetId, Long organizationId, Long programId) {
 		try {
 			ProgramDataSet dataSet = programDataSetRepository.findProgramDataSetById(dataSetId);
@@ -146,7 +149,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	 * @param id
 	 */
 	@Override
-	@Cacheable("program_dataset_list")
+	@CachePut(value = "program_dataset_list")
 	public List<ProgramDataSet> getProgramDataSetList(Long id) {
 		return programDataSetRepository.findAllActiveProgramDataSets(id);
 	}
@@ -157,7 +160,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 	 * @param categoryId
 	 */
 	@Override
-	@Cacheable("program_dataset_category_list")
+	@CachePut(value = "program_dataset_category_list")
 	public List<DataSetCategory> getDataSetCategoryList() {
 		return dataSetCategoryRepository.findAll();
 	}

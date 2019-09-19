@@ -16,7 +16,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -46,6 +45,7 @@ import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
+import com.winwin.winwin.payload.OrganizationBulkFailedPayload;
 import com.winwin.winwin.payload.OrganizationBulkResultPayload;
 import com.winwin.winwin.payload.OrganizationChartPayload;
 import com.winwin.winwin.payload.OrganizationCsvPayload;
@@ -127,8 +127,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
-	@CachePut(value="organization_filter_list")
+	@Caching(evict = { @CacheEvict(value = "organization_chart_list"),
+			@CacheEvict(value = "organization_filter_list") })
 	public Organization createOrganization(OrganizationRequestPayload organizationPayload, ExceptionResponse response) {
 		Organization organization = null;
 		try {
@@ -160,8 +160,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Async
-	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
-	@CachePut(value="organization_filter_list")
+	@Caching(evict = { @CacheEvict(value = "organization_chart_list"),
+			@CacheEvict(value = "organization_filter_list") })
 	public void createOrganizations(List<OrganizationCsvPayload> organizationPayloadList, ExceptionResponse response,
 			UserPayload user) {
 		saveOrganizationsForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
@@ -192,10 +192,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	//@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
-	@Caching(evict = { 
-			  @CacheEvict(value = "organization_chart_list"),//,organization_filter_list,organization_filter_count") 
-			  @CacheEvict(value="organization_filter_list", key="#id") })
+	// @CacheEvict(value =
+	// "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@Caching(evict = { @CacheEvict(value = "organization_chart_list"), // ,organization_filter_list,organization_filter_count")
+			@CacheEvict(value = "organization_filter_list", key = "#id") })
 	public void deleteOrganization(Long id, String type, ExceptionResponse response) {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
@@ -207,14 +207,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getUserDisplayName());
 					organization.setUpdatedByEmail(user.getEmail());
-					if( null != organization.getAddress()) {
+					if (null != organization.getAddress()) {
 						organization.getAddress().setIsActive(false);
 						organization.getAddress().setUpdatedAt(date);
 						organization.getAddress().setUpdatedBy(user.getUserDisplayName());
 						organization.getAddress().setUpdatedByEmail(user.getEmail());
 						addressRepository.saveAndFlush(organization.getAddress());
 					}
-					
+
 					organization = organizationRepository.saveAndFlush(organization);
 
 					if (null != organization && null != organization.getParentId()) {
@@ -241,9 +241,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@Caching(evict = { 
-			  @CacheEvict(value = "organization_chart_list"),//,organization_filter_list,organization_filter_count") 
-			  @CacheEvict(value="organization_filter_list", key="#organization.getId()") })
+	@Caching(evict = { @CacheEvict(value = "organization_chart_list"), // ,organization_filter_list,organization_filter_count")
+			@CacheEvict(value = "organization_filter_list", key = "#organization.getId()") })
 	public Organization updateOrgDetails(OrganizationRequestPayload organizationPayload, Organization organization,
 			String type, ExceptionResponse response) {
 		if (null != organizationPayload) {
@@ -301,7 +300,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional(readOnly = true)
-	@Cacheable("organization_filter_list")
+	@CachePut(value = "organization_filter_list")
 	public List<Organization> getOrganizationList(OrganizationFilterPayload payload, ExceptionResponse response) {
 		List<Organization> orgList = new ArrayList<Organization>();
 		try {
@@ -331,7 +330,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @return
 	 */
 	@Override
-	//@Cacheable("organization_filter_count")
+	// @Cacheable("organization_filter_count")
 	public BigInteger getOrgCounts(OrganizationFilterPayload payload, ExceptionResponse response) {
 		BigInteger noOfRecords = null;
 		try {
@@ -359,7 +358,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 * @return
 	 */
 	@Override
-	@Cacheable("organization_chart_list")
+	@CachePut(value = "organization_chart_list")
 	public OrganizationChartPayload getOrgCharts(Organization organization) {
 		List<Organization> childOrganizations = organizationRepository.findAllChildren(organization.getId());
 		AddressPayload location = null;
@@ -388,7 +387,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "organization_chart_list")//,organization_filter_list,organization_filter_count")
+	@CacheEvict(value = "organization_chart_list")
 	public Organization createSubOrganization(SubOrganizationPayload payload) {
 		Organization organization = null;
 		try {
@@ -405,15 +404,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 				if (!(StringUtils.isEmpty(payload.getChildOrgType()))) {
 					organization.setType(payload.getChildOrgType());
 				}
-				//save suborganization parent Id
+				// save suborganization parent Id
 				if (null != payload.getParentId())
 					organization.setParentId(payload.getParentId());
-				
-				//save suborganization root parent Id
+
+				// save suborganization root parent Id
 				if (null != payload.getRootParentId())
 					organization.setRootParentId(payload.getRootParentId());
-			
-				//save address for sub organization
+
+				// save address for sub organization
 				address = saveAddress(addressPayload, user);
 				organization.setAddress(address);
 				organization.setCreatedAt(date);
@@ -425,8 +424,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 				organization = organizationRepository.saveAndFlush(organization);
 
 				if (null != organization) {
-					orgHistoryService.createOrganizationHistory(user, payload.getParentId(), OrganizationConstants.CREATE,
-							OrganizationConstants.ORGANIZATION, organization.getId(), organization.getName(), "");
+					orgHistoryService.createOrganizationHistory(user, payload.getParentId(),
+							OrganizationConstants.CREATE, OrganizationConstants.ORGANIZATION, organization.getId(),
+							organization.getName(), "");
 				}
 			}
 		} catch (Exception e) {
@@ -491,7 +491,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
 		List<Organization> successOrganizationList = new ArrayList<Organization>();
-		List<Organization> failedOrganizationList = new ArrayList<Organization>();
+		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<OrganizationBulkFailedPayload>();
 		try {
 			Date date = CommonUtils.getFormattedDate();
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -536,45 +536,37 @@ public class OrganizationServiceImpl implements OrganizationService {
 						if (i % 1000 == 0) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
-							if (!payload.getIsFailed()) {
-								successOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							} else {
-								failedOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							}
+							successOrganizationList.addAll(payload.getSuccessOrganizationList());
+							// refresh the data after added into list
+							failedOrganizationList.addAll(payload.getFailedOrganizationList());
+							// refresh the data after added into list
+							organizationsListToSaveIntoDB = new ArrayList<Organization>();
 							// save the remaining organizations when total size
 							// is less than 1000
 						} else if (i == numOfOrganizationsToSaveByBatchSize
 								&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
-							if (!payload.getIsFailed()) {
-								successOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							} else {
-								failedOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							}
+							successOrganizationList.addAll(payload.getSuccessOrganizationList());
+							failedOrganizationList.addAll(payload.getFailedOrganizationList());
+							// refresh the data after added into list
+							organizationsListToSaveIntoDB = new ArrayList<Organization>();
 							// save the remaining organizations when total size
 							// is greater than 1000
 						} else if (i > numOfOrganizationsToSaveByBatchSize
 								&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 							OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 									organizationsListToSaveIntoDB, i);
-							if (!payload.getIsFailed()) {
-								successOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							} else {
-								failedOrganizationList.addAll(payload.getOrganizationList());
-								// refresh the data after added into list
-								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-							}
+							// if (!payload.getIsFailed()) {
+							successOrganizationList.addAll(payload.getSuccessOrganizationList());
+							// refresh the data after added into list
+							// organizationsListToSaveIntoDB = new
+							// ArrayList<Organization>();
+							// } else {
+							failedOrganizationList.addAll(payload.getFailedOrganizationList());
+							// refresh the data after added into list
+							organizationsListToSaveIntoDB = new ArrayList<Organization>();
+							// }
 						}
 
 						i++;
@@ -608,12 +600,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
 		// Implemented below logic to log failed and success
 		// organizations for bulk upload
-		List<Organization> organizationList = new ArrayList<Organization>();
-		Boolean isFailed = false;
+		List<Organization> successOrganizationList = new ArrayList<Organization>();
+		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<OrganizationBulkFailedPayload>();
+		// Boolean isFailed = false;
 		try {
 			LOGGER.info(
 					"Saving organizations : " + organizations.size() + " Starting from: " + (i - organizations.size()));
-			organizationList.addAll(organizationRepository.saveAll(organizations));
+			successOrganizationList.addAll(organizationRepository.saveAll(organizations));
 
 			// Flush all pending changes to the database
 			organizationRepository.flush();
@@ -621,12 +614,28 @@ public class OrganizationServiceImpl implements OrganizationService {
 			LOGGER.info("Saved organizations: " + organizations.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save organizations starting from : " + (i - organizations.size()));
-			organizationList.addAll(organizations);
-			isFailed = true;
+
+			// Added the below logic to save the organization one by one when
+			// the bulk organization batch failed because of some faulty
+			// organization and save the perfect organization into
+			// successOrganizationList
+			LOGGER.info("Saving Failed organizations one by one starting from : " + (i - organizations.size()));
+			for (Organization failedOrganization : organizations) {
+				try {
+					successOrganizationList.add(organizationRepository.saveAndFlush(failedOrganization));
+				} catch (Exception e1) {
+					OrganizationBulkFailedPayload failedOrg = new OrganizationBulkFailedPayload();
+					failedOrg.setFailedOrganization(failedOrganization);
+					failedOrg.setFailedMessage(e1.getMessage());
+					failedOrganizationList.add(failedOrg);
+				}
+			}
+			// isFailed = true;
 		}
 		OrganizationBulkResultPayload payload = new OrganizationBulkResultPayload();
-		payload.setOrganizationList(organizationList);
-		payload.setIsFailed(isFailed);
+		payload.setSuccessOrganizationList(successOrganizationList);
+		payload.setFailedOrganizationList(failedOrganizationList);
+		// payload.setIsFailed(isFailed);
 		return payload;
 
 	}
@@ -644,7 +653,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 			throws Exception {
 		Organization organization = new Organization();
 
-		if ( null != organizationPayload ) {
+		if (null != organizationPayload) {
 			BeanUtils.copyProperties(organizationPayload, organization);
 			if (organizationPayload.getAddress() != null) {
 				Address address = saveAddress(organizationPayload.getAddress(), user);
@@ -1316,14 +1325,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 		if (null != addressPayload && null != addressPayload.getId()) {
 			Date date = CommonUtils.getFormattedDate();
 			try {
-				if( null != organization.getAddress() ) {
+				if (null != organization.getAddress()) {
 					BeanUtils.copyProperties(addressPayload, organization.getAddress());
 					organization.getAddress().setUpdatedAt(date);
 					organization.getAddress().setUpdatedBy(user.getUserDisplayName());
 					organization.getAddress().setUpdatedByEmail(user.getEmail());
 					return true;
 				}
-				
+
 			} catch (Exception e) {
 				LOGGER.error(customMessageSource.getMessage("org.exception.address.updated"), e);
 			}
@@ -1339,8 +1348,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	private AddressPayload getLocationPayload(Organization organization, AddressPayload addressPayload) {
 		if (null != organization.getAddress()) {
 			addressPayload = new AddressPayload();
-			if( null != organization.getAddress())
-			BeanUtils.copyProperties(organization.getAddress(), addressPayload);
+			if (null != organization.getAddress())
+				BeanUtils.copyProperties(organization.getAddress(), addressPayload);
 		}
 		return addressPayload;
 	}

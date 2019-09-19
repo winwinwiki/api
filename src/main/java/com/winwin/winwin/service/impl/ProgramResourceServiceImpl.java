@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +62,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "program_resource__list,program_resource_category_list")
+	@Caching(evict = { @CacheEvict(value = "program_resource_category_list"),
+			@CacheEvict(value = "program_resource__list") })
 	public ProgramResource createOrUpdateProgramResource(ProgramResourcePayLoad programResourcePayLoad) {
 		ProgramResource programResource = null;
 		try {
@@ -117,7 +119,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	 */
 	@Override
 	@Transactional
-	@CacheEvict(value = "program_resource__list,program_resource_category_list")
+	@Caching(evict = { @CacheEvict(value = "program_resource_category_list"),
+			@CacheEvict(value = "program_resource__list") })
 	public void removeProgramResource(Long resourceId, Long organizationId, Long programId) {
 		// TODO Auto-generated method stub
 		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
@@ -163,7 +166,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	 * @param id
 	 */
 	@Override
-	@Cacheable("program_resource_category_list")
+	@CachePut(value = "program_resource_category_list")
 	public List<ResourceCategory> getResourceCategoryList() {
 		return resourceCategoryRepository.findAll();
 	}// end of method getOrganizationResourceCategoryList
@@ -174,7 +177,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	 * @param programId
 	 */
 	@Override
-	@Cacheable("program_resource__list")
+	@CachePut(value = "program_resource__list")
 	public List<ProgramResource> getProgramResourceList(Long programId) {
 		return programResourceRepository.findAllActiveProgramResources(programId);
 	}

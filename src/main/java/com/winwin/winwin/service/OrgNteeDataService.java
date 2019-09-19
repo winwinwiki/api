@@ -3,7 +3,7 @@ package com.winwin.winwin.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 
 import com.winwin.winwin.entity.NteeData;
@@ -15,7 +15,7 @@ public class OrgNteeDataService {
 	@Autowired
 	private NteeDataRepository nteeDataRepository;
 
-	@Cacheable("ntee_data_list")
+	@CachePut(value="ntee_data_list")
 	public List<NteeData> getAllOrgNteeData() {
 		return nteeDataRepository.findAllNteeData();
 	}
