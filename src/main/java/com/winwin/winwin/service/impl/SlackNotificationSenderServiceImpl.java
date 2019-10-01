@@ -136,8 +136,9 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			String fileContent = FileUtils.readFileToString(file, "UTF-8");
 			SlackMessage slackMessage = SlackMessage.builder().filetype("csv").filename(file.getName())
 					.username("WinWinUploadNotifier").content(fileContent)
-					.initial_comment("WinWinWiki editor bulk upload status file, created by: "
-							+ user.getUserDisplayName() + " at " + date)
+					.initial_comment(
+							"WinWinWiki editor bulk upload status file for app env: " + System.getenv("WINWIN_ENV")
+									+ " , created by: " + user.getUserDisplayName() + " at " + date)
 					.channels(SLACK_CHANNEL).build();
 			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
 			// send post request to slack channel
