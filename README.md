@@ -24,6 +24,7 @@ $ export WINWIN_DB_NAME=winwindb
 $ export WINWIN_DB_USER=winwindbuser
 $ export WINWIN_DB_PASSWORD=winwindbpassword
 $ export WINWIN_DB_PORT=5432
+$ export WINWIN_ENV=Development
 
 $ export AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
 $ export AWS_SECRET_KEY=<AWS_SECRET_KEY>
