@@ -629,9 +629,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				// copy remaining sdgDataMapping values to
 				// sdgDataMappingPayload
-				if (null != sdgDataMapping.getSdgData())
-					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getShortName());
-				sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getShortNameCode());
+				if (null != sdgDataMapping.getSdgData()) {
+					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getGoalName());
+
+					if (null != sdgDataMapping.getSdgData().getGoalCode())
+						sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getGoalCode().toString());
+
+					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortName());
+					sdgDataMappingPayload.setShortNameCode(sdgDataMapping.getSdgData().getShortNameCode());
+				}
 
 				// set adminUrl for programs SDG TAGS
 				if (winwinRoutesMap == null) {
@@ -681,8 +687,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				// copy remaining spiDataMapping values to
 				// spiDataMappingPayload
-				if (null != spiDataMapping.getSpiData())
-					spiDataMappingPayload.setName(spiDataMapping.getSpiData().getIndicatorName());
+				if (null != spiDataMapping.getSpiData()) {
+					spiDataMappingPayload.setDimension(spiDataMapping.getSpiData().getDimensionName());
+					spiDataMappingPayload.setComponent(spiDataMapping.getSpiData().getComponentName());
+					spiDataMappingPayload.setIndicator(spiDataMapping.getSpiData().getIndicatorName());
+				}
 
 				// set adminUrl for programs SPI TAGS
 				if (winwinRoutesMap == null) {
@@ -880,9 +889,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				// copy remaining sdgDataMapping values to
 				// sdgDataMappingPayload
-				if (null != sdgDataMapping.getSdgData())
-					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getShortName());
-				sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getShortNameCode());
+				if (null != sdgDataMapping.getSdgData()) {
+					sdgDataMappingPayload.setName(sdgDataMapping.getSdgData().getGoalName());
+
+					if (null != sdgDataMapping.getSdgData().getGoalCode())
+						sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getGoalCode().toString());
+
+					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortName());
+					sdgDataMappingPayload.setShortNameCode(sdgDataMapping.getSdgData().getShortNameCode());
+				}
 
 				// set adminUrl for organization SDG TAGS
 				if (winwinRoutesMap == null) {
@@ -928,8 +943,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				// copy remaining spiDataMapping values to
 				// spiDataMappingPayload
-				if (null != spiDataMapping.getSpiData())
-					spiDataMappingPayload.setName(spiDataMapping.getSpiData().getIndicatorName());
+				if (null != spiDataMapping.getSpiData()) {
+					spiDataMappingPayload.setDimension(spiDataMapping.getSpiData().getDimensionName());
+					spiDataMappingPayload.setComponent(spiDataMapping.getSpiData().getComponentName());
+					spiDataMappingPayload.setIndicator(spiDataMapping.getSpiData().getIndicatorName());
+				}
 
 				// set adminUrl for organization SPI TAGS
 				if (winwinRoutesMap == null) {
