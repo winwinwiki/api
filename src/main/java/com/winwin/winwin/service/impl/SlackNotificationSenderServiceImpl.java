@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.SlackMessage;
+import com.winwin.winwin.payload.OrganizationBulkFailedPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.SlackNotificationSenderService;
 
@@ -69,7 +70,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 */
 	@Override
 	public void sendSlackNotification(List<Organization> successOrganizationsList,
-			List<Organization> failedOrganizationsList, UserPayload user, Date date) {
+			List<OrganizationBulkFailedPayload> failedOrganizationsList, UserPayload user, Date date) {
 		try {
 			// list of failed and success organizations
 			StringBuilder successOrganizations = new StringBuilder();
@@ -89,14 +90,20 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			} // end of for loop
 
 			// append failed organizations
-			for (Organization organization : failedOrganizationsList) {
+			for (OrganizationBulkFailedPayload failedOrg : failedOrganizationsList) {
 				failedOrganizations.append("");
 				failedOrganizations.append(",");
 				failedOrganizations.append("\"");
-				failedOrganizations.append(organization.getName());
-				failedOrganizations.append("\"");
-				failedOrganizations.append(",");
-				failedOrganizations.append("FAILED");
+				if (null != failedOrg.getFailedOrganization()) {
+					failedOrganizations.append(failedOrg.getFailedOrganization().getName());
+					failedOrganizations.append("\"");
+					failedOrganizations.append(",");
+					failedOrganizations.append("FAILED");
+					failedOrganizations.append("\"");
+					failedOrganizations.append(",");
+					failedOrganizations.append(failedOrg.getFailedMessage());
+				}
+
 				failedOrganizations.append("\n");
 			} // end of for loop
 
@@ -119,7 +126,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 
 			FileWriter csvWriter = new FileWriter(file, true);
 			csvWriter.append("# Below are the List of uploaded organizations").append("\n").append("Organization Id")
-					.append(",").append("Organization Name").append(",").append("Organization Status").append("\n");
+					.append(",").append("Organization Name").append(",").append("Organization Status").append(",")
+					.append("Comment").append("\n");
 			csvWriter.append(successOrganizations);
 			csvWriter.append(failedOrganizations);
 			csvWriter.flush();
@@ -128,8 +136,9 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			String fileContent = FileUtils.readFileToString(file, "UTF-8");
 			SlackMessage slackMessage = SlackMessage.builder().filetype("csv").filename(file.getName())
 					.username("WinWinUploadNotifier").content(fileContent)
-					.initial_comment("WinWinWiki editor bulk upload status file, created by: "
-							+ user.getUserDisplayName() + " at " + date)
+					.initial_comment(
+							"WinWinWiki editor bulk upload status file for app env: " + System.getenv("WINWIN_ENV")
+									+ " , created by: " + user.getUserDisplayName() + " at " + date)
 					.channels(SLACK_CHANNEL).build();
 			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
 			// send post request to slack channel

@@ -158,7 +158,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			// for Slack Notification
 			Date date = CommonUtils.getFormattedDate();
 			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
-					.text("WinWinWiki Publish To Kibana Process has been started successfully at " + date)
+					.text("WinWinWiki Publish To Kibana Process has been started successfully for app env: "
+							+ System.getenv("WINWIN_ENV") + " at " + date)
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
@@ -209,7 +210,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			} // end of loop
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
 			date = CommonUtils.getFormattedDate();
-			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully at " + date));
+			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully for app env: "
+					+ System.getenv("WINWIN_ENV") + " at " + date));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 			// flush the changes and close txtWriter
@@ -219,8 +221,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		} catch (Exception e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 			Date date = CommonUtils.getFormattedDate();
-			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run at " + date
-					+ " due to error: \n" + e.getMessage()));
+			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run for app env: "
+					+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		}
@@ -233,8 +235,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 */
 	private void sendDataToElasticSearch(Pageable pageable, File file, FileWriter txtWriter, Date lastUpdatedDate)
 			throws Exception {
-		final String serviceName = "es";
-		final String region = System.getenv("AWS_REGION2");
+		// final String serviceName = "es";
+		// final String region = System.getenv("AWS_REGION2");
 		final String index = System.getenv("AWS_ES_INDEX");
 		final String type = System.getenv("AWS_ES_INDEX_TYPE");
 
@@ -1170,6 +1172,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			throws Exception {
 		String encodedBytes = Base64.getEncoder().encodeToString((userName + ":" + password).getBytes());
 		Integer port = new Integer(System.getenv("AWS_ES_ENDPOINT_PORT"));
+		String scheme = System.getenv("AWS_ES_ENDPOINT_SCHEME");
 
 		Header[] headers = { new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
 				new BasicHeader("Authorization", "Basic " + encodedBytes) };
@@ -1178,7 +1181,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// exception
 		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
 		// socket and connection timeout exception
-		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, "http"))
+		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, scheme))
 				.setDefaultHeaders(headers).setMaxRetryTimeoutMillis(6000000)
 				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000)
 						.setSocketTimeout(6000000)));
