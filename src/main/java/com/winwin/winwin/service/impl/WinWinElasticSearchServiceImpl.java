@@ -635,7 +635,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					if (null != sdgDataMapping.getSdgData().getGoalCode())
 						sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getGoalCode().toString());
 
-					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortName());
+					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortNameCode() + " "
+							+ sdgDataMapping.getSdgData().getShortName());
 					sdgDataMappingPayload.setShortNameCode(sdgDataMapping.getSdgData().getShortNameCode());
 				}
 
@@ -895,7 +896,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					if (null != sdgDataMapping.getSdgData().getGoalCode())
 						sdgDataMappingPayload.setCode(sdgDataMapping.getSdgData().getGoalCode().toString());
 
-					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortName());
+					sdgDataMappingPayload.setShortName(sdgDataMapping.getSdgData().getShortNameCode() + " "
+							+ sdgDataMapping.getSdgData().getShortName());
 					sdgDataMappingPayload.setShortNameCode(sdgDataMapping.getSdgData().getShortNameCode());
 				}
 
