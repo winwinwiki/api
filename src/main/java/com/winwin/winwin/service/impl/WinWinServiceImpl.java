@@ -335,7 +335,11 @@ public class WinWinServiceImpl implements WinWinService {
 
 		}
 
-		organization.setType(OrganizationConstants.ORGANIZATION);
+		if (organization.getParentId() == null || organization.getRootParentId() == null)
+			organization.setType(OrganizationConstants.ORGANIZATION);
+		else
+			organization.setType(OrganizationConstants.SUBORGANIZATION);
+
 		organization.setPriority(OrganizationConstants.PRIORITY_NORMAL);
 		organization.setIsActive(true);
 
