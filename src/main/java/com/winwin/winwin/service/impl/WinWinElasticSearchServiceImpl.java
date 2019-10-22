@@ -364,7 +364,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						if (parentOrganization == null)
 							parentOrganization = organizationRepository
 									.findOrgById(organizationFromMap.getValue().getParentId());
+					} else {
+						// find parentOrganization first in map if not found
+						// then make DB call
+						parentOrganization = organizationMap.get(organizationFromMap.getValue().getId());
 
+						if (parentOrganization == null)
+							parentOrganization = organizationRepository
+									.findOrgById(organizationFromMap.getValue().getId());
 					}
 
 					// check for root parent Organization
@@ -377,7 +384,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						if (rootParentOrganization == null)
 							rootParentOrganization = organizationRepository
 									.findOrgById(organizationFromMap.getValue().getRootParentId());
+					} else {
+						// find rootParentOrganization first in map if not
+						// found
+						// then make DB call
+						rootParentOrganization = organizationMap.get(organizationFromMap.getValue().getId());
 
+						if (rootParentOrganization == null)
+							rootParentOrganization = organizationRepository
+									.findOrgById(organizationFromMap.getValue().getId());
 					}
 
 					// check for all organization to push the data into elastic
