@@ -18,7 +18,9 @@ import lombok.Setter;
 public class ProgramSdgElasticSearchPayload {
 	private Long id;
 	private String name;
+	private String shortName;
 	private String code;
+	private String shortNameCode;
 	private String adminUrl;
 	private Boolean isChecked;
 	private Date createdAt;
