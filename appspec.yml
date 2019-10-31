@@ -6,11 +6,9 @@ files:
   # - source: source
   #   destination: /webapps/myApp
 hooks:
-  # BeforeInstall:
-  #   - location: stop_server
-  #     runas: root
-  #   - location: Scripts/UnzipDataBundle.sh
-  
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      runas: root
   # AfterInstall:
   #   - location: service winwin-service start
   #        timeout: 180
