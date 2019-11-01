@@ -65,7 +65,7 @@ The service should be up on port 80. all apis are listed in http://localhost:80/
 
 ### Steps to run Code Deploy on Ec2 Linux Instance
 ```
-$ sudo yum insall ruby
+$ sudo yum install ruby
 $ sudo yum install wget
 $ wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
 $ chmod +X ./install
