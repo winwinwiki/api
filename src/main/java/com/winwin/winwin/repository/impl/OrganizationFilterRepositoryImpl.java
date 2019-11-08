@@ -180,6 +180,8 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
 			sb.append(" order by " + payload.getSortBy() + " " + (!StringUtils.isNullOrEmpty(payload.getSortOrder())
 					? payload.getSortOrder() + " NULLS LAST" : "ASC NULLS LAST"));
+		else
+			sb.append(" order by o.name ASC NULLS LAST");
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
