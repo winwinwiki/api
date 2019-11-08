@@ -63,15 +63,24 @@ The service should be up on port 80. all apis are listed in http://localhost:80/
 
 * update and copy ```scripts/winwin-env.sh``` in ```/etc/profile.d/winwin-env.sh``` and run ```$ source /etc/profile.d/winwin-env.sh``` to update environment variables in EC2 linux machines
 
+### Steps to run Code Deploy on Ec2 Linux Instance
+```
+$ sudo yum install ruby
+$ sudo yum install wget
+$ wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
+$ chmod +X ./install
+$ sudo ./install auto
+$ sudo service codedeploy-agent start
+```
+
 ### Starting server on EC2 linux machines
 
 * Copy ```scripts/start_server.sh``` , ``` scripts/stop_server.sh ``` & ``` winwin-service ``` in ```/home/ec2-user``` and run following command
  
 
 ```
-$ sudo mv winwin-service /etc/init.d/winwin-service
-$ chmod +x /etc/init.d/winwin-service
-$ sudo sed -i -e 's/\r//g' /etc/init.d/winwin-service
+$ sudo sed -i -e 's/\r//g' /home/ec2-user/start_server.sh
+$ sudo sed -i -e 's/\r//g' /home/ec2-user/stop_server.sh
 $ chmod +x start_server.sh
 $ chmod +x stop_server.sh
 $ sudo ./start_server.sh
