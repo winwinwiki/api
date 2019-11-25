@@ -1,4 +1,6 @@
-#service winwin-service stop
-echo "Stopping WinWin application"
-sudo kill $(pgrep java)
-echo "WinWin application Stopped"
+if pgrep -x "java" >/dev/null
+then
+    echo "Stopping WinWin application"
+	sudo kill $(pgrep java)
+	echo "WinWin application Stopped"
+fi
