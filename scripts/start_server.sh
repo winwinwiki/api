@@ -1,7 +1,8 @@
 chmod 777 /home/ec2-user/winwin-0.0.1-SNAPSHOT.jar
+
 if [[ "$WINWIN_ENV" = "Development" ]]; then
 	echo "Starting WinWin application for environment: $WINWIN_ENV"
-	nohup java -Xmx768m -Dserver.port=80 -jar winwin-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &
+	nohup sudo java -Dserver.port=80 -jar winwin-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &
 	echo "WinWin application started for environment: $WINWIN_ENV"
 elif [[ "$WINWIN_ENV" = "Staging" ]]; then
 	nohup sudo java -Xmx1792m -Dserver.port=80 -jar winwin-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &
