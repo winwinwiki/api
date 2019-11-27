@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -29,6 +30,7 @@ public class DataSetCategory extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_category_generator")
 	private Long id;
 
-	@Column(name = "category", columnDefinition = "TEXT", nullable=false)
+	@NotBlank
+	@Column(name = "category", columnDefinition = "TEXT", nullable = false)
 	private String categoryName;
 }
