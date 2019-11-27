@@ -45,7 +45,7 @@ public class Organization extends AbstractAuditableEntity {
 	@JoinColumn(name = "address_id")
 	private Address address;
 
-	@Column(name = "name")
+	@Column(name = "name", nullable=false)
 	private String name;
 
 	@Column(name = "ein")

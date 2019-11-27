@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Caching;
@@ -37,6 +38,7 @@ import com.winwin.winwin.entity.OrganizationSdgData;
 import com.winwin.winwin.entity.OrganizationSpiData;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.SdgData;
+import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.OrganizationException;
@@ -118,6 +120,9 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	private Map<String, NaicsData> naicsMap = null;
 	private Map<String, NteeData> nteeMap = null;
+
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
 
 	/**
 	 * create new Organization
@@ -585,7 +590,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			// for Slack Notification
+			Date date = CommonUtils.getFormattedDate();
+			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+					.text(("WinWinWiki Bulk Upload Process has failed to run for app env: "
+							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+					.channel(SLACK_CHANNEL).as_user("true").build();
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
+
 	}
 
 	/**
