@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -45,7 +46,8 @@ public class Organization extends AbstractAuditableEntity {
 	@JoinColumn(name = "address_id")
 	private Address address;
 
-	@Column(name = "name", nullable=false)
+	@NotBlank
+	@Column(name = "name", nullable = false)
 	private String name;
 
 	@Column(name = "ein")
