@@ -292,6 +292,13 @@ public class WinWinServiceImpl implements WinWinService {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			// for Slack Notification
+			Date date = CommonUtils.getFormattedDate();
+			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+					.text(("WinWinWiki Organization Data Migration Process has failed to run for app env: "
+							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+					.channel(SLACK_CHANNEL).as_user("true").build();
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 		// set failed and success organizations for migration response
 		organizationList.addAll(successOrganizationList);
@@ -859,6 +866,13 @@ public class WinWinServiceImpl implements WinWinService {
 			LOGGER.error(customMessageSource.getMessage(customMessage), e);
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+			// for Slack Notification
+			Date date = CommonUtils.getFormattedDate();
+			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+					.text(("WinWinWiki Program Data Migration Process has failed to run for app env: "
+							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+					.channel(SLACK_CHANNEL).as_user("true").build();
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 
 		// set failed and success programs for migration response
