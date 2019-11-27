@@ -34,7 +34,7 @@ public class Address extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "address_generator")
 	private Long id;
 
-	@Column(name = "country", nullable=false)
+	@Column(name = "country")
 	private String country;
 
 	@Column(name = "is_active")
