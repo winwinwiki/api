@@ -7,6 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -34,6 +35,7 @@ public class ResourceCategory extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resource_category_generator")
 	private Long id;
 
-	@Column(name = "category", columnDefinition = "TEXT")
+	@NotBlank
+	@Column(name = "category", columnDefinition = "TEXT", nullable = false)
 	private String categoryName;
 }
