@@ -40,7 +40,7 @@ public class Program extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "program_generator")
 	private Long id;
 
-	@Column(name = "name")
+	@Column(name = "name", nullable=false)
 	private String name;
 
 	@Column(name = "description", columnDefinition = "TEXT")

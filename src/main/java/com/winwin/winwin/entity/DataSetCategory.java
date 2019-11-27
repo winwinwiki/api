@@ -29,6 +29,6 @@ public class DataSetCategory extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_category_generator")
 	private Long id;
 
-	@Column(name = "category", columnDefinition = "TEXT")
+	@Column(name = "category", columnDefinition = "TEXT", nullable=false)
 	private String categoryName;
 }

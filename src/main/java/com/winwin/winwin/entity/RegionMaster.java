@@ -34,6 +34,6 @@ public class RegionMaster extends AbstractAuditableEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "region_master_generator")
 	private Long id;
 
-	@Column(name = "name")
+	@Column(name = "name", nullable=false)
 	private String regionName;
 }
