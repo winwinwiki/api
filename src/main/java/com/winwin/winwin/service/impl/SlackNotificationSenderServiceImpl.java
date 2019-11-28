@@ -34,6 +34,7 @@ import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.payload.OrganizationBulkFailedPayload;
 import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.service.SlackNotificationSenderService;
+import com.winwin.winwin.util.CommonUtils;
 
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.Getter;
@@ -53,6 +54,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	protected CustomMessageSource customMessageSource;
 	@Autowired
 	private AwsS3ObjectServiceImpl awsS3ObjectServiceImpl;
+	@Autowired
+	private SlackNotificationSenderService slackNotificationSenderService;
 
 	@Value("${slack.channel}")
 	String SLACK_CHANNEL;
@@ -153,6 +156,13 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			int numOfOrganizations = successOrganizationsList.size() + failedOrganizationsList.size();
 			LOGGER.info("org service createOrganizations() ended with number of organizations - " + numOfOrganizations
 					+ " created by: " + user.getUserDisplayName());
+			// for Slack Notification
+			date = CommonUtils.getFormattedDate();
+			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+					.text("WinWinWiki Bulk Upload Process has been ended successfully for app env: "
+							+ System.getenv("WINWIN_ENV") + " at " + date)
+					.channel(SLACK_CHANNEL).as_user("true").build();
+			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		} catch (Exception e) {
 			LOGGER.error("exception occured while sending notification", e);

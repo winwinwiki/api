@@ -6,6 +6,7 @@
 package com.winwin.winwin.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +42,7 @@ import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
+import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.exception.DataSetCategoryException;
 import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -93,6 +96,7 @@ import com.winwin.winwin.service.OrganizationResourceService;
 import com.winwin.winwin.service.OrganizationService;
 import com.winwin.winwin.service.ProgramService;
 import com.winwin.winwin.service.SdgDataService;
+import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.SpiDataService;
 import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.util.CommonUtils;
@@ -149,12 +153,17 @@ public class OrganizationController extends BaseController {
 	@Autowired
 	private NaicsDataRepository naicsDataRepository;
 	@Autowired
+	private SlackNotificationSenderService slackNotificationSenderService;
+	@Autowired
 	private CsvUtils csvUtils;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationController.class);
 
 	private Map<String, Long> naicsMap = null;
 	private Map<String, Long> nteeMap = null;
+
+	@Value("${slack.channel}")
+	String SLACK_CHANNEL;
 
 	// Code for organization start
 	/**
@@ -208,6 +217,13 @@ public class OrganizationController extends BaseController {
 				UserPayload user = userService.getCurrentUserDetails();
 				LOGGER.info("org service createOrganizations() started  with number of organizations - "
 						+ organizationCsvPayload.size() + " created by: " + user.getUserDisplayName());
+				// for Slack Notification
+				Date date = CommonUtils.getFormattedDate();
+				SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+						.text("WinWinWiki Bulk Upload Process has been started successfully for app env: "
+								+ System.getenv("WINWIN_ENV") + " at " + date)
+						.channel(SLACK_CHANNEL).as_user("true").build();
+				slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 				organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
