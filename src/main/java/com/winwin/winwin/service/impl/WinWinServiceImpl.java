@@ -361,6 +361,10 @@ public class WinWinServiceImpl implements WinWinService {
 		organization.setUpdatedByEmail(user.getEmail());
 		organization.setIsActive(true);
 
+		// set sector for organization as null to apply sorting NULLS LAST
+		if (StringUtils.isEmpty(csvPayload.getSector()))
+			organization.setSector(null);
+
 		// set note for organization
 		if (!StringUtils.isEmpty(csvPayload.getNotes()))
 			organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
@@ -1476,6 +1480,14 @@ public class WinWinServiceImpl implements WinWinService {
 				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getUserDisplayName());
 				address.setUpdatedByEmail(user.getEmail());
+
+				// set city, state for address as null to apply org list sorting
+				// NULLS
+				// LAST
+				if (StringUtils.isEmpty(payload.getCity()))
+					address.setCity(null);
+				if (StringUtils.isEmpty(payload.getState()))
+					address.setState(null);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
