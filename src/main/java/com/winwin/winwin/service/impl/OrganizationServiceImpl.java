@@ -273,6 +273,12 @@ public class OrganizationServiceImpl implements OrganizationService {
 					if (!isUpdated) {
 						throw new OrganizationException(customMessageSource.getMessage("org.exception.address.null"));
 					}
+
+					// set sector for organization as null to apply sorting
+					// NULLS LAST
+					if (StringUtils.isEmpty(organizationPayload.getSector()))
+						organization.setSector(null);
+
 					organization.setIsActive(true);
 					organization.setUpdatedAt(date);
 					organization.setUpdatedBy(user.getUserDisplayName());
@@ -403,6 +409,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 				AddressPayload addressPayload = new AddressPayload();
 				addressPayload.setCountry("");
 				organization = new Organization();
+				organization.setSector(null);
 				if (!(StringUtils.isEmpty(payload.getChildOrgName()))) {
 					organization.setName(payload.getChildOrgName());
 				}
@@ -713,6 +720,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setUpdatedBy(user.getUserDisplayName());
 			organization.setUpdatedByEmail(user.getEmail());
 			organization.setIsActive(true);
+
+			// set sector for organization as null to apply sorting NULLS LAST
+			if (StringUtils.isEmpty(organizationPayload.getSector()))
+				organization.setSector(null);
 		}
 		return organization;
 	}
@@ -769,6 +780,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 		organization.setUpdatedBy(user.getUserDisplayName());
 		organization.setUpdatedByEmail(user.getEmail());
 		organization.setIsActive(true);
+
+		// set sector for organization as null to apply sorting NULLS LAST
+		if (StringUtils.isEmpty(csvPayload.getSector()))
+			organization.setSector(null);
 
 		if (!StringUtils.isEmpty(csvPayload.getNotes()))
 			organization.setNote(saveOrganizationNotesForBulkUpload(csvPayload, user, organization));
@@ -1297,6 +1312,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getUserDisplayName());
 				address.setUpdatedByEmail(user.getEmail());
+
+				// set city, state for address as null to apply org list sorting
+				// NULLS
+				// LAST
+				if (StringUtils.isEmpty(payload.getCity()))
+					address.setCity(null);
+				if (StringUtils.isEmpty(payload.getState()))
+					address.setState(null);
+
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
@@ -1344,6 +1368,14 @@ public class OrganizationServiceImpl implements OrganizationService {
 				address.setUpdatedAt(date);
 				address.setUpdatedBy(user.getUserDisplayName());
 				address.setUpdatedByEmail(user.getEmail());
+
+				// set city, state for address as null to apply org list sorting
+				// NULLS
+				// LAST
+				if (StringUtils.isEmpty(addressPayload.getCity()))
+					address.setCity(null);
+				if (StringUtils.isEmpty(addressPayload.getState()))
+					address.setState(null);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.exception.address.created"), e);
@@ -1360,6 +1392,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.getAddress().setUpdatedAt(date);
 					organization.getAddress().setUpdatedBy(user.getUserDisplayName());
 					organization.getAddress().setUpdatedByEmail(user.getEmail());
+
+					// set city, state for address as null to apply org list
+					// sorting
+					// NULLS
+					// LAST
+					if (StringUtils.isEmpty(addressPayload.getCity()))
+						organization.getAddress().setCity(null);
+					if (StringUtils.isEmpty(addressPayload.getState()))
+						organization.getAddress().setState(null);
+
 					return true;
 				}
 
