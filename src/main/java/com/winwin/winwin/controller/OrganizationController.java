@@ -1414,7 +1414,7 @@ public class OrganizationController extends BaseController {
 	@RequestMapping(value = "/{id}/notes", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getorgNotesList(@PathVariable("id") Long orgId) throws OrganizationException {
+	public ResponseEntity<?> getOrgNotesList(@PathVariable("id") Long orgId) throws OrganizationException {
 		List<OrganizationNote> orgNoteList = null;
 		OrganizationNotePayload payload = new OrganizationNotePayload();
 		List<OrganizationNotePayload> payloadList = new ArrayList<OrganizationNotePayload>();
