@@ -455,25 +455,42 @@ public class OrganizationServiceImpl implements OrganizationService {
 			if (null != orgHistoryList) {
 				Organization organization = organizationRepository.findOrgById(orgId);
 
+				// fetch organization creation history from organization table
+				// Added below changes to resolve bulk data migration and bulk
+				// upload create history issue
+				OrganizationHistoryPayload payload = new OrganizationHistoryPayload();
+				payload.setParentEntityName(organization.getName());
+				payload.setParentEntityType(OrganizationConstants.ORGANIZATION);
+				payload.setEntityName(organization.getName());
+				payload.setEntityCode("");
+				payload.setActionPerformed(OrganizationConstants.CREATE);
+				payload.setModifiedBy(organization.getCreatedBy());
+				payload.setModifiedAt(organization.getCreatedAt());
+				payloadList.add(payload);
+
 				for (OrganizationHistory history : orgHistoryList) {
-					OrganizationHistoryPayload payload = new OrganizationHistoryPayload();
-					payload.setId(history.getId());
-					if (null != organization && history.getProgramId() == null) {
-						payload.setParentEntityName(organization.getName());
-						payload.setParentEntityType(OrganizationConstants.ORGANIZATION);
-					} else if (null != organization && null != history.getProgramId()) {
-						Program program = programRepository.findProgramById(history.getProgramId());
-						if (null != program)
-							payload.setParentEntityName(program.getName());
-						payload.setParentEntityType(OrganizationConstants.PROGRAM);
+					// skip organization creation history from history table
+					if (!(history.getActionPerformed().equalsIgnoreCase(OrganizationConstants.CREATE)
+							&& history.getEntityType().equalsIgnoreCase(OrganizationConstants.ORGANIZATION))) {
+						payload = new OrganizationHistoryPayload();
+						payload.setId(history.getId());
+						if (null != organization && history.getProgramId() == null) {
+							payload.setParentEntityName(organization.getName());
+							payload.setParentEntityType(OrganizationConstants.ORGANIZATION);
+						} else if (null != organization && null != history.getProgramId()) {
+							Program program = programRepository.findProgramById(history.getProgramId());
+							if (null != program)
+								payload.setParentEntityName(program.getName());
+							payload.setParentEntityType(OrganizationConstants.PROGRAM);
+						}
+						payload.setEntityType(history.getEntityType());
+						payload.setEntityName(history.getEntityName());
+						payload.setEntityCode(history.getEntityCode());
+						payload.setActionPerformed(history.getActionPerformed());
+						payload.setModifiedBy(history.getUpdatedBy());
+						payload.setModifiedAt(history.getUpdatedAt());
+						payloadList.add(payload);
 					}
-					payload.setEntityType(history.getEntityType());
-					payload.setEntityName(history.getEntityName());
-					payload.setEntityCode(history.getEntityCode());
-					payload.setActionPerformed(history.getActionPerformed());
-					payload.setModifiedBy(history.getUpdatedBy());
-					payload.setModifiedAt(history.getUpdatedAt());
-					payloadList.add(payload);
 				}
 			}
 		} catch (Exception e) {
