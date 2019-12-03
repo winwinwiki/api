@@ -82,16 +82,20 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 	 * @return
 	 */
 	private Query setFilterQuery(OrganizationFilterPayload payload, String type) {
-		StringBuilder query = new StringBuilder("select distinct o.* from organization o ");
+		StringBuilder query = new StringBuilder("select distinct o.* ");
 		boolean spi = false;
 		boolean sdg = false;
 		StringBuilder sb = new StringBuilder();
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
-			sb.append("inner join address a on a.id = o.address_id");
+			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
 		} else if (!StringUtils.isNullOrEmpty(payload.getCountry()) || !StringUtils.isNullOrEmpty(payload.getState())
 				|| !StringUtils.isNullOrEmpty(payload.getCity()) || !StringUtils.isNullOrEmpty(payload.getCounty())) {
-			sb.append("inner join address a on a.id = o.address_id");
+			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
+		} else if ((!StringUtils.isNullOrEmpty(payload.getSortBy())) && payload.getSortBy().matches("(?i)city|state")) {
+			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
+		} else {
+			sb.append("from organization o inner join address a on a.id = o.address_id");
 		}
 
 		sb.append(" where  o.is_active = true and o.type = :type ");
