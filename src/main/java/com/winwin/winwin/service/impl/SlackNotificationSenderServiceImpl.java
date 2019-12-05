@@ -102,9 +102,10 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 					failedOrganizations.append("\"");
 					failedOrganizations.append(",");
 					failedOrganizations.append("FAILED");
-					failedOrganizations.append("\"");
 					failedOrganizations.append(",");
+					failedOrganizations.append("\"");
 					failedOrganizations.append(failedOrg.getFailedMessage());
+					failedOrganizations.append("\"");
 				}
 
 				failedOrganizations.append("\n");
