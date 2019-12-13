@@ -52,17 +52,20 @@ public class OrganizationElasticSearchPayload {
 	private String values;
 	private String websiteUrl;
 	private String adminUrl;
+	private String parentUrl;
+	private String rootParentUrl;
 	private Long parentId;
 	private Long rootParentId;
 	private String parentName;
 	private String rootParentName;
+	private List<String> connectedOrganizations;
 	private AddressElasticSearchPayload address;
-	private List<ProgramElasticSearchPayload> programs;
 	private List<OrganizationNoteElasticSearchPayload> notes;
+	private List<String> namesOfDatasets;
 	private List<OrganizationDataSetElasticSearchPayload> datasets;
+	private List<String> namesOfResources;
 	private List<OrganizationResourceElasticSearchPayload> resources;
 	private List<OrganizationRegionServedElasticSearchPayload> regionServed;
-	private List<OrganizationSpiElasticSearchPayload> spi;
-	private List<OrganizationSdgElasticSearchPayload> sdg;
+	private List<OrganizationFrameworksPayload> frameworks;
 
 }

@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.winwin.winwin.payload;
 
 import java.util.Date;
@@ -9,14 +6,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @Getter
 @Setter
-public class OrganizationSpiElasticSearchPayload {
+public class OrganizationFrameworksPayload {
 	private String type;
 	private Long id;
+	private String name;
+	private String shortName;
+	private String tagName;
+	private String code;
+	private String shortNameCode;
 	private String dimension;
 	private String component;
 	private String indicator;
