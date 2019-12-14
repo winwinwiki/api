@@ -21,8 +21,8 @@ public class ClearAllCacheSchedular {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClearAllCacheSchedular.class);
 
-	// reset cache in every 30mins, with delay of 30mins after application start
-	@Scheduled(fixedRateString = "1800000", initialDelayString = "1800000")
+	// reset cache in every 1hr, with delay of 1hr after application start
+	@Scheduled(fixedRateString = "3600000", initialDelayString = "3600000")
 	public void reportCurrentTime() {
 		cacheManager.getCacheNames().parallelStream().forEach(name -> cacheManager.getCache(name).clear());
 		LOGGER.info("Clearing all the application caches");
