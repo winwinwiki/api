@@ -185,9 +185,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
 			if (lastUpdatedDate == null) {
@@ -197,7 +196,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						.findAllOrganizationsCountFromLastUpdatedDate(lastUpdatedDate);
 			}
 
-			Integer pageSize = 500;
+			Integer pageSize = 1000;
 			Integer pageNumAvailable = numOfOrganizations / pageSize;
 			Integer totalPageNumAvailable = null;
 			if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -254,13 +253,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "organization_" + payload.getId().toString();
 				// check for program
-				if ((!StringUtils.isEmpty(payload.getType()))
-						&& payload.getType().equalsIgnoreCase(OrganizationConstants.PROGRAM))
+				if (isProgram(payload))
 					id = "program_" + payload.getId().toString();
 
 				if (null != payload.getResources()) {
 					for (OrganizationResourceElasticSearchPayload resource : payload.getResources()) {
-						String resourceId = "resource_" + resource.getId().toString();
+						String resourceId = "organization_resource_" + resource.getId().toString();
+						// check for program
+						if (isProgram(payload))
+							resourceId = "program_resource_" + resource.getId().toString();
 						// copy organization and resource properties to
 						// resourcePayload
 						ResourceElasticSearchPayload resourcePayload = new ResourceElasticSearchPayload();
@@ -275,7 +276,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (null != payload.getDatasets()) {
 					for (OrganizationDataSetElasticSearchPayload dataset : payload.getDatasets()) {
-						String datasetId = "dataset_" + dataset.getId().toString();
+						String datasetId = "organization_dataset_" + dataset.getId().toString();
+						// check for program
+						if (isProgram(payload))
+							datasetId = "program_dataset_" + dataset.getId().toString();
 						// copy organization and dataset properties to
 						// datasetPayload
 						DataSetElasticSearchPayload datasetPayload = new DataSetElasticSearchPayload();
@@ -290,7 +294,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (null != payload.getFrameworks()) {
 					for (OrganizationFrameworksPayload framework : payload.getFrameworks()) {
-						String frameworkId = "framework_" + framework.getId().toString();
+						String frameworkId = "organization_framework_" + framework.getId().toString();
+						// check for program
+						if (isProgram(payload))
+							frameworkId = "program_framework_" + framework.getId().toString();
 						// copy organization and framework properties to
 						// frameworkPayload
 						FrameworkElasticSearchPayload frameworkPayload = new FrameworkElasticSearchPayload();
@@ -313,7 +320,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (null != payload.getRegionServed()) {
 					for (OrganizationRegionServedElasticSearchPayload regionServed : payload.getRegionServed()) {
-						String regionServedId = "regionserved_" + regionServed.getId().toString();
+						String regionServedId = "organization_regionserved_" + regionServed.getId().toString();
+						// check for program
+						if (isProgram(payload))
+							regionServedId = "program_regionserved_" + regionServed.getId().toString();
 						// copy organization and regionServed properties to
 						// regionServedPayload
 						RegionServedElasticSearchPayload regionServedPayload = new RegionServedElasticSearchPayload();
@@ -329,7 +339,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (null != payload.getNotes()) {
 					for (OrganizationNoteElasticSearchPayload note : payload.getNotes()) {
-						String noteId = "notes_" + note.getId().toString();
+						String noteId = "organization_notes_" + note.getId().toString();
+						// check for program
+						if (isProgram(payload))
+							noteId = "program_notes_" + note.getId().toString();
 						// copy organization and note properties to notePayload
 						NotesElasticSearchPayload notePayload = new NotesElasticSearchPayload();
 						notePayload.setNotes(note);
@@ -378,6 +391,18 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	/**
+	 * @param payload
+	 * @param id
+	 * @return
+	 */
+	private Boolean isProgram(OrganizationElasticSearchPayload payload) {
+		if ((!StringUtils.isEmpty(payload.getType()))
+				&& payload.getType().equalsIgnoreCase(OrganizationConstants.PROGRAM))
+			return true;
+		return false;
+	}
+
+	/**
 	 * @param bulkRequest
 	 * @param mapper
 	 * @param id
@@ -405,9 +430,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -472,25 +496,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for
-					 * root organization to push the data into elastic // search
-					 * if (parentOrganization == null && rootParentOrganization
-					 * == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for root organization to
+					 * push the data into elastic // search if (parentOrganization == null &&
+					 * rootParentOrganization == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child
-					 * organization to push the data into // elastic search }
-					 * else if (null != parentOrganization && null !=
-					 * rootParentOrganization) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
+					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child organization to push the data
+					 * into // elastic search } else if (null != parentOrganization && null !=
+					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
+					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
+					 * parentOrganization, rootParentOrganization); }
 					 */
 
 				} // end of loop for (Map.Entry<Long, Organization>
@@ -677,9 +696,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	private void setProgramConnectedOrganizations(Program program, Organization organization,
 			Map<Long, Organization> organizationMap, OrganizationElasticSearchPayload programPayload) throws Exception {
 		List<String> connectedOrganizations = new ArrayList<String>();
-		// Add parent organization name
+		// Add organization's parent organizations name
 		if (null != organization.getParentId())
 			connectedOrganizations.add(getParentOrgName(organization, organizationMap));
+		// Add program's parent org name
+		connectedOrganizations.add(organization.getName());
 		// Add program Name at Last
 		connectedOrganizations.add(program.getName());
 		// set connected organization list to programPayload
@@ -750,8 +771,21 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							rootParent = organizationRepository.findOrgById(organization.getRootParentId());
 						if (null != rootParent)
 							programPayload.setRootParentName(rootParent.getName());
+					} else if (null != organization.getParentId()) {
+						// find root parentOrganization first in map if not
+						// found
+						// then make DB call
+						Organization rootParent = organizationMap.get(organization.getParentId());
+						if (rootParent == null)
+							rootParent = organizationRepository.findOrgById(organization.getParentId());
+
+						if (null != rootParent) {
+							programPayload.setRootParentId(rootParent.getId());
+							programPayload.setRootParentName(rootParent.getName());
+						}
 					} else {
-						programPayload.setRootParentId(organization.getParentId());
+						// set programs parent as root parent
+						programPayload.setRootParentId(organization.getId());
 						programPayload.setRootParentName(organization.getName());
 					}
 				}
