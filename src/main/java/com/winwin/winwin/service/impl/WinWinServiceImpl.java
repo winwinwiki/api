@@ -51,10 +51,12 @@ import com.winwin.winwin.entity.SlackMessage;
 import com.winwin.winwin.entity.SpiData;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.OrganizationDataMigrationCsvPayload;
+import com.winwin.winwin.payload.ProgramBulkFailedPayload;
 import com.winwin.winwin.payload.NaicsDataMappingPayload;
 import com.winwin.winwin.payload.NaicsMappingCsvPayload;
 import com.winwin.winwin.payload.NteeDataMappingPayload;
 import com.winwin.winwin.payload.NteeMappingCsvPayload;
+import com.winwin.winwin.payload.OrganizationBulkFailedPayload;
 import com.winwin.winwin.payload.OrganizationBulkResultPayload;
 import com.winwin.winwin.payload.ProgramBulkResultPayload;
 import com.winwin.winwin.payload.ProgramDataMigrationCsvPayload;
@@ -126,9 +128,8 @@ public class WinWinServiceImpl implements WinWinService {
 	 */
 	@Override
 	@Async
-	public List<Organization> createOrganizationsOffline(
-			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
-			UserPayload user) {
+	public void createOrganizationsOffline(List<OrganizationDataMigrationCsvPayload> organizationPayloadList,
+			ExceptionResponse response, UserPayload user) {
 		// for Slack Notification
 		Date date = CommonUtils.getFormattedDate();
 		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
@@ -137,15 +138,15 @@ public class WinWinServiceImpl implements WinWinService {
 				.channel(SLACK_CHANNEL).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
-		List<Organization> organizationList = saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response,
-				OrganizationConstants.CREATE, "org.exception.created", user);
+		saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
+				"org.exception.created", user);
 
 		date = CommonUtils.getFormattedDate();
 		slackMessage.setText(("WinWinWiki Organization Data Migration Process has been ended successfully for app env: "
 				+ System.getenv("WINWIN_ENV") + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
-		return organizationList;
+		// return organizationList;
 	}
 
 	/**
@@ -160,7 +161,7 @@ public class WinWinServiceImpl implements WinWinService {
 	 */
 	@Override
 	@Async
-	public List<Program> createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
+	public void createProgramsOffline(List<ProgramDataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, UserPayload user) {
 		// for Slack Notification
 		Date date = CommonUtils.getFormattedDate();
@@ -170,15 +171,15 @@ public class WinWinServiceImpl implements WinWinService {
 				.channel(SLACK_CHANNEL).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
-		List<Program> programList = saveProgramOfflineForBulkUpload(programPayloadList, response,
-				OrganizationConstants.CREATE, "prg.exception.created", user);
+		saveProgramOfflineForBulkUpload(programPayloadList, response, OrganizationConstants.CREATE,
+				"prg.exception.created", user);
 
 		date = CommonUtils.getFormattedDate();
 		slackMessage.setText(("WinWinWiki Program Data Migration Process has been ended successfully for app env: "
 				+ System.getenv("WINWIN_ENV") + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
-		return programList;
+		// return programList;
 	}
 
 	/**
@@ -191,14 +192,16 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param user
 	 * @return
 	 */
-	public List<Organization> saveOrganizationsOfflineForBulkUpload(
-			List<OrganizationDataMigrationCsvPayload> organizationPayloadList, ExceptionResponse response,
-			String operationPerformed, String customMessage, UserPayload user) {
-		List<Organization> organizationList = new ArrayList<Organization>();
+	public void saveOrganizationsOfflineForBulkUpload(List<OrganizationDataMigrationCsvPayload> organizationPayloadList,
+			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
+		// List<OrganizationBulkFailedPayload> organizationList = new
+		// ArrayList<OrganizationBulkFailedPayload>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
-		List<Organization> successOrganizationList = new ArrayList<Organization>();
-		List<Organization> failedOrganizationList = new ArrayList<Organization>();
+		// List<Organization> successOrganizationList = new
+		// ArrayList<Organization>();
+		// List<OrganizationBulkFailedPayload> failedOrganizationList = new
+		// ArrayList<OrganizationBulkFailedPayload>();
 
 		try {
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -238,47 +241,43 @@ public class WinWinServiceImpl implements WinWinService {
 							// save the organizations in the batches of 1000 and
 							// save the remaining organizations
 							if (i % 1000 == 0) {
-								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
-										organizationsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								} else {
-									failedOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								}
+								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
+								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								// save the remaining organizations when total
 								// size is less than 1000
 							} else if (numOfOrganizationsToSaveByBatchSize == 0
 									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
-								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
-										organizationsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								} else {
-									failedOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								}
+								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
+								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								// save the remaining organizations when total
 								// size is greater than 1000
 							} else if (i > numOfOrganizationsToSaveByBatchSize
 									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
-								OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
-										organizationsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								} else {
-									failedOrganizationList.addAll(payload.getOrganizationList());
-									// refresh the data after added into list
-									organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								}
+								/*
+								 * OrganizationBulkResultPayload payload =
+								 * saveOrganizationsIntoDB(
+								 * organizationsListToSaveIntoDB, i);
+								 */
+								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
+								// if (!payload.getIsFailed()) {
+								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								// } else {
+								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
+								// refresh the data after added into list
+								organizationsListToSaveIntoDB = new ArrayList<Organization>();
+								// }
 							}
 
 							i++;
@@ -301,10 +300,10 @@ public class WinWinServiceImpl implements WinWinService {
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 		// set failed and success organizations for migration response
-		organizationList.addAll(successOrganizationList);
-		organizationList.addAll(failedOrganizationList);
+		// organizationList.addAll(successOrganizationList);
+		// organizationList.addAll(failedOrganizationList);
 
-		return organizationList;
+		// return organizationList;
 	}
 
 	/**
@@ -432,12 +431,13 @@ public class WinWinServiceImpl implements WinWinService {
 	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
 		// Implemented below logic to log failed and success
 		// organizations for bulk upload
-		List<Organization> organizationList = new ArrayList<Organization>();
-		Boolean isFailed = false;
+		List<Organization> successOrganizationList = new ArrayList<Organization>();
+		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<OrganizationBulkFailedPayload>();
+		// Boolean isFailed = false;
 		try {
 			LOGGER.info(
 					"Saving organizations : " + organizations.size() + " Starting from: " + (i - organizations.size()));
-			organizationList.addAll(organizationRepository.saveAll(organizations));
+			successOrganizationList.addAll(organizationRepository.saveAll(organizations));
 
 			// Flush all pending changes to the database
 			organizationRepository.flush();
@@ -445,13 +445,28 @@ public class WinWinServiceImpl implements WinWinService {
 			LOGGER.info("Saved organizations: " + organizations.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save organizations starting from : " + (i - organizations.size()));
-			organizationList = new ArrayList<Organization>();
-			organizationList.addAll(organizations);
-			isFailed = true;
+
+			// Added the below logic to save the organization one by one when
+			// the bulk organization batch failed because of some faulty
+			// organization and save the perfect organization into
+			// successOrganizationList
+			LOGGER.info("Saving Failed organizations one by one starting from : " + (i - organizations.size()));
+			for (Organization failedOrganization : organizations) {
+				try {
+					successOrganizationList.add(organizationRepository.saveAndFlush(failedOrganization));
+				} catch (Exception e1) {
+					OrganizationBulkFailedPayload failedOrg = new OrganizationBulkFailedPayload();
+					failedOrg.setFailedOrganization(failedOrganization);
+					failedOrg.setFailedMessage(e1.getMessage());
+					failedOrganizationList.add(failedOrg);
+				}
+			}
+			// isFailed = true;
 		}
 		OrganizationBulkResultPayload payload = new OrganizationBulkResultPayload();
-		payload.setOrganizationList(organizationList);
-		payload.setIsFailed(isFailed);
+		payload.setSuccessOrganizationList(successOrganizationList);
+		payload.setFailedOrganizationList(failedOrganizationList);
+		// payload.setIsFailed(isFailed);
 		return payload;
 
 	}
@@ -773,13 +788,14 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param customMessage
 	 * @return
 	 */
-	public List<Program> saveProgramOfflineForBulkUpload(List<ProgramDataMigrationCsvPayload> programPayloadList,
+	public void saveProgramOfflineForBulkUpload(List<ProgramDataMigrationCsvPayload> programPayloadList,
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
-		List<Program> programList = new ArrayList<Program>();
+		// List<Program> programList = new ArrayList<Program>();
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
-		List<Program> successProgramsList = new ArrayList<Program>();
-		List<Program> failedProgramsList = new ArrayList<Program>();
+		// List<Program> successProgramsList = new ArrayList<Program>();
+		// List<ProgramBulkFailedPayload> failedProgramsList = new
+		// ArrayList<ProgramBulkFailedPayload>();
 
 		try {
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -819,44 +835,41 @@ public class WinWinServiceImpl implements WinWinService {
 							// save the programs in the batches of 1000 and
 							// save the remaining programs
 							if (i % 1000 == 0) {
-								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								} else {
-									failedProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								}
+								saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								// successProgramsList.addAll(payload.getSuccessProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
+								// failedProgramsList.addAll(payload.getFailedProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
 								// save the remaining programs when total
 								// size is less than 1000
 							} else if (numOfProgramsToSaveByBatchSize == 0
 									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
-								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								} else {
-									failedProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								}
+								saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								// successProgramsList.addAll(payload.getSuccessProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
+								// failedProgramsList.addAll(payload.getFailedProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
 								// save the remaining programs when total
 								// size is greater than 1000
 							} else if (i > numOfProgramsToSaveByBatchSize
 									&& (programsListToSaveIntoDB.size() == remainingProgramsToSave)) {
-								ProgramBulkResultPayload payload = saveProgramsIntoDB(programsListToSaveIntoDB, i);
-								if (!payload.getIsFailed()) {
-									successProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								} else {
-									failedProgramsList.addAll(payload.getProgramList());
-									// refresh the data after added into list
-									programsListToSaveIntoDB = new ArrayList<Program>();
-								}
+								saveProgramsIntoDB(programsListToSaveIntoDB, i);
+								// ProgramBulkResultPayload payload =
+								// saveProgramsIntoDB(programsListToSaveIntoDB,
+								// i);
+								// if (!payload.getIsFailed()) {
+								// successProgramsList.addAll(payload.getSuccessProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
+								// } else {
+								// failedProgramsList.addAll(payload.getFailedProgramList());
+								// refresh the data after added into list
+								programsListToSaveIntoDB = new ArrayList<Program>();
+								// }
 							}
 							i++;
 
@@ -880,10 +893,10 @@ public class WinWinServiceImpl implements WinWinService {
 		}
 
 		// set failed and success programs for migration response
-		programList.addAll(successProgramsList);
-		programList.addAll(failedProgramsList);
+		// programList.addAll(successProgramsList);
+		// programList.addAll(failedProgramsList);
 
-		return programList;
+		// return programList;
 	}
 
 	/**
@@ -986,11 +999,12 @@ public class WinWinServiceImpl implements WinWinService {
 	ProgramBulkResultPayload saveProgramsIntoDB(List<Program> programs, int i) {
 		// Implemented below logic to log failed and success
 		// programs for bulk upload
-		List<Program> programList = new ArrayList<Program>();
-		Boolean isFailed = false;
+		List<Program> successProgramList = new ArrayList<Program>();
+		List<ProgramBulkFailedPayload> failedProgramList = new ArrayList<ProgramBulkFailedPayload>();
+		// Boolean isFailed = false;
 		try {
 			LOGGER.info("Saving programs : " + programs.size() + " Starting from: " + (i - programs.size()));
-			programList.addAll(programRepository.saveAll(programs));
+			successProgramList.addAll(programRepository.saveAll(programs));
 
 			// Flush all pending changes to the database
 			programRepository.flush();
@@ -998,12 +1012,29 @@ public class WinWinServiceImpl implements WinWinService {
 			LOGGER.info("Saved programs: " + programs.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save programs starting from: " + (i - programs.size()));
-			programList.addAll(programs);
-			isFailed = true;
+
+			// Added the below logic to save the program one by one when
+			// the bulk program batch failed because of some faulty
+			// program and save the perfect program into
+			// successProgramList
+			LOGGER.info("Saving Failed programs one by one starting from : " + (i - programs.size()));
+			for (Program failedProgram : programs) {
+				try {
+					successProgramList.add(programRepository.saveAndFlush(failedProgram));
+				} catch (Exception e1) {
+					ProgramBulkFailedPayload failedProg = new ProgramBulkFailedPayload();
+					failedProg.setFailedProgram(failedProgram);
+					failedProg.setFailedMessage(e1.getMessage());
+					failedProgramList.add(failedProg);
+				}
+			}
+			successProgramList.addAll(programs);
+			// isFailed = true;
 		}
 		ProgramBulkResultPayload payload = new ProgramBulkResultPayload();
-		payload.setProgramList(programList);
-		payload.setIsFailed(isFailed);
+		payload.setSuccessProgramList(successProgramList);
+		payload.setFailedProgramList(failedProgramList);
+		// payload.setIsFailed(isFailed);
 
 		return payload;
 
