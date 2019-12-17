@@ -1,9 +1,6 @@
-/**
- * 
- */
 package com.winwin.winwin.payload;
 
-import com.winwin.winwin.entity.Organization;
+import com.winwin.winwin.entity.Program;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,8 +11,8 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class OrganizationBulkFailedPayload {
-	private Organization failedOrganization;
+public class ProgramBulkFailedPayload {
+	private Program failedProgram;
 	private String failedMessage;
 
 }
