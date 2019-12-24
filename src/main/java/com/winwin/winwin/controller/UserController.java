@@ -389,4 +389,9 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.enable.success");
 	}
 
+	@RequestMapping(value = "/actuator/health", method = RequestMethod.GET)
+	public ResponseEntity<?> getActuatorHealthStatus() {
+		return sendSuccessResponse("actuator.health.status", HttpStatus.OK);
+	}
+
 }
