@@ -16,6 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OrganizationSdgElasticSearchPayload {
+	private String type;
 	private Long id;
 	private String name;
 	private String shortName;

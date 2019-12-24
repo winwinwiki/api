@@ -9,12 +9,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * @author ArvindK
+ * @author ArvindKhatik
  *
  */
 @Getter
 @Setter
 public class OrganizationSpiElasticSearchPayload {
+	private String type;
 	private Long id;
 	private String dimension;
 	private String component;

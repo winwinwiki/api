@@ -18,6 +18,8 @@ import lombok.Setter;
 @Setter
 public class ProgramBulkResultPayload {
 	private List<Program> programList;
+	private List<Program> successProgramList;
+	private List<ProgramBulkFailedPayload> failedProgramList;
 	Boolean isFailed;
 
 }
