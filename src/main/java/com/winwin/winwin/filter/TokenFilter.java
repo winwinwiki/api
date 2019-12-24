@@ -51,7 +51,7 @@ public class TokenFilter extends HttpFilter {
 	public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain filterchain)
 			throws IOException, ServletException {
 		final Set<String> requestEndpoint = new HashSet<String>(Arrays.asList("/user/login", "/user/resetPassword",
-				"/user/confirmResetPassword", "/user/resendCode", "/user/createKibanaUser"));
+				"/user/confirmResetPassword", "/user/resendCode", "/user/createKibanaUser", "/user/actuator/health"));
 
 		if (requestEndpoint.contains(request.getRequestURI())) {
 			filterchain.doFilter(request, response);
