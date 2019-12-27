@@ -185,8 +185,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
 			if (lastUpdatedDate == null) {
@@ -430,8 +431,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -496,20 +498,25 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for root organization to
-					 * push the data into elastic // search if (parentOrganization == null &&
-					 * rootParentOrganization == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for
+					 * root organization to push the data into elastic // search
+					 * if (parentOrganization == null && rootParentOrganization
+					 * == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
-					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child organization to push the data
-					 * into // elastic search } else if (null != parentOrganization && null !=
-					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
-					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
-					 * parentOrganization, rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child
+					 * organization to push the data into // elastic search }
+					 * else if (null != parentOrganization && null !=
+					 * rootParentOrganization) {
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); }
 					 */
 
 				} // end of loop for (Map.Entry<Long, Organization>
@@ -606,6 +613,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		if (null != parentOrganization) {
 			organizationPayload.setParentId(parentOrganization.getId());
 			organizationPayload.setParentName(parentOrganization.getName());
+			organizationPayload.setParentDescription(parentOrganization.getDescription());
 			if (null != winwinRoutesMap) {
 				if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
 						&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
@@ -759,6 +767,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				if (null != organization) {
 					programPayload.setParentId(organization.getId());
 					programPayload.setParentName(organization.getName());
+					programPayload.setParentDescription(organization.getDescription());
+					programPayload.setSector(organization.getSector());
+					programPayload.setSectorLevel(organization.getSectorLevel());
+					programPayload.setSectorLevelName(organization.getSectorLevelName());
+					if (null != organizationPayload)
+						programPayload.setAddress(organizationPayload.getAddress());
 
 					// check for root parent Organization
 					if (null != organization.getRootParentId()) {
