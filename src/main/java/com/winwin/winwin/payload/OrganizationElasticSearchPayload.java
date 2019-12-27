@@ -58,6 +58,7 @@ public class OrganizationElasticSearchPayload {
 	private Long rootParentId;
 	private String parentName;
 	private String rootParentName;
+	private String parentDescription;
 	private List<String> connectedOrganizations;
 	private AddressElasticSearchPayload address;
 	private List<OrganizationNoteElasticSearchPayload> notes;
