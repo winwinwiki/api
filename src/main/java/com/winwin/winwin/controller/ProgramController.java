@@ -16,10 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.constants.UserConstants;
@@ -30,15 +33,8 @@ import com.winwin.winwin.entity.ProgramRegionServed;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.RegionMaster;
 import com.winwin.winwin.entity.ResourceCategory;
-import com.winwin.winwin.exception.DataSetCategoryException;
-import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.exception.OrganizationException;
-import com.winwin.winwin.exception.RegionServedException;
-import com.winwin.winwin.exception.ResourceCategoryException;
-import com.winwin.winwin.exception.ResourceException;
-import com.winwin.winwin.exception.SdgDataException;
-import com.winwin.winwin.exception.SpiDataException;
 import com.winwin.winwin.payload.DataSetCategoryPayload;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.ProgramRegionServedPayload;
@@ -104,7 +100,7 @@ public class ProgramController extends BaseController {
 	 * @param id
 	 * @return
 	 */
-	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> getProgramDetails(@PathVariable("id") Long id) {
@@ -127,14 +123,12 @@ public class ProgramController extends BaseController {
 	 * Creates DataSet for an Program by Id
 	 * 
 	 * @param programDataSetPayLoad
-	 * @return
-	 * @throws DataSetException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.POST)
+	@PostMapping(path = "/{id}/dataset")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createProgrmDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
-			throws DataSetException {
+	public ResponseEntity<?> createProgrmDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad) {
 		ProgramDataSet programDataSet = null;
 		ProgramDataSetPayLoad payload = new ProgramDataSetPayLoad();
 		if (null != programDataSetPayLoad) {
@@ -172,14 +166,12 @@ public class ProgramController extends BaseController {
 	 * Update DataSet for an Program by Id
 	 * 
 	 * @param programDataSetPayLoad
-	 * @return
-	 * @throws DataSetException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.PUT)
+	@PutMapping(path = "/{id}/dataset")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateProgramDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
-			throws DataSetException {
+	public ResponseEntity<?> updateProgramDataSet(@Valid @RequestBody ProgramDataSetPayLoad programDataSetPayLoad) {
 		ProgramDataSetPayLoad payload = new ProgramDataSetPayLoad();
 
 		if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
@@ -212,14 +204,12 @@ public class ProgramController extends BaseController {
 	 * Delete a DataSet for an Program by Id
 	 * 
 	 * @param programDataSetPayLoad
-	 * @return
-	 * @throws DataSetException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/dataset", method = RequestMethod.DELETE)
+	@DeleteMapping(path = "/{id}/dataset")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> deleteProgramDataSet(@RequestBody ProgramDataSetPayLoad programDataSetPayLoad)
-			throws DataSetException {
+	public ResponseEntity<?> deleteProgramDataSet(@RequestBody ProgramDataSetPayLoad programDataSetPayLoad) {
 		try {
 			if (null != programDataSetPayLoad && null != programDataSetPayLoad.getId()) {
 				Long id = programDataSetPayLoad.getId();
@@ -242,16 +232,15 @@ public class ProgramController extends BaseController {
 	 * Returns a DataSet List associated with Program by Id
 	 * 
 	 * @param id
-	 * @return
-	 * @throws DataSetException
+	 * @return @
 	 */
-	@RequestMapping(value = "{id}/datasets", method = RequestMethod.GET)
+	@GetMapping(path = "{id}/datasets")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) throws DataSetException {
+	public ResponseEntity<?> getProgramDataSetList(@PathVariable("id") Long id) {
 		List<ProgramDataSet> programDataSetList = null;
 		ProgramDataSetPayLoad payload = null;
-		List<ProgramDataSetPayLoad> payloadList = new ArrayList<ProgramDataSetPayLoad>();
+		List<ProgramDataSetPayLoad> payloadList = new ArrayList<>();
 		try {
 			programDataSetList = programDataSetService.getProgramDataSetList(id);
 			if (programDataSetList != null) {
@@ -282,16 +271,14 @@ public class ProgramController extends BaseController {
 	/**
 	 * Returns a DataSet Category Master List
 	 * 
-	 * @return
-	 * @throws DataSetCategoryException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/dataset/categorylist", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/dataset/categorylist")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getDataSetCategoryList(HttpServletResponse httpServletResponce)
-			throws DataSetCategoryException {
+	public ResponseEntity<?> getDataSetCategoryList(HttpServletResponse httpServletResponce) {
 		List<DataSetCategory> dataSetCategoryList = null;
-		List<DataSetCategoryPayload> payloadList = new ArrayList<DataSetCategoryPayload>();
+		List<DataSetCategoryPayload> payloadList = new ArrayList<>();
 		try {
 			dataSetCategoryList = programDataSetService.getDataSetCategoryList();
 			if (dataSetCategoryList != null) {
@@ -315,14 +302,12 @@ public class ProgramController extends BaseController {
 	 * Creates Resources for an Program by Id
 	 * 
 	 * @param programResourcePayLoad
-	 * @return
-	 * @throws ResourceException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/resource", method = RequestMethod.POST)
+	@PostMapping(path = "/{id}/resource")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> createProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
-			throws ResourceException {
+	public ResponseEntity<?> createProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad) {
 		ProgramResource programResource = null;
 		ProgramResourcePayLoad payload = null;
 		ResourceCategory category = null;
@@ -357,14 +342,12 @@ public class ProgramController extends BaseController {
 	 * Update Resource for an Program by Id
 	 * 
 	 * @param programResourcePayLoad
-	 * @return
-	 * @throws ResourceException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/resource", method = RequestMethod.PUT)
+	@PutMapping(path = "/{id}/resource")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> updateProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
-			throws ResourceException {
+	public ResponseEntity<?> updateProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad) {
 		ProgramResource programResource = null;
 		ResourceCategory category = null;
 		ResourceCategoryPayLoad payloadCategory = null;
@@ -403,14 +386,12 @@ public class ProgramController extends BaseController {
 	 * Delete Resource associated with Program by Id
 	 * 
 	 * @param programResourcePayLoad
-	 * @return
-	 * @throws ResourceException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/resource", method = RequestMethod.DELETE)
+	@DeleteMapping(path = "/{id}/resource")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> deleteProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad)
-			throws ResourceException {
+	public ResponseEntity<?> deleteProgramResource(@Valid @RequestBody ProgramResourcePayLoad programResourcePayLoad) {
 		try {
 			if (null != programResourcePayLoad && null != programResourcePayLoad.getId()) {
 				Long id = programResourcePayLoad.getId();
@@ -433,18 +414,17 @@ public class ProgramController extends BaseController {
 	 * Returns a List of Resources for an Program by Id
 	 * 
 	 * @param id
-	 * @return
-	 * @throws ResourceException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/resources", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/resources")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getProgramResourceList(@PathVariable("id") Long id) throws ResourceException {
+	public ResponseEntity<?> getProgramResourceList(@PathVariable("id") Long id) {
 		List<ProgramResource> programResourceList = null;
 		ProgramResourcePayLoad payload = null;
 		ResourceCategory category = null;
 		ResourceCategoryPayLoad payloadCategory = null;
-		List<ProgramResourcePayLoad> payloadList = new ArrayList<ProgramResourcePayLoad>();
+		List<ProgramResourcePayLoad> payloadList = new ArrayList<>();
 		try {
 			programResourceList = programResourceService.getProgramResourceList(id);
 			if (programResourceList != null) {
@@ -474,13 +454,12 @@ public class ProgramController extends BaseController {
 	/**
 	 * Returns an Resource Category Master List
 	 * 
-	 * @return
-	 * @throws ResourceCategoryException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/resource/categorylist", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/resource/categorylist")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
-	public ResponseEntity<?> getResourceCategoryList() throws ResourceCategoryException {
+	public ResponseEntity<?> getResourceCategoryList() {
 		List<ResourceCategory> resourceCategoryList = null;
 		ResourceCategoryPayLoad payload = null;
 		List<ResourceCategoryPayLoad> payloadList = new ArrayList<>();
@@ -507,16 +486,15 @@ public class ProgramController extends BaseController {
 	 * Creates ProgramRegionServed for an Program by Id
 	 * 
 	 * @param programRegionServedPayloadList
-	 * @return
-	 * @throws RegionServedException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/region", method = RequestMethod.PUT)
+	@PutMapping(path = "/{id}/region")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') ")
 	public ResponseEntity<?> createOrgRegions(
-			@RequestBody List<ProgramRegionServedPayload> programRegionServedPayloadList) throws RegionServedException {
+			@RequestBody List<ProgramRegionServedPayload> programRegionServedPayloadList) {
 		List<ProgramRegionServed> progranRegionServedList = null;
-		List<ProgramRegionServedPayload> payloadList = new ArrayList<ProgramRegionServedPayload>();
+		List<ProgramRegionServedPayload> payloadList = new ArrayList<>();
 		ProgramRegionServedPayload payload = null;
 		try {
 			progranRegionServedList = programRegionServedService
@@ -549,16 +527,15 @@ public class ProgramController extends BaseController {
 	 * Returns ProgramRegionServed List
 	 * 
 	 * @param id
-	 * @return
-	 * @throws RegionServedException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/regions", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/regions")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) throws RegionServedException {
+	public ResponseEntity<?> getOrgRegionsList(@PathVariable Long id) {
 		List<ProgramRegionServed> programRegionList = null;
 		ProgramRegionServedPayload payload = null;
-		List<ProgramRegionServedPayload> payloadList = new ArrayList<ProgramRegionServedPayload>();
+		List<ProgramRegionServedPayload> payloadList = new ArrayList<>();
 		try {
 			programRegionList = programRegionServedService.getProgramRegionServedList(id);
 			if (programRegionList != null) {
@@ -590,17 +567,15 @@ public class ProgramController extends BaseController {
 	 * Returns a Region Master List
 	 * 
 	 * @param filterPayload
-	 * @return
-	 * @throws RegionServedException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/regionmasters", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/regionmasters")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgRegionsMasterList(RegionMasterFilterPayload filterPayload)
-			throws RegionServedException {
+	public ResponseEntity<?> getOrgRegionsMasterList(RegionMasterFilterPayload filterPayload) {
 		List<RegionMaster> orgRegionMasterList = null;
 		RegionMasterPayload payload = null;
-		List<RegionMasterPayload> payloadList = new ArrayList<RegionMasterPayload>();
+		List<RegionMasterPayload> payloadList = new ArrayList<>();
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		try {
 			if (null != filterPayload) {
@@ -633,14 +608,13 @@ public class ProgramController extends BaseController {
 	/**
 	 * Returns a SpiData Master List
 	 * 
-	 * @return
-	 * @throws SpiDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/spidata", method = RequestMethod.GET)
+	@GetMapping(path = "/spidata")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgSpiDataList() throws SpiDataException {
-		List<SpiDataDimensionsPayload> payloadList = new ArrayList<SpiDataDimensionsPayload>();
+	public ResponseEntity<?> getOrgSpiDataList() {
+		List<SpiDataDimensionsPayload> payloadList = new ArrayList<>();
 		try {
 			payloadList = spiDataService.getSpiDataForResponse();
 		} catch (Exception e) {
@@ -654,14 +628,13 @@ public class ProgramController extends BaseController {
 	 * 
 	 * @param payloadList
 	 * @param progId
-	 * @return
-	 * @throws SpiDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/spidata", method = RequestMethod.PUT)
+	@PutMapping(path = "/{id}/spidata")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createOrgSpiDataMapping(@RequestBody List<ProgramSpiDataMapPayload> payloadList,
-			@PathVariable("id") Long progId) throws SpiDataException {
+			@PathVariable("id") Long progId) {
 		Program program = programRepository.findProgramById(progId);
 		if (program == null)
 			return sendErrorResponse(customMessageSource.getMessage("prg.error.not_found"));
@@ -682,14 +655,13 @@ public class ProgramController extends BaseController {
 	 * Returns a SpiData selected list for an Program by Id
 	 * 
 	 * @param orgId
-	 * @return
-	 * @throws SpiDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/spidata/selected", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/spidata/selected")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) throws SpiDataException {
-		List<ProgramSpiDataMapPayload> payloadList = new ArrayList<ProgramSpiDataMapPayload>();
+	public ResponseEntity<?> getSelectedOrgSpiData(@PathVariable("id") Long orgId) {
+		List<ProgramSpiDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 
@@ -698,6 +670,9 @@ public class ProgramController extends BaseController {
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "prog.spidata.error.selectedlist");
 		}
+		if (payloadList == null)
+			return sendSuccessResponse(new ArrayList<>());
+
 		return sendSuccessResponse(payloadList);
 	}// Code for program SPI data end
 
@@ -705,14 +680,13 @@ public class ProgramController extends BaseController {
 	/**
 	 * Returns a SdgData Master List
 	 * 
-	 * @return
-	 * @throws SdgDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/sdgdata", method = RequestMethod.GET)
+	@GetMapping(path = "/sdgdata")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
-	public ResponseEntity<?> getOrgSdgDataList() throws SdgDataException {
-		List<SdgGoalPayload> payloadList = new ArrayList<SdgGoalPayload>();
+	public ResponseEntity<?> getOrgSdgDataList() {
+		List<SdgGoalPayload> payloadList = new ArrayList<>();
 		try {
 			payloadList = sdgDataService.getSdgDataForResponse();
 		} catch (Exception e) {
@@ -727,14 +701,13 @@ public class ProgramController extends BaseController {
 	 * 
 	 * @param payloadList
 	 * @param progId
-	 * @return
-	 * @throws SdgDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/sdgdata", method = RequestMethod.PUT)
+	@PutMapping(path = "/{id}/sdgdata")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> createProgramSdgDataMapping(@RequestBody List<ProgramSdgDataMapPayload> payloadList,
-			@PathVariable("id") Long progId) throws SdgDataException {
+			@PathVariable("id") Long progId) {
 		Program program = programRepository.findProgramById(progId);
 		if (program == null)
 			return sendErrorResponse(customMessageSource.getMessage("prg.error.not_found"));
@@ -755,14 +728,13 @@ public class ProgramController extends BaseController {
 	 * Returns a SdgData selected list for an Program by Id
 	 * 
 	 * @param orgId
-	 * @return
-	 * @throws SdgDataException
+	 * @return @
 	 */
-	@RequestMapping(value = "/{id}/sdgdata/selected", method = RequestMethod.GET)
+	@GetMapping(path = "/{id}/sdgdata/selected")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
-	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) throws SdgDataException {
-		List<ProgramSdgDataMapPayload> payloadList = new ArrayList<ProgramSdgDataMapPayload>();
+	public ResponseEntity<?> getSelectedOrgSdgData(@PathVariable("id") Long orgId) {
+		List<ProgramSdgDataMapPayload> payloadList = null;
 		if (orgId == null)
 			return sendErrorResponse(customMessageSource.getMessage("prog.error.organization.null"));
 		try {
@@ -770,6 +742,10 @@ public class ProgramController extends BaseController {
 		} catch (Exception e) {
 			return sendExceptionResponse(e, "prog.spidata.error.selectedlist");
 		}
+
+		if (payloadList == null)
+			return sendSuccessResponse(new ArrayList<>());
+
 		return sendSuccessResponse(payloadList);
 	}// Code for program SDG data end
 

@@ -15,7 +15,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.winwin.winwin.service.AwsS3ObjectService;
-import com.winwin.winwin.util.CsvUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +28,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
-	private static final Logger logger = LoggerFactory.getLogger(CsvUtils.class);
+	private static final Logger logger = LoggerFactory.getLogger(AwsS3ObjectServiceImpl.class);
 
 	String clientRegion = System.getenv("AWS_REGION");
 
@@ -41,6 +40,9 @@ public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
 
 	@Value("${aws.s3.bucket.ntee.key.name}")
 	String nteeAwsKey;
+
+	private static final String AWS_BUCKET_NAME = "winwin-public-bucket-dev";
+	private static final String AWS_BUCKET_UPLOAD_FILE = "bulk_upload_result_1.csv";
 
 	EnvironmentVariableCredentialsProvider envCredentialsProvider = new EnvironmentVariableCredentialsProvider();
 
@@ -83,9 +85,8 @@ public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
 	public S3Object putS3ObjectWithResult(File file) throws Exception {
 		AmazonS3 s3Client = getS3Client();
 		logger.info("Pushing an object to S3");
-		s3Client.putObject(new PutObjectRequest("winwin-public-bucket-dev", "bulk_upload_result_1.csv", file));
-		S3Object s3Object = getS3Object("winwin-public-bucket-dev", "bulk_upload_result_1.csv");
-		return s3Object;
+		s3Client.putObject(new PutObjectRequest(AWS_BUCKET_NAME, AWS_BUCKET_UPLOAD_FILE, file));
+		return getS3Object(AWS_BUCKET_NAME, AWS_BUCKET_UPLOAD_FILE);
 	}
 
 	/**
@@ -98,8 +99,7 @@ public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
 		PutObjectResult putObjectResult = null;
 		AmazonS3 s3Client = getS3Client();
 		logger.info("Pushing an object to S3");
-		putObjectResult = s3Client
-				.putObject(new PutObjectRequest("winwin-public-bucket-dev", "bulk_upload_result_1.csv", file));
+		putObjectResult = s3Client.putObject(new PutObjectRequest(AWS_BUCKET_NAME, AWS_BUCKET_UPLOAD_FILE, file));
 		return putObjectResult;
 	}
 
@@ -109,9 +109,8 @@ public class AwsS3ObjectServiceImpl implements AwsS3ObjectService {
 	 * @return
 	 */
 	private AmazonS3 getS3Client() {
-		AmazonS3 s3Client = AmazonS3ClientBuilder.standard().withRegion(clientRegion)
-				.withCredentials(envCredentialsProvider).build();
-		return s3Client;
+		return AmazonS3ClientBuilder.standard().withRegion(clientRegion).withCredentials(envCredentialsProvider)
+				.build();
 	}
 
 }

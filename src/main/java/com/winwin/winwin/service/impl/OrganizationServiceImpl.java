@@ -405,7 +405,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != payload && null != user) {
 				Date date = CommonUtils.getFormattedDate();
-				Address address = new Address();
 				AddressPayload addressPayload = new AddressPayload();
 				addressPayload.setCountry("");
 				organization = new Organization();
@@ -425,7 +424,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 					organization.setRootParentId(payload.getRootParentId());
 
 				// save address for sub organization
-				address = saveAddress(addressPayload, user);
+				Address address = saveAddress(addressPayload, user);
 				organization.setAddress(address);
 				organization.setCreatedAt(date);
 				organization.setUpdatedAt(date);
@@ -519,8 +518,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			ExceptionResponse response, String operationPerformed, String customMessage, UserPayload user) {
 		ExceptionResponse errorResForNaics = new ExceptionResponse();
 		ExceptionResponse errorResForNtee = new ExceptionResponse();
-		List<Organization> successOrganizationList = new ArrayList<Organization>();
-		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<OrganizationBulkFailedPayload>();
+		List<Organization> successOrganizationList = new ArrayList<>();
+		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<>();
 		try {
 			Date date = CommonUtils.getFormattedDate();
 			// get NaicsCode AutoTag SpiSdgMapping
@@ -637,8 +636,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
 		// Implemented below logic to log failed and success
 		// organizations for bulk upload
-		List<Organization> successOrganizationList = new ArrayList<Organization>();
-		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<OrganizationBulkFailedPayload>();
+		List<Organization> successOrganizationList = new ArrayList<>();
+		List<OrganizationBulkFailedPayload> failedOrganizationList = new ArrayList<>();
 		// Boolean isFailed = false;
 		try {
 			LOGGER.info(
@@ -667,12 +666,10 @@ public class OrganizationServiceImpl implements OrganizationService {
 					failedOrganizationList.add(failedOrg);
 				}
 			}
-			// isFailed = true;
 		}
 		OrganizationBulkResultPayload payload = new OrganizationBulkResultPayload();
 		payload.setSuccessOrganizationList(successOrganizationList);
 		payload.setFailedOrganizationList(failedOrganizationList);
-		// payload.setIsFailed(isFailed);
 		return payload;
 
 	}
@@ -1330,7 +1327,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	private List<OrganizationNote> saveOrganizationNotesForBulkUpload(OrganizationCsvPayload payload, UserPayload user,
 			Organization organization) {
-		List<OrganizationNote> notes = new ArrayList<OrganizationNote>();
+		List<OrganizationNote> notes = new ArrayList<>();
 		OrganizationNote note = null;
 		try {
 			if (null != payload) {
@@ -1433,7 +1430,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		if (naicsMap == null) {
 			List<NaicsData> naicsCodeList = naicsDataRepository.findAll();
 			if (null != naicsCodeList) {
-				naicsMap = new HashMap<String, NaicsData>();
+				naicsMap = new HashMap<>();
 				for (NaicsData naicsData : naicsCodeList)
 					naicsMap.put(naicsData.getCode(), naicsData);
 			}
@@ -1441,7 +1438,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		if (nteeMap == null) {
 			List<NteeData> nteeCodeList = nteeDataRepository.findAll();
 			if (null != nteeCodeList) {
-				nteeMap = new HashMap<String, NteeData>();
+				nteeMap = new HashMap<>();
 				for (NteeData nteeData : nteeCodeList)
 					nteeMap.put(nteeData.getCode(), nteeData);
 			}

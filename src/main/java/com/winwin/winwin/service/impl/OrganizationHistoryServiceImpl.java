@@ -69,9 +69,9 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
 			orgHistory.setUpdatedByEmail(user.getEmail());
 			orgHistory.setActionPerformed(actionPerformed);
-			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+			orgHistoryRepository.saveAndFlush(orgHistory);
 		} catch (Exception e) {
-			LOGGER.error("exception occured while creating history", e);
+			LOGGER.error("exception occured while creating history ", e);
 		}
 
 	}
@@ -121,7 +121,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 			orgHistory.setUpdatedBy(user.getUserDisplayName());
 			orgHistory.setUpdatedByEmail(user.getEmail());
 			orgHistory.setActionPerformed(actionPerformed);
-			orgHistory = orgHistoryRepository.saveAndFlush(orgHistory);
+			orgHistoryRepository.saveAndFlush(orgHistory);
 		} catch (Exception e) {
 			LOGGER.error("exception occured while creating history", e);
 		}

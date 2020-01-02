@@ -153,7 +153,6 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	 */
 	@Override
 	public List<ProgramRegionServed> getProgramRegionServedList(Long programId) {
-		// TODO Auto-generated method stub
 		return programRegionServedRepository.findAllActiveProgramRegions(programId);
 	}
 

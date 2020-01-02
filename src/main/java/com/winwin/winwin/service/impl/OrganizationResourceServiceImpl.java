@@ -54,7 +54,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
 
-	private final Long CATEGORY_ID = -1L;
+	private static final Long CATEGORY_ID = -1L;
 
 	/**
 	 * create or update OrganizationResource and ResourceCategory, create new
@@ -72,18 +72,11 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != orgResourcePayLoad && null != user) {
 				orgResource = constructOrganizationResource(orgResourcePayLoad);
-				orgResource = organizationResourceRepository.saveAndFlush(orgResource);
-				/*
-				 * if (null != orgResource && null !=
-				 * orgResource.getOrganization()) {
-				 * orgHistoryService.createOrganizationHistory(user,
-				 * orgResource.getOrganization().getId(),
-				 * OrganizationConstants.CREATE, OrganizationConstants.RESOURCE,
-				 * orgResource.getId(),
-				 * orgResource.getResourceCategory().getCategoryName(), ""); }
-				 */
 
-				if (null != orgResource.getId() && null != orgResource.getOrganization()) {
+				if (null != orgResource)
+					orgResource = organizationResourceRepository.saveAndFlush(orgResource);
+
+				if (null != orgResource && null != orgResource.getId() && null != orgResource.getOrganization()) {
 					if (null != orgResourcePayLoad.getId()) {
 						orgHistoryService.createOrganizationHistory(user, orgResource.getOrganization().getId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE, orgResource.getId(),

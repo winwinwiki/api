@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,7 +54,7 @@ public class WinWinController extends BaseController {
 	 * @param file
 	 * @return
 	 */
-	@RequestMapping(value = "/organization/addAll", method = RequestMethod.POST)
+	@PostMapping(path = "/organization/addAll")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createOrganizationsOffline(@RequestParam("file") MultipartFile file) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -86,7 +86,7 @@ public class WinWinController extends BaseController {
 	 * @param file
 	 * @return
 	 */
-	@RequestMapping(value = "/program/addAll", method = RequestMethod.POST)
+	@PostMapping(path = "/program/addAll")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createProgramsOffline(@RequestParam("file") MultipartFile file) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();

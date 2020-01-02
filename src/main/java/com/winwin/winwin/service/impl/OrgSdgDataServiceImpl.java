@@ -59,7 +59,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 	public void createSdgDataMapping(List<OrganizationSdgDataMapPayload> payloadList, Organization organization)
 			throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
-		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
+		HashMap<String, SdgData> subGoalCodesMap = new HashMap<>();
 		if (null != payloadList && null != user) {
 			List<SdgData> sdgList = orgSdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
@@ -181,7 +181,7 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 	 */
 	@Override
 	public List<OrganizationSdgDataMapPayload> getSelectedSdgData(Long orgId) {
-		List<OrganizationSdgDataMapPayload> payloadList = new ArrayList<OrganizationSdgDataMapPayload>();
+		List<OrganizationSdgDataMapPayload> payloadList = new ArrayList<>();
 		List<OrganizationSdgData> sdgDataMapList = orgSdgDataMapRepository.getOrgSdgMapDataByOrgId(orgId);
 
 		if (null != sdgDataMapList) {

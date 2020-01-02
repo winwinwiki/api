@@ -7,7 +7,6 @@ package com.winwin.winwin.exception;
 public class DataSetCategoryException extends Exception {
 
 	private static final long serialVersionUID = 1L;
-	
 	private String message = null;
 
 	public DataSetCategoryException() {

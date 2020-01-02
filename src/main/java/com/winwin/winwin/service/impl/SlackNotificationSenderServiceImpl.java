@@ -58,7 +58,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	private SlackNotificationSenderService slackNotificationSenderService;
 
 	@Value("${slack.channel}")
-	String SLACK_CHANNEL;
+	private String SLACK_CHANNEL;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SlackNotificationSenderServiceImpl.class);
 

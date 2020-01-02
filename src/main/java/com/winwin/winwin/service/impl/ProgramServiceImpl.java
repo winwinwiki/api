@@ -196,7 +196,7 @@ public class ProgramServiceImpl implements ProgramService {
 	 */
 	@Override
 	public List<Program> getProgramList(ProgramFilterPayloadData payload, Long orgId, ExceptionResponse response) {
-		List<Program> programList = new ArrayList<Program>();
+		List<Program> programList = new ArrayList<>();
 		try {
 			if (payload.getNameSearch() != null)
 				return programRepository.findProgramByNameIgnoreCaseContaining(orgId, payload.getNameSearch());
