@@ -10,14 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
-import com.winwin.winwin.Logger.CustomMessageSource;
 import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.constants.UserConstants;
 import com.winwin.winwin.exception.ExceptionResponse;
@@ -42,16 +44,13 @@ public class UserController extends BaseController {
 	@Autowired
 	UserServiceImpl userService;
 
-	@Autowired
-	protected CustomMessageSource customMessageSource;
-
-	@RequestMapping(value = "", method = RequestMethod.POST)
+	@PostMapping(path = "")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> createUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != payload) {
 			// Check user with status as FORCE_CHANGE_PASSWORD
-			if (isNewUser(payload.getEmail(), exceptionResponse)) {
+			if (Boolean.TRUE.equals(isNewUser(payload.getEmail(), exceptionResponse))) {
 				userService.resendUserInvitation(payload, exceptionResponse);
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -59,8 +58,7 @@ public class UserController extends BaseController {
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 				return sendSuccessResponse("org.user.success.resend_invitation");
 			} else {
-				if (exceptionResponse.getException() != null
-						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+				if (exceptionResponse.getException() instanceof UserNotFoundException) {
 					userService.createUser(payload, exceptionResponse);
 					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 				} else if (exceptionResponse.getException() != null
@@ -73,12 +71,12 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 	}
 
-	@RequestMapping(value = "createKibanaUser", method = RequestMethod.POST)
+	@PostMapping(path = "createKibanaUser")
 	public ResponseEntity<?> createKibanaUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		if (null != payload) {
 			// Check user with status as FORCE_CHANGE_PASSWORD
-			if (isNewUser(payload.getEmail(), exceptionResponse)) {
+			if (Boolean.TRUE.equals(isNewUser(payload.getEmail(), exceptionResponse))) {
 				userService.resendUserInvitation(payload, exceptionResponse);
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -86,8 +84,7 @@ public class UserController extends BaseController {
 					return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 				return sendSuccessResponse("org.user.success.resend_invitation");
 			} else {
-				if (exceptionResponse.getException() != null
-						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+				if (exceptionResponse.getException() instanceof UserNotFoundException) {
 					userService.createKibanaUser(payload, exceptionResponse);
 					return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 				} else if (exceptionResponse.getException() != null
@@ -100,7 +97,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.success.created", HttpStatus.CREATED);
 	}
 
-	@RequestMapping(value = "login", method = RequestMethod.POST)
+	@PostMapping(path = "login")
 	public ResponseEntity<?> userSignInRequest(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		AuthenticationResultType authenticationResult = null;
@@ -109,7 +106,8 @@ public class UserController extends BaseController {
 
 		if (null != payload) {
 			if (!StringUtils.isEmpty(payload.getUserName())) {
-				if (isNewUser(payload.getUserName(), exceptionResponse) && payload.getNewPassword() == null) {
+				if (Boolean.TRUE.equals(isNewUser(payload.getUserName(), exceptionResponse))
+						&& payload.getNewPassword() == null) {
 					userSignInPayload = new UserSignInPayload();
 					userSignInPayload.setUserName(payload.getUserName());
 					userSignInPayload.setIsNewUser(true);
@@ -121,22 +119,20 @@ public class UserController extends BaseController {
 					return sendSuccessResponse(userSignInPayload);
 				}
 
-				if (exceptionResponse.getException() != null
-						&& exceptionResponse.getException() instanceof UserNotFoundException) {
+				if (exceptionResponse.getException() instanceof UserNotFoundException) {
 					return sendMsgResponse(exceptionResponse.getException().getMessage(),
 							exceptionResponse.getStatusCode());
 				}
 
 				authenticationResult = userService.userSignIn(payload, exceptionResponse);
 
-				if (null != authenticationResult) {
-					if (!StringUtils.isEmpty(authenticationResult.getAccessToken())) {
-						UserPayload userPayload = userService.getLoggedInUser(authenticationResult.getAccessToken(),
-								exceptionResponse);
-						userSignInResPayload = new UserSignInResponsePayload();
-						userSignInResPayload.setAuthResult(authenticationResult);
-						userSignInResPayload.setUserDetails(userPayload);
-					}
+				if (null != authenticationResult && (!StringUtils.isEmpty(authenticationResult.getAccessToken()))) {
+					UserPayload userPayload = userService.getLoggedInUser(authenticationResult.getAccessToken(),
+							exceptionResponse);
+					userSignInResPayload = new UserSignInResponsePayload();
+					userSignInResPayload.setAuthResult(authenticationResult);
+					userSignInResPayload.setUserDetails(userPayload);
+
 				}
 
 				if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
@@ -151,7 +147,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse(userSignInResPayload);
 	}
 
-	@RequestMapping(value = "info", method = RequestMethod.GET)
+	@GetMapping(path = "info")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getUserInfo(UserPayload userPayload) throws UserException {
@@ -174,7 +170,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@RequestMapping(value = "update", method = RequestMethod.PUT)
+	@PutMapping(path = "update")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> updateUserInfo(@Valid @RequestBody UserPayload userPayload) {
@@ -198,12 +194,12 @@ public class UserController extends BaseController {
 		return sendSuccessResponse(payload);
 	}
 
-	@RequestMapping(value = "updateAll", method = RequestMethod.PUT)
+	@PutMapping(path = "updateAll")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> updateUsersInfo(@Valid @RequestBody List<UserPayload> userPayloadList) {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 		UserPayload payload = null;
-		List<UserPayload> payloadList = new ArrayList<UserPayload>();
+		List<UserPayload> payloadList = new ArrayList<>();
 
 		if (null != userPayloadList) {
 			for (UserPayload userPayload : userPayloadList) {
@@ -228,14 +224,14 @@ public class UserController extends BaseController {
 	public Boolean isNewUser(String userName, ExceptionResponse exceptionResponse) throws UserException {
 		String userStatus = userService.getUserStatus(userName, exceptionResponse);
 		if (!StringUtils.isEmpty(userStatus)) {
-			if (OrganizationConstants.AWS_USER_STATUS_FORCE_CHANGE_PASSWORD.equals(userStatus)) {
+			if (OrganizationConstants.AWS_USER_STATUS_FORCE_CHANGE_PASS_WORD.equals(userStatus)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	@RequestMapping(value = "", method = RequestMethod.GET)
+	@GetMapping(path = "")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "')")
 	public ResponseEntity<?> getUserList() {
@@ -254,7 +250,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse(payloadList);
 	}
 
-	@RequestMapping(value = "resetPassword", method = RequestMethod.POST)
+	@PostMapping(path = "resetPassword")
 	public ResponseEntity<?> resetPassword(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -274,7 +270,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
-	@RequestMapping(value = "confirmResetPassword", method = RequestMethod.POST)
+	@PostMapping(path = "confirmResetPassword")
 	public ResponseEntity<?> confirmResetPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -297,7 +293,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.password.success.reset");
 	}
 
-	@RequestMapping(value = "resendCode", method = RequestMethod.POST)
+	@PostMapping(path = "resendCode")
 	public ResponseEntity<?> resendConfirmationCode(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
 
@@ -317,7 +313,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.code.success");
 	}
 
-	@RequestMapping(value = "changePassword", method = RequestMethod.PUT)
+	@PutMapping(path = "changePassword")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "') or hasAuthority('" + UserConstants.ROLE_DATASEEDER
 			+ "') or hasAuthority('" + UserConstants.ROLE_READER + "')")
 	public ResponseEntity<?> changeUserPassword(@Valid @RequestBody UserSignInPayload payload) throws UserException {
@@ -340,7 +336,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.password.success.changed");
 	}
 
-	@RequestMapping(value = "", method = RequestMethod.DELETE)
+	@DeleteMapping(path = "")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> deleteUser(@Valid @RequestBody UserPayload payload) throws UserException {
 		ExceptionResponse exceptionResponse = new ExceptionResponse();
@@ -361,7 +357,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.delete.success");
 	}
 
-	@RequestMapping(value = "changeUserStatus", method = RequestMethod.PUT)
+	@PutMapping(path = "changeUserStatus")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> changeUserStatus(@Valid @RequestBody UserStatusPayload userStatuspayload)
 			throws UserException {
@@ -373,7 +369,7 @@ public class UserController extends BaseController {
 				}
 			}
 
-			if (userStatuspayload.getIsActive()) {
+			if (Boolean.TRUE.equals(userStatuspayload.getIsActive())) {
 				userService.enableUser(userStatuspayload.getUserNames(), exceptionResponse);
 			} else {
 				userService.disableUser(userStatuspayload.getUserNames(), exceptionResponse);
@@ -389,7 +385,7 @@ public class UserController extends BaseController {
 		return sendSuccessResponse("org.user.enable.success");
 	}
 
-	@RequestMapping(value = "/actuator/health", method = RequestMethod.GET)
+	@GetMapping(path = "/actuator/health")
 	public ResponseEntity<?> getActuatorHealthStatus() {
 		return sendSuccessResponse("actuator.health.status", HttpStatus.OK);
 	}

@@ -28,7 +28,7 @@ public class AddressServiceImpl implements AddressService {
 	@Autowired
 	AddressRepository addressRepository;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AddressServiceImpl.class);
 
 	/**
 	 * save new address

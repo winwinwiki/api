@@ -109,7 +109,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
 			CloseableHttpClient client = HttpClients.createDefault();
 			String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
@@ -117,7 +117,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 
 			String encoding = Base64.getEncoder()
 					.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
 
 			// Prepare HttpGet Request
 			HttpGet httpGet = new HttpGet(url);
@@ -192,11 +192,11 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 		}
 
 		// return WINWIN user role mapped to search guard roles
-		if (isAdmin)
+		if (Boolean.TRUE.equals(isAdmin))
 			winwinUserRole = UserConstants.ROLE_ADMIN;
-		else if (isDataSeeder)
+		else if (Boolean.TRUE.equals(isDataSeeder))
 			winwinUserRole = UserConstants.ROLE_DATASEEDER;
-		else if (isReader)
+		else if (Boolean.TRUE.equals(isReader))
 			winwinUserRole = UserConstants.ROLE_READER;
 
 		return winwinUserRole;
@@ -219,7 +219,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
 			KibanaUserRequestPayload kibanaUserReqPayload = new KibanaUserRequestPayload();
 
@@ -273,7 +273,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 				}
 				String encoding = Base64.getEncoder()
 						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
 				StringEntity entity = new StringEntity(jsonStr);
 				HttpPut httpPut = new HttpPut(url);
 				httpPut.setEntity(entity);
@@ -311,7 +311,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
 			if (!StringUtils.isEmpty(payload.getUserName())) {
 				CloseableHttpClient client = HttpClients.createDefault();
@@ -319,7 +319,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
 				String encoding = Base64.getEncoder()
 						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
 				HttpDelete httpDelete = new HttpDelete(url);
 				httpDelete.setHeader("Accept", "application/json");
 				httpDelete.setHeader("Content-type", "application/json");
@@ -356,7 +356,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_CHANGE_PASS_API_URL)
 				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
 			if (!StringUtils.isEmpty(payload.getUserName())) {
 				CloseableHttpClient client = HttpClients.createDefault();
@@ -378,7 +378,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 
 				String encoding = Base64.getEncoder()
 						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)).getBytes());
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
 				StringEntity entity = new StringEntity(jsonStr);
 				HttpPut httpPut = new HttpPut(url);
 				httpPut.setEntity(entity);
@@ -408,19 +408,20 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	 */
 	private void setKibanaUserPayload(UserSignInPayload payload, KibanaUserRequestPayload kibanaUserPayload,
 			String[] backendRoles) {
-		if (null != payload)
+		if (null != payload) {
 			kibanaUserPayload.setPassword(payload.getNewPassword());
-
+			kibanaUserPayload.setFull_name(payload.getFullName());
+			kibanaUserPayload.setEmail(payload.getUserName());
+		}
 		kibanaUserPayload.setRoles(backendRoles);
-		kibanaUserPayload.setFull_name(payload.getFullName());
-		kibanaUserPayload.setEmail(payload.getUserName());
+
 	}
 
 	/**
 	 * set FrontEnd Routes for WINWIN
 	 */
-	private void setWinWinRoutesMap() throws Exception {
-		winwinRoutesMap = new HashMap<String, String>();
+	private void setWinWinRoutesMap() {
+		winwinRoutesMap = new HashMap<>();
 		List<WinWinRoutesMapping> activeRoutes = winWinRoutesMappingRepository.findAllActiveRoutes();
 		if (null != activeRoutes)
 			winwinRoutesMap = activeRoutes.stream()

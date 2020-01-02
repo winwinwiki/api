@@ -61,7 +61,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 			throws SdgDataException {
 		UserPayload user = userService.getCurrentUserDetails();
 		Date date = CommonUtils.getFormattedDate();
-		HashMap<String, SdgData> subGoalCodesMap = new HashMap<String, SdgData>();
+		HashMap<String, SdgData> subGoalCodesMap = new HashMap<>();
 		if (null != payloadList && null != user) {
 			List<SdgData> sdgList = sdgDataRepository.findAllActiveSdgData();
 			if (null != sdgList) {
@@ -122,19 +122,14 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 						if (payload.getProgramId() == null) {
 							isValidSdgData = false;
 						}
-						if (null != goalCode && !(StringUtils.isEmpty(subGoalCode)) && !(StringUtils.isEmpty(goalName))
-								&& !(StringUtils.isEmpty(subGoalName))) {
-							if (null != sdgDataMapObj.getSdgData()) {
-								if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
-									isValidSdgData = false;
-								} else if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
-									isValidSdgData = false;
-								} else if (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName())) {
-									isValidSdgData = false;
-								} else if (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())) {
-									isValidSdgData = false;
-								}
-							}
+						if (null != goalCode && (!StringUtils.isEmpty(subGoalCode)) && (!StringUtils.isEmpty(goalName))
+								&& (!StringUtils.isEmpty(subGoalName)) && null != sdgDataMapObj.getSdgData()
+								&& ((!goalCode.equals(sdgDataMapObj.getSdgData().getGoalCode()))
+										|| (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode()))
+										|| (!goalName.equals(sdgDataMapObj.getSdgData().getGoalName()))
+										|| (!subGoalName.equals(sdgDataMapObj.getSdgData().getShortName())))) {
+							isValidSdgData = false;
+
 						}
 						if (!isValidSdgData) {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.updated"));
@@ -165,7 +160,7 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 						throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.updated"));
 					}
 				}
-			} // end of loop for (OrgSdgDataMapPayload payload :
+			} // end of loop
 		}
 	}
 
@@ -176,7 +171,6 @@ public class ProgramSdgDataServiceImpl implements ProgramSdgDataService {
 	 */
 	@Override
 	public List<ProgramSdgDataMapPayload> getSelectedSdgData(Long programId) {
-		// TODO Auto-generated method stub
 		List<ProgramSdgDataMapPayload> payloadList = null;
 		List<ProgramSdgData> sdgDataMapList = programSdgDataMapRepository.getProgramSdgMapDataByOrgId(programId);
 		if (null != sdgDataMapList) {

@@ -32,16 +32,16 @@ public class SdgDataServiceImpl implements SdgDataService {
 	@Override
 	@CachePut(value = "sdg_data_list")
 	public List<SdgGoalPayload> getSdgDataForResponse() {
-		List<SdgGoalPayload> payloadList = new ArrayList<SdgGoalPayload>();
+		List<SdgGoalPayload> payloadList = new ArrayList<>();
 		List<SdgData> sdgList = orgSdgDataRepository.findAllActiveSdgData();
 		if (null != sdgList) {
-			HashMap<Long, List<SdgData>> sdgDataMap = new HashMap<Long, List<SdgData>>();
+			HashMap<Long, List<SdgData>> sdgDataMap = new HashMap<>();
 			setSdgDataMap(sdgList, sdgDataMap);
 
 			if ((!sdgDataMap.isEmpty())) {
 				for (List<SdgData> sdgDataList : sdgDataMap.values()) {
 					SdgGoalPayload sdgGoalPayload = new SdgGoalPayload();
-					List<SdgSubGoalPayload> subGoalsList = new ArrayList<SdgSubGoalPayload>();
+					List<SdgSubGoalPayload> subGoalsList = new ArrayList<>();
 					sdgGoalPayload.setGoalCode(sdgDataList.get(0).getGoalCode());
 					sdgGoalPayload.setGoalName(sdgDataList.get(0).getGoalName());
 					for (SdgData sdgdata : sdgDataList) {
@@ -65,7 +65,7 @@ public class SdgDataServiceImpl implements SdgDataService {
 	private void setSdgDataMap(List<SdgData> sdgList, HashMap<Long, List<SdgData>> sdgDataMap) {
 		for (SdgData sdgDataObj : sdgList) {
 			if (!sdgDataMap.containsKey(sdgDataObj.getGoalCode())) {
-				List<SdgData> subGoals = new ArrayList<SdgData>();
+				List<SdgData> subGoals = new ArrayList<>();
 				subGoals.add(sdgDataObj);
 				sdgDataMap.put(sdgDataObj.getGoalCode(), subGoals);
 			} else {

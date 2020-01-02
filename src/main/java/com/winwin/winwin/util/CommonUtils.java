@@ -21,7 +21,6 @@ public class CommonUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtils.class);
 
 	public CommonUtils() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**

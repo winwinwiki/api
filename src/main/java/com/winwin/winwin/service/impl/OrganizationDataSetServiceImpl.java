@@ -54,7 +54,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationDataSetServiceImpl.class);
 
-	private final Long CATEGORY_ID = -1L;
+	private static final Long CATEGORY_ID = -1L;
 
 	/**
 	 * create or update OrganizationDataSet and DataSetCategory, create new

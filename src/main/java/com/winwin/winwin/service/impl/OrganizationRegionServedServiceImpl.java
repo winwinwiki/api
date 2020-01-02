@@ -81,14 +81,13 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 		try {
 			if (null != orgRegionPayloadlist && null != user) {
 				Date date = CommonUtils.getFormattedDate();
-				orgRegionList = new ArrayList<OrganizationRegionServed>();
+				orgRegionList = new ArrayList<>();
 				for (OrganizationRegionServedPayload payload : orgRegionPayloadlist) {
 					if (payload.getId() == null) {
 						OrganizationRegionServed orgRegionServed = null;
 						orgRegionServed = new OrganizationRegionServed();
 						// set organization region master
 						setOrgRegionMasterData(payload, orgRegionServed, user);
-
 						if (null != payload.getOrganizationId()) {
 							Organization organization = organizationRepository.findOrgById(payload.getOrganizationId());
 							orgRegionServed.setOrganization(organization);
@@ -206,7 +205,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 	@Override
 	@CachePut(value = "organization_region_master")
 	public List<RegionMaster> getOrgRegionMasterList(RegionMasterFilterPayload payload, ExceptionResponse response) {
-		List<RegionMaster> regionsList = new ArrayList<RegionMaster>();
+		List<RegionMaster> regionsList = new ArrayList<>();
 		try {
 			if (null != payload.getPageNo() && null != payload.getPageSize()) {
 				String regionName = "";
