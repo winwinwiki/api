@@ -9,6 +9,7 @@ import com.winwin.winwin.payload.UserPayload;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 public class UserComparator implements Comparator<UserPayload> {

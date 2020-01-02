@@ -3,12 +3,9 @@
  */
 package com.winwin.winwin.controller;
 
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
@@ -31,11 +28,10 @@ public class BaseController {
 	protected CustomMessageSource customMessageSource;
 
 	private BodyBuilder buildSuccessBody() {
-		return ResponseEntity
-				.ok();
-				//.cacheControl(CacheControl.maxAge(300, TimeUnit.SECONDS).mustRevalidate());
+		return ResponseEntity.ok();
+
 	}
-	
+
 	/**
 	 * send success response with Object
 	 * 

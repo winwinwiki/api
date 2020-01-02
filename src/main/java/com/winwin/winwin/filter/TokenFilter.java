@@ -20,7 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.winwin.winwin.constants.OrganizationConstants;
-import com.winwin.winwin.controller.BaseController;
 import com.winwin.winwin.entity.ApplicationUser;
 import com.winwin.winwin.exception.ExceptionResponse;
 import com.winwin.winwin.payload.UserPayload;
@@ -36,12 +35,12 @@ import io.micrometer.core.instrument.util.StringUtils;
 @Service
 public class TokenFilter extends HttpFilter {
 
+	/**
+	 * 
+	 */
 	private static final long serialVersionUID = 1L;
 	@Autowired
-	BaseController baseController;
-
-	@Autowired
-	UserServiceImpl userService;
+	private UserServiceImpl userService;
 
 	@Override
 	public void destroy() {

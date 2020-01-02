@@ -10,7 +10,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
@@ -152,7 +151,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	private final String notesIndexType = System.getenv("AWS_ES_NOTES_INDEX_TYPE");
 
 	@Value("${slack.channel}")
-	String SLACK_CHANNEL;
+	private String SLACK_CHANNEL;
 
 	/**
 	 * send organization's data to Elastic Search
@@ -240,8 +239,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 */
 	private void sendDataToElasticSearch(Pageable pageable, File file, FileWriter txtWriter, Date lastUpdatedDate)
 			throws Exception {
-		// final String serviceName = "es";
-		// final String region = System.getenv("AWS_REGION2");
 		try {
 			// fetch all the data of organization by pageNum and pageSize
 			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable, file,
@@ -323,7 +320,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					for (OrganizationRegionServedElasticSearchPayload regionServed : payload.getRegionServed()) {
 						String regionServedId = "organization_regionserved_" + regionServed.getId().toString();
 						// check for program
-						if (isProgram(payload))
+						if (Boolean.TRUE.equals(isProgram(payload)))
 							regionServedId = "program_regionserved_" + regionServed.getId().toString();
 						// copy organization and regionServed properties to
 						// regionServedPayload
@@ -342,7 +339,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					for (OrganizationNoteElasticSearchPayload note : payload.getNotes()) {
 						String noteId = "organization_notes_" + note.getId().toString();
 						// check for program
-						if (isProgram(payload))
+						if (Boolean.TRUE.equals(isProgram(payload)))
 							noteId = "program_notes_" + note.getId().toString();
 						// copy organization and note properties to notePayload
 						NotesElasticSearchPayload notePayload = new NotesElasticSearchPayload();
@@ -358,7 +355,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				String jsonStr = mapper.writeValueAsString(payload);
 				// set bulk request
 				setBulkRequest(bulkRequest, mapper, orgIndex, orgIndexType, id, jsonStr);
-			} // end of loop for (OrganizationElasticSearchPayload payload :
+			} // end of loop
 
 			if (!organizationPayloadList.isEmpty()) {
 				// set post request for KIBANA
@@ -369,15 +366,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (!winwinRoutesMap.isEmpty()
 						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD)) {
+						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
 					RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
-							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASSWORD));
+							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
 
 					// send bulk request to es
-					@SuppressWarnings("unused")
-					BulkResponse response = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
 				}
 			}
 
@@ -426,8 +422,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable, File file,
 			FileWriter txtWriter, Date lastUpdatedDate) throws Exception {
-		List<OrganizationElasticSearchPayload> organizationPayloadList = new ArrayList<OrganizationElasticSearchPayload>();
-		List<Organization> organizationList = new ArrayList<Organization>();
+		List<OrganizationElasticSearchPayload> organizationPayloadList = new ArrayList<>();
+		List<Organization> organizationList = new ArrayList<>();
 
 		try {
 			/*
@@ -519,12 +515,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					 * rootParentOrganization); }
 					 */
 
-				} // end of loop for (Map.Entry<Long, Organization>
-					// organizationFromMap
+				} // end of loop
 
-			} // end of if (null != organizationList) {
-
-			// }
+			} // end of if
 
 		} catch (BeansException e) {
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
@@ -749,7 +742,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			throws Exception {
 		// fetch all programs of an organization
 		List<Program> programList = programRepository.findAllProgramList(organization.getId());
-		List<OrganizationElasticSearchPayload> programPayloadList = new ArrayList<OrganizationElasticSearchPayload>();
+		List<OrganizationElasticSearchPayload> programPayloadList = new ArrayList<>();
 
 		if (null != programList) {
 			// set Organization Map
@@ -847,7 +840,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 			}
 
-		} // end of if (null != programList) {
+		} // end of if
 
 		// set programPayloadList to add in the organizationPayloadList
 		return programPayloadList;
@@ -861,7 +854,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all sdgDataMapping of an program
 		List<ProgramSdgData> programSdgDataMappingList = programSdgDataMapRepository
 				.getProgramSdgMapDataByOrgId(program.getId());
-		List<OrganizationFrameworksPayload> sdgDataFrameworks = new ArrayList<OrganizationFrameworksPayload>();
+		List<OrganizationFrameworksPayload> sdgDataFrameworks = new ArrayList<>();
 
 		if (null != programSdgDataMappingList) {
 			for (ProgramSdgData sdgDataMapping : programSdgDataMappingList) {
@@ -921,7 +914,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all spiDataMapping of an program
 		List<ProgramSpiData> programSpiDataMappingList = programSpiDataMapRepository
 				.getProgramSpiMapDataByOrgId(program.getId());
-		List<OrganizationFrameworksPayload> spiDataFrameworks = new ArrayList<OrganizationFrameworksPayload>();
+		List<OrganizationFrameworksPayload> spiDataFrameworks = new ArrayList<>();
 
 		if (null != programSpiDataMappingList) {
 			for (ProgramSpiData spiDataMapping : programSpiDataMappingList) {
@@ -979,7 +972,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all regionServed of an program
 		List<ProgramRegionServed> programRegionServedList = programRegionServedRepository
 				.findAllActiveProgramRegions(program.getId());
-		List<OrganizationRegionServedElasticSearchPayload> regionServedPayloadList = new ArrayList<OrganizationRegionServedElasticSearchPayload>();
+		List<OrganizationRegionServedElasticSearchPayload> regionServedPayloadList = new ArrayList<>();
 
 		if (null != programRegionServedList) {
 			for (ProgramRegionServed regionServed : programRegionServedList) {
@@ -1028,7 +1021,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all active resources of an program
 		List<ProgramResource> programResourceList = programResourceRepository
 				.findAllActiveProgramResources(program.getId());
-		List<OrganizationResourceElasticSearchPayload> resourcePayloadList = new ArrayList<OrganizationResourceElasticSearchPayload>();
+		List<OrganizationResourceElasticSearchPayload> resourcePayloadList = new ArrayList<>();
 		List<String> namesofResources = new ArrayList<String>();
 
 		if (null != programResourceList) {
@@ -1080,7 +1073,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all active datasets of an program
 		List<ProgramDataSet> programDataSetList = programDataSetRepository
 				.findAllActiveProgramDataSets(program.getId());
-		List<OrganizationDataSetElasticSearchPayload> dataSetPayloadList = new ArrayList<OrganizationDataSetElasticSearchPayload>();
+		List<OrganizationDataSetElasticSearchPayload> dataSetPayloadList = new ArrayList<>();
 		List<String> namesofDatasets = new ArrayList<String>();
 
 		if (null != programDataSetList) {
@@ -1133,7 +1126,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all sdgDataMapping of an organization
 		List<OrganizationSdgData> organizationSdgDataMappingList = orgSdgDataMapRepository
 				.getOrgSdgMapDataByOrgId(organization.getId());
-		List<OrganizationFrameworksPayload> sdgDataFrameworks = new ArrayList<OrganizationFrameworksPayload>();
+		List<OrganizationFrameworksPayload> sdgDataFrameworks = new ArrayList<>();
 
 		if (null != organizationSdgDataMappingList) {
 			for (OrganizationSdgData sdgDataMapping : organizationSdgDataMappingList) {
@@ -1192,7 +1185,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all spiDataMapping of an organization
 		List<OrganizationSpiData> organizationSpiDataMappingList = orgSpiDataMapRepository
 				.getOrgSpiMapDataByOrgId(organization.getId());
-		List<OrganizationFrameworksPayload> spiDataFrameworks = new ArrayList<OrganizationFrameworksPayload>();
+		List<OrganizationFrameworksPayload> spiDataFrameworks = new ArrayList<>();
 
 		if (null != organizationSpiDataMappingList) {
 			for (OrganizationSpiData spiDataMapping : organizationSpiDataMappingList) {
@@ -1245,7 +1238,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all regionServed of an organization
 		List<OrganizationRegionServed> organizationRegionServedList = organizationRegionServedRepository
 				.findAllActiveOrgRegions(organization.getId());
-		List<OrganizationRegionServedElasticSearchPayload> regionServedPayloadList = new ArrayList<OrganizationRegionServedElasticSearchPayload>();
+		List<OrganizationRegionServedElasticSearchPayload> regionServedPayloadList = new ArrayList<>();
 
 		if (null != organizationRegionServedList) {
 			for (OrganizationRegionServed regionServed : organizationRegionServedList) {
@@ -1289,8 +1282,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all active resources of an organization
 		List<OrganizationResource> organizationResourceList = organizationResourceRepository
 				.findAllActiveOrgResources(organization.getId());
-		List<OrganizationResourceElasticSearchPayload> resourcePayloadList = new ArrayList<OrganizationResourceElasticSearchPayload>();
-		List<String> namesofResources = new ArrayList<String>();
+		List<OrganizationResourceElasticSearchPayload> resourcePayloadList = new ArrayList<>();
+		List<String> namesofResources = new ArrayList<>();
 
 		if (null != organizationResourceList) {
 			for (OrganizationResource resource : organizationResourceList) {
@@ -1338,8 +1331,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all active dataSets of an organization
 		List<OrganizationDataSet> organizationDataSetList = organizationDataSetRepository
 				.findAllActiveOrgDataSets(organization.getId());
-		List<OrganizationDataSetElasticSearchPayload> dataSetPayloadList = new ArrayList<OrganizationDataSetElasticSearchPayload>();
-		List<String> namesofDatasets = new ArrayList<String>();
+		List<OrganizationDataSetElasticSearchPayload> dataSetPayloadList = new ArrayList<>();
+		List<String> namesofDatasets = new ArrayList<>();
 
 		if (null != organizationDataSetList) {
 			for (OrganizationDataSet dataset : organizationDataSetList) {
@@ -1387,7 +1380,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// fetch all notes of an organization
 		List<OrganizationNote> organizationNoteList = organizationNoteRepository
 				.findAllOrgNotesList(organization.getId());
-		List<OrganizationNoteElasticSearchPayload> notePayloadList = new ArrayList<OrganizationNoteElasticSearchPayload>();
+		List<OrganizationNoteElasticSearchPayload> notePayloadList = new ArrayList<>();
 
 		if (null != organizationNoteList) {
 			for (OrganizationNote note : organizationNoteList) {

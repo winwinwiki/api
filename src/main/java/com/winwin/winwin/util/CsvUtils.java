@@ -19,6 +19,7 @@ import com.winwin.winwin.exception.ExceptionResponse;
 
 /**
  * @author ArvindKhatik
+ * @version 1.0
  *
  */
 @Component
@@ -27,8 +28,8 @@ public class CsvUtils {
 	protected CustomMessageSource customMessageSource;
 
 	private static final Logger log = LoggerFactory.getLogger(CsvUtils.class);
-
 	private static final CsvMapper mapper = new CsvMapper();
+	private String csvErrorMessage = "csv.error";
 
 	public <T> List<T> read(Class<T> clazz, MultipartFile file, ExceptionResponse response) {
 
@@ -38,7 +39,7 @@ public class CsvUtils {
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
 			list = reader.<T> readValues(file.getInputStream()).readAll();
 		} catch (Exception e) {
-			log.error(customMessageSource.getMessage("csv.error"), e);
+			log.error(customMessageSource.getMessage(csvErrorMessage), e);
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			response.setException(e);
@@ -54,7 +55,7 @@ public class CsvUtils {
 			ObjectReader reader = mapper.readerFor(clazz).with(schema);
 			list = reader.<T> readValues(stream).readAll();
 		} catch (Exception e) {
-			log.error(customMessageSource.getMessage("csv.error"), e);
+			log.error(customMessageSource.getMessage(csvErrorMessage), e);
 			response.setErrorMessage(e.getMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 			response.setException(e);

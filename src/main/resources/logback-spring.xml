@@ -3,7 +3,7 @@
 
 	<springProperty scope="context" name="logFilePath" source="logging.path"/>
 
-	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+	<!-- <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
 		<Target>System.out</Target>
 		<encoder>
 			<Pattern>.%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} %L - %msg %n
@@ -36,12 +36,53 @@
 	    <level value="ERROR" />
 		<appender-ref ref="console" /> 
 		<appender-ref ref="RFA"/>
+	</logger> -->
+	
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    	<layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+        	<jsonFormatter
+            	class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+            	<prettyPrint>false</prettyPrint>
+        	</jsonFormatter>
+        	<timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
+        	<appendLineSeparator>true</appendLineSeparator>
+    	</layout>
+	</appender>
+	
+	<appender name="RFA"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logFilePath}/winwin-application.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>${logFilePath}/winwin-application.log.%d{yyyy-MM-dd}.gz
+			</FileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+    	<layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+        	<jsonFormatter
+            	class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+            	<prettyPrint>false</prettyPrint>
+        	</jsonFormatter>
+        	<timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
+        	<appendLineSeparator>true</appendLineSeparator>
+    	</layout>
+	</appender>	
+ 
+	<logger name="com.winwin.winwin" >
+		<level value="INFO" />
+		<level value="DEBUG" />
+	    <level value="WARN" />
+	    <level value="ERROR" />
+    	<appender-ref ref="console" />
+    	<appender-ref ref="RFA" />
 	</logger>
 
 	<root>
 		<level value="INFO" />
-		<appender-ref ref="RFA"/>
+		<level value="DEBUG" />
+	    <level value="WARN" />
+	    <level value="ERROR" />
 		<appender-ref ref="console" />
+		<appender-ref ref="RFA" />
 	</root>
 
 </configuration>

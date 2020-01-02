@@ -123,12 +123,12 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 								isValidSpiData = false;
 							}
 
-							if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))
-									&& !(StringUtils.isEmpty(dName)) && !(StringUtils.isEmpty(dName))
-									&& !(StringUtils.isEmpty(dName))) {
+							if (null != dId && (!StringUtils.isEmpty(cId)) && (!StringUtils.isEmpty(indId))
+									&& (!StringUtils.isEmpty(dName)) && (!StringUtils.isEmpty(cName))
+									&& (!StringUtils.isEmpty(indName))) {
 
 								if (null != spiDataMapObj.getSpiData()) {
-									if (dId != spiDataMapObj.getSpiData().getDimensionId()) {
+									if (!dId.equals(spiDataMapObj.getSpiData().getDimensionId())) {
 										isValidSpiData = false;
 									} else if (!cId.equals(spiDataMapObj.getSpiData().getComponentId())) {
 										isValidSpiData = false;
@@ -187,7 +187,7 @@ public class OrgSpiDataServiceImpl implements OrgSpiDataService {
 	 */
 	@Override
 	public List<OrganizationSpiDataMapPayload> getSelectedSpiData(Long orgId) {
-		List<OrganizationSpiDataMapPayload> payloadList = new ArrayList<OrganizationSpiDataMapPayload>();
+		List<OrganizationSpiDataMapPayload> payloadList = new ArrayList<>();
 		List<OrganizationSpiData> spiDataMapList = orgSpiDataMapRepository.getOrgSpiMapDataByOrgId(orgId);
 		if (null != spiDataMapList) {
 			for (OrganizationSpiData spiMapData : spiDataMapList) {

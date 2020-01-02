@@ -17,19 +17,16 @@ import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDisableUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminEnableUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthRequest;
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthResult;
 import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordRequest;
-import com.amazonaws.services.cognitoidp.model.AdminResetUserPasswordResult;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeRequest;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
@@ -59,7 +56,6 @@ import com.amazonaws.services.cognitoidp.model.ListUsersResult;
 import com.amazonaws.services.cognitoidp.model.NotAuthorizedException;
 import com.amazonaws.services.cognitoidp.model.PasswordResetRequiredException;
 import com.amazonaws.services.cognitoidp.model.ResendConfirmationCodeRequest;
-import com.amazonaws.services.cognitoidp.model.ResendConfirmationCodeResult;
 import com.amazonaws.services.cognitoidp.model.ResourceNotFoundException;
 import com.amazonaws.services.cognitoidp.model.TooManyFailedAttemptsException;
 import com.amazonaws.services.cognitoidp.model.TooManyRequestsException;
@@ -123,8 +119,7 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		try {
-			@SuppressWarnings("unused")
-			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+			cognitoClient.adminCreateUser(cognitoRequest);
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -162,8 +157,7 @@ public class UserServiceImpl implements UserService {
 				.withDesiredDeliveryMediums(DeliveryMediumType.EMAIL).withForceAliasCreation(Boolean.FALSE);
 
 		try {
-			@SuppressWarnings("unused")
-			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+			cognitoClient.adminCreateUser(cognitoRequest);
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -218,7 +212,7 @@ public class UserServiceImpl implements UserService {
 		cognitoRequest.setMessageAction("RESEND");
 
 		try {
-			AdminCreateUserResult createUserResult = cognitoClient.adminCreateUser(cognitoRequest);
+			cognitoClient.adminCreateUser(cognitoRequest);
 		} catch (InternalErrorException e) {
 			response.setErrorMessage(e.getErrorMessage());
 			response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -366,7 +360,7 @@ public class UserServiceImpl implements UserService {
 	 */
 	@Override
 	public List<UserPayload> getUserList(ExceptionResponse response) {
-		List<UserPayload> payloadList = new ArrayList<UserPayload>();
+		List<UserPayload> payloadList = new ArrayList<>();
 		AWSCognitoIdentityProvider cognitoClient = getAmazonCognitoIdentityClient();
 		ListUsersRequest cognitoGetListUserRequest = new ListUsersRequest()
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID"));
@@ -575,8 +569,7 @@ public class UserServiceImpl implements UserService {
 				.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(payload.getEmail());
 
 		try {
-			@SuppressWarnings("unused")
-			AdminResetUserPasswordResult resetUserPassResult = cognitoClient.adminResetUserPassword(cognitoRequest);
+			cognitoClient.adminResetUserPassword(cognitoRequest);
 		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException | NotAuthorizedException
 				| TooManyRequestsException | LimitExceededException e) {
 			response.setErrorMessage(e.getErrorMessage());
@@ -647,8 +640,7 @@ public class UserServiceImpl implements UserService {
 		ResendConfirmationCodeRequest cognitoRequest = new ResendConfirmationCodeRequest()
 				.withClientId(System.getenv("AWS_COGNITO_CLIENT_ID")).withUsername(payload.getEmail());
 		try {
-			@SuppressWarnings("unused")
-			ResendConfirmationCodeResult confirmCodeResult = cognitoClient.resendConfirmationCode(cognitoRequest);
+			cognitoClient.resendConfirmationCode(cognitoRequest);
 		} catch (ResourceNotFoundException | InvalidParameterException | UserNotFoundException
 				| CodeDeliveryFailureException | InvalidPasswordException | NotAuthorizedException
 				| TooManyRequestsException | InvalidEmailRoleAccessPolicyException | LimitExceededException e) {
@@ -814,8 +806,7 @@ public class UserServiceImpl implements UserService {
 			AdminEnableUserRequest adminEnableUserRequest = new AdminEnableUserRequest()
 					.withUserPoolId(System.getenv("AWS_COGNITO_USER_POOL_ID")).withUsername(userName);
 			try {
-				@SuppressWarnings("unused")
-				AdminEnableUserResult adminEnableUserResult = cognitoClient.adminEnableUser(adminEnableUserRequest);
+				cognitoClient.adminEnableUser(adminEnableUserRequest);
 				// Call resetUserPassword Flow Once User is Enabled In
 				// AWS_COGNITO_USER_POOL_ID
 				// Added this flow to support enable / disable feature Elastic
@@ -893,7 +884,6 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserPayload getCurrentUserDetails() {
-		// TODO Auto-generated method stub
 		UserPayload user = null;
 		if (null != SecurityContextHolder.getContext() && null != SecurityContextHolder.getContext().getAuthentication()
 				&& null != SecurityContextHolder.getContext().getAuthentication().getDetails()) {

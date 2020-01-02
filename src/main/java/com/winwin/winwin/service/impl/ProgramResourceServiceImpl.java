@@ -72,19 +72,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				programResource = constructProgramResource(programResourcePayLoad);
 				programResource = programResourceRepository.saveAndFlush(programResource);
 
-				/*
-				 * if (null != programResource && null !=
-				 * programResource.getProgram() && null !=
-				 * programResource.getProgram().getId()) {
-				 * organizationHistoryService.createOrganizationHistory(user,
-				 * programResourcePayLoad.getOrganizationId(),
-				 * programResourcePayLoad.getProgramId(),
-				 * OrganizationConstants.UPDATE, OrganizationConstants.RESOURCE,
-				 * programResource.getId(),
-				 * programResource.getResourceCategory().getCategoryName(), "");
-				 * }
-				 */
-
 				if (null != programResource && null != programResource.getProgram()
 						&& null != programResource.getProgram().getId()) {
 					if (null != programResourcePayLoad.getId()) {
@@ -122,7 +109,6 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	@Caching(evict = { @CacheEvict(value = "program_resource_category_list"),
 			@CacheEvict(value = "program_resource__list") })
 	public void removeProgramResource(Long resourceId, Long organizationId, Long programId) {
-		// TODO Auto-generated method stub
 		ProgramResource resource = programResourceRepository.findProgramResourceById(resourceId);
 		try {
 			UserPayload user = userService.getCurrentUserDetails();

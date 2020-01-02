@@ -122,29 +122,24 @@ public class ProgramSpiDataServiceImpl implements ProgramSpiDataService {
 								isValidSpiData = false;
 							}
 
-							if (null != dId && !(StringUtils.isEmpty(cId)) && !(StringUtils.isEmpty(indId))
-									&& !(StringUtils.isEmpty(dName)) && !(StringUtils.isEmpty(dName))
-									&& !(StringUtils.isEmpty(dName))) {
-								if (null != spiDataMapObj.getSpiData()) {
-									if (dId != spiDataMapObj.getSpiData().getDimensionId()) {
-										isValidSpiData = false;
-									} else if (!cId.equals(spiDataMapObj.getSpiData().getComponentId())) {
-										isValidSpiData = false;
-									} else if (!indId.equals(spiDataMapObj.getSpiData().getIndicatorId())) {
-										isValidSpiData = false;
-									} else if (!dName.equals(spiDataMapObj.getSpiData().getDimensionName())) {
-										isValidSpiData = false;
-									} else if (!cName.equals(spiDataMapObj.getSpiData().getComponentName())) {
-										isValidSpiData = false;
-									} else if (!indName.equals(spiDataMapObj.getSpiData().getIndicatorName())) {
-										isValidSpiData = false;
-									}
-								}
+							if (null != dId && (!StringUtils.isEmpty(cId)) && (!StringUtils.isEmpty(indId))
+									&& (!StringUtils.isEmpty(dName)) && (!StringUtils.isEmpty(cName))
+									&& (!StringUtils.isEmpty(indName))
+									&& (null != spiDataMapObj.getSpiData() && ((!dId
+											.equals(spiDataMapObj.getSpiData().getDimensionId()))
+											|| (!cId.equals(spiDataMapObj.getSpiData().getComponentId()))
+											|| (!indId.equals(spiDataMapObj.getSpiData().getIndicatorId()))
+											|| (!dName.equals(spiDataMapObj.getSpiData().getDimensionName()))
+											|| (!cName.equals(spiDataMapObj.getSpiData().getComponentName()))
+											|| (!indName.equals(spiDataMapObj.getSpiData().getIndicatorName()))))) {
+								isValidSpiData = false;
+
 							}
 
-							if (!isValidSpiData) {
-								LOGGER.error(customMessageSource.getMessage("org.spidata.error.updated"));
-								throw new SpiDataException(customMessageSource.getMessage("org.spidata.error.updated"));
+							if (Boolean.FALSE.equals(isValidSpiData)) {
+								String errorMessage = "org.spidata.error.updated";
+								LOGGER.error(customMessageSource.getMessage(errorMessage));
+								throw new SpiDataException(customMessageSource.getMessage(errorMessage));
 							} else {
 								BeanUtils.copyProperties(payload, spiDataMapObj);
 								spiDataMapObj.setUpdatedAt(date);

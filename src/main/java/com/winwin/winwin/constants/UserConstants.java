@@ -14,4 +14,8 @@ public class UserConstants {
 	public static final String ROLE_CONTENTMANAGER = "ContentManager";
 	public static final String ROLE_READER = "Reader";
 
+	private UserConstants() {
+
+	}
+
 }
