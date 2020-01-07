@@ -34,8 +34,8 @@ public class OrganizationElasticSearchPayload {
 	private String linkedinUrl;
 	private String missionStatement;
 	private String naics_code;
-	private String name;
-	private String description;
+	private String programOrOrgName;
+	private String programOrOrgDescription;
 	private String ntee_code;
 	private String populationServed;
 	private String priority;
@@ -48,17 +48,17 @@ public class OrganizationElasticSearchPayload {
 	private String selfInterest;
 	private String tagStatus;
 	private String twitterUrl;
-	private String type;
+	private String programOrOrgType;
 	private String values;
 	private String websiteUrl;
 	private String adminUrl;
-	private String parentUrl;
-	private String rootParentUrl;
-	private Long parentId;
-	private Long rootParentId;
-	private String parentName;
-	private String rootParentName;
-	private String parentDescription;
+	private String parentOrgUrl;
+	private String topParentOrgUrl;
+	private Long parentOrgId;
+	private Long topParentOrgId;
+	private String parentOrgName;
+	private String topParentOrgName;
+	private String parentOrgDescription;
 	private List<String> connectedOrganizations;
 	private AddressElasticSearchPayload address;
 	private List<OrganizationNoteElasticSearchPayload> notes;
@@ -67,6 +67,6 @@ public class OrganizationElasticSearchPayload {
 	private List<String> namesOfResources;
 	private List<OrganizationResourceElasticSearchPayload> resources;
 	private List<OrganizationRegionServedElasticSearchPayload> regionServed;
-	private List<OrganizationFrameworksPayload> frameworks;
+	private List<OrganizationFrameworksPayload> framework;
 
 }
