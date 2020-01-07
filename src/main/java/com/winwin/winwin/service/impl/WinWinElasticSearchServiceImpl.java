@@ -251,14 +251,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "organization_" + payload.getId().toString();
 				// check for program
-				if (isProgram(payload))
+				if (Boolean.TRUE.equals(isProgram(payload)))
 					id = "program_" + payload.getId().toString();
 
 				if (null != payload.getResources()) {
 					for (OrganizationResourceElasticSearchPayload resource : payload.getResources()) {
 						String resourceId = "organization_resource_" + resource.getId().toString();
 						// check for program
-						if (isProgram(payload))
+						if (Boolean.TRUE.equals(isProgram(payload)))
 							resourceId = "program_resource_" + resource.getId().toString();
 						// copy organization and resource properties to
 						// resourcePayload
@@ -276,7 +276,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					for (OrganizationDataSetElasticSearchPayload dataset : payload.getDatasets()) {
 						String datasetId = "organization_dataset_" + dataset.getId().toString();
 						// check for program
-						if (isProgram(payload))
+						if (Boolean.TRUE.equals(isProgram(payload)))
 							datasetId = "program_dataset_" + dataset.getId().toString();
 						// copy organization and dataset properties to
 						// datasetPayload
@@ -290,11 +290,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 				}
 
-				if (null != payload.getFrameworks()) {
-					for (OrganizationFrameworksPayload framework : payload.getFrameworks()) {
+				if (null != payload.getFramework()) {
+					for (OrganizationFrameworksPayload framework : payload.getFramework()) {
 						String frameworkId = "organization_framework_" + framework.getId().toString();
 						// check for program
-						if (isProgram(payload))
+						if (Boolean.TRUE.equals(isProgram(payload)))
 							frameworkId = "program_framework_" + framework.getId().toString();
 						// copy organization and framework properties to
 						// frameworkPayload
@@ -306,7 +306,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 								&& framework.getType().equalsIgnoreCase("sdg"))) {
 							framework.setTagName(framework.getShortName());
 						}
-
 						frameworkPayload.setFramework(framework);
 						BeanUtils.copyProperties(payload, frameworkPayload);
 						// get frameworkPayload object as a JSON string
@@ -363,7 +362,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					// set winWin routes map
 					setWinWinRoutesMap();
 				}
-
 				if (!winwinRoutesMap.isEmpty()
 						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
 						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
@@ -376,7 +374,6 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
 				}
 			}
-
 		} catch (ElasticsearchException e) {
 			if (e.status() == RestStatus.CONFLICT) {
 				LOGGER.error("exception occoured due to conflict while sending post request to ElasticSearch", e);
@@ -393,8 +390,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @return
 	 */
 	private Boolean isProgram(OrganizationElasticSearchPayload payload) {
-		if ((!StringUtils.isEmpty(payload.getType()))
-				&& payload.getType().equalsIgnoreCase(OrganizationConstants.PROGRAM))
+		if ((!StringUtils.isEmpty(payload.getProgramOrOrgType()))
+				&& payload.getProgramOrOrgType().equalsIgnoreCase(OrganizationConstants.PROGRAM))
 			return true;
 		return false;
 	}
@@ -532,9 +529,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 			throw e;
 		}
-
 		return organizationPayloadList;
-
 	}
 
 	/**
@@ -563,11 +558,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 			// write last Updated Date
 			txtWriter.write(lastUpdatedDate.toString());
-
 			// flush the changes into txtWriter
 			txtWriter.flush();
 		}
-
 		if (null != currentUpdatedDate && null != lastUpdatedDate) {
 			if (currentUpdatedDate.compareTo(lastUpdatedDate) > 0) {
 				lastUpdatedDate = currentUpdatedDate;
@@ -584,83 +577,73 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				txtWriter.flush();
 			}
 		}
+		if (null != organization) {
+			OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
+			// copy organization values to organizationPayload
+			BeanUtils.copyProperties(organization, organizationPayload);
+			// copy remaining organization values to
+			// organizationPayload
+			organizationPayload.setProgramOrOrgName(organization.getName());
+			organizationPayload.setProgramOrOrgDescription(organization.getDescription());
+			organizationPayload.setProgramOrOrgType(organization.getType());
 
-		OrganizationElasticSearchPayload organizationPayload = new OrganizationElasticSearchPayload();
-		// copy organization values to organizationPayload
-		BeanUtils.copyProperties(organization, organizationPayload);
-
-		// copy remaining organization values to
-		// organizationPayload
-		if (null != organization.getNaicsCode())
-			organizationPayload.setNaics_code(organization.getNaicsCode().getCode());
-
-		if (null != organization.getNteeCode())
-			organizationPayload.setNtee_code(organization.getNteeCode().getCode());
-
-		if (winwinRoutesMap == null) {
-			// set winWin routes map
-			setWinWinRoutesMap();
-		}
-
-		// check for parent Organization
-		if (null != parentOrganization) {
-			organizationPayload.setParentId(parentOrganization.getId());
-			organizationPayload.setParentName(parentOrganization.getName());
-			organizationPayload.setParentDescription(parentOrganization.getDescription());
+			if (null != organization.getNaicsCode())
+				organizationPayload.setNaics_code(organization.getNaicsCode().getCode());
+			if (null != organization.getNteeCode())
+				organizationPayload.setNtee_code(organization.getNteeCode().getCode());
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			// check for parent Organization
+			if (null != parentOrganization) {
+				organizationPayload.setParentOrgId(parentOrganization.getId());
+				organizationPayload.setParentOrgName(parentOrganization.getName());
+				organizationPayload.setParentOrgDescription(parentOrganization.getDescription());
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
+						organizationPayload.setParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ parentOrganization.getId());
+					}
+				}
+			}
+			// check for root parent Organization
+			if (null != rootParentOrganization) {
+				organizationPayload.setTopParentOrgId(rootParentOrganization.getId());
+				organizationPayload.setTopParentOrgName(rootParentOrganization.getName());
+				if (null != winwinRoutesMap) {
+					if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
+							&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
+						organizationPayload.setTopParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
+								+ rootParentOrganization.getId());
+					}
+				}
+			}
+			// set adminUrl for organization
 			if (null != winwinRoutesMap) {
 				if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
 						&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
-					organizationPayload.setParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
-							+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + parentOrganization.getId());
+					organizationPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+							+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId());
 				}
 			}
+			setOrganizationAddress(organization, organizationPayload);
+			setOrganizationNotes(organization, organizationPayload);
+			setOrganizationDataSets(organization, organizationPayload);
+			setOrganizationResources(organization, organizationPayload);
+			setOrganizationRegionServed(organization, organizationPayload);
+			setOrganizationSpiData(organization, organizationPayload);
+			setOrganizationSdgData(organization, organizationPayload);
+			// set all the connectedOrganizations of an organization
+			setConnectedOrganizations(organization, organizationMap, organizationPayload);
+			// add organizationPayload to organizationPayloadList
+			organizationPayloadList.add(organizationPayload);
+			//// add all organization programs to organizationPayloadList
+			organizationPayloadList.addAll(getOrganizationPrograms(organization, organizationMap, organizationPayload));
 		}
-
-		// check for root parent Organization
-		if (null != rootParentOrganization) {
-			organizationPayload.setRootParentId(rootParentOrganization.getId());
-			organizationPayload.setRootParentName(rootParentOrganization.getName());
-			if (null != winwinRoutesMap) {
-				if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
-						&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
-					organizationPayload.setRootParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
-							+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
-							+ rootParentOrganization.getId());
-				}
-			}
-		}
-
-		// set adminUrl for organization
-		if (null != winwinRoutesMap) {
-			if (winwinRoutesMap.containsKey(OrganizationConstants.BASE_URL)
-					&& winwinRoutesMap.containsKey(OrganizationConstants.ORGANIZATIONS)) {
-				organizationPayload.setAdminUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
-						+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId());
-			}
-		}
-
-		setOrganizationAddress(organization, organizationPayload);
-
-		setOrganizationNotes(organization, organizationPayload);
-
-		setOrganizationDataSets(organization, organizationPayload);
-
-		setOrganizationResources(organization, organizationPayload);
-
-		setOrganizationRegionServed(organization, organizationPayload);
-
-		setOrganizationSpiData(organization, organizationPayload);
-
-		setOrganizationSdgData(organization, organizationPayload);
-
-		// set all the connectedOrganizations of an organization
-		setConnectedOrganizations(organization, organizationMap, organizationPayload);
-
-		// add organizationPayload to organizationPayloadList
-		organizationPayloadList.add(organizationPayload);
-
-		//// add all organization programs to organizationPayloadList
-		organizationPayloadList.addAll(getOrganizationPrograms(organization, organizationMap, organizationPayload));
 	}
 
 	/**
@@ -756,20 +739,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// copy program values to programPayload
 				BeanUtils.copyProperties(program, programPayload);
 				// copy remaining program values to programPayload
-				programPayload.setType(OrganizationConstants.PROGRAM);
+				programPayload.setProgramOrOrgName(program.getName());
+				programPayload.setProgramOrOrgDescription(program.getDescription());
+				programPayload.setProgramOrOrgType(OrganizationConstants.PROGRAM);
+
 				if (null != organization) {
-					programPayload.setParentId(organization.getId());
-					programPayload.setParentName(organization.getName());
-					programPayload.setParentDescription(organization.getDescription());
+					programPayload.setParentOrgId(organization.getId());
+					programPayload.setParentOrgName(organization.getName());
+					programPayload.setParentOrgDescription(organization.getDescription());
 					programPayload.setSector(organization.getSector());
 					programPayload.setSectorLevel(organization.getSectorLevel());
 					programPayload.setSectorLevelName(organization.getSectorLevelName());
+
 					if (null != organizationPayload)
 						programPayload.setAddress(organizationPayload.getAddress());
-
 					// check for root parent Organization
 					if (null != organization.getRootParentId()) {
-						programPayload.setRootParentId(organization.getRootParentId());
+						programPayload.setTopParentOrgId(organization.getRootParentId());
 						// find root parentOrganization first in map if not
 						// found
 						// then make DB call
@@ -777,7 +763,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						if (rootParent == null)
 							rootParent = organizationRepository.findOrgById(organization.getRootParentId());
 						if (null != rootParent)
-							programPayload.setRootParentName(rootParent.getName());
+							programPayload.setTopParentOrgName(rootParent.getName());
 					} else if (null != organization.getParentId()) {
 						// find root parentOrganization first in map if not
 						// found
@@ -787,13 +773,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							rootParent = organizationRepository.findOrgById(organization.getParentId());
 
 						if (null != rootParent) {
-							programPayload.setRootParentId(rootParent.getId());
-							programPayload.setRootParentName(rootParent.getName());
+							programPayload.setTopParentOrgId(rootParent.getId());
+							programPayload.setTopParentOrgName(rootParent.getName());
 						}
 					} else {
 						// set programs parent as root parent
-						programPayload.setRootParentId(organization.getId());
-						programPayload.setRootParentName(organization.getName());
+						programPayload.setTopParentOrgId(organization.getId());
+						programPayload.setTopParentOrgName(organization.getName());
 					}
 				}
 				setProgramDataSets(program, programPayload);
@@ -818,18 +804,18 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId()
 								+ winwinRoutesMap.get(OrganizationConstants.PROGRAMS) + program.getId());
 
-						programPayload.setParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+						programPayload.setParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
 								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId());
 
-						programPayload.setParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+						programPayload.setParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
 								+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId());
 
 						if (null != organization.getRootParentId())
-							programPayload.setRootParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+							programPayload.setTopParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
 									+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS)
 									+ organization.getRootParentId());
 						else
-							programPayload.setRootParentUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
+							programPayload.setTopParentOrgUrl(winwinRoutesMap.get(OrganizationConstants.BASE_URL)
 									+ winwinRoutesMap.get(OrganizationConstants.ORGANIZATIONS) + organization.getId());
 
 					}
@@ -900,10 +886,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 		}
 		// set sdgDataFrameworks to programPayload
-		if (programPayload.getFrameworks() == null)
-			programPayload.setFrameworks(sdgDataFrameworks);
+		if (programPayload.getFramework() == null)
+			programPayload.setFramework(sdgDataFrameworks);
 		else
-			programPayload.getFrameworks().addAll(sdgDataFrameworks);
+			programPayload.getFramework().addAll(sdgDataFrameworks);
 	}
 
 	/**
@@ -957,10 +943,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 		}
 		// set spiDataFrameworks to programPayload
-		if (programPayload.getFrameworks() == null)
-			programPayload.setFrameworks(spiDataFrameworks);
+		if (programPayload.getFramework() == null)
+			programPayload.setFramework(spiDataFrameworks);
 		else
-			programPayload.getFrameworks().addAll(spiDataFrameworks);
+			programPayload.getFramework().addAll(spiDataFrameworks);
 	}
 
 	/**
@@ -1169,10 +1155,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 		}
 		// set sdgDataFrameworks to organizationPayload
-		if (organizationPayload.getFrameworks() == null)
-			organizationPayload.setFrameworks(sdgDataFrameworks);
+		if (organizationPayload.getFramework() == null)
+			organizationPayload.setFramework(sdgDataFrameworks);
 		else
-			organizationPayload.getFrameworks().addAll(sdgDataFrameworks);
+			organizationPayload.getFramework().addAll(sdgDataFrameworks);
 
 	}
 
@@ -1223,10 +1209,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 		}
 		// set spiDataFrameworks to organizationPayload
-		if (organizationPayload.getFrameworks() == null)
-			organizationPayload.setFrameworks(spiDataFrameworks);
+		if (organizationPayload.getFramework() == null)
+			organizationPayload.setFramework(spiDataFrameworks);
 		else
-			organizationPayload.getFrameworks().addAll(spiDataFrameworks);
+			organizationPayload.getFramework().addAll(spiDataFrameworks);
 	}
 
 	/**
