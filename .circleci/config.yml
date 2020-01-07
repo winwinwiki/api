@@ -126,10 +126,10 @@ jobs: # a collection of steps
           name: Run CodeDeploy to deploy on EC2
           command: |
              if [ "$CIRCLE_BRANCH" = "dev" ]; then
-               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
              elif [ "$CIRCLE_BRANCH" = "staging" ]; then
-               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Stag --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Stag-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-stag,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Stag --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Stag-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-stag,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
              elif [ "$CIRCLE_BRANCH" = "master" ]; then
-               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Prod --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Prod-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-prod,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Prod --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Prod-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-prod,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
              fi
             
