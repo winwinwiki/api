@@ -17,10 +17,10 @@ import com.winwin.winwin.entity.OrganizationSdgData;
 @Repository
 public interface OrgSdgDataMapRepository extends JpaRepository<OrganizationSdgData, Long> {
 	@Query(value = "select * from org_sdg_mapping where organization_id = :orgId AND is_checked = true", nativeQuery = true)
-	List<OrganizationSdgData> getOrgSdgMapDataByOrgId(Long orgId);
+	List<OrganizationSdgData> getOrgSdgMapDataByOrgId(@Param(value = "orgId") Long orgId);
 
 	@Query(value = "select * from org_sdg_mapping where organization_id = :orgId", nativeQuery = true)
-	List<OrganizationSdgData> getAllOrgSdgMapDataByOrgId(Long orgId);
+	List<OrganizationSdgData> getAllOrgSdgMapDataByOrgId(@Param(value = "orgId") Long orgId);
 
 	@Query(value = "select * from org_sdg_mapping where id = :id", nativeQuery = true)
 	OrganizationSdgData findSdgSelectedTagsById(@Param("id") Long id);
