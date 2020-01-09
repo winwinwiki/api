@@ -42,7 +42,7 @@
     	<layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
         	<jsonFormatter
             	class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-            	<prettyPrint>false</prettyPrint>
+            	<prettyPrint>true</prettyPrint>
         	</jsonFormatter>
         	<timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
         	<appendLineSeparator>true</appendLineSeparator>
@@ -72,13 +72,12 @@
 		<level value="DEBUG" />
 	    <level value="WARN" />
 	    <level value="ERROR" />
+	    <level value="TRACE" />
     	<appender-ref ref="console" />
     	<appender-ref ref="RFA" />
 	</logger>
 
 	<root>
-		<level value="INFO" />
-		<level value="DEBUG" />
 	    <level value="WARN" />
 	    <level value="ERROR" />
 		<appender-ref ref="console" />
