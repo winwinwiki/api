@@ -188,7 +188,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			 * lastUpdatedDate is not found else find all the organizations from
 			 * lastUpdatedDate
 			 */
-			Integer numOfOrganizations = organizationRepository.findAllOrganizationsCount();
+			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
 				numOfOrganizations = organizationRepository.findAllOrganizationsCount();
 			} else {
@@ -196,26 +196,28 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						.findAllOrganizationsCountFromLastUpdatedDate(lastUpdatedDate);
 			}
 
-			Integer pageSize = 1000;
-			Integer pageNumAvailable = numOfOrganizations / pageSize;
-			Integer totalPageNumAvailable = null;
-			if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
-				totalPageNumAvailable = pageNumAvailable + 1;
-			else
-				totalPageNumAvailable = pageNumAvailable;
+			if (null != numOfOrganizations) {
+				Integer pageSize = 10000;
+				Integer pageNumAvailable = numOfOrganizations / pageSize;
+				Integer totalPageNumAvailable = null;
+				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
+					totalPageNumAvailable = pageNumAvailable + 1;
+				else
+					totalPageNumAvailable = pageNumAvailable;
 
-			for (int pageNum = 0; pageNum < totalPageNumAvailable; pageNum++) {
-				// set page number and page size for organization
-				Pageable pageable = PageRequest.of(pageNum, pageSize);
-				LOGGER.info("sending data to Elastic Search Indexes: " + orgIndex + ", " + resourceIndex + ", "
-						+ datasetIndex + ", " + frameworkIndex + ", " + regionServedIndex + ", " + notesIndex + " from "
-						+ ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize));
-				sendDataToElasticSearch(pageable, file, txtWriter, lastUpdatedDate);
-				LOGGER.info("data has been sent successfully to Elastic Search Indexes: " + orgIndex + ", "
-						+ resourceIndex + ", " + datasetIndex + ", " + frameworkIndex + ", " + regionServedIndex + ", "
-						+ notesIndex + " from " + ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize)
-						+ " ");
-			} // end of loop
+				for (int pageNum = 0; pageNum < totalPageNumAvailable; pageNum++) {
+					// set page number and page size for organization
+					Pageable pageable = PageRequest.of(pageNum, pageSize);
+					LOGGER.info("sending data to Elastic Search Indexes: " + orgIndex + ", " + resourceIndex + ", "
+							+ datasetIndex + ", " + frameworkIndex + ", " + regionServedIndex + ", " + notesIndex
+							+ " from " + ((pageNum * pageSize) + 1) + " to " + ((pageNum + 1) * pageSize));
+					sendDataToElasticSearch(pageable, file, txtWriter, lastUpdatedDate);
+					LOGGER.info("data has been sent successfully to Elastic Search Indexes: " + orgIndex + ", "
+							+ resourceIndex + ", " + datasetIndex + ", " + frameworkIndex + ", " + regionServedIndex
+							+ ", " + notesIndex + " from " + ((pageNum * pageSize) + 1) + " to "
+							+ ((pageNum + 1) * pageSize) + " ");
+				} // end of loop
+			}
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
 			date = CommonUtils.getFormattedDate();
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully for app env: "
@@ -457,13 +459,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							parentOrganization = organizationRepository.findOrgById(organization.getParentId());
 
 					} else {
-						// find parentOrganization first in map if not found
-						// then make DB call
 						// if no parent found than make org itself as parent
 						// according to beth.roberts requirement
-						parentOrganization = organizationMap.get(organization.getId());
-						if (parentOrganization == null)
-							parentOrganization = organizationRepository.findOrgById(organization.getId());
+						parentOrganization = organization;
 					}
 
 					// check for root parent Organization
@@ -476,14 +474,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						if (rootParentOrganization == null)
 							rootParentOrganization = organizationRepository.findOrgById(organization.getRootParentId());
 					} else {
-						// find rootParentOrganization first in map if not
-						// found
-						// then make DB call
 						// if no root parent found than make org itself as root
 						// parent according to beth.roberts requirement
-						rootParentOrganization = organizationMap.get(organization.getId());
-						if (rootParentOrganization == null)
-							rootParentOrganization = organizationRepository.findOrgById(organization.getId());
+						rootParentOrganization = organization;
 					}
 
 					// check for all organization to push the data into elastic
