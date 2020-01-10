@@ -259,7 +259,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				if (Boolean.TRUE.equals(isProgram(payload)))
 					id = "program_" + payload.getId().toString();
 
-				if (null != payload.getResources()) {
+				if (null != payload.getResources() && (!payload.getResources().isEmpty())) {
 					for (OrganizationResourceElasticSearchPayload resource : payload.getResources()) {
 						String resourceId = "organization_resource_" + resource.getId().toString();
 						// check for program
@@ -279,7 +279,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 				}
 
-				if (null != payload.getDatasets()) {
+				if (null != payload.getDatasets() && (!payload.getDatasets().isEmpty())) {
 					for (OrganizationDataSetElasticSearchPayload dataset : payload.getDatasets()) {
 						String datasetId = "organization_dataset_" + dataset.getId().toString();
 						// check for program
@@ -299,7 +299,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 				}
 
-				if (null != payload.getFramework()) {
+				if (null != payload.getFramework() && (!payload.getFramework().isEmpty())) {
 					for (OrganizationFrameworksPayload framework : payload.getFramework()) {
 						String frameworkId = "organization_framework_" + framework.getId().toString();
 						// check for program
@@ -326,7 +326,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 				}
 
-				if (null != payload.getRegionServed()) {
+				if (null != payload.getRegionServed() && (!payload.getRegionServed().isEmpty())) {
 					for (OrganizationRegionServedElasticSearchPayload regionServed : payload.getRegionServed()) {
 						String regionServedId = "organization_regionserved_" + regionServed.getId().toString();
 						// check for program
@@ -347,7 +347,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 				}
 
-				if (null != payload.getNotes()) {
+				if (null != payload.getNotes() && (!payload.getNotes().isEmpty())) {
 					for (OrganizationNoteElasticSearchPayload note : payload.getNotes()) {
 						String noteId = "organization_notes_" + note.getId().toString();
 						// check for program
@@ -388,12 +388,18 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
 
 					// send bulk request to es to individual indexes
-					esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
-					esClient.bulk(resBulkRequest, RequestOptions.DEFAULT);
-					esClient.bulk(dsBulkRequest, RequestOptions.DEFAULT);
-					esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
-					esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
-					esClient.bulk(notesBulkRequest, RequestOptions.DEFAULT);
+					if (null != orgBulkRequest.requests() && (!orgBulkRequest.requests().isEmpty()))
+						esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
+					if (null != resBulkRequest.requests() && (!resBulkRequest.requests().isEmpty()))
+						esClient.bulk(resBulkRequest, RequestOptions.DEFAULT);
+					if (null != dsBulkRequest.requests() && (!dsBulkRequest.requests().isEmpty()))
+						esClient.bulk(dsBulkRequest, RequestOptions.DEFAULT);
+					if (null != fwBulkRequest.requests() && (!fwBulkRequest.requests().isEmpty()))
+						esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
+					if (null != rsBulkRequest.requests() && (!rsBulkRequest.requests().isEmpty()))
+						esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
+					if (null != notesBulkRequest.requests() && (!notesBulkRequest.requests().isEmpty()))
+						esClient.bulk(notesBulkRequest, RequestOptions.DEFAULT);
 				}
 			}
 		} catch (ElasticsearchException e) {
