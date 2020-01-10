@@ -197,7 +197,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 1000;
+				Integer pageSize = 2000;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -245,10 +245,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			// fetch all the data of organization by pageNum and pageSize
 			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable, file,
 					txtWriter, lastUpdatedDate);
-			// Send bulk index data
-			BulkRequest bulkRequest = new BulkRequest();
-			// Creating Object of ObjectMapper define in JACKSON API
-			ObjectMapper mapper = new ObjectMapper();
+			// Send bulk indexes data to individual indexes
+			BulkRequest orgBulkRequest = new BulkRequest();
+			BulkRequest resBulkRequest = new BulkRequest();
+			BulkRequest dsBulkRequest = new BulkRequest();
+			BulkRequest fwBulkRequest = new BulkRequest();
+			BulkRequest rsBulkRequest = new BulkRequest();
+			BulkRequest notesBulkRequest = new BulkRequest();
 
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "organization_" + payload.getId().toString();
@@ -267,10 +270,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ResourceElasticSearchPayload resourcePayload = new ResourceElasticSearchPayload();
 						resourcePayload.setResource(resource);
 						BeanUtils.copyProperties(payload, resourcePayload);
+						// Creating Object of ObjectMapper define in JACKSON API
+						ObjectMapper mapper = new ObjectMapper();
 						// get resourcePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(resourcePayload);
 						// set bulk request
-						setBulkRequest(bulkRequest, mapper, resourceIndex, resourceIndexType, resourceId, jsonStr);
+						setBulkRequest(resBulkRequest, mapper, resourceIndex, resourceIndexType, resourceId, jsonStr);
 					}
 				}
 
@@ -285,10 +290,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						DataSetElasticSearchPayload datasetPayload = new DataSetElasticSearchPayload();
 						datasetPayload.setDataset(dataset);
 						BeanUtils.copyProperties(payload, datasetPayload);
+						// Creating Object of ObjectMapper define in JACKSON API
+						ObjectMapper mapper = new ObjectMapper();
 						// get datasetPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(datasetPayload);
 						// set bulk request
-						setBulkRequest(bulkRequest, mapper, datasetIndex, datasetIndexType, datasetId, jsonStr);
+						setBulkRequest(dsBulkRequest, mapper, datasetIndex, datasetIndexType, datasetId, jsonStr);
 					}
 				}
 
@@ -310,10 +317,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						}
 						frameworkPayload.setFramework(framework);
 						BeanUtils.copyProperties(payload, frameworkPayload);
+						// Creating Object of ObjectMapper define in JACKSON API
+						ObjectMapper mapper = new ObjectMapper();
 						// get frameworkPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(frameworkPayload);
 						// set bulk request
-						setBulkRequest(bulkRequest, mapper, frameworkIndex, frameworkIndexType, frameworkId, jsonStr);
+						setBulkRequest(fwBulkRequest, mapper, frameworkIndex, frameworkIndexType, frameworkId, jsonStr);
 					}
 				}
 
@@ -328,10 +337,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						RegionServedElasticSearchPayload regionServedPayload = new RegionServedElasticSearchPayload();
 						regionServedPayload.setRegionServed(regionServed);
 						BeanUtils.copyProperties(payload, regionServedPayload);
+						// Creating Object of ObjectMapper define in JACKSON API
+						ObjectMapper mapper = new ObjectMapper();
 						// get regionServedPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(regionServedPayload);
 						// set bulk request
-						setBulkRequest(bulkRequest, mapper, regionServedIndex, regionServedIndexType, regionServedId,
+						setBulkRequest(rsBulkRequest, mapper, regionServedIndex, regionServedIndexType, regionServedId,
 								jsonStr);
 					}
 				}
@@ -346,16 +357,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						NotesElasticSearchPayload notePayload = new NotesElasticSearchPayload();
 						notePayload.setNotes(note);
 						BeanUtils.copyProperties(payload, notePayload);
+						// Creating Object of ObjectMapper define in JACKSON API
+						ObjectMapper mapper = new ObjectMapper();
 						// get notePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(notePayload);
 						// set bulk request
-						setBulkRequest(bulkRequest, mapper, notesIndex, notesIndexType, noteId, jsonStr);
+						setBulkRequest(notesBulkRequest, mapper, notesIndex, notesIndexType, noteId, jsonStr);
 					}
 				}
+				// Creating Object of ObjectMapper define in JACKSON API
+				ObjectMapper mapper = new ObjectMapper();
 				// get Organization object as a JSON string
 				String jsonStr = mapper.writeValueAsString(payload);
 				// set bulk request
-				setBulkRequest(bulkRequest, mapper, orgIndex, orgIndexType, id, jsonStr);
+				setBulkRequest(orgBulkRequest, mapper, orgIndex, orgIndexType, id, jsonStr);
 			} // end of loop
 
 			if (!organizationPayloadList.isEmpty()) {
@@ -372,8 +387,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
 
-					// send bulk request to es
-					esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+					// send bulk request to es to individual indexes
+					esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(resBulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(dsBulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
+					esClient.bulk(notesBulkRequest, RequestOptions.DEFAULT);
 				}
 			}
 		} catch (ElasticsearchException e) {
