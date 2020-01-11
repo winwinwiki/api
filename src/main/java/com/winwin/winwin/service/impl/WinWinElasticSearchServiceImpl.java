@@ -14,6 +14,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -255,17 +256,17 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			// set timeout and minimum active shard's required to perform index write
 			// operation
 			orgBulkRequest.waitForActiveShards(1);
-			orgBulkRequest.timeout("600000000");
+			orgBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			resBulkRequest.waitForActiveShards(1);
-			resBulkRequest.timeout("600000000");
+			resBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			dsBulkRequest.waitForActiveShards(1);
-			dsBulkRequest.timeout("600000000");
+			dsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			fwBulkRequest.waitForActiveShards(1);
-			fwBulkRequest.timeout("600000000");
+			fwBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			rsBulkRequest.waitForActiveShards(1);
-			rsBulkRequest.timeout("600000000");
+			rsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			notesBulkRequest.waitForActiveShards(1);
-			notesBulkRequest.timeout("600000000");
+			notesBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "org_" + payload.getId().toString();
