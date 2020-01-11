@@ -504,7 +504,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 					}
 
 					// check for all organization to push the data into elastic
-					organizationPayloadList = prepareDataByTagStatus(file, txtWriter, lastUpdatedDate, organizationMap,
+					prepareDataByTagStatus(organizationPayloadList, file, txtWriter, lastUpdatedDate, organizationMap,
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
@@ -545,19 +545,19 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	/**
+	 * @param organizationPayloadList
 	 * @param file
 	 * @param txtWriter
 	 * @param lastUpdatedDate
 	 * @param organizationMap
 	 * @param organization
-	 * @return
 	 * @throws IOException
 	 */
-	private List<OrganizationElasticSearchPayload> prepareDataByTagStatus(File file, FileWriter txtWriter,
-			Date lastUpdatedDate, Map<Long, Organization> organizationMap, Organization organization,
-			Organization parentOrganization, Organization rootParentOrganization) throws Exception {
+	private void prepareDataByTagStatus(List<OrganizationElasticSearchPayload> organizationPayloadList, File file,
+			FileWriter txtWriter, Date lastUpdatedDate, Map<Long, Organization> organizationMap,
+			Organization organization, Organization parentOrganization, Organization rootParentOrganization)
+			throws Exception {
 		Date currentUpdatedDate = organization.getUpdatedAt();
-		List<OrganizationElasticSearchPayload> organizationPayloadList = new ArrayList<>();
 
 		if (lastUpdatedDate == null) {
 			lastUpdatedDate = organization.getUpdatedAt();
@@ -655,9 +655,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			organizationPayloadList.add(organizationPayload);
 			//// add all organization programs to organizationPayloadList
 			organizationPayloadList.addAll(getOrganizationPrograms(organization, organizationMap, organizationPayload));
-
 		}
-		return organizationPayloadList;
 	}
 
 	/**
