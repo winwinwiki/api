@@ -252,6 +252,21 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			BulkRequest rsBulkRequest = new BulkRequest();
 			BulkRequest notesBulkRequest = new BulkRequest();
 
+			// set timeout and minimum active shard's required to perform index write
+			// operation
+			orgBulkRequest.waitForActiveShards(1);
+			orgBulkRequest.timeout("600000000");
+			resBulkRequest.waitForActiveShards(1);
+			resBulkRequest.timeout("600000000");
+			dsBulkRequest.waitForActiveShards(1);
+			dsBulkRequest.timeout("600000000");
+			fwBulkRequest.waitForActiveShards(1);
+			fwBulkRequest.timeout("600000000");
+			rsBulkRequest.waitForActiveShards(1);
+			rsBulkRequest.timeout("600000000");
+			notesBulkRequest.waitForActiveShards(1);
+			notesBulkRequest.timeout("600000000");
+
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "org_" + payload.getId().toString();
 				// check for program
@@ -1454,14 +1469,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		Header[] headers = { new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
 				new BasicHeader("Authorization", "Basic " + encodedBytes) };
 
-		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
+		// Added .setMaxRetryTimeoutMillis(600000000) to avoid listener timeout
 		// exception
-		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
+		// Added .setConnectTimeout(600000000).setSocketTimeout(600000000)) to avoid
 		// socket and connection timeout exception
 		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, scheme))
-				.setDefaultHeaders(headers).setMaxRetryTimeoutMillis(6000000)
-				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000)
-						.setSocketTimeout(6000000)));
+				.setDefaultHeaders(headers).setMaxRetryTimeoutMillis(600000000)
+				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(600000000)
+						.setSocketTimeout(600000000)));
 	}
 
 }
