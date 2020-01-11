@@ -1,5 +1,6 @@
 package com.winwin.winwin.payload;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -23,10 +24,10 @@ public class OrganizationFilterPayload {
 	public List<String> editedBy;
 	private Long nteeCode;
 	private Long naicsCode;
-	private long revenueMin = 0;
-	private long revenueMax = Long.MAX_VALUE;
-	private long assetsMin = 0;
-	private long assetsMax = Long.MAX_VALUE;
+	private BigDecimal revenueMin;
+	private BigDecimal revenueMax;
+	private BigDecimal assetsMin;
+	private BigDecimal assetsMax;
 	private String frameworkTag;
 	private String indicatorId;
 	private long dimensionId;
