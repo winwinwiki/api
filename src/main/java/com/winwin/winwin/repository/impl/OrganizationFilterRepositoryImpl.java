@@ -88,20 +88,27 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		StringBuilder sb = new StringBuilder();
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
-			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
+			query.append(", a.city, a.state ");
 		} else if (!StringUtils.isNullOrEmpty(payload.getCountry()) || !StringUtils.isNullOrEmpty(payload.getState())
 				|| !StringUtils.isNullOrEmpty(payload.getCity()) || !StringUtils.isNullOrEmpty(payload.getCounty())) {
-			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
+			query.append(", a.city, a.state ");
 		} else if ((!StringUtils.isNullOrEmpty(payload.getSortBy())) && payload.getSortBy().matches("(?i)city|state")) {
-			sb.append(", a.city, a.state from organization o inner join address a on a.id = o.address_id");
-		} else {
-			sb.append("from organization o inner join address a on a.id = o.address_id");
+			query.append(", a.city, a.state ");
 		}
+
+		query.append("from organization o inner join address a on a.id = o.address_id");
 
 		sb.append(" where  o.is_active = true and o.type = :type ");
 
-		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
-		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
+		if ((payload.getRevenueMin() != null && payload.getRevenueMax() != null)
+				|| (payload.getRevenueMin() != null && payload.getRevenueMax() == null)
+				|| (payload.getRevenueMin() == null && payload.getRevenueMax() != null))
+			sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
+
+		if ((payload.getAssetsMin() != null && payload.getAssetsMax() != null)
+				|| (payload.getAssetsMin() != null && payload.getAssetsMax() == null)
+				|| (payload.getAssetsMin() == null && payload.getAssetsMax() != null))
+			sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
@@ -130,8 +137,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append(" and o.naics_code IS NOT DISTINCT FROM :naicsCode ");
 
 		if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SPI")) {
-
-			query.append("join org_spi_mapping osm on o.id=osm.organization_id join ")
+			query.append(" join org_spi_mapping osm on o.id=osm.organization_id join ")
 					.append(" spi_data osd on osm.spi_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -145,7 +151,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 				sb.append(" and osd.dimension_id IS NOT DISTINCT FROM :dimensionId ");
 			spi = true;
 		} else if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SDG")) {
-			query.append("join org_sdg_mapping osm on o.id=osm.organization_id join "
+			query.append(" join org_sdg_mapping osm on o.id=osm.organization_id join "
 					+ " sdg_data osd on osm.sdg_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -182,20 +188,37 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		// keep the empty values always last
 		if (!StringUtils.isNullOrEmpty(payload.getSortBy()))
-			sb.append(" order by " + payload.getSortBy() + " " + (!StringUtils.isNullOrEmpty(payload.getSortOrder())
-					? payload.getSortOrder() + " NULLS LAST" : "ASC NULLS LAST"));
+			sb.append(" order by " + payload.getSortBy() + " "
+					+ (!StringUtils.isNullOrEmpty(payload.getSortOrder()) ? payload.getSortOrder() + " NULLS LAST"
+							: "ASC NULLS LAST"));
 		else
 			sb.append(" order by o.name ASC NULLS LAST");
 
 		query.append(sb);
 		Query filterQuery = entityManager.createNativeQuery(query.toString(), Organization.class);
-
 		filterQuery.setParameter("type", type);
 
-		filterQuery.setParameter("minRevenue", payload.getRevenueMin());
-		filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
-		filterQuery.setParameter("minAssets", payload.getAssetsMin());
-		filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		if ((payload.getRevenueMin() != null && payload.getRevenueMax() != null)) {
+			filterQuery.setParameter("minRevenue", payload.getRevenueMin());
+			filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
+		} else if (payload.getRevenueMin() == null && payload.getRevenueMax() != null) {
+			filterQuery.setParameter("minRevenue", Double.MIN_VALUE);
+			filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
+		} else if (payload.getRevenueMin() != null && payload.getRevenueMax() == null) {
+			filterQuery.setParameter("minRevenue", payload.getRevenueMin());
+			filterQuery.setParameter("maxRevenue", Double.MAX_VALUE);
+		}
+
+		if ((payload.getAssetsMin() != null && payload.getAssetsMax() != null)) {
+			filterQuery.setParameter("minAssets", payload.getAssetsMin());
+			filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		} else if (payload.getAssetsMin() == null && payload.getAssetsMax() != null) {
+			filterQuery.setParameter("minAssets", Double.MIN_VALUE);
+			filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		} else if (payload.getAssetsMin() != null && payload.getAssetsMax() == null) {
+			filterQuery.setParameter("minAssets", payload.getAssetsMin());
+			filterQuery.setParameter("maxAssets", Double.MAX_VALUE);
+		}
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
@@ -264,16 +287,23 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 		StringBuilder sb = new StringBuilder();
 
 		if (!StringUtils.isNullOrEmpty(payload.getAddress())) {
-			sb.append("inner join address a on a.id = o.address_id");
+			query.append("inner join address a on a.id = o.address_id");
 		} else if (!StringUtils.isNullOrEmpty(payload.getCountry()) || !StringUtils.isNullOrEmpty(payload.getState())
 				|| !StringUtils.isNullOrEmpty(payload.getCity()) || !StringUtils.isNullOrEmpty(payload.getCounty())) {
-			sb.append("inner join address a on a.id = o.address_id");
+			query.append("inner join address a on a.id = o.address_id");
 		}
 
 		sb.append(" where  o.is_active = true and o.type = :type ");
 
-		sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
-		sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
+		if ((payload.getRevenueMin() != null && payload.getRevenueMax() != null)
+				|| (payload.getRevenueMin() != null && payload.getRevenueMax() == null)
+				|| (payload.getRevenueMin() == null && payload.getRevenueMax() != null))
+			sb.append(" and (coalesce(o.revenue,0) BETWEEN :minRevenue and :maxRevenue )");
+
+		if ((payload.getAssetsMin() != null && payload.getAssetsMax() != null)
+				|| (payload.getAssetsMin() != null && payload.getAssetsMax() == null)
+				|| (payload.getAssetsMin() == null && payload.getAssetsMax() != null))
+			sb.append(" and (coalesce(o.assets,0) BETWEEN :minAssets and  :maxAssets ) ");
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0) {
 			sb.append(" and (o.sector_level IN :sectorLevel) ");
@@ -302,8 +332,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 			sb.append(" and o.naics_code IS NOT DISTINCT FROM :naicsCode ");
 
 		if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SPI")) {
-
-			query.append("join org_spi_mapping osm on o.id=osm.organization_id join ")
+			query.append(" join org_spi_mapping osm on o.id=osm.organization_id join ")
 					.append(" spi_data osd on osm.spi_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -317,7 +346,7 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 				sb.append(" and osd.dimension_id IS NOT DISTINCT FROM :dimensionId ");
 			spi = true;
 		} else if (payload.getFrameworkTag() != null && payload.getFrameworkTag().equalsIgnoreCase("SDG")) {
-			query.append("join org_sdg_mapping osm on o.id=osm.organization_id join "
+			query.append(" join org_sdg_mapping osm on o.id=osm.organization_id join "
 					+ " sdg_data osd on osm.sdg_id = osd.id ");
 
 			sb.append(" AND osm.is_checked = true ");
@@ -357,10 +386,27 @@ public class OrganizationFilterRepositoryImpl implements OrganizationFilterRepos
 
 		filterQuery.setParameter("type", type);
 
-		filterQuery.setParameter("minRevenue", payload.getRevenueMin());
-		filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
-		filterQuery.setParameter("minAssets", payload.getAssetsMin());
-		filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		if ((payload.getRevenueMin() != null && payload.getRevenueMax() != null)) {
+			filterQuery.setParameter("minRevenue", payload.getRevenueMin());
+			filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
+		} else if (payload.getRevenueMin() == null && payload.getRevenueMax() != null) {
+			filterQuery.setParameter("minRevenue", Double.MIN_VALUE);
+			filterQuery.setParameter("maxRevenue", payload.getRevenueMax());
+		} else if (payload.getRevenueMin() != null && payload.getRevenueMax() == null) {
+			filterQuery.setParameter("minRevenue", payload.getRevenueMin());
+			filterQuery.setParameter("maxRevenue", Double.MAX_VALUE);
+		}
+
+		if ((payload.getAssetsMin() != null && payload.getAssetsMax() != null)) {
+			filterQuery.setParameter("minAssets", payload.getAssetsMin());
+			filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		} else if (payload.getAssetsMin() == null && payload.getAssetsMax() != null) {
+			filterQuery.setParameter("minAssets", Double.MIN_VALUE);
+			filterQuery.setParameter("maxAssets", payload.getAssetsMax());
+		} else if (payload.getAssetsMin() != null && payload.getAssetsMax() == null) {
+			filterQuery.setParameter("minAssets", payload.getAssetsMin());
+			filterQuery.setParameter("maxAssets", Double.MAX_VALUE);
+		}
 
 		if (payload.getSectorLevel() != null && payload.getSectorLevel().size() != 0)
 			filterQuery.setParameter("sectorLevel", payload.getSectorLevel());
