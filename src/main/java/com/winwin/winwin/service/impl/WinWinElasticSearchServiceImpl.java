@@ -139,17 +139,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	private Map<String, String> winwinRoutesMap = null;
 
 	private final String orgIndex = System.getenv("AWS_ES_ORG_INDEX");
-	private final String orgIndexType = System.getenv("AWS_ES_ORG_INDEX_TYPE");
 	private final String resourceIndex = System.getenv("AWS_ES_RES_INDEX");
-	private final String resourceIndexType = System.getenv("AWS_ES_RES_INDEX_TYPE");
 	private final String datasetIndex = System.getenv("AWS_ES_DS_INDEX");
-	private final String datasetIndexType = System.getenv("AWS_ES_DS_INDEX_TYPE");
 	private final String frameworkIndex = System.getenv("AWS_ES_FW_INDEX");
-	private final String frameworkIndexType = System.getenv("AWS_ES_FW_INDEX_TYPE");
 	private final String regionServedIndex = System.getenv("AWS_ES_RS_INDEX");
-	private final String regionServedIndexType = System.getenv("AWS_ES_RS_INDEX_TYPE");
 	private final String notesIndex = System.getenv("AWS_ES_NOTES_INDEX");
-	private final String notesIndexType = System.getenv("AWS_ES_NOTES_INDEX_TYPE");
 
 	@Value("${slack.channel}")
 	private String SLACK_CHANNEL;
@@ -197,7 +191,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 1000;
+				Integer pageSize = 2000;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -290,7 +284,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// get resourcePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(resourcePayload);
 						// set bulk request
-						setBulkRequest(resBulkRequest, mapper, resourceIndex, resourceIndexType, resourceId, jsonStr);
+						setBulkRequest(resBulkRequest, mapper, resourceIndex, resourceId, jsonStr);
 					}
 				}
 
@@ -310,7 +304,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// get datasetPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(datasetPayload);
 						// set bulk request
-						setBulkRequest(dsBulkRequest, mapper, datasetIndex, datasetIndexType, datasetId, jsonStr);
+						setBulkRequest(dsBulkRequest, mapper, datasetIndex, datasetId, jsonStr);
 					}
 				}
 
@@ -337,7 +331,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// get frameworkPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(frameworkPayload);
 						// set bulk request
-						setBulkRequest(fwBulkRequest, mapper, frameworkIndex, frameworkIndexType, frameworkId, jsonStr);
+						setBulkRequest(fwBulkRequest, mapper, frameworkIndex, frameworkId, jsonStr);
 					}
 				}
 
@@ -357,8 +351,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// get regionServedPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(regionServedPayload);
 						// set bulk request
-						setBulkRequest(rsBulkRequest, mapper, regionServedIndex, regionServedIndexType, regionServedId,
-								jsonStr);
+						setBulkRequest(rsBulkRequest, mapper, regionServedIndex, regionServedId, jsonStr);
 					}
 				}
 
@@ -377,7 +370,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						// get notePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(notePayload);
 						// set bulk request
-						setBulkRequest(notesBulkRequest, mapper, notesIndex, notesIndexType, noteId, jsonStr);
+						setBulkRequest(notesBulkRequest, mapper, notesIndex, noteId, jsonStr);
 					}
 				}
 				// Creating Object of ObjectMapper define in JACKSON API
@@ -385,7 +378,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				// get Organization object as a JSON string
 				String jsonStr = mapper.writeValueAsString(payload);
 				// set bulk request
-				setBulkRequest(orgBulkRequest, mapper, orgIndex, orgIndexType, id, jsonStr);
+				setBulkRequest(orgBulkRequest, mapper, orgIndex, id, jsonStr);
 			} // end of loop
 
 			if (!organizationPayloadList.isEmpty()) {
@@ -448,14 +441,14 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @throws JsonParseException
 	 * @throws JsonMappingException
 	 */
-	private void setBulkRequest(BulkRequest bulkRequest, ObjectMapper mapper, String index, String indexType, String id,
-			String jsonStr) throws IOException, JsonParseException, JsonMappingException {
+	private void setBulkRequest(BulkRequest bulkRequest, ObjectMapper mapper, String index, String id, String jsonStr)
+			throws IOException, JsonParseException, JsonMappingException {
 		// Create the document as a hash map from JSON string
 		@SuppressWarnings("unchecked")
 		Map<String, String> document = mapper.readValue(jsonStr, Map.class);
 		// Form the indexing request, send it, and print the
 		// response
-		IndexRequest request = new IndexRequest(index, indexType, id).source(document);
+		IndexRequest request = new IndexRequest(index).id(id).source(document);
 		// Add individual bulk request to bulk request
 		bulkRequest.add(request);
 	}
@@ -1451,13 +1444,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
 		// exception
+		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version < 7.0
 		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
 		// socket and connection timeout exception
-		return new RestHighLevelClient(
-				RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT"))).setMaxRetryTimeoutMillis(6000000)
-						.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
-								.setConnectTimeout(6000000).setSocketTimeout(6000000))
-						.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
+		return new RestHighLevelClient(RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT")))
+				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000)
+						.setSocketTimeout(6000000))
+				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
 	}
 
 	// Adds the interceptor to the ES REST client
@@ -1472,12 +1465,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		// Added .setMaxRetryTimeoutMillis(600000000) to avoid listener timeout
 		// exception
+		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version < 7.0
 		// Added .setConnectTimeout(600000000).setSocketTimeout(600000000)) to avoid
 		// socket and connection timeout exception
 		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, scheme))
-				.setDefaultHeaders(headers).setMaxRetryTimeoutMillis(600000000)
-				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(600000000)
-						.setSocketTimeout(600000000)));
+				.setDefaultHeaders(headers).setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+						.setConnectTimeout(600000000).setSocketTimeout(600000000)));
 	}
 
 }
