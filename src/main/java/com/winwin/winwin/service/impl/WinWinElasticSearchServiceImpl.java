@@ -310,10 +310,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 				if (null != payload.getFramework() && (!payload.getFramework().isEmpty())) {
 					for (OrganizationFrameworksPayload framework : payload.getFramework()) {
-						String frameworkId = "org_fw_" + framework.getId().toString();
+						String frameworkId = "org_fw_" + framework.getType() + "_" + framework.getId().toString();
 						// check for program
 						if (Boolean.TRUE.equals(isProgram(payload)))
-							frameworkId = "prog_fw_" + framework.getId().toString();
+							frameworkId = "prog_fw_" + framework.getType() + "_" + framework.getId().toString();
 						// copy organization and framework properties to
 						// frameworkPayload
 						FrameworkElasticSearchPayload frameworkPayload = new FrameworkElasticSearchPayload();
