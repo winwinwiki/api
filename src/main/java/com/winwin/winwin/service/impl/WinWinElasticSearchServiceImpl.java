@@ -191,7 +191,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 2000;
+				Integer pageSize = 100;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
