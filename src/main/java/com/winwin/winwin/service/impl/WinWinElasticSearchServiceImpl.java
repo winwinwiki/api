@@ -9,7 +9,8 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.bulk.BackoffPolicy;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -17,6 +18,8 @@ import org.elasticsearch.client.Node;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
@@ -95,6 +98,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -182,9 +186,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
@@ -244,23 +247,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			List<OrganizationElasticSearchPayload> organizationPayloadList = prepareDataForElasticSearch(pageable, file,
 					txtWriter, lastUpdatedDate);
 			// Send bulk indexes data to individual indexes
-			BulkRequest orgBulkRequest = new BulkRequest();
-			BulkRequest resBulkRequest = new BulkRequest();
-			BulkRequest dsBulkRequest = new BulkRequest();
-			BulkRequest fwBulkRequest = new BulkRequest();
-			BulkRequest rsBulkRequest = new BulkRequest();
-			BulkRequest notesBulkRequest = new BulkRequest();
-
-			/*
-			 * set timeout and minimum active shard's required to perform index
-			 * write operation
-			 */
-			orgBulkRequest.timeout(TimeValue.timeValueHours(5L));
-			resBulkRequest.timeout(TimeValue.timeValueHours(5L));
-			dsBulkRequest.timeout(TimeValue.timeValueHours(5L));
-			fwBulkRequest.timeout(TimeValue.timeValueHours(5L));
-			rsBulkRequest.timeout(TimeValue.timeValueHours(5L));
-			notesBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			// get bulkProcessor instance to add multiple IndexRequest
+			BulkProcessor bulkProcessor = getBulkProcessor();
 
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "org_" + payload.getId().toString();
@@ -283,8 +271,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ObjectMapper mapper = new ObjectMapper();
 						// get resourcePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(resourcePayload);
-						// set bulk request
-						setBulkRequest(resBulkRequest, mapper, resourceIndex, resourceId, jsonStr);
+						// add data to bulk processor
+						addDataToBulkProcessor(bulkProcessor, mapper, resourceIndex, resourceId, jsonStr);
 					}
 				}
 
@@ -303,8 +291,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ObjectMapper mapper = new ObjectMapper();
 						// get datasetPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(datasetPayload);
-						// set bulk request
-						setBulkRequest(dsBulkRequest, mapper, datasetIndex, datasetId, jsonStr);
+						// add data to bulk processor
+						addDataToBulkProcessor(bulkProcessor, mapper, datasetIndex, datasetId, jsonStr);
 					}
 				}
 
@@ -330,8 +318,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ObjectMapper mapper = new ObjectMapper();
 						// get frameworkPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(frameworkPayload);
-						// set bulk request
-						setBulkRequest(fwBulkRequest, mapper, frameworkIndex, frameworkId, jsonStr);
+						// add data to bulk processor
+						addDataToBulkProcessor(bulkProcessor, mapper, frameworkIndex, frameworkId, jsonStr);
 					}
 				}
 
@@ -350,8 +338,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ObjectMapper mapper = new ObjectMapper();
 						// get regionServedPayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(regionServedPayload);
-						// set bulk request
-						setBulkRequest(rsBulkRequest, mapper, regionServedIndex, regionServedId, jsonStr);
+						// add data to bulk processor
+						addDataToBulkProcessor(bulkProcessor, mapper, regionServedIndex, regionServedId, jsonStr);
 					}
 				}
 
@@ -369,71 +357,23 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						ObjectMapper mapper = new ObjectMapper();
 						// get notePayload object as a JSON string
 						String jsonStr = mapper.writeValueAsString(notePayload);
-						// set bulk request
-						setBulkRequest(notesBulkRequest, mapper, notesIndex, noteId, jsonStr);
+						// add data to bulk processor
+						addDataToBulkProcessor(bulkProcessor, mapper, notesIndex, noteId, jsonStr);
 					}
 				}
 				// Creating Object of ObjectMapper define in JACKSON API
 				ObjectMapper mapper = new ObjectMapper();
 				// get Organization object as a JSON string
 				String jsonStr = mapper.writeValueAsString(payload);
-				// set bulk request
-				setBulkRequest(orgBulkRequest, mapper, orgIndex, id, jsonStr);
+				// add data to bulk processor
+				addDataToBulkProcessor(bulkProcessor, mapper, orgIndex, id, jsonStr);
 			} // end of loop
 
-			if (!organizationPayloadList.isEmpty()) {
-				// set post request for KIBANA
-				if (winwinRoutesMap == null) {
-					// set winWin routes map
-					setWinWinRoutesMap();
-				}
-				if (!winwinRoutesMap.isEmpty()
-						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+			// close the bulk processor
+			Boolean terminated = bulkProcessor.awaitClose(30L, TimeUnit.SECONDS);
+			if (Boolean.TRUE.equals(terminated))
+				LOGGER.info("Bulk Processor Terminated Successfuly for current batch");
 
-					// get rest client connection
-					RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
-							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
-							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
-
-					// Adding a Listener when Asynchronous Bulk Fails or Succeed
-					ActionListener<BulkResponse> listener = new ActionListener<BulkResponse>() {
-						@Override
-						public void onResponse(BulkResponse bulkResponse) {
-							LOGGER.info("bulk request created successfully with status as : " + bulkResponse.status());
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							LOGGER.error("bulk request failed due to exception: " + e);
-						}
-					};
-
-					// send bulk request to es to individual indexes
-					if (null != orgBulkRequest.requests() && (!orgBulkRequest.requests().isEmpty())) {
-						LOGGER.info("organization bulk request request size:" + orgBulkRequest.estimatedSizeInBytes());
-						esClient.bulkAsync(orgBulkRequest, RequestOptions.DEFAULT, listener);
-					}
-					if (null != resBulkRequest.requests() && (!resBulkRequest.requests().isEmpty()))
-						esClient.bulkAsync(resBulkRequest, RequestOptions.DEFAULT, listener);
-
-					if (null != dsBulkRequest.requests() && (!dsBulkRequest.requests().isEmpty()))
-						esClient.bulkAsync(dsBulkRequest, RequestOptions.DEFAULT, listener);
-
-					if (null != fwBulkRequest.requests() && (!fwBulkRequest.requests().isEmpty())) {
-						LOGGER.info("framework bulk request request size:" + fwBulkRequest.estimatedSizeInBytes());
-						esClient.bulkAsync(fwBulkRequest, RequestOptions.DEFAULT, listener);
-					}
-					if (null != rsBulkRequest.requests() && (!rsBulkRequest.requests().isEmpty()))
-						esClient.bulkAsync(rsBulkRequest, RequestOptions.DEFAULT, listener);
-
-					if (null != notesBulkRequest.requests() && (!notesBulkRequest.requests().isEmpty()))
-						esClient.bulkAsync(notesBulkRequest, RequestOptions.DEFAULT, listener);
-
-					// Close ElasticSearch Rest Client Connection
-					esClient.close();
-				}
-			}
 		} catch (ElasticsearchException e) {
 			if (e.status() == RestStatus.CONFLICT) {
 				LOGGER.error("exception occoured due to conflict while sending post request to ElasticSearch", e);
@@ -449,6 +389,76 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	/**
+	 * @return
+	 * @throws Exception
+	 */
+	private BulkProcessor getBulkProcessor() throws Exception {
+		try {
+			// set post request for ElasticSearch
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+				// get rest client connection
+				RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
+
+				BulkProcessor.Listener listener = new BulkProcessor.Listener() {
+					@Override
+					public void beforeBulk(long executionId, BulkRequest request) {
+						int numberOfActions = request.numberOfActions();
+						LOGGER.debug("Executing bulk [{}] with {} requests", executionId, numberOfActions);
+					}
+
+					@Override
+					public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
+						if (response.hasFailures()) {
+							LOGGER.warn("Bulk [{}] executed with failures", executionId);
+						} else {
+							LOGGER.debug("Bulk [{}] completed in {} milliseconds", executionId,
+									response.getTook().getMillis());
+						}
+					}
+
+					@Override
+					public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
+						LOGGER.error("Failed to execute bulk", failure);
+					}
+				};
+
+				BulkProcessor.Builder builder = BulkProcessor.builder(
+						(request, bulkListener) -> esClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener),
+						listener);
+				// send to ElasticSearch when it has 1000 Index Request at a time
+				builder.setBulkActions(1000);
+				// send to ElasticSearch when it has 1MB size 0f Index Request at a time
+				builder.setBulkSize(new ByteSizeValue(1L, ByteSizeUnit.MB));
+				builder.setConcurrentRequests(0);
+				// set a flush interval flushing any BulkRequest pending if the interval passes
+				// to 50 Minutes
+				builder.setFlushInterval(TimeValue.timeValueMinutes(50L));
+				// set a constant back off policy that initially waits for 60 seconds and
+				// retries up to 3 times
+				builder.setBackoffPolicy(BackoffPolicy.constantBackoff(TimeValue.timeValueSeconds(60L), 3));
+
+				BulkProcessor bulkProcessor = builder.build();
+
+				return bulkProcessor;
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("Failed to create bulkProcessor ", e);
+			// throw exception to main method
+			throw e;
+		}
+
+		return null;
+	}
+
+	/**
 	 * @param payload
 	 * @param id
 	 * @return
@@ -461,7 +471,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	/**
-	 * @param bulkRequest
+	 * @param bulkProcessor
 	 * @param mapper
 	 * @param id
 	 * @param jsonStr
@@ -469,16 +479,19 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 * @throws JsonParseException
 	 * @throws JsonMappingException
 	 */
-	private void setBulkRequest(BulkRequest bulkRequest, ObjectMapper mapper, String index, String id, String jsonStr)
-			throws IOException, JsonParseException, JsonMappingException {
-		// Create the document as a hash map from JSON string
-		@SuppressWarnings("unchecked")
-		Map<String, String> document = mapper.readValue(jsonStr, Map.class);
-		// Form the indexing request, send it, and print the
-		// response
-		IndexRequest request = new IndexRequest(index).id(id).source(document).timeout(TimeValue.timeValueHours(5L));
-		// Add individual bulk request to bulk request
-		bulkRequest.add(request);
+	private void addDataToBulkProcessor(BulkProcessor bulkProcessor, ObjectMapper mapper, String index, String id,
+			String jsonStr) throws IOException, JsonParseException, JsonMappingException {
+		if (null != bulkProcessor) {
+			// Create the document as a hash map from JSON string
+			@SuppressWarnings("unchecked")
+			Map<String, String> document = mapper.readValue(jsonStr, Map.class);
+			// Form the indexing request, send it, and print the
+			// response
+			IndexRequest request = new IndexRequest(index).id(id).source(document)
+					.timeout(TimeValue.timeValueMinutes(10L));
+			// Add individual index request to bulk processor
+			bulkProcessor.add(request);
+		}
 	}
 
 	private List<OrganizationElasticSearchPayload> prepareDataForElasticSearch(Pageable pageable, File file,
@@ -488,9 +501,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -546,25 +558,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for
-					 * root organization to push the data into elastic // search
-					 * if (parentOrganization == null && rootParentOrganization
-					 * == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for root organization to
+					 * push the data into elastic // search if (parentOrganization == null &&
+					 * rootParentOrganization == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child
-					 * organization to push the data into // elastic search }
-					 * else if (null != parentOrganization && null !=
-					 * rootParentOrganization) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
+					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child organization to push the data
+					 * into // elastic search } else if (null != parentOrganization && null !=
+					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
+					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
+					 * parentOrganization, rootParentOrganization); }
 					 */
 
 				} // end of loop
