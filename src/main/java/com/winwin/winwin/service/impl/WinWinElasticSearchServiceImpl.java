@@ -9,6 +9,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -16,6 +17,7 @@ import org.elasticsearch.client.Node;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +195,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 500;
+				Integer pageSize = 5000;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -248,21 +250,17 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			BulkRequest fwBulkRequest = new BulkRequest();
 			BulkRequest rsBulkRequest = new BulkRequest();
 			BulkRequest notesBulkRequest = new BulkRequest();
+
 			/*
-			 * // set timeout and minimum active shard's required to perform
-			 * index write // operation orgBulkRequest.waitForActiveShards(1);
-			 * orgBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			 * resBulkRequest.waitForActiveShards(1);
-			 * resBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			 * dsBulkRequest.waitForActiveShards(1);
-			 * dsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			 * fwBulkRequest.waitForActiveShards(1);
-			 * fwBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			 * rsBulkRequest.waitForActiveShards(1);
-			 * rsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			 * notesBulkRequest.waitForActiveShards(1);
-			 * notesBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * set timeout and minimum active shard's required to perform index
+			 * write operation
 			 */
+			orgBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			resBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			dsBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			fwBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			rsBulkRequest.timeout(TimeValue.timeValueHours(5L));
+			notesBulkRequest.timeout(TimeValue.timeValueHours(5L));
 
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "org_" + payload.getId().toString();
@@ -398,30 +396,39 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
 
+					// Adding a Listener when Asynchronous Bulk Fails or Succeed
+					ActionListener<BulkResponse> listener = new ActionListener<BulkResponse>() {
+						@Override
+						public void onResponse(BulkResponse bulkResponse) {
+							LOGGER.info("bulk request created successfully with status as : " + bulkResponse.status());
+						}
+
+						@Override
+						public void onFailure(Exception e) {
+							LOGGER.error("bulk request failed due to exception: " + e);
+						}
+					};
+
 					// send bulk request to es to individual indexes
-					BulkResponse response = null;
 					if (null != orgBulkRequest.requests() && (!orgBulkRequest.requests().isEmpty())) {
 						LOGGER.info("organization bulk request request size:" + orgBulkRequest.estimatedSizeInBytes());
-						response = esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
-						if (null != response && (!StringUtils.isEmpty(response.buildFailureMessage())))
-							LOGGER.info(
-									"organization bulk response failure message: " + response.buildFailureMessage());
+						esClient.bulkAsync(orgBulkRequest, RequestOptions.DEFAULT, listener);
 					}
 					if (null != resBulkRequest.requests() && (!resBulkRequest.requests().isEmpty()))
-						esClient.bulk(resBulkRequest, RequestOptions.DEFAULT);
+						esClient.bulkAsync(resBulkRequest, RequestOptions.DEFAULT, listener);
+
 					if (null != dsBulkRequest.requests() && (!dsBulkRequest.requests().isEmpty()))
-						esClient.bulk(dsBulkRequest, RequestOptions.DEFAULT);
+						esClient.bulkAsync(dsBulkRequest, RequestOptions.DEFAULT, listener);
+
 					if (null != fwBulkRequest.requests() && (!fwBulkRequest.requests().isEmpty())) {
 						LOGGER.info("framework bulk request request size:" + fwBulkRequest.estimatedSizeInBytes());
-						response = null;
-						response = esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
-						if (null != response && (!StringUtils.isEmpty(response.buildFailureMessage())))
-							LOGGER.info("framework bulk response failure message: " + response.buildFailureMessage());
+						esClient.bulkAsync(fwBulkRequest, RequestOptions.DEFAULT, listener);
 					}
 					if (null != rsBulkRequest.requests() && (!rsBulkRequest.requests().isEmpty()))
-						esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
+						esClient.bulkAsync(rsBulkRequest, RequestOptions.DEFAULT, listener);
+
 					if (null != notesBulkRequest.requests() && (!notesBulkRequest.requests().isEmpty()))
-						esClient.bulk(notesBulkRequest, RequestOptions.DEFAULT);
+						esClient.bulkAsync(notesBulkRequest, RequestOptions.DEFAULT, listener);
 
 					// Close ElasticSearch Rest Client Connection
 					esClient.close();
@@ -469,7 +476,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		Map<String, String> document = mapper.readValue(jsonStr, Map.class);
 		// Form the indexing request, send it, and print the
 		// response
-		IndexRequest request = new IndexRequest(index).id(id).source(document);
+		IndexRequest request = new IndexRequest(index).id(id).source(document).timeout(TimeValue.timeValueHours(5L));
 		// Add individual bulk request to bulk request
 		bulkRequest.add(request);
 	}
