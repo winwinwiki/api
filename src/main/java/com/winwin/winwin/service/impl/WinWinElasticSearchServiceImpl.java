@@ -15,6 +15,10 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,8 +183,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
@@ -247,9 +252,13 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			BulkRequest rsBulkRequest = new BulkRequest();
 			BulkRequest notesBulkRequest = new BulkRequest();
 
+			// Create Indexes without mapping with primary shards as 5 and
+			// replica as 5
+			createEsIndexRequests();
+
 			/*
-			 * // set timeout and minimum active shard's required to perform index write //
-			 * operation orgBulkRequest.waitForActiveShards(1);
+			 * // set timeout and minimum active shard's required to perform
+			 * index write // operation orgBulkRequest.waitForActiveShards(1);
 			 * orgBulkRequest.timeout(TimeValue.timeValueMinutes(60));
 			 * resBulkRequest.waitForActiveShards(1);
 			 * resBulkRequest.timeout(TimeValue.timeValueMinutes(60));
@@ -392,6 +401,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
 						&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
 
+					// get rest client connection
 					RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
@@ -414,13 +424,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 						response = null;
 						response = esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
 						if (null != response && (!StringUtils.isEmpty(response.buildFailureMessage())))
-							LOGGER.info(
-									"framework bulk response failure message: " + response.buildFailureMessage());
+							LOGGER.info("framework bulk response failure message: " + response.buildFailureMessage());
 					}
 					if (null != rsBulkRequest.requests() && (!rsBulkRequest.requests().isEmpty()))
 						esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
 					if (null != notesBulkRequest.requests() && (!notesBulkRequest.requests().isEmpty()))
 						esClient.bulk(notesBulkRequest, RequestOptions.DEFAULT);
+
+					// Close ElasticSearch Rest Client Connection
+					esClient.close();
 				}
 			}
 		} catch (ElasticsearchException e) {
@@ -429,6 +441,94 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 			// throw exception to main method
 			throw e;
+		} catch (Exception e) {
+			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
+			// throw exception to main method
+			throw e;
+		}
+
+	}
+
+	private void createEsIndexRequests() {
+
+		try {
+			// get rest client connection
+			RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
+					winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+					winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
+
+			// Create Index for Organization and Program
+			CreateIndexRequest orgIndexRequest = new CreateIndexRequest(orgIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			orgIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse orgIndexResponse = esClient.indices().create(orgIndexRequest, RequestOptions.DEFAULT);
+			if (orgIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + orgIndex + " created successfully");
+			if (orgIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + orgIndex);
+
+			// Create Index for Organization and Program Resources
+			CreateIndexRequest resIndexRequest = new CreateIndexRequest(resourceIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			resIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse resIndexResponse = esClient.indices().create(resIndexRequest, RequestOptions.DEFAULT);
+			if (resIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + resourceIndex + " created successfully");
+			if (resIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + resourceIndex);
+
+			// Create Index for Organization and Program DataSets
+			CreateIndexRequest dsIndexRequest = new CreateIndexRequest(datasetIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			dsIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse dsIndexResponse = esClient.indices().create(dsIndexRequest, RequestOptions.DEFAULT);
+			if (dsIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + datasetIndex + " created successfully");
+			if (dsIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + datasetIndex);
+
+			// Create Index for Organization and Program Frameworks(SPI, SDG)
+			CreateIndexRequest fwIndexRequest = new CreateIndexRequest(frameworkIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			fwIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse fwIndexResponse = esClient.indices().create(fwIndexRequest, RequestOptions.DEFAULT);
+			if (fwIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + frameworkIndex + " created successfully");
+			if (fwIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + frameworkIndex);
+
+			// Create Index for Organization and Program Resources
+			CreateIndexRequest rsIndexRequest = new CreateIndexRequest(regionServedIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			rsIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse rsIndexResponse = esClient.indices().create(rsIndexRequest, RequestOptions.DEFAULT);
+			if (rsIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + regionServedIndex + " created successfully");
+			if (rsIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + regionServedIndex);
+
+			// Create Index for Organization Notes
+			CreateIndexRequest notesIndexRequest = new CreateIndexRequest(notesIndex)
+					.settings(Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 5));
+			notesIndexRequest.setTimeout(TimeValue.timeValueMinutes(5));
+
+			CreateIndexResponse notesIndexResponse = esClient.indices().create(notesIndexRequest,
+					RequestOptions.DEFAULT);
+			if (notesIndexResponse.isAcknowledged())
+				LOGGER.info("Index: " + notesIndex + " created successfully");
+			if (notesIndexResponse.isShardsAcknowledged())
+				LOGGER.info("Shards created successfully for Index: " + notesIndex);
+
+			// Close the RestHighLevelClient connection
+			esClient.close();
+
+		} catch (Exception e) {
+			LOGGER.error("exception occoured while creatin ElasticSearch Indexes" + e);
 		}
 
 	}
@@ -473,8 +573,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -530,20 +631,25 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for root organization to
-					 * push the data into elastic // search if (parentOrganization == null &&
-					 * rootParentOrganization == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for
+					 * root organization to push the data into elastic // search
+					 * if (parentOrganization == null && rootParentOrganization
+					 * == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
-					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child organization to push the data
-					 * into // elastic search } else if (null != parentOrganization && null !=
-					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
-					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
-					 * parentOrganization, rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child
+					 * organization to push the data into // elastic search }
+					 * else if (null != parentOrganization && null !=
+					 * rootParentOrganization) {
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); }
 					 */
 
 				} // end of loop
@@ -1457,7 +1563,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		// Added .setMaxRetryTimeoutMillis(6000000) to avoid listener timeout
 		// exception
-		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version < 7.0
+		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version <
+		// 7.0
 		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
 		// socket and connection timeout exception
 		return new RestHighLevelClient(RestClient.builder(HttpHost.create(System.getenv("AWS_ES_ENDPOINT")))
@@ -1478,8 +1585,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		// Added .setMaxRetryTimeoutMillis(600000000) to avoid listener timeout
 		// exception
-		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version < 7.0
-		// Added .setConnectTimeout(600000000).setSocketTimeout(600000000)) to avoid
+		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version <
+		// 7.0
+		// Added .setConnectTimeout(600000000).setSocketTimeout(600000000)) to
+		// avoid
 		// socket and connection timeout exception
 		return new RestHighLevelClient(RestClient.builder(new HttpHost(System.getenv("AWS_ES_ENDPOINT"), port, scheme))
 				.setDefaultHeaders(headers).setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
