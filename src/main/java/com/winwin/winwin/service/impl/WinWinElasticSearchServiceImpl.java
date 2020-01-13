@@ -196,7 +196,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 100;
+				Integer pageSize = 500;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -251,10 +251,10 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			BulkRequest fwBulkRequest = new BulkRequest();
 			BulkRequest rsBulkRequest = new BulkRequest();
 			BulkRequest notesBulkRequest = new BulkRequest();
-
-			// Create Indexes without mapping with primary shards as 5 and
-			// replica as 5
-			createEsIndexRequests();
+			/*
+			 * // Create Indexes without mapping with primary shards as 5 and //
+			 * replica as 5 createEsIndexRequests();
+			 */
 
 			/*
 			 * // set timeout and minimum active shard's required to perform
