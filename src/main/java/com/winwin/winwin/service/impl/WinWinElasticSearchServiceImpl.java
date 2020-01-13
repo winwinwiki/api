@@ -10,11 +10,11 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,20 +247,21 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			BulkRequest rsBulkRequest = new BulkRequest();
 			BulkRequest notesBulkRequest = new BulkRequest();
 
-			// set timeout and minimum active shard's required to perform index write
-			// operation
-			orgBulkRequest.waitForActiveShards(1);
-			orgBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			resBulkRequest.waitForActiveShards(1);
-			resBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			dsBulkRequest.waitForActiveShards(1);
-			dsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			fwBulkRequest.waitForActiveShards(1);
-			fwBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			rsBulkRequest.waitForActiveShards(1);
-			rsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
-			notesBulkRequest.waitForActiveShards(1);
-			notesBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			/*
+			 * // set timeout and minimum active shard's required to perform index write //
+			 * operation orgBulkRequest.waitForActiveShards(1);
+			 * orgBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * resBulkRequest.waitForActiveShards(1);
+			 * resBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * dsBulkRequest.waitForActiveShards(1);
+			 * dsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * fwBulkRequest.waitForActiveShards(1);
+			 * fwBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * rsBulkRequest.waitForActiveShards(1);
+			 * rsBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 * notesBulkRequest.waitForActiveShards(1);
+			 * notesBulkRequest.timeout(TimeValue.timeValueMinutes(60));
+			 */
 
 			for (OrganizationElasticSearchPayload payload : organizationPayloadList) {
 				String id = "org_" + payload.getId().toString();
@@ -396,14 +397,26 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
 
 					// send bulk request to es to individual indexes
-					if (null != orgBulkRequest.requests() && (!orgBulkRequest.requests().isEmpty()))
-						esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
+					BulkResponse response = null;
+					if (null != orgBulkRequest.requests() && (!orgBulkRequest.requests().isEmpty())) {
+						LOGGER.info("organization bulk request request size:" + orgBulkRequest.estimatedSizeInBytes());
+						response = esClient.bulk(orgBulkRequest, RequestOptions.DEFAULT);
+						if (null != response && (!StringUtils.isEmpty(response.buildFailureMessage())))
+							LOGGER.info(
+									"organization bulk response failure message: " + response.buildFailureMessage());
+					}
 					if (null != resBulkRequest.requests() && (!resBulkRequest.requests().isEmpty()))
 						esClient.bulk(resBulkRequest, RequestOptions.DEFAULT);
 					if (null != dsBulkRequest.requests() && (!dsBulkRequest.requests().isEmpty()))
 						esClient.bulk(dsBulkRequest, RequestOptions.DEFAULT);
-					if (null != fwBulkRequest.requests() && (!fwBulkRequest.requests().isEmpty()))
-						esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
+					if (null != fwBulkRequest.requests() && (!fwBulkRequest.requests().isEmpty())) {
+						LOGGER.info("framework bulk request request size:" + fwBulkRequest.estimatedSizeInBytes());
+						response = null;
+						response = esClient.bulk(fwBulkRequest, RequestOptions.DEFAULT);
+						if (null != response && (!StringUtils.isEmpty(response.buildFailureMessage())))
+							LOGGER.info(
+									"framework bulk response failure message: " + response.buildFailureMessage());
+					}
 					if (null != rsBulkRequest.requests() && (!rsBulkRequest.requests().isEmpty()))
 						esClient.bulk(rsBulkRequest, RequestOptions.DEFAULT);
 					if (null != notesBulkRequest.requests() && (!notesBulkRequest.requests().isEmpty()))
