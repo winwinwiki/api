@@ -65,6 +65,7 @@ import com.winwin.winwin.payload.OrganizationRegionServedElasticSearchPayload;
 import com.winwin.winwin.payload.OrganizationResourceElasticSearchPayload;
 import com.winwin.winwin.payload.RegionServedElasticSearchPayload;
 import com.winwin.winwin.payload.ResourceElasticSearchPayload;
+import com.winwin.winwin.payload.UserPayload;
 import com.winwin.winwin.repository.OrgSdgDataMapRepository;
 import com.winwin.winwin.repository.OrgSpiDataMapRepository;
 import com.winwin.winwin.repository.OrganizationDataSetRepository;
@@ -160,7 +161,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	 */
 	@Override
 	@Async
-	public void sendPostRequestToElasticSearch() {
+	public void sendPostRequestToElasticSearch(UserPayload user) {
 		SlackMessage slackMessage = null;
 		// send organization data to elastic
 		try {
@@ -170,7 +171,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			Date date = CommonUtils.getFormattedDate();
 			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text("WinWinWiki Publish To Kibana Process has been started successfully for app env: "
-							+ System.getenv("WINWIN_ENV") + " at " + date)
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date)
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
@@ -222,7 +223,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
 			date = CommonUtils.getFormattedDate();
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully for app env: "
-					+ System.getenv("WINWIN_ENV") + " at " + date));
+					+ System.getenv("WINWIN_ENV") +  " , initiated by user: " + user.getUserDisplayName() +" at " + date));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 			// flush the changes and close txtWriter
 			txtWriter.flush();
@@ -231,7 +232,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 			Date date = CommonUtils.getFormattedDate();
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run for app env: "
-					+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()));
+					+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date + " due to error: \n" + e.getMessage()));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 	}

@@ -118,8 +118,8 @@ public class WinWinServiceImpl implements WinWinService {
 
 	/**
 	 * create organizations in bulk, call this method only when the organization
-	 * id's are already imported into organization table. This is the utility
-	 * method for data migration and can only be used for new environment setup
+	 * id's are already imported into organization table. This is the utility method
+	 * for data migration and can only be used for new environment setup
 	 * 
 	 * @param organizationPayloadList
 	 * @param response
@@ -134,7 +134,8 @@ public class WinWinServiceImpl implements WinWinService {
 		Date date = CommonUtils.getFormattedDate();
 		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 				.text("WinWinWiki Organization Data Migration Process has been started successfully for app env: "
-						+ System.getenv("WINWIN_ENV") + " at " + date)
+						+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at "
+						+ date)
 				.channel(SLACK_CHANNEL).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
@@ -143,7 +144,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 		date = CommonUtils.getFormattedDate();
 		slackMessage.setText(("WinWinWiki Organization Data Migration Process has been ended successfully for app env: "
-				+ System.getenv("WINWIN_ENV") + " at " + date));
+				+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		// return organizationList;
@@ -167,7 +168,8 @@ public class WinWinServiceImpl implements WinWinService {
 		Date date = CommonUtils.getFormattedDate();
 		SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 				.text("WinWinWiki Program Data Migration Process has been started successfully for app env: "
-						+ System.getenv("WINWIN_ENV") + " at " + date)
+						+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at "
+						+ date)
 				.channel(SLACK_CHANNEL).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
@@ -176,7 +178,7 @@ public class WinWinServiceImpl implements WinWinService {
 
 		date = CommonUtils.getFormattedDate();
 		slackMessage.setText(("WinWinWiki Program Data Migration Process has been ended successfully for app env: "
-				+ System.getenv("WINWIN_ENV") + " at " + date));
+				+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		// return programList;
@@ -257,8 +259,7 @@ public class WinWinServiceImpl implements WinWinService {
 							} else if (i > numOfOrganizationsToSaveByBatchSize
 									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 								/*
-								 * OrganizationBulkResultPayload payload =
-								 * saveOrganizationsIntoDB(
+								 * OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
 								 * organizationsListToSaveIntoDB, i);
 								 */
 								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
@@ -288,7 +289,8 @@ public class WinWinServiceImpl implements WinWinService {
 			Date date = CommonUtils.getFormattedDate();
 			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text(("WinWinWiki Organization Data Migration Process has failed to run for app env: "
-							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+							+ " at " + date + " due to error: \n" + e.getMessage()))
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
@@ -851,7 +853,8 @@ public class WinWinServiceImpl implements WinWinService {
 			Date date = CommonUtils.getFormattedDate();
 			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text(("WinWinWiki Program Data Migration Process has failed to run for app env: "
-							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+							+ " at " + date + " due to error: \n" + e.getMessage()))
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}

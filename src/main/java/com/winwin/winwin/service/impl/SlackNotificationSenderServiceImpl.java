@@ -161,7 +161,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			date = CommonUtils.getFormattedDate();
 			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text("WinWinWiki Bulk Upload Process has been ended successfully for app env: "
-							+ System.getenv("WINWIN_ENV") + " at " + date)
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date)
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
