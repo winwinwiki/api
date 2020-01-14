@@ -171,7 +171,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			Date date = CommonUtils.getFormattedDate();
 			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text("WinWinWiki Publish To Kibana Process has been started successfully for app env: "
-							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date)
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+							+ " at " + date)
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
@@ -187,8 +188,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
@@ -199,7 +201,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			}
 
 			if (null != numOfOrganizations) {
-				Integer pageSize = 1000;
+				Integer pageSize = 1500;
 				Integer pageNumAvailable = numOfOrganizations / pageSize;
 				Integer totalPageNumAvailable = null;
 				if ((Math.floorMod(numOfOrganizations, pageSize)) > 0)
@@ -223,7 +225,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			LOGGER.info("process: sendPostRequestToElasticSearch has been ended successfully");
 			date = CommonUtils.getFormattedDate();
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has been ended successfully for app env: "
-					+ System.getenv("WINWIN_ENV") +  " , initiated by user: " + user.getUserDisplayName() +" at " + date));
+					+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at "
+					+ date));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 			// flush the changes and close txtWriter
 			txtWriter.flush();
@@ -232,7 +235,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			LOGGER.error("exception occoured while sending post request to ElasticSearch", e);
 			Date date = CommonUtils.getFormattedDate();
 			slackMessage.setText(("WinWinWiki Publish To Kibana Process has failed to run for app env: "
-					+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date + " due to error: \n" + e.getMessage()));
+					+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date
+					+ " due to error: \n" + e.getMessage()));
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 	}
@@ -371,9 +375,11 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			} // end of loop
 
 			// close the bulk processor
-			Boolean terminated = bulkProcessor.awaitClose(30L, TimeUnit.SECONDS);
+			Boolean terminated = bulkProcessor.awaitClose(5L, TimeUnit.MINUTES);
 			if (Boolean.TRUE.equals(terminated))
 				LOGGER.info("Bulk Processor Terminated Successfuly for current batch");
+			else
+				LOGGER.warn("Bulk Processor Terminated Unsuccessfuly for current batch");
 
 		} catch (ElasticsearchException e) {
 			if (e.status() == RestStatus.CONFLICT) {
@@ -433,17 +439,21 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				BulkProcessor.Builder builder = BulkProcessor.builder(
 						(request, bulkListener) -> esClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener),
 						listener);
-				// send to ElasticSearch when it has 1000 Index Request at a time
+				// send to ElasticSearch when it has 1000 Index Request at a
+				// time
 				builder.setBulkActions(1000);
-				// send to ElasticSearch when it has 1MB size 0f Index Request at a time
-				builder.setBulkSize(new ByteSizeValue(1L, ByteSizeUnit.MB));
-				builder.setConcurrentRequests(0);
-				// set a flush interval flushing any BulkRequest pending if the interval passes
-				// to 50 Minutes
-				builder.setFlushInterval(TimeValue.timeValueMinutes(50L));
-				// set a constant back off policy that initially waits for 60 seconds and
+				// send to ElasticSearch when it has 1MB size 0f Index Request
+				// at a time
+				builder.setBulkSize(new ByteSizeValue(5L, ByteSizeUnit.MB));
+				builder.setConcurrentRequests(1000);
+				// set a flush interval flushing any BulkRequest pending if the
+				// interval passes
+				// to 2 Minutes
+				builder.setFlushInterval(TimeValue.timeValueMinutes(1L));
+				// set a constant back off policy that initially waits for 120
+				// seconds and
 				// retries up to 3 times
-				builder.setBackoffPolicy(BackoffPolicy.constantBackoff(TimeValue.timeValueSeconds(60L), 3));
+				builder.setBackoffPolicy(BackoffPolicy.constantBackoff(TimeValue.timeValueSeconds(120L), 3));
 
 				BulkProcessor bulkProcessor = builder.build();
 
@@ -488,8 +498,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			Map<String, String> document = mapper.readValue(jsonStr, Map.class);
 			// Form the indexing request, send it, and print the
 			// response
-			IndexRequest request = new IndexRequest(index).id(id).source(document)
-					.timeout(TimeValue.timeValueMinutes(10L));
+			IndexRequest request = new IndexRequest(index).id(id).source(document);
+			// .timeout(TimeValue.timeValueMinutes(10L));
 			// Add individual index request to bulk processor
 			bulkProcessor.add(request);
 		}
@@ -502,8 +512,9 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
-			 * not found else find all the organizations from lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if
+			 * lastUpdatedDate is not found else find all the organizations from
+			 * lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -559,20 +570,25 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for root organization to
-					 * push the data into elastic // search if (parentOrganization == null &&
-					 * rootParentOrganization == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for
+					 * root organization to push the data into elastic // search
+					 * if (parentOrganization == null && rootParentOrganization
+					 * == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
-					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child organization to push the data
-					 * into // elastic search } else if (null != parentOrganization && null !=
-					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
-					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
-					 * parentOrganization, rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child
+					 * organization to push the data into // elastic search }
+					 * else if (null != parentOrganization && null !=
+					 * rootParentOrganization) {
+					 * prepareDataByTagStatus(organizationPayloadList, file,
+					 * txtWriter, lastUpdatedDate, organizationMap,
+					 * organizationFromMap, parentOrganization,
+					 * rootParentOrganization); }
 					 */
 
 				} // end of loop
