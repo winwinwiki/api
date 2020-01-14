@@ -66,7 +66,8 @@ public class WinWinController extends BaseController {
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			UserPayload user = userService.getCurrentUserDetails();
-			winWinService.createOrganizationsOffline(dataMigrationCsvPayload, exceptionResponse, user);
+			if (null != user)
+				winWinService.createOrganizationsOffline(dataMigrationCsvPayload, exceptionResponse, user);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)
@@ -98,7 +99,8 @@ public class WinWinController extends BaseController {
 					&& exceptionResponse.getStatusCode() != null)
 				return sendMsgResponse(exceptionResponse.getErrorMessage(), exceptionResponse.getStatusCode());
 			UserPayload user = userService.getCurrentUserDetails();
-			winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
+			if (null != user)
+				winWinService.createProgramsOffline(dataMigrationCsvPayload, exceptionResponse, user);
 
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)

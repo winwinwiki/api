@@ -3,6 +3,8 @@
  */
 package com.winwin.winwin.service;
 
+import com.winwin.winwin.payload.UserPayload;
+
 /**
  * @author ArvindKhatik
  * @version 1.0
@@ -10,6 +12,6 @@ package com.winwin.winwin.service;
  */
 public interface WinWinElasticSearchService {
 
-	public void sendPostRequestToElasticSearch();
+	public void sendPostRequestToElasticSearch(UserPayload user);
 
 }
