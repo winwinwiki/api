@@ -210,16 +210,19 @@ public class OrganizationController extends BaseController {
 
 			if (null != organizationCsvPayload) {
 				UserPayload user = userService.getCurrentUserDetails();
-				LOGGER.info("org service createOrganizations() started  with number of organizations - "
-						+ organizationCsvPayload.size() + " created by: " + user.getUserDisplayName());
-				// for Slack Notification
-				Date date = CommonUtils.getFormattedDate();
-				SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
-						.text("WinWinWiki Bulk Upload Process has been started successfully for app env: "
-								+ System.getenv("WINWIN_ENV") + " at " + date)
-						.channel(SLACK_CHANNEL).as_user("true").build();
-				slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
-				organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
+				if (null != user) {
+					LOGGER.info("org service createOrganizations() started  with number of organizations - "
+							+ organizationCsvPayload.size() + " created by: " + user.getUserDisplayName());
+					// for Slack Notification
+					Date date = CommonUtils.getFormattedDate();
+					SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
+							.text("WinWinWiki Bulk Upload Process has been started successfully for app env: "
+									+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+									+ " at " + date)
+							.channel(SLACK_CHANNEL).as_user("true").build();
+					slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
+					organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
+				}
 			}
 			if (!(StringUtils.isEmpty(exceptionResponse.getErrorMessage()))
 					&& exceptionResponse.getStatusCode() != null)

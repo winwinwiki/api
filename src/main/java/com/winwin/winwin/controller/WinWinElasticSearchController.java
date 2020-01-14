@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.winwin.winwin.constants.UserConstants;
+import com.winwin.winwin.payload.UserPayload;
+import com.winwin.winwin.service.UserService;
 import com.winwin.winwin.service.WinWinElasticSearchService;
 
 /**
@@ -20,11 +22,15 @@ import com.winwin.winwin.service.WinWinElasticSearchService;
 public class WinWinElasticSearchController extends BaseController {
 	@Autowired
 	private WinWinElasticSearchService winWinElasticSearchService;
+	@Autowired
+	private UserService userService;
 
 	@GetMapping(path = "")
 	@PreAuthorize("hasAuthority('" + UserConstants.ROLE_ADMIN + "')")
 	public ResponseEntity<?> send() {
-		winWinElasticSearchService.sendPostRequestToElasticSearch();
+		UserPayload user = userService.getCurrentUserDetails();
+		if (null != user)
+			winWinElasticSearchService.sendPostRequestToElasticSearch(user);
 		return sendSuccessResponse("org.success.created");
 	}
 

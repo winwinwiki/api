@@ -617,7 +617,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 			Date date = CommonUtils.getFormattedDate();
 			SlackMessage slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text(("WinWinWiki Bulk Upload Process has failed to run for app env: "
-							+ System.getenv("WINWIN_ENV") + " at " + date + " due to error: \n" + e.getMessage()))
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+							+ " at " + date + " due to error: \n" + e.getMessage()))
 					.channel(SLACK_CHANNEL).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
@@ -1200,9 +1201,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * sdgDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SDG,
-					 * sdgDataMapObj.getId(),
+					 * sdgDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SDG, sdgDataMapObj.getId(),
 					 * sdgDataMapObj.getSdgData().getShortName(),
 					 * sdgDataMapObj.getSdgData().getShortNameCode());
 					 */
@@ -1280,9 +1280,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 					}
 					/*
 					 * orgHistoryService.createOrganizationHistory(user,
-					 * spiDataMapObj.getOrganizationId(),
-					 * OrganizationConstants.CREATE, OrganizationConstants.SPI,
-					 * spiDataMapObj.getId(),
+					 * spiDataMapObj.getOrganizationId(), OrganizationConstants.CREATE,
+					 * OrganizationConstants.SPI, spiDataMapObj.getId(),
 					 * spiDataMapObj.getSpiData().getIndicatorName(),
 					 * spiDataMapObj.getSpiData().getIndicatorId());
 					 */
