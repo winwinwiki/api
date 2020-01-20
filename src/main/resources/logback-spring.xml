@@ -67,12 +67,8 @@
     	</layout>
 	</appender>	
  
-	<logger name="com.winwin.winwin" >
-		<level value="INFO" />
-		<level value="DEBUG" />
-	    <level value="WARN" />
-	    <level value="ERROR" />
-	    <level value="TRACE" />
+	<logger name="com.winwin.winwin" additivity="false">
+		<level value="ALL" />
     	<appender-ref ref="console" />
     	<appender-ref ref="RFA" />
 	</logger>
