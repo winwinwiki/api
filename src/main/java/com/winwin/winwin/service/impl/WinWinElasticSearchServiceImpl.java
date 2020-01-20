@@ -738,7 +738,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		List<String> connectedOrganizations = new ArrayList<String>();
 		// Add parent organization name
 		if (null != organization.getParentId())
-			connectedOrganizations.add(getParentOrgName(organization, organizationMap));
+			connectedOrganizations = getParentOrgNames(organization, organizationMap, connectedOrganizations);
 		// Add leaf organization Name at Last
 		connectedOrganizations.add(organization.getName());
 		// set connected organization list to organizationPayload
@@ -754,7 +754,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		List<String> connectedOrganizations = new ArrayList<String>();
 		// Add organization's parent organizations name
 		if (null != organization.getParentId())
-			connectedOrganizations.add(getParentOrgName(organization, organizationMap));
+			connectedOrganizations = getParentOrgNames(organization, organizationMap, connectedOrganizations);
 		// Add program's parent org name
 		connectedOrganizations.add(organization.getName());
 		// Add program Name at Last
@@ -766,10 +766,12 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	/**
 	 * @param organizationFromMap
 	 * @param organizationMap
+	 * @param connectedOrganizations
+	 * @return
 	 */
-	private String getParentOrgName(Organization organization, Map<Long, Organization> organizationMap) {
+	private List<String> getParentOrgNames(Organization organization, Map<Long, Organization> organizationMap,
+			List<String> connectedOrganizations) {
 		Organization parentOrganization = null;
-		String orgName = "";
 		// check for parent Organization
 		if (null != organization.getParentId()) {
 			// find parentOrganization first in map if not found
@@ -779,13 +781,15 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			if (parentOrganization == null)
 				parentOrganization = organizationRepository.findOrgById(organization.getParentId());
 			if (null != parentOrganization) {
-				if (null != parentOrganization.getParentId())
-					orgName = getParentOrgName(parentOrganization, organizationMap);
-				else
-					orgName = parentOrganization.getName();
+				if (null != parentOrganization.getParentId()) {
+					connectedOrganizations = getParentOrgNames(parentOrganization, organizationMap,
+							connectedOrganizations);
+					connectedOrganizations.add(parentOrganization.getName());
+				} else
+					connectedOrganizations.add(parentOrganization.getName());
 			}
 		}
-		return orgName;
+		return connectedOrganizations;
 	}// end of method
 
 	/**
