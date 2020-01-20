@@ -188,9 +188,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
@@ -439,21 +438,21 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				BulkProcessor.Builder builder = BulkProcessor.builder(
 						(request, bulkListener) -> esClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener),
 						listener);
-				// send to ElasticSearch when it has 1000 Index Request at a
+				// send to ElasticSearch when it has 10000 Index Request at a
 				// time
-				builder.setBulkActions(1000);
-				// send to ElasticSearch when it has 1MB size 0f Index Request
+				builder.setBulkActions(10000);
+				// send to ElasticSearch when it has 5MB size 0f Index Request
 				// at a time
 				builder.setBulkSize(new ByteSizeValue(5L, ByteSizeUnit.MB));
-				builder.setConcurrentRequests(1000);
+				builder.setConcurrentRequests(100);
 				// set a flush interval flushing any BulkRequest pending if the
 				// interval passes
-				// to 2 Minutes
-				builder.setFlushInterval(TimeValue.timeValueMinutes(1L));
-				// set a constant back off policy that initially waits for 120
-				// seconds and
+				// to 5 Seconds
+				builder.setFlushInterval(TimeValue.timeValueSeconds(5L));
+				// set a constant back off policy that initially waits for 100
+				// milliseconds and
 				// retries up to 3 times
-				builder.setBackoffPolicy(BackoffPolicy.constantBackoff(TimeValue.timeValueSeconds(120L), 3));
+				builder.setBackoffPolicy(BackoffPolicy.constantBackoff(TimeValue.timeValueMillis(100L), 3));
 
 				BulkProcessor bulkProcessor = builder.build();
 
@@ -512,9 +511,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -570,25 +568,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for
-					 * root organization to push the data into elastic // search
-					 * if (parentOrganization == null && rootParentOrganization
-					 * == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for root organization to
+					 * push the data into elastic // search if (parentOrganization == null &&
+					 * rootParentOrganization == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child
-					 * organization to push the data into // elastic search }
-					 * else if (null != parentOrganization && null !=
-					 * rootParentOrganization) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
+					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child organization to push the data
+					 * into // elastic search } else if (null != parentOrganization && null !=
+					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
+					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
+					 * parentOrganization, rootParentOrganization); }
 					 */
 
 				} // end of loop
