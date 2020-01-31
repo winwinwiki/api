@@ -1,5 +1,6 @@
 cd /home/ec2-user/
 chmod +x winwin-0.0.1-SNAPSHOT.jar
+chmod +x elastic-apm-agent-1.12.0.jar
 echo "Starting WinWin application for environment: $WINWIN_ENV"
 if [[ "$WINWIN_ENV" = "Development" ]]; then
 	nohup sudo java -Xmx768m -Dserver.port=80 -jar winwin-0.0.1-SNAPSHOT.jar /tmp 2>> /dev/null >> /dev/null &
