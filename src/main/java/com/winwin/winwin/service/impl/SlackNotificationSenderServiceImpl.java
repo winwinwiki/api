@@ -60,7 +60,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	private String slackChannelName;
 
 	private static final String SLACK_UPLOAD_FILE_API_URL = System.getenv("SLACK_UPLOAD_FILE_API_URL");
-
+	private static final String SLACK_CHAT_POST_MESSAGE_API_URL = System.getenv("SLACK_CHAT_POST_MESSAGE_API_URL");
 	private static final Logger LOGGER = LoggerFactory.getLogger(SlackNotificationSenderServiceImpl.class);
 
 	/**
@@ -254,7 +254,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 		if (!StringUtils.isEmpty(message.getAs_user()))
 			params.add(new BasicNameValuePair("as_user", message.getAs_user()));
 		// execute post request
-		executePostRequest(message, params, SLACK_UPLOAD_FILE_API_URL);
+		executePostRequest(message, params, SLACK_CHAT_POST_MESSAGE_API_URL);
 	}
 
 	/**
