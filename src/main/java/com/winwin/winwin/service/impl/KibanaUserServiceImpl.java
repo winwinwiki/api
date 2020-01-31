@@ -1,5 +1,7 @@
 package com.winwin.winwin.service.impl;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -7,20 +9,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.Node;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.settings.Settings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winwin.winwin.constants.OrganizationConstants;
@@ -48,8 +63,13 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	private WinWinRoutesMappingRepository winWinRoutesMappingRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(KibanaUserServiceImpl.class);
-
 	private Map<String, String> winwinRoutesMap = null;
+	private static final String ES_ENDPOINT = System.getenv("AWS_ES_ENDPOINT");
+	private static final String ES_ENDPOINT_PORT = System.getenv("AWS_ES_ENDPOINT_PORT");
+	private static final String ES_ENDPOINT_SCHEME = System.getenv("AWS_ES_ENDPOINT_SCHEME");
+	private static final String SECURITY_INDEX = System.getenv("AWS_ES_SECURITY_INDEX");
+	private static final String RESPONSE_MSZ = " Response: {}";
+	private static final String BASIC_AUTH = "Basic ";
 
 	/**
 	 * Create internal user in elastic search internal DB
@@ -100,38 +120,64 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	@Override
 	public KibanaUserResponsePayload getInternalKibanaUserDetails(String userName) throws Exception {
 		KibanaUserResponsePayload resPayload = new KibanaUserResponsePayload();
-		// set post request for KIBANA
-		if (winwinRoutesMap == null) {
-			// set winWin routes map
-			setWinWinRoutesMap();
+		CloseableHttpClient client = null;
+		try {
+			// set post request for KIBANA
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+
+				client = HttpClients.createDefault();
+				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + userName;
+
+				String encoding = Base64.getEncoder()
+						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
+								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
+
+				// Prepare HttpGet Request
+				HttpGet httpGet = new HttpGet(url);
+				httpGet.setHeader(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpGet.setHeader(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpGet.setHeader(HttpHeaders.AUTHORIZATION, BASIC_AUTH + encoding);
+
+				LOGGER.info(" Sending Internal User Request to elastic search to get user details of : {}", userName);
+				// update Index Settings before performing User API Operation
+				if (!StringUtils.isEmpty(SECURITY_INDEX))
+					updateIndexSettings(SECURITY_INDEX);
+
+				HttpResponse response = client.execute(httpGet);
+				String responseJSON = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8.toString());
+				LOGGER.info(
+						" Internal User Request has been successfully sent to elastic search to get user details of : {}",
+						userName);
+				LOGGER.info(RESPONSE_MSZ, responseJSON);
+
+				// set KibanaUserResponsePayload
+				setResponsePayload(userName, resPayload, responseJSON);
+			}
+		} finally {
+			// close the CloseableHttpClient
+			if (null != client)
+				client.close();
 		}
+		return resPayload;
 
-		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+	}
 
-			CloseableHttpClient client = HttpClients.createDefault();
-			String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-					+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + userName;
-
-			String encoding = Base64.getEncoder()
-					.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
-
-			// Prepare HttpGet Request
-			HttpGet httpGet = new HttpGet(url);
-			httpGet.setHeader("Accept", "application/json");
-			httpGet.setHeader("Content-type", "application/json");
-			httpGet.setHeader("Authorization", "Basic " + encoding);
-
-			LOGGER.info(" Sending Internal User Request to elastic search to get user details of : " + userName);
-			HttpResponse response = client.execute(httpGet);
-			String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
-			LOGGER.info(" Internal User Request has been successfully sent to elastic search to get user details of : "
-					+ userName);
-			LOGGER.info(" Response: " + responseJSON);
-
+	/**
+	 * @param userName
+	 * @param resPayload
+	 * @param responseJSON
+	 * @throws Exception
+	 */
+	private void setResponsePayload(String userName, KibanaUserResponsePayload resPayload, String responseJSON) {
+		try {
 			// Parse JSON and FETCH user's backend_roles
 			final JSONObject jsonObj = new JSONObject(responseJSON);
 			final JSONArray backendRoles = jsonObj.getJSONObject(userName).getJSONArray("roles");
@@ -139,27 +185,20 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 			String email = jsonObj.getJSONObject(userName).getString("email");
 			String fullName = jsonObj.getJSONObject(userName).getString("full_name");
 			Boolean enabled = jsonObj.getJSONObject(userName).getBoolean("enabled");
-
-			ArrayList<String> roleslist = new ArrayList<String>();
+			ArrayList<String> roleslist = new ArrayList<>();
 			for (int i = 0; i < backendRoles.length(); i++) {
 				roleslist.add(backendRoles.getString(i));
 			}
 			// Convert JSON Array to List
 			String[] roles = roleslist.toArray(new String[0]);
-
 			resPayload.setUsername(username);
 			resPayload.setRoles(roles);
 			resPayload.setFull_name(fullName);
 			resPayload.setEmail(email);
 			resPayload.setEnabled(enabled);
-
-			// close the CloseableHttpClient
-			client.close();
-
+		} catch (Exception e) {
+			LOGGER.error("exception occured while setting kibana response payload", e);
 		}
-
-		return resPayload;
-
 	}
 
 	/**
@@ -167,6 +206,7 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	 * 
 	 * @param userName
 	 * @return
+	 * @throws Exception
 	 */
 	@Override
 	public String getKibanaUserCognitoRole(String userName) throws Exception {
@@ -190,7 +230,6 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 				}
 			}
 		}
-
 		// return WINWIN user role mapped to search guard roles
 		if (Boolean.TRUE.equals(isAdmin))
 			winwinUserRole = UserConstants.ROLE_ADMIN;
@@ -209,133 +248,160 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	 * @param payload
 	 */
 
-	private void sendPostRequestToKibana(UserSignInPayload payload) throws Exception {
-		// set post request for KIBANA
-		if (winwinRoutesMap == null) {
-			// set winWin routes map
-			setWinWinRoutesMap();
+	private void sendPostRequestToKibana(UserSignInPayload payload) throws IOException {
+		CloseableHttpClient client = null;
+		try {
+			// set post request for KIBANA
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+
+				KibanaUserRequestPayload kibanaUserReqPayload = new KibanaUserRequestPayload();
+				// set KibanaUserpayload by roles
+				setKibanauserPayloadByRoles(payload, kibanaUserReqPayload);
+
+				if (!StringUtils.isEmpty(payload.getUserName())) {
+					client = HttpClients.createDefault();
+					String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+							+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
+					// Creating Object of ObjectMapper define in JACKSON API
+					ObjectMapper objectMapper = new ObjectMapper();
+					// get KibanaUserPayload object as a JSON string
+					String jsonStr = null;
+					// created KibanaUserRolePayload to only update the roles in
+					// Elastic
+					// Search Internal User DB
+					if (!StringUtils.isEmpty(kibanaUserReqPayload.getPassword())) {
+						// get KibanaUserPayload object as a JSON string
+						jsonStr = objectMapper.writeValueAsString(kibanaUserReqPayload);
+					} else {
+						KibanaUserRolePayload kibanaUserRolePayload = new KibanaUserRolePayload();
+						kibanaUserRolePayload.setFull_name(payload.getFullName());
+						kibanaUserRolePayload.setRoles(kibanaUserReqPayload.getRoles());
+						kibanaUserRolePayload.setEmail(payload.getUserName());
+						// get KibanaUserPayload object as a JSON string
+						jsonStr = objectMapper.writeValueAsString(kibanaUserRolePayload);
+					}
+					String encoding = Base64.getEncoder()
+							.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
+									+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD))
+											.getBytes());
+					StringEntity entity = new StringEntity(jsonStr);
+					HttpPut httpPut = new HttpPut(url);
+					httpPut.setEntity(entity);
+					httpPut.setHeader(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_JSON_VALUE);
+					httpPut.setHeader(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE);
+					httpPut.setHeader(HttpHeaders.AUTHORIZATION, BASIC_AUTH + encoding);
+					LOGGER.info(" Sending Internal User Creation Request to elastic search for user: {}",
+							payload.getUserName());
+
+					// update Index Settings before performing User API
+					// Operation
+					if (!StringUtils.isEmpty(SECURITY_INDEX))
+						updateIndexSettings(SECURITY_INDEX);
+
+					HttpResponse response = client.execute(httpPut);
+					String responseJSON = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8.toString());
+					LOGGER.info(
+							" Internal User Creation Request has been successfully sent to elastic search for user: {}",
+							payload.getUserName());
+					LOGGER.info(RESPONSE_MSZ, responseJSON);
+				}
+			}
+		} finally {
+			// close the CloseableHttpClient
+			if (null != client)
+				client.close();
 		}
 
-		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+	}
 
-			KibanaUserRequestPayload kibanaUserReqPayload = new KibanaUserRequestPayload();
+	/**
+	 * @param payload
+	 * @param kibanaUserReqPayload
+	 */
+	private void setKibanauserPayloadByRoles(UserSignInPayload payload, KibanaUserRequestPayload kibanaUserReqPayload) {
+		// check for ADMIN user
+		if (payload.getRole().equals(UserConstants.ROLE_ADMIN)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE)) {
+			String[] backendRoles = { winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE) };
 
-			// check for ADMIN user
-			if (payload.getRole().equals(UserConstants.ROLE_ADMIN)
-					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE)) {
-				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_BACKEND_ROLE) };
+			// set KibanaUserPayload
+			setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
 
-				// set KibanaUserPayload
-				setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
+			// check for DATASEEDER user
+		} else if (payload.getRole().equals(UserConstants.ROLE_DATASEEDER)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE)) {
+			String[] backendRoles = { winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE) };
 
-				// check for DATASEEDER user
-			} else if (payload.getRole().equals(UserConstants.ROLE_DATASEEDER)
-					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE)) {
-				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_DATASEEDER_BACKEND_ROLE) };
+			// set KibanaUserPayload
+			setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
 
-				// set KibanaUserPayload
-				setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
+			// check for READER user
+		} else if (payload.getRole().equals(UserConstants.ROLE_READER)
+				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_READER_BACKEND_ROLE)) {
+			String[] backendRoles = { winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE) };
 
-				// check for READER user
-			} else if (payload.getRole().equals(UserConstants.ROLE_READER)
-					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_READER_BACKEND_ROLE)) {
-				String backendRoles[] = { winwinRoutesMap.get(OrganizationConstants.KIBANA_READER_BACKEND_ROLE) };
+			// set KibanaUserPayload
+			setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
 
-				// set KibanaUserPayload
-				setKibanaUserPayload(payload, kibanaUserReqPayload, backendRoles);
-
-			}
-
-			if (!StringUtils.isEmpty(payload.getUserName())) {
-				CloseableHttpClient client = HttpClients.createDefault();
-				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
-				// Creating Object of ObjectMapper define in JACKSON API
-				ObjectMapper objectMapper = new ObjectMapper();
-				// get KibanaUserPayload object as a JSON string
-				String jsonStr = null;
-				// created KibanaUserRolePayload to only update the roles in
-				// Elastic
-				// Search Internal User DB
-				if (!StringUtils.isEmpty(kibanaUserReqPayload.getPassword())) {
-					// get KibanaUserPayload object as a JSON string
-					jsonStr = objectMapper.writeValueAsString(kibanaUserReqPayload);
-				} else {
-					KibanaUserRolePayload kibanaUserRolePayload = new KibanaUserRolePayload();
-					kibanaUserRolePayload.setFull_name(payload.getFullName());
-					kibanaUserRolePayload.setRoles(kibanaUserReqPayload.getRoles());
-					kibanaUserRolePayload.setEmail(payload.getUserName());
-					// get KibanaUserPayload object as a JSON string
-					jsonStr = objectMapper.writeValueAsString(kibanaUserRolePayload);
-				}
-				String encoding = Base64.getEncoder()
-						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
-								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
-				StringEntity entity = new StringEntity(jsonStr);
-				HttpPut httpPut = new HttpPut(url);
-				httpPut.setEntity(entity);
-				httpPut.setHeader("Accept", "application/json");
-				httpPut.setHeader("Content-type", "application/json");
-				httpPut.setHeader("Authorization", "Basic " + encoding);
-				LOGGER.info(
-						" Sending Internal User Creation Request to elastic search for user: " + payload.getUserName());
-				HttpResponse response = client.execute(httpPut);
-				String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
-				LOGGER.info(" Internal User Creation Request has been successfully sent to elastic search for user: "
-						+ payload.getUserName());
-				LOGGER.info(" Response: " + responseJSON);
-				// close the CloseableHttpClient
-				client.close();
-			}
-
-		} // end of if (!winwinRoutesMap.isEmpty()
-
+		}
 	}
 
 	/**
 	 * Send Delete Request to elastic search for internal user deletion
 	 * 
 	 * @param payload
+	 * @throws IOException
 	 */
 
-	private void sendDeleteRequestToKibana(UserSignInPayload payload) throws Exception {
-		// set post request for KIBANA
-		if (winwinRoutesMap == null) {
-			// set winWin routes map
-			setWinWinRoutesMap();
-		}
+	private void sendDeleteRequestToKibana(UserSignInPayload payload) throws IOException {
+		CloseableHttpClient client = null;
+		try {
+			// set post request for KIBANA
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)
+					&& (!StringUtils.isEmpty(payload.getUserName()))) {
 
-		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
-
-			if (!StringUtils.isEmpty(payload.getUserName())) {
-				CloseableHttpClient client = HttpClients.createDefault();
+				client = HttpClients.createDefault();
 				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName();
 				String encoding = Base64.getEncoder()
 						.encodeToString((winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME) + ":"
 								+ winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)).getBytes());
 				HttpDelete httpDelete = new HttpDelete(url);
-				httpDelete.setHeader("Accept", "application/json");
-				httpDelete.setHeader("Content-type", "application/json");
-				httpDelete.setHeader("Authorization", "Basic " + encoding);
-				LOGGER.info(
-						" Sending Internal User Deletion Request to elastic search for user: " + payload.getUserName());
-				HttpResponse response = client.execute(httpDelete);
-				String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
-				LOGGER.info(" Internal User Deletion Request has been successfully sent to elastic search for user: "
-						+ payload.getUserName());
-				LOGGER.info(" Response: " + responseJSON);
-				// close the CloseableHttpClient
-				client.close();
-			}
+				httpDelete.setHeader(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpDelete.setHeader(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpDelete.setHeader(HttpHeaders.AUTHORIZATION, BASIC_AUTH + encoding);
+				LOGGER.info(" Sending Internal User Deletion Request to elastic search for user: {}",
+						payload.getUserName());
+				// update Index Settings before performing User API Operation
+				if (!StringUtils.isEmpty(SECURITY_INDEX))
+					updateIndexSettings(SECURITY_INDEX);
 
-		} // end of if (!winwinRoutesMap.isEmpty()
+				HttpResponse response = client.execute(httpDelete);
+				String responseJSON = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8.toString());
+				LOGGER.info(" Internal User Deletion Request has been successfully sent to elastic search for user: {}",
+						payload.getUserName());
+				LOGGER.info(RESPONSE_MSZ, responseJSON);
+
+			}
+		} finally {
+			// close the CloseableHttpClient
+			if (null != client)
+				client.close();
+		}
 
 	}
 
@@ -343,23 +409,26 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 	 * Send Password Change Request to elastic search for internal user
 	 * 
 	 * @param payload
+	 * @throws IOException
+	 * @throws ParseException
 	 */
 
-	private void sendPasswordChangeRequestToKibana(UserSignInPayload payload) throws Exception {
-		// set post request for KIBANA
-		if (winwinRoutesMap == null) {
-			// set winWin routes map
-			setWinWinRoutesMap();
-		}
+	private void sendPasswordChangeRequestToKibana(UserSignInPayload payload) throws IOException {
+		CloseableHttpClient client = null;
+		try {
+			// set post request for KIBANA
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_CHANGE_PASS_API_URL)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)
+					&& (!StringUtils.isEmpty(payload.getUserName()))) {
 
-		if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_USER_CHANGE_PASS_API_URL)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
-				&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
-
-			if (!StringUtils.isEmpty(payload.getUserName())) {
-				CloseableHttpClient client = HttpClients.createDefault();
+				client = HttpClients.createDefault();
 				String url = winwinRoutesMap.get(OrganizationConstants.KIBANA_BACKEND_BASE_URL)
 						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_API_URL) + payload.getUserName()
 						+ winwinRoutesMap.get(OrganizationConstants.KIBANA_USER_CHANGE_PASS_API_URL);
@@ -382,23 +451,99 @@ public class KibanaUserServiceImpl implements KibanaUserService {
 				StringEntity entity = new StringEntity(jsonStr);
 				HttpPut httpPut = new HttpPut(url);
 				httpPut.setEntity(entity);
-				httpPut.setHeader("Accept", "application/json");
-				httpPut.setHeader("Content-type", "application/json");
-				httpPut.setHeader("Authorization", "Basic " + encoding);
-				LOGGER.info(" Sending Internal User Change Password Request to elastic search for user: "
-						+ payload.getUserName());
+				httpPut.setHeader(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpPut.setHeader(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE);
+				httpPut.setHeader(HttpHeaders.AUTHORIZATION, BASIC_AUTH + encoding);
+				LOGGER.info(" Sending Internal User Change Password Request to elastic search for user: {}",
+						payload.getUserName());
+
+				// update Index Settings before performing User API Operation
+				if (!StringUtils.isEmpty(SECURITY_INDEX))
+					updateIndexSettings(SECURITY_INDEX);
+
 				HttpResponse response = client.execute(httpPut);
-				String responseJSON = EntityUtils.toString(response.getEntity(), "UTF-8");
+				String responseJSON = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8.toString());
 				LOGGER.info(
-						" Internal User Change Password Request has been successfully sent to elastic search for user: "
-								+ payload.getUserName());
-				LOGGER.info(" Response: " + responseJSON);
-				// close the CloseableHttpClient
+						" Internal User Change Password Request has been successfully sent to elastic search for user: {}",
+						payload.getUserName());
+				LOGGER.info(RESPONSE_MSZ, responseJSON);
+			}
+		} finally {
+			// close the CloseableHttpClient
+			if (null != client)
 				client.close();
+		}
+
+	}
+
+	private void updateIndexSettings(String index) throws IOException {
+		RestHighLevelClient esClient = null;
+		try {
+			UpdateSettingsRequest request = new UpdateSettingsRequest(index);
+			String settingKey1 = "index.blocks.read_only_allow_delete";
+			Settings settings = Settings.builder().put(settingKey1, false).build();
+
+			// set settings to request
+			request.settings(settings);
+
+			// set post request for ElasticSearch
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+				// get rest client connection
+				esClient = esClientForEC2HostedElasticSearch(
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
+				AcknowledgedResponse updateSettingsResponse = esClient.indices().putSettings(request,
+						RequestOptions.DEFAULT);
+
+				// check for index settings updated successfully
+				if (Boolean.TRUE.equals(updateSettingsResponse.isAcknowledged()))
+					LOGGER.info("Index Settings updated for Index: {}", index);
+				else
+					LOGGER.info("Index Settings not updated for Index: {}", index);
 			}
 
-		} // end of if (!winwinRoutesMap.isEmpty()
+		} catch (IOException e) {
+			LOGGER.error("Failed to update index settings for index: {}", index, e);
+		} finally {
+			// close the CloseableHttpClient
+			if (null != esClient)
+				esClient.close();
+		}
+	}
 
+	// Adds the interceptor to the ES REST client
+	private static RestHighLevelClient esClientForEC2HostedElasticSearch(String userName, String password) {
+		String encodedBytes = Base64.getEncoder().encodeToString((userName + ":" + password).getBytes());
+		Integer port = new Integer(ES_ENDPOINT_PORT);
+		String scheme = ES_ENDPOINT_SCHEME;
+
+		Header[] headers = { new BasicHeader(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON_VALUE),
+				new BasicHeader(HttpHeaders.AUTHORIZATION, BASIC_AUTH + encodedBytes) };
+
+		// Added .setMaxRetryTimeoutMillis(600000000) to avoid listener timeout
+		// exception
+		// use .setMaxRetryTimeoutMillis(6000000) when elasticSearch version <
+		// 7.0
+		// Added .setConnectTimeout(600000000).setSocketTimeout(600000000)) to
+		// avoid
+		// socket and connection timeout exception
+		// Added Failure Listener when node fails
+		return new RestHighLevelClient(RestClient.builder(new HttpHost(ES_ENDPOINT, port, scheme))
+				.setDefaultHeaders(headers).setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+						.setConnectTimeout(600000000).setSocketTimeout(600000000))
+				.setFailureListener(new RestClient.FailureListener() {
+					@Override
+					public void onFailure(Node node) {
+						if (null != node)
+							LOGGER.error("Elastic Search Node: {} has been failed while sending index request",
+									node.getName());
+					}
+				}));
 	}
 
 	/**

@@ -75,8 +75,7 @@
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
 		</dependency>
-		<!-- <dependency> <groupId>com.amazonaws</groupId> <artifactId>aws-java-sdk-core</artifactId> 
-			<version>1.11.163</version> </dependency> -->
+		
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-cognitoidp</artifactId>
@@ -129,8 +128,6 @@
 			<artifactId>json</artifactId>
 			<version>20190722</version>
 		</dependency>
-		<!-- <dependency> <groupId>co.elastic.apm</groupId> <artifactId>elastic-apm-agent</artifactId> 
-			<version>1.12.0</version> </dependency> -->
 
 		<dependency>
 			<groupId>ch.qos.logback.contrib</groupId>
@@ -159,14 +156,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-
-			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-install-plugin</artifactId> 
-				<executions> <execution> <id>install-external</id> <phase>clean</phase> <configuration> 
-				<file>${basedir}/lib/aws-java-sdk-custom-core-1.11.365.jar</file> <repositoryLayout>default</repositoryLayout> 
-				<groupId>aws-java-sdk-custom</groupId> <artifactId>aws-java-sdk-custom-core</artifactId> 
-				<version>1.11.365</version> <packaging>jar</packaging> <generatePom>true</generatePom> 
-				</configuration> <goals> <goal>install-file</goal> </goals> </execution> 
-				</executions> </plugin> -->
 		</plugins>
 	</build>
 

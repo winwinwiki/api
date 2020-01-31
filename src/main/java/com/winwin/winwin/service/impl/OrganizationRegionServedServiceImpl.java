@@ -62,7 +62,7 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRegionServedServiceImpl.class);
 
-	private final Long REGION_ID = -1L;
+	private static final Long REGION_ID = -1L;
 
 	/**
 	 * create or update multiple OrganizationRegionServed for Organization
@@ -156,10 +156,6 @@ public class OrganizationRegionServedServiceImpl implements OrganizationRegionSe
 						LOGGER.info(customMessageSource.getMessage("org.region.master.success.created"));
 					} else {
 						regionMaster = orgRegionMasterRepository.getOne(regionMasterId);
-						if (regionMaster == null) {
-							throw new RegionServedException(
-									"Org region master record not found for Id: " + regionMasterId + " in DB ");
-						}
 					}
 					region.setRegionMaster(regionMaster);
 				}

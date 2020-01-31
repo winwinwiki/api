@@ -24,6 +24,12 @@ public class NteeDataMappingPayload {
 
 	@Override
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+
+		if (this.getClass() != o.getClass())
+			return false;
+
 		NteeDataMappingPayload obj = (NteeDataMappingPayload) o;
 		return nteeCode.equals(obj.nteeCode);
 	}

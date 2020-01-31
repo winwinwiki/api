@@ -158,7 +158,7 @@ public class OrganizationController extends BaseController {
 	private Map<String, Long> nteeMap = null;
 
 	@Value("${slack.channel}")
-	String SLACK_CHANNEL;
+	String slackChannelName;
 
 	// Code for organization start
 	/**
@@ -219,7 +219,7 @@ public class OrganizationController extends BaseController {
 							.text("WinWinWiki Bulk Upload Process has been started successfully for app env: "
 									+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
 									+ " at " + date)
-							.channel(SLACK_CHANNEL).as_user("true").build();
+							.channel(slackChannelName).as_user("true").build();
 					slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 					organizationService.createOrganizations(organizationCsvPayload, exceptionResponse, user);
 				}

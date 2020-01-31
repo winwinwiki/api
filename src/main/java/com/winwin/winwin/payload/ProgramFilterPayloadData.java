@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProgramFilterPayloadData {
-	public List<String> createdBy;
-	public List<String> editedBy;
-	public String nameSearch;
-	public Integer pageNo;
-	public Integer pageSize;
-	public String sortBy;
-	public String sortOrder;
+	private List<String> createdBy;
+	private List<String> editedBy;
+	private String nameSearch;
+	private Integer pageNo;
+	private Integer pageSize;
+	private String sortBy;
+	private String sortOrder;
 
 }
