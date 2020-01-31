@@ -1,6 +1,11 @@
 HELP.md
 /target/
+.metadata/
+*.log
+.vscode/
 !.mvn/wrapper/maven-wrapper.jar
+node_modules/
+package-lock.json
 
 ### STS ###
 .apt_generated
@@ -24,3 +29,7 @@ HELP.md
 /nbdist/
 /.nb-gradle/
 /build/
+
+.vs/
+
+.gradle/

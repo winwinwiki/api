@@ -1,7 +1,5 @@
 package com.winwin.winwin.payload;
 
-import java.sql.Timestamp;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,6 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * @author ArvindKhatik
+ *
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
@@ -21,9 +23,7 @@ public class AddressPayload {
 	private String state;
 	private String city;
 	private String county;
-	private Long zip;
+	private String zip;
 	private String street;
-	private Timestamp createdAt;
-	private Timestamp updatedAt;
-	
+	private String placeId;
 }

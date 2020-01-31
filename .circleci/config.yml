@@ -1,0 +1,135 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2
+jobs: # a collection of steps
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/openjdk:11-jdk
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: circleci/postgres:latest
+
+    #working_directory: ~/repo
+    
+    branches:
+      only: 
+        - dev
+        #- qa
+        - staging
+        - master
+
+    environment:
+      # Customize the JVM maximum heap limit
+      MAVEN_OPTS: -Xmx3200m
+      JVM_OPTS: -Xmx3200m
+      #WINWIN_DB_HOST: 127.0.0.1
+      #WINWIN_DB_NAME: postgres
+      #WINWIN_DB_USER: postgres
+      #WINWIN_DB_PASSWORD: 
+      WINWIN_DB_PORT: 5432
+      AWS_CODE_DEPLOY_APPLICATION_NAME: WinWin-Backend-CodeDeploy-Dev
+      AWS_CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: WinWin-Backend-CodeDeploy-Dev-DeploymentGroup
+
+    steps: # a collection of executable commands
+      - checkout # check out source code to working directory
+
+      - run: chmod +x mvnw
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      #- run: sudo rm -rf /var/lib/apt/lists/* - run: sudo apt-get update -qq 
+      #- run: sudo apt-get install -y postgresql
+      # - run: psql --port=5432 -c "CREATE DATABASE winwindb;"
+      # - run: psql --port=5432 -c "CREATE USER winwindbuser WITH ENCRYPTED PASSWORD 'winwindbpassword';"
+      # - run: psql --port=5432 -c "GRANT ALL PRIVILEGES ON DATABASE winwindb TO winwindbuser;"
+      - run: sed -i 's/5432/'"$WINWIN_DB_PORT"'/g' ./src/main/resources/application.properties
+
+      # build now
+      #- run: mvn package # run the actual tests
+      - run: 
+          name: Building project...
+          command: mvn clean install # run the actual tests
+      #- run: mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
+      - store_test_results: # uploads the test metadata from the `target/surefire-reports` directory so that it can show up in the CircleCI dashboard. 
+          # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+          path: target/surefire-reports
+
+      - store_artifacts: # store the jar as an artifact
+          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: target/winwin-0.0.1-SNAPSHOT.jar
+      
+      - run: 
+          name: Install python
+          command: sudo rm -rf /var/lib/apt/lists/* && sudo apt-get update && sudo apt-get install -y python-dev
+      - run: 
+          name: Install bootstrap python
+          command: sudo curl -O https://bootstrap.pypa.io/get-pip.py
+      - run: 
+          name: Install pip
+          command: sudo python get-pip.py
+      - run: 
+          name: Install aws cli
+          command: sudo pip install awscli --upgrade
+      - run: 
+          name: Check aws version
+          command: aws --version
+      - run: 
+          name: Check S3 directory
+          command: aws s3 ls
+      - run:
+          name: Zipping required files
+          command: |
+            zip target/winwin-0.0.1-SNAPSHOT.zip target/winwin-0.0.1-SNAPSHOT.jar appspec.yml
+            zip -r target/winwin-0.0.1-SNAPSHOT.zip scripts lib
+      
+      - store_artifacts: # store the zip as an artifact
+          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: target/winwin-0.0.1-SNAPSHOT.zip
+
+      - run:
+          name: Deploy to S3
+          command: |
+             if [ "$CIRCLE_BRANCH" = "dev" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-dev/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             elif [ "$CIRCLE_BRANCH" = "staging" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-stag/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             elif [ "$CIRCLE_BRANCH" = "master" ]; then
+               export S3_BUCKET="s3://winwin-backend-bucket-prod/"
+               echo "S3_BUCKET - $S3_BUCKET"
+               aws s3 cp target/winwin-0.0.1-SNAPSHOT.zip "$S3_BUCKET"
+             fi
+            
+            
+      - run:
+          name: Run CodeDeploy to deploy on EC2
+          command: |
+             if [ "$CIRCLE_BRANCH" = "dev" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Dev --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Dev-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-dev,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
+             elif [ "$CIRCLE_BRANCH" = "staging" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Stag --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Stag-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-stag,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
+             elif [ "$CIRCLE_BRANCH" = "master" ]; then
+               aws deploy --region us-west-2 create-deployment --application-name WinWin-Backend-CodeDeploy-Prod --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name WinWin-Backend-CodeDeploy-Prod-DeploymentGroup --description " Deployment through CircleCI " --s3-location bucket=winwin-backend-bucket-prod,bundleType=zip,key=winwin-0.0.1-SNAPSHOT.zip --file-exists-behavior OVERWRITE
+             fi
+            
