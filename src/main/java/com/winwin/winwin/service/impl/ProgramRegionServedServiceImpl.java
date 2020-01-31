@@ -58,7 +58,7 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 	private ProgramRegionServedRepository programRegionServedRepository;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramRegionServedServiceImpl.class);
-	private final Long REGION_ID = -1L;
+	private static final Long REGION_ID = -1L;
 
 	/**
 	 * create or update multiple ProgramRegionServed for Program create new
@@ -168,10 +168,6 @@ public class ProgramRegionServedServiceImpl implements ProgramRegionServedServic
 						LOGGER.info(customMessageSource.getMessage("org.region.master.success.created"));
 					} else {
 						regionMaster = regionMasterRepository.getOne(regionMasterId);
-						if (regionMaster == null) {
-							throw new RegionServedException(
-									"Org region master record not found for Id: " + regionMasterId + " in DB ");
-						}
 					}
 					region.setRegionMaster(regionMaster);
 				}

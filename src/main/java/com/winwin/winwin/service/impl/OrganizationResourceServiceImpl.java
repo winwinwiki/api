@@ -18,8 +18,6 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationResource;
 import com.winwin.winwin.entity.ResourceCategory;
-import com.winwin.winwin.exception.ResourceCategoryException;
-import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.OrganizationResourcePayload;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
@@ -117,10 +115,9 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 				resource.setUpdatedBy(user.getUserDisplayName());
 				resource.setUpdatedByEmail(user.getEmail());
 				resource.setIsActive(false);
+				resource = organizationResourceRepository.saveAndFlush(resource);
 
-				organizationResourceRepository.saveAndFlush(resource);
-
-				if (null != resource && null != resource.getOrganization()) {
+				if (null != resource.getOrganization()) {
 					orgHistoryService.createOrganizationHistory(user, resource.getOrganization().getId(),
 							OrganizationConstants.DELETE, "", resource.getId(),
 							resource.getResourceCategory().getCategoryName(), "");
@@ -188,10 +185,7 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 					organizationResource.setCreatedBy(user.getUserDisplayName());
 					organizationResource.setCreatedByEmail(user.getEmail());
 				}
-				if (organizationResource == null) {
-					throw new ResourceException("Org resource record not found for Id: " + orgResourcePayLoad.getId()
-							+ " to update in DB ");
-				} else {
+				if (null != organizationResource) {
 					setOrganizationResourceCategory(orgResourcePayLoad, organizationResource);
 					BeanUtils.copyProperties(orgResourcePayLoad, organizationResource);
 					organizationResource.setIsActive(true);
@@ -231,10 +225,6 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 
 					} else {
 						organizationResourceCategory = resourceCategoryRepository.getOne(categoryId);
-						if (organizationResourceCategory == null) {
-							throw new ResourceCategoryException(
-									"Org resource category record not found for Id: " + categoryId + " in DB ");
-						}
 						organizationResource.setResourceCategory(organizationResourceCategory);
 					}
 				}
@@ -266,7 +256,9 @@ public class OrganizationResourceServiceImpl implements OrganizationResourceServ
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.category.error.updated"), e);
 		}
-		return resourceCategoryRepository.saveAndFlush(category);
+		if (null != category)
+			category = resourceCategoryRepository.saveAndFlush(category);
+		return category;
 	}// end of method saveOrganizationResourceCategory
 
 }

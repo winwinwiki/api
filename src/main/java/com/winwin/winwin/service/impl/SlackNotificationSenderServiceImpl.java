@@ -10,10 +10,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -58,7 +57,9 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	private SlackNotificationSenderService slackNotificationSenderService;
 
 	@Value("${slack.channel}")
-	private String SLACK_CHANNEL;
+	private String slackChannelName;
+
+	private static final String SLACK_UPLOAD_FILE_API_URL = System.getenv("SLACK_UPLOAD_FILE_API_URL");
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SlackNotificationSenderServiceImpl.class);
 
@@ -68,12 +69,13 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 * an attachment with all the organizations along with there status and send
 	 * notification to the channel set in Environment Variables. This method
 	 * requires environment, application.properties variables,as
-	 * SLACK_CHANNEL,SLACK_AUTH_TOKEN and SLACK_UPLOAD_FILE_API_URL which will
-	 * be created through Slack for the particular channel
+	 * slackChannelName,SLACK_AUTH_TOKEN and SLACK_UPLOAD_FILE_API_URL which
+	 * will be created through Slack for the particular channel
 	 */
 	@Override
 	public void sendSlackNotification(List<Organization> successOrganizationsList,
 			List<OrganizationBulkFailedPayload> failedOrganizationsList, UserPayload user, Date date) {
+		FileWriter csvWriter = null;
 		try {
 			// list of failed and success organizations
 			StringBuilder successOrganizations = new StringBuilder();
@@ -115,58 +117,69 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			// write list of success and failed organizations into .csv
 			File file = new File("organization_bulk_upload_result_" + formattedDte + ".csv");
 			// Create the file
-			LOGGER.info("creating Bulk Upload File " + file.getName());
+			LOGGER.info("creating Bulk Upload File {}", file.getName());
 			if (file.createNewFile()) {
-				LOGGER.info("Bulk Upload file " + file.getName() + " is successfully created!");
+				LOGGER.info("Bulk Upload file {} is successfully created!", file.getName());
 			} else {
-				LOGGER.info("deleting existing Bulk Upload file: " + file.getName());
-				file.delete();
-				LOGGER.info("Bulk Upload file  " + file.getName() + " has been successfully deleted");
+				LOGGER.info("deleting existing Bulk Upload file: {}", file.getName());
+				Boolean isFileDeleted = file.delete();
+				if (isFileDeleted.equals(Boolean.TRUE))
+					LOGGER.info("Bulk Upload file {} has been successfully deleted", file.getName());
 
-				LOGGER.info("creating again Bulk Upload File " + file.getName());
-				file.createNewFile();
-				LOGGER.info("Bulk Upload file " + file.getName() + " is successfully created again!");
+				LOGGER.info("creating again Bulk Upload File {}", file.getName());
+				Boolean isFileCreated = file.createNewFile();
+				if (isFileCreated.equals(Boolean.TRUE))
+					LOGGER.info("Bulk Upload file {} is successfully created again!", file.getName());
 			}
 
-			FileWriter csvWriter = new FileWriter(file, true);
+			csvWriter = new FileWriter(file, true);
 			csvWriter.append("# Below are the List of uploaded organizations").append("\n").append("Organization Id")
 					.append(",").append("Organization Name").append(",").append("Organization Status").append(",")
 					.append("Comment").append("\n");
 			csvWriter.append(successOrganizations);
 			csvWriter.append(failedOrganizations);
 			csvWriter.flush();
-			csvWriter.close();
 
-			String fileContent = FileUtils.readFileToString(file, "UTF-8");
+			String fileContent = FileUtils.readFileToString(file, StandardCharsets.UTF_8.toString());
 			SlackMessage slackMessage = SlackMessage.builder().filetype("csv").filename(file.getName())
 					.username("WinWinUploadNotifier").content(fileContent)
 					.initial_comment(
 							"WinWinWiki editor bulk upload status file for app env: " + System.getenv("WINWIN_ENV")
 									+ " , created by: " + user.getUserDisplayName() + " at " + date)
-					.channels(SLACK_CHANNEL).build();
-			LOGGER.info("SLACK_CHANNEL_NAME " + SLACK_CHANNEL);
+					.channels(slackChannelName).build();
+			LOGGER.info("Slack Channel {}", slackChannelName);
 			// send post request to slack channel
 			sendPostRequest(slackMessage);
 			try {
-				LOGGER.info("deleting existing Bulk Upload file: " + file.getName());
-				file.delete();
-				LOGGER.info("Bulk Upload file  " + file.getName() + " has been successfully deleted");
+				LOGGER.info("deleting existing Bulk Upload file: {}", file.getName());
+				Boolean isFileDeleted = file.delete();
+				if (isFileDeleted.equals(Boolean.TRUE))
+					LOGGER.info("Bulk Upload file {} has been successfully deleted", file.getName());
 			} catch (Exception e) {
-				LOGGER.error("failed to delete file: " + file.getName(), e);
+				LOGGER.error("failed to delete file: {} ", file.getName(), e);
 			}
 			int numOfOrganizations = successOrganizationsList.size() + failedOrganizationsList.size();
-			LOGGER.info("org service createOrganizations() ended with number of organizations - " + numOfOrganizations
-					+ " created by: " + user.getUserDisplayName());
+			LOGGER.info("org service createOrganizations() ended with number of organizations - {} created by: {} ",
+					numOfOrganizations, user.getUserDisplayName());
 			// for Slack Notification
 			date = CommonUtils.getFormattedDate();
 			slackMessage = SlackMessage.builder().username("WinWinMessageNotifier")
 					.text("WinWinWiki Bulk Upload Process has been ended successfully for app env: "
-							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date)
-					.channel(SLACK_CHANNEL).as_user("true").build();
+							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
+							+ " at " + date)
+					.channel(slackChannelName).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		} catch (Exception e) {
 			LOGGER.error("exception occured while sending notification", e);
+		} finally {
+			// close csv writer
+			try {
+				if (null != csvWriter)
+					csvWriter.close();
+			} catch (IOException e) {
+				LOGGER.error("exception occured while closing csv writer", e);
+			}
 		}
 
 	}
@@ -178,7 +191,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 * @param message
 	 */
 	private void sendPostRequest(SlackMessage message) {
-		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		List<NameValuePair> params = new ArrayList<>();
 
 		if (!StringUtils.isEmpty(message.getFiletype()))
 			params.add(new BasicNameValuePair("filetype", message.getFiletype()));
@@ -198,45 +211,8 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 		if (!StringUtils.isEmpty(message.getChannels()))
 			params.add(new BasicNameValuePair("channels", message.getChannels()));
 
-		try {
-			URL obj = new URL(System.getenv("SLACK_UPLOAD_FILE_API_URL"));
-			HttpURLConnection postConnection = (HttpURLConnection) obj.openConnection();
-			postConnection.setRequestProperty("Authorization", "Bearer " + System.getenv("SLACK_AUTH_TOKEN"));
-			postConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			postConnection.setReadTimeout(10000);
-			postConnection.setConnectTimeout(15000);
-			postConnection.setRequestMethod("POST");
-			postConnection.setDoInput(true);
-			postConnection.setDoOutput(true);
-
-			OutputStream os = postConnection.getOutputStream();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-			writer.write(getQuery(params));
-			writer.flush();
-			writer.close();
-			os.close();
-			postConnection.connect();
-
-			// read the InputStream and print it
-			String result;
-			BufferedInputStream bis = new BufferedInputStream(postConnection.getInputStream());
-			ByteArrayOutputStream buf = new ByteArrayOutputStream();
-			int result2 = bis.read();
-			while (result2 != -1) {
-				buf.write((byte) result2);
-				result2 = bis.read();
-			}
-			result = buf.toString();
-			LOGGER.info(result);
-			LOGGER.info("SLACK_CHANNEL_NAME " + message.getChannels());
-
-		} catch (MalformedURLException e) {
-			LOGGER.error("exception occured while sending notification", e);
-		} catch (ProtocolException e) {
-			LOGGER.error("exception occured while sending notification", e);
-		} catch (IOException e) {
-			LOGGER.error("exception occured while sending notification", e);
-		}
+		// execute post request
+		executePostRequest(message, params, SLACK_UPLOAD_FILE_API_URL);
 	}
 
 	private String getQuery(List<NameValuePair> params) throws UnsupportedEncodingException {
@@ -249,9 +225,9 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			else
 				result.append("&");
 
-			result.append(URLEncoder.encode(pair.getName(), "UTF-8"));
+			result.append(URLEncoder.encode(pair.getName(), StandardCharsets.UTF_8.toString()));
 			result.append("=");
-			result.append(URLEncoder.encode(pair.getValue(), "UTF-8"));
+			result.append(URLEncoder.encode(pair.getValue(), StandardCharsets.UTF_8.toString()));
 		}
 
 		return result.toString();
@@ -265,8 +241,7 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 	 */
 	@Override
 	public void sendSlackMessageNotification(SlackMessage message) {
-		List<NameValuePair> params = new ArrayList<NameValuePair>();
-
+		List<NameValuePair> params = new ArrayList<>();
 		if (!StringUtils.isEmpty(message.getUsername()))
 			params.add(new BasicNameValuePair("username", message.getUsername()));
 
@@ -278,9 +253,20 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 
 		if (!StringUtils.isEmpty(message.getAs_user()))
 			params.add(new BasicNameValuePair("as_user", message.getAs_user()));
+		// execute post request
+		executePostRequest(message, params, SLACK_UPLOAD_FILE_API_URL);
+	}
 
+	/**
+	 * @param message
+	 * @param params
+	 * @param url
+	 */
+	private void executePostRequest(SlackMessage message, List<NameValuePair> params, String url) {
+		OutputStream os = null;
+		BufferedWriter writer = null;
 		try {
-			URL obj = new URL(System.getenv("SLACK_CHAT_POST_MESSAGE_API_URL"));
+			URL obj = new URL(url);
 			HttpURLConnection postConnection = (HttpURLConnection) obj.openConnection();
 			postConnection.setRequestProperty("Authorization", "Bearer " + System.getenv("SLACK_AUTH_TOKEN"));
 			postConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -290,12 +276,10 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			postConnection.setDoInput(true);
 			postConnection.setDoOutput(true);
 
-			OutputStream os = postConnection.getOutputStream();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+			os = postConnection.getOutputStream();
+			writer = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8.toString()));
 			writer.write(getQuery(params));
 			writer.flush();
-			writer.close();
-			os.close();
 			postConnection.connect();
 
 			// read the InputStream and print it
@@ -309,14 +293,18 @@ public class SlackNotificationSenderServiceImpl implements SlackNotificationSend
 			}
 			result = buf.toString();
 			LOGGER.info(result);
-			LOGGER.info("SLACK_CHANNEL_NAME " + message.getChannels());
-
-		} catch (MalformedURLException e) {
+			LOGGER.info("Slack Channel {}", message.getChannels());
+		} catch (Exception e) {
 			LOGGER.error("exception occured while sending notification", e);
-		} catch (ProtocolException e) {
-			LOGGER.error("exception occured while sending notification", e);
-		} catch (IOException e) {
-			LOGGER.error("exception occured while sending notification", e);
+		} finally {
+			try {
+				if (null != os && null != writer) {
+					writer.close();
+					os.close();
+				}
+			} catch (IOException e) {
+				LOGGER.error("exception occured while closing BufferedWriter ", e);
+			}
 		}
 	}
 

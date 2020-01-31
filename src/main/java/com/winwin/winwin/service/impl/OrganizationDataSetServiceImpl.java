@@ -18,8 +18,6 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.Organization;
 import com.winwin.winwin.entity.OrganizationDataSet;
-import com.winwin.winwin.exception.DataSetCategoryException;
-import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.payload.DataSetCategoryPayload;
 import com.winwin.winwin.payload.DataSetPayload;
 import com.winwin.winwin.payload.UserPayload;
@@ -72,9 +70,10 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != orgDataSetPayLoad && null != user) {
 				organizationDataSet = constructOrganizationDataSet(orgDataSetPayLoad, user);
-				organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
+				if (null != organizationDataSet)
+					organizationDataSet = organizationDataSetRepository.saveAndFlush(organizationDataSet);
 
-				if (null != organizationDataSet.getId() && null != organizationDataSet.getOrganization()) {
+				if (null != organizationDataSet && null != organizationDataSet.getOrganization()) {
 					if (null != orgDataSetPayLoad.getId()) {
 						orgHistoryService.createOrganizationHistory(user, organizationDataSet.getOrganization().getId(),
 								OrganizationConstants.UPDATE, OrganizationConstants.DATASET,
@@ -90,7 +89,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 
 			}
 		} catch (Exception e) {
-			if (null != orgDataSetPayLoad.getId()) {
+			if (null != orgDataSetPayLoad) {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.exception.updated"), e);
 			} else {
 				LOGGER.error(customMessageSource.getMessage("org.dataset.exception.created"), e);
@@ -123,7 +122,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 				dataSet.setIsActive(false);
 				dataSet = organizationDataSetRepository.saveAndFlush(dataSet);
 
-				if (null != dataSet && null != dataSet.getOrganization()) {
+				if (null != dataSet.getOrganization()) {
 					orgHistoryService.createOrganizationHistory(user, dataSet.getOrganization().getId(),
 							OrganizationConstants.DELETE, OrganizationConstants.DATASET, dataSet.getId(),
 							dataSet.getDataSetCategory().getCategoryName(), "");
@@ -144,9 +143,6 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 			Date date = CommonUtils.getFormattedDate();
 			if (null != orgDataSetPayLoad.getId()) {
 				organizationDataSet = organizationDataSetRepository.getOne(orgDataSetPayLoad.getId());
-				if (organizationDataSet == null)
-					throw new DataSetException(
-							"Org dataset record not found for Id: " + orgDataSetPayLoad.getId() + " to update in DB ");
 			} else {
 				organizationDataSet = new OrganizationDataSet();
 				organizationDataSet.setCreatedAt(date);
@@ -222,12 +218,7 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 						orgDataSet.setDataSetCategory(organizationDataSetCategory);
 					} else {
 						organizationDataSetCategory = dataSetCategoryRepository.getOne(categoryId);
-						if (organizationDataSetCategory == null) {
-							throw new DataSetCategoryException(
-									"Org dataset category record not found for Id: " + categoryId + " in DB ");
-						} else {
-							orgDataSet.setDataSetCategory(organizationDataSetCategory);
-						}
+						orgDataSet.setDataSetCategory(organizationDataSetCategory);
 					}
 				}
 			}
@@ -236,7 +227,6 @@ public class OrganizationDataSetServiceImpl implements OrganizationDataSetServic
 		}
 	}
 
-	@Transactional
 	private DataSetCategory saveOrganizationDataSetCategory(DataSetCategoryPayload categoryFromPayLoad,
 			UserPayload user) {
 		DataSetCategory category = new DataSetCategory();

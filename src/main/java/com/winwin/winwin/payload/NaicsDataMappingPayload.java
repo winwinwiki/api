@@ -7,7 +7,7 @@ import lombok.Setter;
 
 /**
  * @author ArvindKhatik
- *
+ * @version 1.0
  */
 @Getter
 @Setter
@@ -24,6 +24,12 @@ public class NaicsDataMappingPayload {
 
 	@Override
 	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+
+		if (this.getClass() != o.getClass())
+			return false;
+
 		NaicsDataMappingPayload obj = (NaicsDataMappingPayload) o;
 		return naicsCode.equals(obj.naicsCode);
 	}

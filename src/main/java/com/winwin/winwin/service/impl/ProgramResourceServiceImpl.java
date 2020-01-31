@@ -18,7 +18,6 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramResource;
 import com.winwin.winwin.entity.ResourceCategory;
-import com.winwin.winwin.exception.ResourceException;
 import com.winwin.winwin.payload.ProgramResourcePayLoad;
 import com.winwin.winwin.payload.ResourceCategoryPayLoad;
 import com.winwin.winwin.payload.UserPayload;
@@ -49,7 +48,7 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 	@Autowired
 	private ProgramResourceRepository programResourceRepository;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationResourceServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ProgramResourceServiceImpl.class);
 
 	@Autowired
 	private ResourceCategoryRepository resourceCategoryRepository;
@@ -70,7 +69,8 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 			UserPayload user = userService.getCurrentUserDetails();
 			if (null != programResourcePayLoad && null != user) {
 				programResource = constructProgramResource(programResourcePayLoad);
-				programResource = programResourceRepository.saveAndFlush(programResource);
+				if (null != programResource)
+					programResource = programResourceRepository.saveAndFlush(programResource);
 
 				if (null != programResource && null != programResource.getProgram()
 						&& null != programResource.getProgram().getId()) {
@@ -118,13 +118,11 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 				resource.setUpdatedAt(date);
 				resource.setUpdatedBy(user.getUserDisplayName());
 				resource.setUpdatedByEmail(user.getEmail());
-				programResourceRepository.saveAndFlush(resource);
+				resource = programResourceRepository.saveAndFlush(resource);
 
-				if (null != resource) {
-					organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
-							OrganizationConstants.DELETE, "", resource.getId(),
-							resource.getResourceCategory().getCategoryName(), "");
-				}
+				organizationHistoryService.createOrganizationHistory(user, organizationId, programId,
+						OrganizationConstants.DELETE, "", resource.getId(),
+						resource.getResourceCategory().getCategoryName(), "");
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.error.deleted"), e);
@@ -173,32 +171,29 @@ public class ProgramResourceServiceImpl implements ProgramResourceService {
 		try {
 			UserPayload user = userService.getCurrentUserDetails();
 			Date date = CommonUtils.getFormattedDate();
-			if (null != programResourcePayLoad.getId() && null != user) {
+			if (null != programResourcePayLoad.getId()) {
 				programResource = programResourceRepository.getOne(programResourcePayLoad.getId());
 			} else {
 				programResource = new ProgramResource();
 				BeanUtils.copyProperties(programResourcePayLoad, programResource);
 				programResource.setIsActive(true);
 				programResource.setCreatedAt(date);
-				programResource.setCreatedBy(user.getUserDisplayName());
-				programResource.setCreatedByEmail(user.getEmail());
+				if (null != user) {
+					programResource.setCreatedBy(user.getUserDisplayName());
+					programResource.setCreatedByEmail(user.getEmail());
+				}
 			}
-
-			if (programResource == null) {
-				throw new ResourceException("Org resource record not found for Id: " + programResourcePayLoad.getId()
-						+ " to update in DB ");
-			} else {
-				setResourceCategory(programResourcePayLoad, programResource);
-				BeanUtils.copyProperties(programResourcePayLoad, programResource);
-				programResource.setIsActive(true);
-				programResource.setUpdatedAt(date);
+			setResourceCategory(programResourcePayLoad, programResource);
+			BeanUtils.copyProperties(programResourcePayLoad, programResource);
+			programResource.setIsActive(true);
+			programResource.setUpdatedAt(date);
+			if (null != user) {
 				programResource.setUpdatedBy(user.getUserDisplayName());
 				programResource.setUpdatedByEmail(user.getEmail());
-
-				if (null != programResourcePayLoad.getProgramId()) {
-					Program program = programRepository.findProgramById(programResourcePayLoad.getProgramId());
-					programResource.setProgram(program);
-				}
+			}
+			if (null != programResourcePayLoad.getProgramId()) {
+				Program program = programRepository.findProgramById(programResourcePayLoad.getProgramId());
+				programResource.setProgram(program);
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.exception.construct"), e);

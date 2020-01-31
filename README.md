@@ -46,6 +46,7 @@ $ export AWS_ES_DS_INDEX=<AWS_ES_DS_INDEX>
 $ export AWS_ES_FW_INDEX=<AWS_ES_FW_INDEX>
 $ export AWS_ES_RS_INDEX=<AWS_ES_RS_INDEX>
 $ export AWS_ES_NOTES_INDEX=<AWS_ES_NOTES_INDEX>
+$ export AWS_ES_SECURITY_INDEX=<AWS_ES_SECURITY_INDEX>
 
 $ export SLACK_UPLOAD_FILE_API_URL=https://slack.com/api/files.upload
 $ export SLACK_AUTH_TOKEN=<SLACK_AUTH_TOKEN>
@@ -71,7 +72,7 @@ The service should be up on port 80. all apis are listed in http://localhost:80/
 $ sudo yum install ruby
 $ sudo yum install wget
 $ wget https://aws-codedeploy-us-west-2.s3.us-west-2.amazonaws.com/latest/install
-$ chmod +X ./install
+$ chmod +x ./install
 $ sudo ./install auto
 $ sudo service codedeploy-agent start
 ```

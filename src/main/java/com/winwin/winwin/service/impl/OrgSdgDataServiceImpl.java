@@ -112,25 +112,20 @@ public class OrgSdgDataServiceImpl implements OrgSdgDataService {
 						String subGoalCode = payload.getSubGoalCode();
 						String goalName = payload.getGoalName();
 						String subGoalName = payload.getSubGoalName();
-
 						sdgDataMapObj = orgSdgDataMapRepository.findSdgSelectedTagsById(payload.getId());
 
 						if (sdgDataMapObj == null) {
 							LOGGER.error(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 							throw new SdgDataException(customMessageSource.getMessage("org.sdgdata.error.not_found"));
 						}
-
 						if (payload.getOrganizationId() == null
 								|| !(payload.getOrganizationId().equals(organization.getId()))) {
 							isValidSdgData = false;
 						}
-
 						if (null != goalCode && !(StringUtils.isEmpty(subGoalCode)) && !(StringUtils.isEmpty(goalName))
 								&& !(StringUtils.isEmpty(subGoalName))) {
-
 							if (null != sdgDataMapObj.getSdgData()) {
-
-								if (goalCode != sdgDataMapObj.getSdgData().getGoalCode()) {
+								if (!goalCode.equals(sdgDataMapObj.getSdgData().getGoalCode())) {
 									isValidSdgData = false;
 								} else if (!subGoalCode.equals(sdgDataMapObj.getSdgData().getShortNameCode())) {
 									isValidSdgData = false;
