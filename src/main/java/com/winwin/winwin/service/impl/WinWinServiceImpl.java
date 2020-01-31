@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.amazonaws.services.s3.model.S3Object;
@@ -114,12 +113,12 @@ public class WinWinServiceImpl implements WinWinService {
 	private Map<String, NteeData> nteeMap = null;
 
 	@Value("${slack.channel}")
-	private String SLACK_CHANNEL;
+	private String slackChannelName;
 
 	/**
 	 * create organizations in bulk, call this method only when the organization
-	 * id's are already imported into organization table. This is the utility method
-	 * for data migration and can only be used for new environment setup
+	 * id's are already imported into organization table. This is the utility
+	 * method for data migration and can only be used for new environment setup
 	 * 
 	 * @param organizationPayloadList
 	 * @param response
@@ -136,7 +135,7 @@ public class WinWinServiceImpl implements WinWinService {
 				.text("WinWinWiki Organization Data Migration Process has been started successfully for app env: "
 						+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at "
 						+ date)
-				.channel(SLACK_CHANNEL).as_user("true").build();
+				.channel(slackChannelName).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		saveOrganizationsOfflineForBulkUpload(organizationPayloadList, response, OrganizationConstants.CREATE,
@@ -146,8 +145,6 @@ public class WinWinServiceImpl implements WinWinService {
 		slackMessage.setText(("WinWinWiki Organization Data Migration Process has been ended successfully for app env: "
 				+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
-
-		// return organizationList;
 	}
 
 	/**
@@ -170,7 +167,7 @@ public class WinWinServiceImpl implements WinWinService {
 				.text("WinWinWiki Program Data Migration Process has been started successfully for app env: "
 						+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at "
 						+ date)
-				.channel(SLACK_CHANNEL).as_user("true").build();
+				.channel(slackChannelName).as_user("true").build();
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 		saveProgramOfflineForBulkUpload(programPayloadList, response, OrganizationConstants.CREATE,
@@ -180,8 +177,6 @@ public class WinWinServiceImpl implements WinWinService {
 		slackMessage.setText(("WinWinWiki Program Data Migration Process has been ended successfully for app env: "
 				+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName() + " at " + date));
 		slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
-
-		// return programList;
 	}
 
 	/**
@@ -237,10 +232,8 @@ public class WinWinServiceImpl implements WinWinService {
 							// save the remaining organizations
 							if (i % 1000 == 0) {
 								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
-								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								// save the remaining organizations when total
@@ -248,35 +241,22 @@ public class WinWinServiceImpl implements WinWinService {
 							} else if (numOfOrganizationsToSaveByBatchSize == 0
 									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
 								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
-								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
 								// save the remaining organizations when total
 								// size is greater than 1000
 							} else if (i > numOfOrganizationsToSaveByBatchSize
 									&& (organizationsListToSaveIntoDB.size() == remainingOrganizationsToSave)) {
-								/*
-								 * OrganizationBulkResultPayload payload = saveOrganizationsIntoDB(
-								 * organizationsListToSaveIntoDB, i);
-								 */
 								saveOrganizationsIntoDB(organizationsListToSaveIntoDB, i);
-								// if (!payload.getIsFailed()) {
-								// successOrganizationList.addAll(payload.getSuccessOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								// } else {
-								// failedOrganizationList.addAll(payload.getFailedOrganizationList());
 								// refresh the data after added into list
 								organizationsListToSaveIntoDB = new ArrayList<Organization>();
-								// }
 							}
-
 							i++;
-
-						} // end of if (operationPerformed.
+						}
 					}
 				}
 			}
@@ -291,7 +271,7 @@ public class WinWinServiceImpl implements WinWinService {
 					.text(("WinWinWiki Organization Data Migration Process has failed to run for app env: "
 							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
 							+ " at " + date + " due to error: \n" + e.getMessage()))
-					.channel(SLACK_CHANNEL).as_user("true").build();
+					.channel(slackChannelName).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 	}
@@ -413,9 +393,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param i
 	 * @return
 	 */
-	@Transactional
+	//@Transactional
 	@Async
-	OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
+	private OrganizationBulkResultPayload saveOrganizationsIntoDB(List<Organization> organizations, int i) {
 		// Implemented below logic to log failed and success
 		// organizations for bulk upload
 		List<Organization> successOrganizationList = new ArrayList<Organization>();
@@ -424,14 +404,11 @@ public class WinWinServiceImpl implements WinWinService {
 			LOGGER.info(
 					"Saving organizations : " + organizations.size() + " Starting from: " + (i - organizations.size()));
 			successOrganizationList.addAll(organizationRepository.saveAll(organizations));
-
 			// Flush all pending changes to the database
 			organizationRepository.flush();
-
 			LOGGER.info("Saved organizations: " + organizations.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save organizations starting from : " + (i - organizations.size()));
-
 			// Added the below logic to save the organization one by one when
 			// the bulk organization batch failed because of some faulty
 			// organization and save the perfect organization into
@@ -625,12 +602,9 @@ public class WinWinServiceImpl implements WinWinService {
 						organizationResource.setIsActive(true);
 						organizationResource.setOrganization(organization);
 						organizationResource.setResourceCategory(resourceCategory);
-
 						orgResourceList.add(organizationResource);
-
 					}
 				}
-
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.resource.error.created"), e);
@@ -679,18 +653,14 @@ public class WinWinServiceImpl implements WinWinService {
 						organizationDataSet.setOrganization(organization);
 						organizationDataSet.setDataSetCategory(dataSetCategory);
 						organizationDataSet.setType(payload.getDatasetType());
-
 						orgDatasetList.add(organizationDataSet);
-
 					}
 				}
-
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("org.dataset.error.created"), e);
 		}
 		return orgDatasetList;
-
 	}
 
 	/**
@@ -855,7 +825,7 @@ public class WinWinServiceImpl implements WinWinService {
 					.text(("WinWinWiki Program Data Migration Process has failed to run for app env: "
 							+ System.getenv("WINWIN_ENV") + " , initiated by user: " + user.getUserDisplayName()
 							+ " at " + date + " due to error: \n" + e.getMessage()))
-					.channel(SLACK_CHANNEL).as_user("true").build();
+					.channel(slackChannelName).as_user("true").build();
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 		}
 	}
@@ -955,9 +925,9 @@ public class WinWinServiceImpl implements WinWinService {
 	 * @param i
 	 * @return
 	 */
-	@Transactional
+	//@Transactional
 	@Async
-	ProgramBulkResultPayload saveProgramsIntoDB(List<Program> programs, int i) {
+	private ProgramBulkResultPayload saveProgramsIntoDB(List<Program> programs, int i) {
 		// Implemented below logic to log failed and success
 		// programs for bulk upload
 		List<Program> successProgramList = new ArrayList<Program>();
@@ -965,10 +935,8 @@ public class WinWinServiceImpl implements WinWinService {
 		try {
 			LOGGER.info("Saving programs : " + programs.size() + " Starting from: " + (i - programs.size()));
 			successProgramList.addAll(programRepository.saveAll(programs));
-
 			// Flush all pending changes to the database
 			programRepository.flush();
-
 			LOGGER.info("Saved programs: " + programs.size());
 		} catch (Exception e) {
 			LOGGER.info("Failed to save programs starting from: " + (i - programs.size()));
@@ -1037,12 +1005,9 @@ public class WinWinServiceImpl implements WinWinService {
 						programRegionServed.setIsActive(true);
 						programRegionServed.setProgram(program);
 						programRegionServed.setRegionMaster(regionMaster);
-
 						programRegionServedList.add(programRegionServed);
-
 					}
 				}
-
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("prog.region.error.created"), e);
@@ -1092,7 +1057,6 @@ public class WinWinServiceImpl implements WinWinService {
 						programResource.setIsActive(true);
 						programResource.setProgram(program);
 						programResource.setResourceCategory(resourceCategory);
-
 						programResourceList.add(programResource);
 
 					}
@@ -1147,12 +1111,9 @@ public class WinWinServiceImpl implements WinWinService {
 						programDataSet.setProgram(program);
 						programDataSet.setDataSetCategory(dataSetCategory);
 						programDataSet.setType(payload.getDatasetType());
-
 						programDatasetList.add(programDataSet);
-
 					}
 				}
-
 			}
 		} catch (Exception e) {
 			LOGGER.error(customMessageSource.getMessage("prog.dataset.error.created"), e);
@@ -1286,7 +1247,6 @@ public class WinWinServiceImpl implements WinWinService {
 				}
 			}
 		}
-
 		return spiDataMapList;
 	}
 
@@ -1410,7 +1370,6 @@ public class WinWinServiceImpl implements WinWinService {
 							}
 							payload.setSdgTagIds(sdgIdsList);
 						}
-
 						payload.setNteeCode(payloadData.getNteeCode());
 						nteeMapForS3.put(payloadData.getNteeCode(), payload);
 					}
@@ -1483,5 +1442,4 @@ public class WinWinServiceImpl implements WinWinService {
 		}
 		return address;
 	}
-
 }

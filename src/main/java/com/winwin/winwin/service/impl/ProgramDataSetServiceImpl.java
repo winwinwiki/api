@@ -18,8 +18,6 @@ import com.winwin.winwin.constants.OrganizationConstants;
 import com.winwin.winwin.entity.DataSetCategory;
 import com.winwin.winwin.entity.Program;
 import com.winwin.winwin.entity.ProgramDataSet;
-import com.winwin.winwin.exception.DataSetCategoryException;
-import com.winwin.winwin.exception.DataSetException;
 import com.winwin.winwin.payload.DataSetCategoryPayload;
 import com.winwin.winwin.payload.ProgramDataSetPayLoad;
 import com.winwin.winwin.payload.UserPayload;
@@ -171,10 +169,6 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 			Date date = CommonUtils.getFormattedDate();
 			if (null != programDataSetPayLoad.getId()) {
 				programDataSet = programDataSetRepository.getOne(programDataSetPayLoad.getId());
-				if (programDataSet == null) {
-					throw new DataSetException("Org dataset record not found for Id: " + programDataSetPayLoad.getId()
-							+ " to update in DB ");
-				}
 			} else {
 				programDataSet = new ProgramDataSet();
 				programDataSet.setCreatedAt(date);
@@ -213,12 +207,7 @@ public class ProgramDataSetServiceImpl implements ProgramDataSetService {
 
 					} else {
 						dataSetCategory = dataSetCategoryRepository.getOne(categoryId);
-						if (dataSetCategory == null) {
-							throw new DataSetCategoryException(
-									"Org dataset category record not found for Id: " + categoryId + " in DB ");
-						} else {
-							programDataSet.setDataSetCategory(dataSetCategory);
-						}
+						programDataSet.setDataSetCategory(dataSetCategory);
 					}
 				}
 			}
