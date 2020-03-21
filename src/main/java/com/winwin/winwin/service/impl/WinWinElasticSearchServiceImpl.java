@@ -18,6 +18,9 @@ import org.elasticsearch.client.Node;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
@@ -84,6 +87,7 @@ import com.winwin.winwin.repository.WinWinRoutesMappingRepository;
 import com.winwin.winwin.service.SlackNotificationSenderService;
 import com.winwin.winwin.service.WinWinElasticSearchService;
 import com.winwin.winwin.util.CommonUtils;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -197,9 +201,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				lastUpdatedDate = sdf.parse(fileContent);
 			}
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			Integer numOfOrganizations = null;
 			if (lastUpdatedDate == null) {
@@ -218,9 +221,37 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 				else
 					totalPageNumAvailable = pageNumAvailable;
 
+				// check index exist status and create index if not exist
+				int shardValue = 5;
+				int replicaValue = 1;
+
+				if (!isIndexExist(ORG_INDEX)) {
+					createIndex(ORG_INDEX, shardValue, replicaValue);
+				}
+
+				if (!isIndexExist(RESOURCE_INDEX)) {
+					createIndex(RESOURCE_INDEX, shardValue, replicaValue);
+				}
+
+				if (!isIndexExist(DATASET_INDEX)) {
+					createIndex(DATASET_INDEX, shardValue, replicaValue);
+				}
+
+				if (!isIndexExist(FRAMEWORK_INDEX)) {
+					createIndex(FRAMEWORK_INDEX, shardValue, replicaValue);
+				}
+
+				if (!isIndexExist(REGION_SERVED_INDEX)) {
+					createIndex(REGION_SERVED_INDEX, shardValue, replicaValue);
+				}
+
+				if (!isIndexExist(NOTES_INDEX)) {
+					createIndex(NOTES_INDEX, shardValue, replicaValue);
+				}
+
 				/*
-				 * check if numOfOrganizations > 100 than set individual replica
-				 * to 0 to increase index write efficiency in bulk
+				 * check if numOfOrganizations > 100 than set individual replica to 0 to
+				 * increase index write efficiency in bulk
 				 */
 				if (numOfOrganizations > 100) {
 					updateIndexSettings(ORG_INDEX, 0);
@@ -252,8 +283,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			slackNotificationSenderService.sendSlackMessageNotification(slackMessage);
 
 			/*
-			 * check if numOfOrganizations > 100 than set individual replica to
-			 * 1 once the bulk index write process ends
+			 * check if numOfOrganizations > 100 than set individual replica to 1 once the
+			 * bulk index write process ends
 			 */
 			if (numOfOrganizations > 100) {
 				updateIndexSettings(ORG_INDEX, 1);
@@ -286,14 +317,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 	}
 
 	private void updateIndexSettings(String index, int replicaValue) throws Exception {
-		try {
-			UpdateSettingsRequest request = new UpdateSettingsRequest(index);
-			String settingKey1 = "index.number_of_replicas";
-			String settingKey2 = "index.blocks.read_only_allow_delete";
-			Settings settings = Settings.builder().put(settingKey1, replicaValue).put(settingKey2, false).build();
+		UpdateSettingsRequest request = new UpdateSettingsRequest(index);
+		String settingKey1 = "index.number_of_replicas";
+		String settingKey2 = "index.blocks.read_only_allow_delete";
+		Settings settings = Settings.builder().put(settingKey1, replicaValue).put(settingKey2, false).build();
 
-			// set settings to request
-			request.settings(settings);
+		// set settings to request
+		request.settings(settings);
+
+		try {
+
+			// check index exist status and create index if not exist
+			if (!isIndexExist(index)) {
+				createIndex(index, 5, 1);
+			}
 
 			// set post request for ElasticSearch
 			if (winwinRoutesMap == null) {
@@ -321,6 +358,77 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		} catch (Exception e) {
 			LOGGER.error("Failed to update index settings for index: {}", index, e);
+			// throw exception to main method
+			throw e;
+		}
+	}
+
+	private boolean isIndexExist(String index) throws Exception {
+		GetIndexRequest request = new GetIndexRequest(index);
+		boolean exists = false;
+
+		try {
+			// set post request for ElasticSearch
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+				// get rest client connection
+				RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
+
+				exists = esClient.indices().exists(request, RequestOptions.DEFAULT);
+				// close client
+				esClient.close();
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("Failed to update index settings for index: {}", index, e);
+			// throw exception to main method
+			throw e;
+		}
+
+		return exists;
+	}
+
+	private void createIndex(String index, int shardValue, int replicaValue) throws Exception {
+		CreateIndexRequest request = new CreateIndexRequest(index);
+		String settingKey1 = "index.number_of_replicas";
+		String settingKey2 = "index.number_of_shards";
+		Settings settings = Settings.builder().put(settingKey1, shardValue).put(settingKey2, replicaValue).build();
+
+		// set settings to request
+		request.settings(settings);
+
+		try {
+			// set post request for ElasticSearch
+			if (winwinRoutesMap == null) {
+				// set winWin routes map
+				setWinWinRoutesMap();
+			}
+			if (!winwinRoutesMap.isEmpty() && winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_NAME)
+					&& winwinRoutesMap.containsKey(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD)) {
+				// get rest client connection
+				RestHighLevelClient esClient = esClientForEC2HostedElasticSearch(
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_NAME),
+						winwinRoutesMap.get(OrganizationConstants.KIBANA_ADMIN_USER_PASS_WORD));
+				CreateIndexResponse createIndexResponse = esClient.indices().create(request, RequestOptions.DEFAULT);
+
+				// check for index settings updated successfully
+				if (Boolean.TRUE.equals(createIndexResponse.isAcknowledged()))
+					LOGGER.info("Index Settings created for Index: {}", index);
+				else
+					LOGGER.info("Index Settings not created for Index: {} ", index);
+
+				// close client
+				esClient.close();
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("Failed to create index settings for index: {}", index, e);
 			// throw exception to main method
 			throw e;
 		}
@@ -651,9 +759,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 
 		try {
 			/*
-			 * find all the organizations to send into ElasticSearch if
-			 * lastUpdatedDate is not found else find all the organizations from
-			 * lastUpdatedDate
+			 * find all the organizations to send into ElasticSearch if lastUpdatedDate is
+			 * not found else find all the organizations from lastUpdatedDate
 			 */
 			if (null != pageable) {
 				if (lastUpdatedDate == null) {
@@ -709,25 +816,20 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 							organization, parentOrganization, rootParentOrganization);
 
 					/*
-					 * Commented due to new requirement by jens // check for
-					 * root organization to push the data into elastic // search
-					 * if (parentOrganization == null && rootParentOrganization
-					 * == null) { String tagStatus =
+					 * Commented due to new requirement by jens // check for root organization to
+					 * push the data into elastic // search if (parentOrganization == null &&
+					 * rootParentOrganization == null) { String tagStatus =
 					 * organizationFromMap.getValue().getTagStatus();
 					 * 
 					 * if (!StringUtils.isEmpty(tagStatus) &&
 					 * tagStatus.equals(OrganizationConstants.COMPLETE_TAG)) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); } // check for child
-					 * organization to push the data into // elastic search }
-					 * else if (null != parentOrganization && null !=
-					 * rootParentOrganization) {
-					 * prepareDataByTagStatus(organizationPayloadList, file,
-					 * txtWriter, lastUpdatedDate, organizationMap,
-					 * organizationFromMap, parentOrganization,
-					 * rootParentOrganization); }
+					 * prepareDataByTagStatus(organizationPayloadList, file, txtWriter,
+					 * lastUpdatedDate, organizationMap, organizationFromMap, parentOrganization,
+					 * rootParentOrganization); } // check for child organization to push the data
+					 * into // elastic search } else if (null != parentOrganization && null !=
+					 * rootParentOrganization) { prepareDataByTagStatus(organizationPayloadList,
+					 * file, txtWriter, lastUpdatedDate, organizationMap, organizationFromMap,
+					 * parentOrganization, rootParentOrganization); }
 					 */
 
 				} // end of loop
@@ -756,7 +858,7 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 			throws Exception {
 		Date currentUpdatedDate = organization.getUpdatedAt();
 
-		if (lastUpdatedDate == null) {
+		if (lastUpdatedDate == null && organization.getUpdatedAt() != null) {
 			lastUpdatedDate = organization.getUpdatedAt();
 			if (file.createNewFile()) {
 				LOGGER.info("creating elastic search log File: {}", file.getName());
@@ -1623,9 +1725,8 @@ public class WinWinElasticSearchServiceImpl implements WinWinElasticSearchServic
 		// 7.0
 		// Added .setConnectTimeout(6000000).setSocketTimeout(6000000)) to avoid
 		// socket and connection timeout exception
-		return new RestHighLevelClient(RestClient.builder(HttpHost.create(ES_ENDPOINT))
-				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000)
-						.setSocketTimeout(6000000))
+		return new RestHighLevelClient(RestClient.builder(HttpHost.create(ES_ENDPOINT)).setRequestConfigCallback(
+				requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(6000000).setSocketTimeout(6000000))
 				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
 	}
 
